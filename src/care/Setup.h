@@ -9,6 +9,7 @@
 #define _CARE_SETUP_H_
 
 // CARE headers
+#include "care/config.h"
 #include "care/CHAICallback.h"
 #include "care/RAJAPlugin.h"
 
@@ -125,7 +126,7 @@ namespace care {
    
    // does a GPU device synchronize if there has been a kernel launch through care
    // since the last time this was called.
-   bool syncIfNeeded();
+   CARE_DLL_API bool syncIfNeeded();
 } // namespace care
 
 #endif // !defined(_CARE_SETUP_H_)
