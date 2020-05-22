@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="care::host_device_ptr&lt;*&gt;">
+    <DisplayString Condition="m_elems == 0">nullptr</DisplayString>
+    <DisplayString Condition="m_elems != 0">{{ size={m_elems} }}</DisplayString>
+    <Expand>
+      <ArrayItems Condition="m_elems > 0">
+        <Size>m_elems</Size>
+        <ValuePointer Condition="m_pointer_record != nullptr">($T1*)m_pointer_record->m_pointers[chai::ExecutionSpace::CPU]</ValuePointer>
+        <ValuePointer Condition="m_pointer_record == nullptr">m_active_pointer</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>
