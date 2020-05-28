@@ -54,6 +54,19 @@ target_include_directories(TestArray
 blt_add_test( NAME TestArray
               COMMAND TestArray )
 
+blt_add_executable( NAME TestArrayUtils
+                    SOURCES TestArrayUtils.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestArrayUtils
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestArrayUtils
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestArrayUtils
+              COMMAND TestArrayUtils )
+
 blt_add_executable( NAME TestNumeric
                     SOURCES TestNumeric.cpp
                     DEPENDS_ON ${care_test_dependencies} )
