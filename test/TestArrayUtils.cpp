@@ -69,6 +69,37 @@ TEST(array_utils, fill_three)
    EXPECT_EQ(b.pick(2), -12);
 }
 
+TEST(array_utils, min_empty)
+{
+  // If the parameter type is int (instead of const int), the code does not compile because
+  // it cannot choose the correct ArrayMin signature. Can we change the signature?
+  care::host_device_ptr<const int> a;
+  // this works even when the start index is greater than length. Was that intended, or should it die with an error?
+  int initVal = -1;
+  int result = care_utils::ArrayMin<int>(a, 0, initVal, 567);
+  EXPECT_EQ(result, initVal);
+}
+
+TEST(array_utils, min_seven)
+{
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  // If the parameter type is int (instead of const int), the code does not compile because
+  // it cannot choose the correct ArrayMin signature. Can we change the signature?
+  care::host_device_ptr<const int> a(temp, 6, "minseven");
+  int initVal = -1;
+  // min of whole array
+  int result = care_utils::ArrayMin<int>(a, 7, initVal, 0);
+  EXPECT_EQ(result, 1);
+  
+  // min starting at index 3
+  result = care_utils::ArrayMin<int>(a, 7, initVal, 3);
+  EXPECT_EQ(result, 3);
+
+  // min of values at least 6
+  initVal = 6;
+  result = care_utils::ArrayMin<int>(a, 7, initVal, 0);
+  EXPECT_EQ(result, 7);
+}
 
 #ifdef __CUDACC__
 
