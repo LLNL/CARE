@@ -59,6 +59,7 @@ namespace care {
          printf("High watermark:      %lu bytes\n", allocator.getHighWatermark());
       }
    }
+
    bool syncIfNeeded() {
 #ifndef CHAI_DISABLE_RM
       return chai::ArrayManager::getInstance()->syncIfNeeded();
@@ -67,6 +68,7 @@ namespace care {
 #endif
    }
 }
+
 #if defined(_WIN32) && !defined(CARESTATICLIB)
 #ifdef CARE_EXPORTS
 
@@ -77,7 +79,6 @@ namespace RAJA
 {
 	namespace util
 	{
-
 		PluginStrategy::PluginStrategy() = default;
 	}
 }  // namespace RAJA
