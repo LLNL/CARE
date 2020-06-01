@@ -323,6 +323,37 @@ TEST(array_utils, findabovethreshold)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
+TEST(array_utils, minindexsubset)
+{ 
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
+  int sub3[3] = {5, 0, 6};
+  int sub1[1] = {3};
+  int result = 99;
+
+  care::host_device_ptr<int> a(temp, 7, "arrseven");
+  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
+  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
+  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+
+  // null subset
+  result = care_utils::FindIndexMinSubset<int>(a, nullptr, 0);
+  EXPECT_EQ(result, -1);
+  
+  // all elements but reverse order
+  result = care_utils::FindIndexMinSubset<int>(a, subsetrev, 7);
+  // NOTE: Since we are going in reverse order, this is 2 NOT 1
+  EXPECT_EQ(result, 2);
+
+  // len 3 subset
+  result = care_utils::FindIndexMinSubset<int>(a, subset3, 3);
+  EXPECT_EQ(result, 0);
+
+  // len 1 subset
+  result = care_utils::FindIndexMinSubset<int>(a, subset1, 1);
+  EXPECT_EQ(result, 3);  
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
