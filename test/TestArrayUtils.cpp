@@ -159,6 +159,32 @@ TEST(array_utils, min_max_base)
   EXPECT_EQ(result, false);
 }
 
+TEST(array_utils, min_max_general)
+{ 
+  double min[1] = {-1};
+  double max[1] = {-1};
+  int vals1[1] = {2};
+  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
+  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
+
+  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
+  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
+  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
+  
+  // note that output min/max are double whereas input is int. I am not testing for casting failures because
+  // I'm treating the output value as a given design decision
+  care_utils::ArrayMinMax<int>(a7, nullptr, 7, min, max);
+  EXPECT_EQ(min[0], -2);
+  EXPECT_EQ(max[0], 9);
+
+  care_utils::ArrayMinMax<int>(a7, mask, 7, min, max);
+  EXPECT_EQ(min[0], 0);
+  EXPECT_EQ(max[0], 5);
+
+  care_utils::ArrayMinMax<int>(a1, nullptr, 1, min, max);
+  EXPECT_EQ(min[0], 2);
+  EXPECT_EQ(max[0], 2);
+}
 
 #ifdef __CUDACC__
 
