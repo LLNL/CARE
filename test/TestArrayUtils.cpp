@@ -72,9 +72,7 @@ TEST(array_utils, fill_three)
 // min tests
 TEST(array_utils, min_empty)
 {
-  // If the parameter type is int (instead of const int), the code does not compile because
-  // it cannot choose the correct ArrayMin signature. Can we change the signature?
-  care::host_device_ptr<const int> a;
+  care::host_device_ptr<int> a;
   // this works even when the start index is greater than length. Was that intended, or should it die with an error?
   int initVal = -1;
   int result = care_utils::ArrayMin<int>(a, 0, initVal, 567);
@@ -84,10 +82,7 @@ TEST(array_utils, min_empty)
 TEST(array_utils, min_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  // If the parameter type is int (instead of const int), the code does not compile because
-  // it cannot choose the correct ArrayMin signature. 
-  // Can we change the signature or add a non-const version?
-  care::host_device_ptr<const int> a(temp, 7, "minseven");
+  care::host_device_ptr<int> a(temp, 7, "minseven");
   int initVal = 99;
   // min of whole array
   int result = care_utils::ArrayMin<int>(a, 7, initVal, 0);
@@ -106,9 +101,7 @@ TEST(array_utils, min_seven)
 // max tests
 TEST(array_utils, max_empty)
 {
-  // If the parameter type is int (instead of const int), the code does not compile because
-  // it cannot choose the correct ArrayMin signature. Can we change the signature?
-  care::host_device_ptr<const int> a;
+  care::host_device_ptr<int> a;
   // ArrayMin has a value for start index but ArrayMax does not. Why?
   int initVal = -1;
   int result = care_utils::ArrayMax<int>(a, 0, initVal);
@@ -118,14 +111,14 @@ TEST(array_utils, max_empty)
 TEST(array_utils, max_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  care::host_device_ptr<const int> a(temp, 7, "maxseven");
+  care::host_device_ptr<int> a(temp, 7, "maxseven");
   int initVal = -1;
   // max of whole array
   int result = care_utils::ArrayMax<int>(a, 7, initVal);
   EXPECT_EQ(result, 8);
 
   double tempd[7] = {1.2, 3.0/2.0, 9.2, 11.0/5.0, 1/2, 97.8, -12.2};
-  care::host_device_ptr<const double> b(tempd, 7, "maxsevend"); 
+  care::host_device_ptr<double> b(tempd, 7, "maxsevend"); 
   double resultd = care_utils::ArrayMax<double>(b, 7, initVal);
   EXPECT_EQ(resultd, 97.8);
 
@@ -187,17 +180,17 @@ GPU_TEST(array_utils, fill_three)
 
 GPU_TEST(array_utils, min_gpu)
 {
-  const int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  const int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<const int> ind0(temp0, 7, "mingpu0");
-  care::host_device_ptr<const int> ind1(temp1, 7, "mingpu1");
+  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
+  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
+  care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
+  care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
 
-  care::host_device_ptr<const int> a[2] = {ind0, ind1};
+  care::host_device_ptr<int> a[2] = {ind0, ind1};
 
    RAJAReduceMin<bool> passed{true};
    LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<const int> arr0 = a[0];
-      care::local_ptr<const int> arr1 = a[1]; 
+      care::local_ptr<int> arr0 = a[0];
+      care::local_ptr<int> arr1 = a[1]; 
       
       // min of entire array arr0
       int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
@@ -230,17 +223,17 @@ GPU_TEST(array_utils, min_gpu)
 
 GPU_TEST(array_utils, max_gpu)
 {
-  const int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  const int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<const int> ind0(temp0, 7, "maxgpu0");
-  care::host_device_ptr<const int> ind1(temp1, 7, "maxgpu1");
+  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
+  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
+  care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
+  care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
 
-  care::host_device_ptr<const int> a[2] = {ind0, ind1};
+  care::host_device_ptr<int> a[2] = {ind0, ind1};
 
    RAJAReduceMin<bool> passed{true};
    LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<const int> arr0 = a[0];
-      care::local_ptr<const int> arr1 = a[1];
+      care::local_ptr<int> arr0 = a[0];
+      care::local_ptr<int> arr1 = a[1];
 
       // max of entire array arr0
       int result = care_utils::ArrayMax<int>(arr0, 7, -1);

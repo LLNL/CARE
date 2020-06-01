@@ -8,6 +8,10 @@
 #ifndef _CARE_ARRAY_UTILS_H_
 #define _CARE_ARRAY_UTILS_H_
 
+#ifdef __CUDACC__
+#define GPU_ACTIVE
+#endif
+
 // CARE config header
 #include "care/config.h"
 
@@ -32,19 +36,34 @@ template <typename T>
 void ArrayFill(care::host_ptr<T> arr, int n, T val) ;
 
 template <typename T, typename Exec=RAJAExec>
-T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
+CARE_HOST_DEVICE T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
+
+template <typename T, typename Exec=RAJAExec>
+CARE_HOST_DEVICE T ArrayMin(care::host_device_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
 
 template <typename T>
 CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
 
+template <typename T>
+CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
+
 template <typename T, typename Exec=RAJAExec>
 T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal);
+
+template <typename T, typename Exec=RAJAExec>
+T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal);
 
 template <typename T>
 CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<const T> arr, int n, T initVal);
 
 template <typename T>
+CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<T> arr, int n, T initVal);
+
+template <typename T>
 T ArrayMax(care::host_ptr<const T> arr, int n, T initVal);
+
+template <typename T>
+T ArrayMax(care::host_ptr<T> arr, int n, T initVal);
 
 template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
@@ -1002,6 +1021,11 @@ inline T ArrayMin(care::host_device_ptr<const T> arr, int n, T initVal, int star
    return (T)min;
 }
 
+template <typename T, typename Exec>
+inline T ArrayMin(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)  {
+   return ArrayMin<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
+}
+
 template <typename T>
 inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int n, T initVal, int startIndex)  {
    T min = initVal;
@@ -1009,6 +1033,11 @@ inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int n, T initVa
       min = CARE_MIN(min, arr[k]);
    }
    return min;
+}
+
+template <typename T>
+inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int n, T initVal, int startIndex)  {
+   return ArrayMin<T>((care::local_ptr<const T>)arr, n, initVal, startIndex);
 }
 
 /************************************************************************
@@ -1055,6 +1084,11 @@ inline T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal)  {
    return (T)max;
 }
 
+template <typename T, typename Exec>
+inline T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal);;
+}
+
 /************************************************************************
  * Function  : ArrayMax
  * Author(s) : Peter Robinson
@@ -1067,6 +1101,11 @@ CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<const T> arr, int n, T initVa
       max = CARE_MAX(max, arr[k]);
    }
    return max;
+}
+
+template <typename T>
+CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T>((care::local_ptr<const T>)arr, n, initVal);
 }
 
 /************************************************************************
@@ -1105,6 +1144,11 @@ int ArrayFind(care::host_device_ptr<const T> arr, const int len, const T val, co
 template <typename T>
 inline T ArrayMax(care::host_ptr<const T> arr, int n, T initVal)  {
    return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>((const T *) arr, n, "ArrayMaxTmp"), n, initVal);
+}
+
+template <typename T>
+inline T ArrayMax(care::host_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T>((care::host_ptr<const T>)arr, n, initVal);
 }
 
 /************************************************************************
