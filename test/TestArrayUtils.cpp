@@ -321,5 +321,46 @@ GPU_TEST(array_utils, max_gpu)
 
    ASSERT_TRUE((bool) passed);
 }
+
+GPU_TEST(array_utils, min_max_general)
+{
+  int vals1[1] = {2};
+  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
+  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
+  
+  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
+  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
+  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
+
+  care::host_device_ptr<int> a[3] = {a1, a7, mask};
+
+  RAJAReduceMin<bool> passed{true};
+  LOOP_REDUCE(i, 0, 1) {
+     double min[1] = {-1};
+     double max[1] = {-1};
+     care::local_ptr<int> arr1 = a[0];
+     care::local_ptr<int> arr7 = a[1];
+     care::local_ptr<int> mask7 = a[2];
+      
+     care_utils::ArrayMinMax<int, double>(arr7, nullptr, 7, min, max);
+     if (min[0] != -2 && max[0] != 9) {
+        passed.min(false);
+     }
+      
+     care_utils::ArrayMinMax<int, double>(arr7, mask7, 7, min, max);
+     if (min[0] != 0 && max[0] != 5) {
+        passed.min(false);
+     }
+
+     care_utils::ArrayMinMax<int, double>(arr1, nullptr, 1, min, max);
+     if (min[0] != 2 && max[0] != 2) {
+        passed.min(false);
+     }
+
+  } LOOP_REDUCE_END
+
+  ASSERT_TRUE((bool)passed);
+}
+
 #endif // __CUDACC__
 
