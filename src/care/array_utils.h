@@ -68,8 +68,14 @@ T ArrayMax(care::host_ptr<T> arr, int n, T initVal);
 template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
 
+template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
+int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax);
+
 template <typename T>
 int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax);
+
+template <typename T>
+int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax);
 
 template <typename T, typename Exec=RAJAExec>
 T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc);
@@ -1201,6 +1207,11 @@ int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int co
    return (int) result;
 }
 
+template <typename T, typename ReducerType, typename RAJAExec>
+int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax) {
+ return ArrayMinMax<T, ReducerType, RAJAExec>((care::host_device_ptr<const T>)arr, (care::host_device_ptr<int const>)mask, n, outMin, outMax);
+}
+
 #if CARE_HAVE_LLNL_GLOBALID
 
 template <typename Exec=RAJAExec>
@@ -1257,6 +1268,12 @@ inline int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> 
       *outMax = +DBL_MAX;
    }
    return (int) result;
+}
+
+template <typename T, typename ReducerType>
+inline int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax)
+{
+   return ArrayMinMax<T, ReducerType>((care::local_ptr<const T>)arr, (care::local_ptr<int const>)mask, n, outMin, outMax);
 }
 
 /************************************************************************

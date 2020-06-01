@@ -128,6 +128,38 @@ TEST(array_utils, max_seven)
   EXPECT_EQ(result, 99);
 }
 
+TEST(array_utils, min_max_base)
+{
+  care::host_device_ptr<int> nill;
+  double min[1] = {-1};
+  double max[1] = {-1};
+  
+  int result = care_utils::ArrayMinMax<int>(nill, nill, 0, min, max);
+  EXPECT_EQ(min[0], -DBL_MAX);
+  EXPECT_EQ(max[0], DBL_MAX);
+  EXPECT_EQ(result, false);
+
+  int offmask[4] = {0};
+  care::host_device_ptr<int> mask(offmask, 4, "offmask");
+  min[0] = -1;
+  max[0] = -1;
+  result = care_utils::ArrayMinMax<int>(nill, mask, 0, min, max);
+  EXPECT_EQ(min[0], -DBL_MAX);
+  EXPECT_EQ(max[0], DBL_MAX);
+  EXPECT_EQ(result, false);
+
+  // the mask is set to off for the whole array, so we should still get the DBL_MAX base case here
+  int vals[4] = {1, 2, 3, 4};
+  care::host_device_ptr<int> skippedvals(vals, 4, "skipped");
+  min[0] = -1;
+  max[0] = -1;
+  result = care_utils::ArrayMinMax<int>(skippedvals, mask, 0, min, max);
+  EXPECT_EQ(min[0], -DBL_MAX);
+  EXPECT_EQ(max[0], DBL_MAX);
+  EXPECT_EQ(result, false);
+}
+
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
