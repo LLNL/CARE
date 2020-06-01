@@ -354,6 +354,35 @@ TEST(array_utils, minindexsubset)
   EXPECT_EQ(result, 3);  
 }
 
+TEST(array_utils, maxindexsubset)
+{
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
+  int sub3[3] = {5, 0, 6};
+  int sub1[1] = {2};
+  int result = 99;
+
+  care::host_device_ptr<int> a(temp, 7, "arrseven");
+  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
+  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
+  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+
+  // null subset
+  result = care_utils::FindIndexMaxSubset<int>(a, nullptr, 0);
+  EXPECT_EQ(result, -1);
+
+  // all elements but reverse order
+  result = care_utils::FindIndexMaxSubset<int>(a, subsetrev, 7);
+  EXPECT_EQ(result, 3);
+
+  // len 3 subset
+  result = care_utils::FindIndexMaxSubset<int>(a, subset3, 3);
+  EXPECT_EQ(result, 6);
+
+  // len 1 subset
+  result = care_utils::FindIndexMaxSubset<int>(a, subset1, 1);
+  EXPECT_EQ(result, 2);
+}
 #ifdef __CUDACC__
 
 // Adapted from CHAI
