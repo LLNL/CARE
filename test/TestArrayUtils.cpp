@@ -286,6 +286,43 @@ TEST(array_utils, arrayfind)
   EXPECT_EQ(loc, 2);
 }
 
+TEST(array_utils, findabovethreshold)
+{
+  int result = -1;
+  int threshIdx[1] = {0};
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  double thresh[7] = {0, 0, 0, 10, 10, 10, 10}; // this must be double, cannot be int
+  care::host_device_ptr<int> a(temp, 7, "array");
+  care::host_device_ptr<double> threshold(thresh, 7, "thresh");
+  double cutoff = -10;
+  
+  // null array
+  result = care_utils::FindIndexMinAboveThresholds<int>(nullptr, 0, threshold, cutoff, nullptr);
+  EXPECT_EQ(result, -1);
+
+  // null threshold
+  result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, nullptr, cutoff, threshIdx);
+  EXPECT_EQ(result, 1);
+  EXPECT_EQ(threshIdx[0], 1);
+
+  // threshold always triggers
+  result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  EXPECT_EQ(result, 1);
+  EXPECT_EQ(threshIdx[0], 1);
+
+  // set threshold higher to alter result
+  cutoff = 5;
+  result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  EXPECT_EQ(result, 4);
+  EXPECT_EQ(threshIdx[0], 4);
+
+  // threshold never triggers
+  cutoff = 999;
+  result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(threshIdx[0], -1);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI

@@ -1515,12 +1515,14 @@ int FindIndexMinAboveThresholds(care::host_device_ptr<const T> arr, int n,
          }
       } LOOP_REDUCE_END
       ndx = min.getLoc();
-      *thresholdIndex = ndx;
    }
    else {
       ArrayMinLoc<T, Exec>(arr, n, std::numeric_limits<T>::max(), ndx);
    }
 
+   if (thresholdIndex != nullptr) {
+      *thresholdIndex = ndx;
+   }
    return ndx ;
 }
 
