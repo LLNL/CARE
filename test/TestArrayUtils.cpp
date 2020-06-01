@@ -186,6 +186,71 @@ TEST(array_utils, min_max_general)
   EXPECT_EQ(max[0], 2);
 }
 
+
+// minloc tests
+TEST(array_utils, minloc_empty)
+{ 
+  care::host_device_ptr<int> a;
+  int loc = 10;
+  int initVal = -1;
+  int result = care_utils::ArrayMinLoc<int>(a, 0, initVal, loc);
+  EXPECT_EQ(result, initVal);
+  EXPECT_EQ(loc, -1);
+}
+
+TEST(array_utils, minloc_seven)
+{
+  int loc = -10;
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  care::host_device_ptr<int> a(temp, 7, "minseven");
+  int initVal = 99;
+  // min of whole array
+  int result = care_utils::ArrayMinLoc<int>(a, 7, initVal, loc);
+  EXPECT_EQ(result, 1);
+  EXPECT_EQ(loc, 1);
+
+  // test init val -1
+  initVal = -1;
+  result = care_utils::ArrayMinLoc<int>(a, 7, initVal, loc);
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(loc, -1);
+}
+
+// maxloc tests
+TEST(array_utils, maxloc_empty)
+{
+  care::host_device_ptr<int> a;
+  int loc = 7;
+  int initVal = -1;
+  int result = care_utils::ArrayMaxLoc<int>(a, 0, initVal, loc);
+  EXPECT_EQ(result, initVal);
+  EXPECT_EQ(loc, -1);
+}
+
+TEST(array_utils, maxloc_seven)
+{
+  int loc = -1;
+  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
+  care::host_device_ptr<int> a(temp, 7, "maxseven");
+  int initVal = -1;
+  // max of whole array
+  int result = care_utils::ArrayMaxLoc<int>(a, 7, initVal, loc);
+  EXPECT_EQ(result, 8);
+  EXPECT_EQ(loc, 3);
+
+  double tempd[7] = {1.2, 3.0/2.0, 9.2, 11.0/5.0, 1/2, 97.8, -12.2};
+  care::host_device_ptr<double> b(tempd, 7, "maxsevend");
+  double resultd = care_utils::ArrayMaxLoc<double>(b, 7, initVal, loc);
+  EXPECT_EQ(resultd, 97.8);
+  EXPECT_EQ(loc, 5);
+
+  // test init val 99
+  initVal = 99;
+  result = care_utils::ArrayMaxLoc<int>(a, 7, initVal, loc);
+  EXPECT_EQ(result, 99);
+  EXPECT_EQ(loc, -1);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
