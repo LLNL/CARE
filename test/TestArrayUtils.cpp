@@ -251,6 +251,41 @@ TEST(array_utils, maxloc_seven)
   EXPECT_EQ(loc, -1);
 }
 
+TEST(array_utils, arrayfind)
+{ 
+  int loc = 99;
+  int temp1[1] = {10};
+  int temp7[7] = {2, 1, 8, 3, 5, 7, 1};
+  care::host_device_ptr<int> a1(temp1, 7, "find1");
+  care::host_device_ptr<int> a7(temp7, 7, "find7");
+
+  // empty array
+  loc = care_utils::ArrayFind<int>(nullptr, 0, 10, 0);
+  EXPECT_EQ(loc, -1);
+
+  loc = care_utils::ArrayFind<int>(a1, 1, 10, 0);
+  EXPECT_EQ(loc, 0);
+
+  // not present
+  loc = care_utils::ArrayFind<int>(a1, 1, 77, 0);
+  EXPECT_EQ(loc, -1);
+ 
+  // start location past the end of the array 
+  loc = 4;
+  loc = care_utils::ArrayFind<int>(a1, 1, 77, 99);
+  EXPECT_EQ(loc, -1);
+
+  loc = care_utils::ArrayFind<int>(a7, 7, 1, 0);
+  EXPECT_EQ(loc, 1);
+
+  // start search at index 3
+  loc = care_utils::ArrayFind<int>(a7, 7, 1, 3);
+  EXPECT_EQ(loc, 6);
+
+  loc = care_utils::ArrayFind<int>(a7, 7, 8, 0);
+  EXPECT_EQ(loc, 2);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
