@@ -659,6 +659,41 @@ TEST(array_utils, arraycount)
   EXPECT_EQ(result, 0);
 }
 
+TEST(array_utils, arraysum)
+{
+  int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
+  int temp1[1] = {99};
+  care::host_device_ptr<int> a(temp7, 7, "arrseven");
+  care::host_device_ptr<int> b(temp1, 1, "arrone");
+  care::host_device_ptr<int> nil = nullptr;
+
+  int result = -1;
+
+  // sum everything
+  result = care_utils::ArraySum<int>(a, 7, 0);
+  EXPECT_EQ(result, 14);
+
+  // sum everything with initval -12
+  result = care_utils::ArraySum<int>(a, 7, -12);
+  EXPECT_EQ(result, 2);
+
+  // sum first 4 elems of length 7 array
+  result = care_utils::ArraySum<int>(a, 4, 0);
+  EXPECT_EQ(result, 4);
+
+  // length 1 array
+  result = care_utils::ArraySum<int>(b, 1, 0);
+  EXPECT_EQ(result, 99);
+
+  // the null array test
+  result = care_utils::ArraySum<int>(nil, 0, 0);
+  EXPECT_EQ(result, 0);
+ 
+  // null array, different init val
+  result = care_utils::ArraySum<int>(nil, 0, -5);
+  EXPECT_EQ(result, -5);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
