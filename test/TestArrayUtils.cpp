@@ -297,13 +297,12 @@ TEST(array_utils, findabovethreshold)
   double cutoff = -10;
   
   // null array
-  result = care_utils::FindIndexMinAboveThresholds<int>(nullptr, 0, threshold, cutoff, nullptr);
+  result = care_utils::FindIndexMinAboveThresholds<int>(nullptr, 0, threshold, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
 
   // null threshold
   result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, nullptr, cutoff, threshIdx);
   EXPECT_EQ(result, 1);
-  EXPECT_EQ(threshIdx[0], 1);
 
   // threshold always triggers
   result = care_utils::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
@@ -352,6 +351,68 @@ TEST(array_utils, minindexsubset)
   // len 1 subset
   result = care_utils::FindIndexMinSubset<int>(a, subset1, 1);
   EXPECT_EQ(result, 3);  
+}
+
+TEST(array_utils, minindexsubsetabovethresh)
+{
+  int temp[7] = {2, 1, 1, 8, 5, 3, 7};
+  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
+  int sub3[3] = {5, 0, 6};
+  int sub1[1] = {3};
+  int threshIdx[1] = {-1};
+  int result = 99;
+
+  care::host_device_ptr<int> a(temp, 7, "arrseven");
+  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
+  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
+  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+  double thresh7[7] = {10, 10, 10, 10, 0, 0, 10}; // this must be double, cannot be int
+  double thresh3[3] = {0, 10, 10};
+  double thresh1[1] = {10};
+  care::host_device_ptr<double> threshold7(thresh7, 7, "thresh7");
+  care::host_device_ptr<double> threshold3(thresh3, 3, "thresh3");
+  care::host_device_ptr<double> threshold1(thresh1, 1, "thresh1");
+
+  double cutoff = -10;
+
+  // null subset
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(threshIdx[0], -1);
+
+  // all elements but reverse order, no threshold
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, nullptr, cutoff, threshIdx);
+  // NOTE: Since we are going in reverse order, this is 2 NOT 1
+  EXPECT_EQ(result, 2);
+
+  // all elements in reverse order, cutoff not triggered
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, 2); // this is the index in the original array
+  EXPECT_EQ(threshIdx[0], 4); // this is the index in the subset
+
+  // change the cutoff
+  cutoff = 5.0;
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, 0); // this is the index in the original array
+  EXPECT_EQ(threshIdx[0], 6); // this is the index in the subset
+
+  // len 3 subset
+  cutoff = 5.0;
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subset3, 3, threshold3, cutoff, threshIdx);
+  EXPECT_EQ(result, 0);
+  EXPECT_EQ(threshIdx[0], 1);
+
+  // len 1 subset
+  cutoff = 5.0;
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  EXPECT_EQ(result, 3);
+  EXPECT_EQ(threshIdx[0], 0);
+
+  // len 1 subset not found (cutoff too high)
+  cutoff = 25.67;
+  result = care_utils::FindIndexMinSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(threshIdx[0], -1);
 }
 
 TEST(array_utils, maxindexsubset)

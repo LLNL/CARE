@@ -1515,14 +1515,12 @@ int FindIndexMinAboveThresholds(care::host_device_ptr<const T> arr, int n,
          }
       } LOOP_REDUCE_END
       ndx = min.getLoc();
+      *thresholdIndex = ndx;
    }
    else {
       ArrayMinLoc<T, Exec>(arr, n, std::numeric_limits<T>::max(), ndx);
    }
 
-   if (thresholdIndex != nullptr) {
-      *thresholdIndex = ndx;
-   }
    return ndx ;
 }
 
@@ -1553,7 +1551,9 @@ int FindIndexMinSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @param subset     : The subset of arr to find the min value for.
 // @param lenset     : Length of subset.
 // @param thresholds : If thresholds is not nullptr, only look at indices where
-//                     thresholds is above cutoff. length >= max(subset[0:lenset])
+//                     thresholds is above cutoff. length >= max(subset[0:lenset]).
+//                     Indexing of thresholds corresponds to the the subset,
+//                     not of the original array arr.
 // @cutoff           : The cutoff value described above.
 // @thresholdIndex   : (out) the index of the threshold array used for the min vale.
 //
@@ -1569,8 +1569,7 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
       RAJAReduceMinLoc<T> thresholdmin { std::numeric_limits<T>::max(), -1 };
       LOOP_REDUCE(i, 0, lenset) {
          int curr = subset[i] ;
-
-         if (thresholds[i] > cutoff) {
+         if (thresholds[i] > cutoff) { // if threshold were sized as arr, this would be thresholds[curr]
             min.minloc(arr[curr], curr);
             thresholdmin.minloc(arr[curr], i);
          }
@@ -1679,7 +1678,8 @@ int FindIndexMaxSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @param subset     : The subset of arr to find the max value for.
 // @param lenset     : Length of subset.
 // @param thresholds : If thresholds is not nullptr, only look at indices where
-//                     thresholds is above cutoff. length >= max(subset[0:lenset])
+//                     thresholds is above cutoff. length >= max(subset[0:lenset]).
+//                     Indexing corresponds to subset, the the array arr.
 // @cutoff           : The cutoff value described above.
 // @thresholdIndex   : (out) the index of the threshold array used for the max vale.
 //
