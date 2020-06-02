@@ -636,6 +636,29 @@ TEST(array_utils, pickperformfindmin)
   EXPECT_EQ(threshIdx[0], 0);
 }
 
+TEST(array_utils, arraycount)
+{
+  int temp[7] = {0, 1, 0, 3, 4, 0, 6};
+  care::host_device_ptr<int> a(temp, 7, "arrseven");
+  care::host_device_ptr<int> b = nullptr;
+  
+  int result = -1;
+
+  result = care_utils::ArrayCount<int>(a, 7, 0);
+  EXPECT_EQ(result, 3);
+
+  result = care_utils::ArrayCount<int>(a, 7, 6);
+  EXPECT_EQ(result, 1);
+
+  // not in the array
+  result = care_utils::ArrayCount<int>(a, 7, -1);
+  EXPECT_EQ(result, 0);
+
+  // the null array test
+  result = care_utils::ArrayCount<int>(b, 0, 0);
+  EXPECT_EQ(result, 0);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
