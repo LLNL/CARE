@@ -771,6 +771,49 @@ TEST(array_utils, arraysummaskedsubset)
   EXPECT_EQ(result, 0);
 }
 
+TEST(array_utils, findindexgt)
+{
+  int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
+  care::host_device_ptr<int> a(temp7, 7, "arrseven");
+  int result = -1;
+  
+  // in practice it finds the element that is the highest above the limit, so 6
+  // But in theory a different implementation could give the first element above the limit.
+  result = care_utils::FindIndexGT<int>(a, 7, 3);
+  ASSERT_TRUE(result==4 || result==6);
+
+  result = care_utils::FindIndexGT<int>(a, 7, 0);
+  ASSERT_TRUE(result==1 || result==3 || result==4 || result==6);
+
+  // limit is higher than all elements
+  result = care_utils::FindIndexGT<int>(a, 7, 99);
+  EXPECT_EQ(result, -1);
+}
+
+TEST(array_utils, findindexmax)
+{
+  int temp7[7] = {0, 1, 0, 3, 99, 0, 6};
+  int temp3[3] = {9, 10, -2};
+  int temp2[2] = {5, 5};
+
+  care::host_device_ptr<int> a(temp7, 7, "arrseven");
+  care::host_device_ptr<int> b(temp3, 3, "arrthree");
+  care::host_device_ptr<int> c(temp2, 2, "arrtwo");
+  int result = -1;
+
+  result = care_utils::FindIndexMax<int>(a, 7);
+  EXPECT_EQ(result, 4);
+
+  result = care_utils::FindIndexMax<int>(b, 2);
+  EXPECT_EQ(result, 1);
+
+  result = care_utils::FindIndexMax<int>(c, 2);
+  EXPECT_EQ(result, 0);
+
+  // nil test
+  result = care_utils::FindIndexMax<int>(nullptr, 0);
+  EXPECT_EQ(result, -1);
+}
 #ifdef __CUDACC__
 
 // Adapted from CHAI

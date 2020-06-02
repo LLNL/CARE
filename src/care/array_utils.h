@@ -1309,6 +1309,7 @@ inline T ArraySum(care::host_device_ptr<const T> arr, int n, T initVal)  {
  * Function  : ArraySumSubset
  * Author(s) : Peter Robinson
  * Purpose   : Returns the sum of values in arr at indices in subset.
+ * Note      : length n refers to length of subset, not array
  * ************************************************************************/
 template <typename T, typename ReduceType, typename Exec>
 inline T ArraySumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int n, T initVal) {
@@ -1370,7 +1371,7 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
    } LOOP_REDUCE_END
    return maxLoc.getLoc();
 
-   /* above is supposed to be equivalent to below sequenential code:
+   /* above is supposed to be equivalent to below sequenential code, but it isn't.
    int i ;
    for (i=0 ; i<n ; ++i) {
       if (arr[i] > limit) {
@@ -1378,6 +1379,10 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
       }
    }
    return -1 ;
+
+   Note: It is  NOT equivalent to that code. The provided code finds the index which is the most above
+   the limit. for example, for an array [0, 1, 2, 3, 4] with limit 2, the sequential code returns 3 but the
+   LOOP_REDUCE implementation return 4.
    */
 }
 
@@ -1389,7 +1394,7 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
  * ************************************************************************/
 template <typename T, typename Exec>
 inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
-   RAJAReduceMaxLoc<T> maxLoc { -FLT_MAX, -1 };
+   RAJAReduceMaxLoc<T> maxLoc { std::numeric_limits<T>::lowest(), -1 };
    LOOP_REDUCE(i, 0, n) {
       maxLoc.maxloc(arr[i], i);
    } LOOP_REDUCE_END
