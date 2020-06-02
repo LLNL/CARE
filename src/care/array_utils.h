@@ -1593,6 +1593,10 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
 // @param mask nullptr or Same length as arr, 1 for indices to ignore, 0 otherwise
 // @param subset nullptr or length n, the indices of arr to include in the min search
 //
+// @note: threshold had length and indexing corresponding to the subset while mask
+//        has length and index corresponding to arr
+// @note: even if an element is masked off, thresholdIndex may still be set (if a threshold
+//        is provided), just the returned value will be -1.
 template<typename T, typename Exec>
 int PickAndPerformFindMinIndex(care::host_device_ptr<const T> arr,
                                care::host_device_ptr<int const> mask,
@@ -1720,6 +1724,10 @@ int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
 // @param mask nullptr or Same length as arr, 1 for indices to ignore, 0 otherwise
 // @param subset nullptr or length n, the indices of arr to include in the max search
 //
+// @note: threshold had length and indexing corresponding to the subset while mask
+//        has length and index corresponding to arr
+// @note: even if an element is masked off, thresholdIndex may still be set (if a threshold
+//        is provided), just the returned value will be -1.
 template<typename T, typename Exec>
 int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
                                care::host_device_ptr<int const> mask,

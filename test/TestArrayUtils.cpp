@@ -506,6 +506,74 @@ TEST(array_utils, maxindexsubsetabovethresh)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
+TEST(array_utils, pickperformfindmax)
+{
+  int temp[7] = {2, 1, 1, 8, 5, 3, 7};
+  int masktemp[7] = {0, 0, 0, 1, 0, 0, 0};
+  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
+  int sub3[3] = {5, 0, 6};
+  int sub1[1] = {2};
+  int threshIdx[1] = {-1};
+  int result = 99;
+
+  care::host_device_ptr<int> a(temp, 7, "arrseven");
+  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
+  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
+  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+  double thresh7[7] = {10, 10, 10, 0, 0, 0, 10}; // this must be double, cannot be int
+  double thresh3[3] = {0, 10, 10};
+  double thresh1[1] = {10};
+  care::host_device_ptr<int> mask(masktemp, 7, "mask");
+  care::host_device_ptr<double> threshold7(thresh7, 7, "thresh7");
+  care::host_device_ptr<double> threshold3(thresh3, 3, "thresh3");
+  care::host_device_ptr<double> threshold1(thresh1, 1, "thresh1");
+
+  double cutoff = -10;
+
+  // all elements in reverse order, no mask or subset
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, nullptr, nullptr, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, 3);
+  EXPECT_EQ(threshIdx[0], 3);
+
+  // all elements in reverse order, no subset
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, nullptr, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, -1); // This is -1 because it is masked off
+  EXPECT_EQ(threshIdx[0], 3); // NOTE: even if a value is masked off, the threshold index still comes back
+
+  // all elements but reverse order, no threshold
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, 7, nullptr, cutoff, threshIdx);
+  EXPECT_EQ(result, -1); //masked off
+
+  // all elements in reverse order, cutoff not triggered
+  // NOTE: even though the element is masked off, threshIdx is valid!!! Just the return index is -1, not the threshIdx!!!!
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, -1); // this is the index in the original array
+  EXPECT_EQ(threshIdx[0], 3); // this is the index in the subset
+
+  // change the cutoff
+  cutoff = 5.0;
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, 7, threshold7, cutoff, threshIdx);
+  EXPECT_EQ(result, 6); // this is the index in the original array
+
+  // len 3 subset
+  cutoff = 5.0;
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subset3, 3, threshold3, cutoff, threshIdx);
+  EXPECT_EQ(result, 6);
+  EXPECT_EQ(threshIdx[0], 2);
+
+  // len 1 subset
+  cutoff = 5.0;
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subset1, 1, threshold1, cutoff, threshIdx);
+  EXPECT_EQ(result, 2);
+  EXPECT_EQ(threshIdx[0], 0);
+
+  // len 1 subset not found (cutoff too high)
+  cutoff = 25.67;
+  result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subset1, 1, threshold1, cutoff, threshIdx);
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(threshIdx[0], -1);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
