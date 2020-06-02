@@ -694,6 +694,83 @@ TEST(array_utils, arraysum)
   EXPECT_EQ(result, -5);
 }
 
+TEST(array_utils, arraysumsubset)
+{
+  int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
+  int temp1[1] = {99};
+
+  int subtemp3[3] = {3, 1, 4};
+  int subtemp1[1] = {0};
+
+  care::host_device_ptr<int> a(temp7, 7, "arrseven");
+  care::host_device_ptr<int> b(temp1, 1, "arrone");
+  care::host_device_ptr<int> sub3(subtemp3, 3, "suba");
+  care::host_device_ptr<int> sub1(subtemp1, 1, "subb");
+  care::host_device_ptr<int> nil = nullptr;
+
+  int result = -1;
+
+  // sum subset
+  result = care_utils::ArraySumSubset<int, int>(a, sub3, 3, 0);
+  EXPECT_EQ(result, 8);
+
+  // sum everything with initval -12
+  result = care_utils::ArraySumSubset<int, int>(a, sub3, 3, -12);
+  EXPECT_EQ(result, -4);
+
+  // sum first 2 elements from subset subset
+  result = care_utils::ArraySumSubset<int, int>(a, sub3, 2, 0);
+  EXPECT_EQ(result, 4);
+
+  // length 1 array
+  result = care_utils::ArraySumSubset<int, int>(b, sub1, 1, 0);
+  EXPECT_EQ(result, 99);
+
+  // the null array test
+  result = care_utils::ArraySumSubset<int, int>(nil, nil, 0, 0);
+  EXPECT_EQ(result, 0);
+
+  // null array, different init val
+  result = care_utils::ArraySumSubset<int, int>(nil, nil, 0, -5);
+  EXPECT_EQ(result, -5);
+}
+
+TEST(array_utils, arraysummaskedsubset)
+{ 
+  int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
+  int temp1[1] = {99};
+  
+  int subtemp3[3] = {3, 1, 4};
+  int subtemp1[1] = {0};
+  
+  int masktemp[7] = {1, 1, 0, 1, 0, 0, 0};
+
+  care::host_device_ptr<int> a(temp7, 7, "arrseven");
+  care::host_device_ptr<int> b(temp1, 1, "arrone");
+  care::host_device_ptr<int> sub3(subtemp3, 3, "suba");
+  care::host_device_ptr<int> sub1(subtemp1, 1, "subb");
+  care::host_device_ptr<int> mask(masktemp, 7, "mask");
+  care::host_device_ptr<int> nil = nullptr;
+  
+  int result = -1;
+  
+  // sum subset
+  result = care_utils::ArrayMaskedSumSubset<int, int>(a, mask, sub3, 3, 0);
+  EXPECT_EQ(result, 4);
+  
+  // sum first 2 elements from subset subset
+  result = care_utils::ArrayMaskedSumSubset<int, int>(a, mask, sub3, 2, 0);
+  EXPECT_EQ(result, 0);
+  
+  // length 1 array
+  result = care_utils::ArrayMaskedSumSubset<int, int>(b, mask, sub1, 1, 0);
+  EXPECT_EQ(result, 0);
+  
+  // the null array test
+  result = care_utils::ArrayMaskedSumSubset<int, int>(nil, mask, nil, 0, 0);
+  EXPECT_EQ(result, 0);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
