@@ -570,6 +570,10 @@ inline int BinarySearch(const T *map, const int start,
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
+         while (map[khi] == num && khi < start + mapSize) { // Note: fix for last test in TEST(array_utils, binarysearch)
+            ++khi;
+         }
+
          // the upper option bounds num
          if (map[khi] > num) {
             return khi;

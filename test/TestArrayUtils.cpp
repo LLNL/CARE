@@ -78,6 +78,44 @@ TEST(array_utils, checkSorted) {
   ASSERT_FALSE(result);
 }
 
+TEST(array_utils, binarysearch) {
+   int* nil = nullptr;
+   int  a[7] = {-9, 0, 3, 7, 77, 500, 999};
+   int  b[7] = {0, 1, 1, 1, 1, 1, 6};
+   int result = 0;
+  
+   // nil test
+   result = care_utils::BinarySearch<int>(nil, 0, 0, 77, false);
+   EXPECT_EQ(result, -1);
+
+   result = care_utils::BinarySearch<int>(a, 0, 7, 77, false);
+   EXPECT_EQ(result, 4);
+
+   // start after the number
+   // NOTE: input mapSize is NOT the size of the map. It is the length is the region you want to search. So if the array is length
+   // 7 and you start at index 2, feed BinarySearch 7-2=5.
+   result = care_utils::BinarySearch<int>(a, 5, 7-5, 77, false);
+   EXPECT_EQ(result, -1);
+
+   // upper bound is one after
+   result = care_utils::BinarySearch<int>(a, 2, 7-2, 77, true);
+   EXPECT_EQ(result, 5);
+
+   result = care_utils::BinarySearch<int>(b, 0, 7, 0, false);
+   EXPECT_EQ(result, 0);
+
+   result = care_utils::BinarySearch<int>(b, 0, 7, 6, false);
+   EXPECT_EQ(result, 6);
+
+   // one is repeated, could be a range of answers
+   result = care_utils::BinarySearch<int>(b, 0, 7, 1, false);
+   ASSERT_TRUE(result > 0 && result < 6);
+
+   // turn on upper bound, should ge the value after all of the ones.
+   result = care_utils::BinarySearch<int>(b, 0, 7, 1, true);
+   EXPECT_EQ(result, 6);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
