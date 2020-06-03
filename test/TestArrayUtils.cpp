@@ -47,7 +47,8 @@ TEST(array_utils, fill_three)
    EXPECT_EQ(a[2], -12);
 }
 
-
+// NOTE: if an array is not sorted, the checkSorted function will print out an error message.
+// When you run the unit tests, please ignore the spurious print statements.
 TEST(array_utils, checkSorted) {
   const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
   const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
