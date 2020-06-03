@@ -882,6 +882,35 @@ TEST(array_utils, dup_and_copy) {
   // NOTE: no test for when to and from are the same array or aliased. I;m assuming that is not allowed.
 }
 
+TEST(array_utils, checkSorted) {
+  const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
+  const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
+  const int sorteddup[7] = {-1, 0, 0, 0, 2, 3, 4};
+  
+  bool result = false;
+
+  result = care_utils::checkSorted<int>(nullptr, 0, "test", "nil");
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", true);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", false);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", true);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", false);
+  ASSERT_FALSE(result);
+
+  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", true);
+  ASSERT_FALSE(result);
+
+  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", false);
+  ASSERT_FALSE(result);
+}
+
 #ifdef __CUDACC__
 
 // Adapted from CHAI
