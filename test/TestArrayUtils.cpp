@@ -56,21 +56,26 @@ TEST(array_utils, checkSorted) {
 
   bool result = false;
 
+  // nil array is considered sorted
   result = care_utils::checkSorted<int>(nullptr, 0, "test", "nil");
   ASSERT_TRUE(result);
 
+  // sorted array is sorted
   result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", true);
   ASSERT_TRUE(result);
 
   result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", false);
   ASSERT_TRUE(result);
 
+  // sorteddup is sorted but it has a duplicate. Will succeed or fail depending
+  // on whether duplicates are allowed (last param)
   result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", true);
   ASSERT_TRUE(result);
 
   result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", false);
   ASSERT_FALSE(result);
 
+  // not sorted
   result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", true);
   ASSERT_FALSE(result);
 
@@ -80,14 +85,15 @@ TEST(array_utils, checkSorted) {
 
 TEST(array_utils, binarysearch) {
    int* nil = nullptr;
-   int  a[7] = {-9, 0, 3, 7, 77, 500, 999};
-   int  b[7] = {0, 1, 1, 1, 1, 1, 6};
+   int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
+   int  b[7] = {0, 1, 1, 1, 1, 1, 6};       // sorted with duplicates
    int result = 0;
   
    // nil test
    result = care_utils::BinarySearch<int>(nil, 0, 0, 77, false);
    EXPECT_EQ(result, -1);
 
+   // search for 77
    result = care_utils::BinarySearch<int>(a, 0, 7, 77, false);
    EXPECT_EQ(result, 4);
 
@@ -134,6 +140,7 @@ TEST(array_utils, intersectarrays) {
    care_utils::IntersectArrays<int>(RAJA::seq_exec(), c, 7, 0, nil, 0, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0); 
 
+   // intersect c and b
    care_utils::IntersectArrays<int>(RAJA::seq_exec(), c, 7, 0, b, 5, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 3);
    EXPECT_EQ(matches1[0], 2);
@@ -152,6 +159,7 @@ TEST(array_utils, intersectarrays) {
    EXPECT_EQ(matches2[0], 0);
    EXPECT_EQ(matches2[1], 3);
 
+   // intersect a and b
    care_utils::IntersectArrays<int>(RAJA::seq_exec(), a, 3, 0, b, 5, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 2);
    EXPECT_EQ(matches1[0], 1); 
@@ -208,7 +216,7 @@ GPU_TEST(array_utils, fill_three) {
 GPU_TEST(array_utils, min_empty)
 {
   care::host_device_ptr<int> a;
-  // this works even when the start index is greater than length. Was that intended, or should it die with an error?
+  // this works even when the start index is greater than length.
   int initVal = -1;
   int result = care_utils::ArrayMin<int>(a, 0, initVal, 567);
   EXPECT_EQ(result, initVal);
@@ -216,6 +224,7 @@ GPU_TEST(array_utils, min_empty)
 
 GPU_TEST(array_utils, min_innerloop)
 {
+  // this tests the local_ptr version of min
   int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
   int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
   care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
@@ -223,36 +232,36 @@ GPU_TEST(array_utils, min_innerloop)
 
   care::host_device_ptr<int> a[2] = {ind0, ind1};
 
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<int> arr0 = a[0];
-      care::local_ptr<int> arr1 = a[1];
+  RAJAReduceMin<bool> passed{true};
+  LOOP_REDUCE(i, 0, 1) {
+     care::local_ptr<int> arr0 = a[0];
+     care::local_ptr<int> arr1 = a[1];
 
-      // min of entire array arr0
-      int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
-      if (result != 1) {
-         passed.min(false);
-      }
+     // min of entire array arr0
+     int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
+     if (result != 1) {
+        passed.min(false);
+     }
 
-      // min of arr0 starting at index 6
-      result = care_utils::ArrayMin<int>(arr0, 7, 99, 6);
-      if (result != 7) {
-         passed.min(false);
-      }
+     // min of arr0 starting at index 6
+     result = care_utils::ArrayMin<int>(arr0, 7, 99, 6);
+     if (result != 7) {
+        passed.min(false);
+     }
 
-      // min of entire array arr1
-      result = care_utils::ArrayMin<int>(arr1, 7, 99, 0);
-      if (result != 0) {
-         passed.min(false);
-      }
+     // min of entire array arr1
+     result = care_utils::ArrayMin<int>(arr1, 7, 99, 0);
+     if (result != 0) {
+        passed.min(false);
+     }
 
-      // value min of arr1 with init val -1
-      result = care_utils::ArrayMin<int>(arr1, 7, -1, 7);
-      if (result != -1) {
-         passed.min(false);
-      }
+     // value min of arr1 with init val -1
+     result = care_utils::ArrayMin<int>(arr1, 7, -1, 7);
+     if (result != -1) {
+        passed.min(false);
+     }
 
-   } LOOP_REDUCE_END
+  } LOOP_REDUCE_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -280,7 +289,7 @@ GPU_TEST(array_utils, min_seven)
 GPU_TEST(array_utils, max_empty)
 {
   care::host_device_ptr<int> a;
-  // ArrayMin has a value for start index but ArrayMax does not. Why?
+  // ArrayMin has a value for start index but ArrayMax does not. TODO: use slicing or pointer arithmatic instead.
   int initVal = -1;
   int result = care_utils::ArrayMax<int>(a, 0, initVal);
   EXPECT_EQ(result, initVal);
@@ -308,6 +317,7 @@ GPU_TEST(array_utils, max_seven)
 
 GPU_TEST(array_utils, max_innerloop)
 {
+  // test the local_ptr version of max
   int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
   int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
   care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
@@ -315,40 +325,41 @@ GPU_TEST(array_utils, max_innerloop)
 
   care::host_device_ptr<int> a[2] = {ind0, ind1};
 
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<int> arr0 = a[0];
-      care::local_ptr<int> arr1 = a[1];
+  RAJAReduceMin<bool> passed{true};
+  LOOP_REDUCE(i, 0, 1) {
+     care::local_ptr<int> arr0 = a[0];
+     care::local_ptr<int> arr1 = a[1];
 
-      // max of entire array arr0
-      int result = care_utils::ArrayMax<int>(arr0, 7, -1);
-      if (result != 8) {
-         passed.min(false);
-      }
+     // max of entire array arr0
+     int result = care_utils::ArrayMax<int>(arr0, 7, -1);
+     if (result != 8) {
+        passed.min(false);
+     }
 
-      // max of entire array arr1
-      result = care_utils::ArrayMax<int>(arr1, 7, -1);
-      if (result != 12) {
-         passed.min(false);
-      }
+     // max of entire array arr1
+     result = care_utils::ArrayMax<int>(arr1, 7, -1);
+     if (result != 12) {
+        passed.min(false);
+     }
 
-      // value max of arr1 with init val 99
-      result = care_utils::ArrayMax<int>(arr1, 7, 99);
-      if (result != 99) {
-         passed.min(false);
-      }
+     // value max of arr1 with init val 99
+     result = care_utils::ArrayMax<int>(arr1, 7, 99);
+     if (result != 99) {
+        passed.min(false);
+     }
 
-   } LOOP_REDUCE_END
+  } LOOP_REDUCE_END
 
-   ASSERT_TRUE((bool) passed);
+  ASSERT_TRUE((bool) passed);
 }
 
-GPU_TEST(array_utils, min_max_base)
+GPU_TEST(array_utils, min_max_notfound)
 {
+  // some minmax tests for empty arrays
   care::host_device_ptr<int> nill;
   double min[1] = {-1};
   double max[1] = {-1};
-  
+ 
   int result = care_utils::ArrayMinMax<int>(nill, nill, 0, min, max);
   EXPECT_EQ(min[0], -DBL_MAX);
   EXPECT_EQ(max[0], DBL_MAX);
@@ -392,10 +403,12 @@ GPU_TEST(array_utils, min_max_general)
   EXPECT_EQ(min[0], -2);
   EXPECT_EQ(max[0], 9);
 
+  // test with a mask
   care_utils::ArrayMinMax<int>(a7, mask, 7, min, max);
   EXPECT_EQ(min[0], 0);
   EXPECT_EQ(max[0], 5);
 
+  // no mask, just find the min/max in the array
   care_utils::ArrayMinMax<int>(a1, nullptr, 1, min, max);
   EXPECT_EQ(min[0], 2);
   EXPECT_EQ(max[0], 2);
@@ -403,6 +416,7 @@ GPU_TEST(array_utils, min_max_general)
 
 GPU_TEST(array_utils, min_max_innerloop)
 {
+  // tests for the local_ptr version of minmax
   int vals1[1] = {2};
   int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
   int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
@@ -448,7 +462,7 @@ GPU_TEST(array_utils, minloc_empty)
   int initVal = -1;
   int result = care_utils::ArrayMinLoc<int>(a, 0, initVal, loc);
   EXPECT_EQ(result, initVal);
-  EXPECT_EQ(loc, -1);
+  EXPECT_EQ(loc, -1); // empty array, not found
 }
 
 GPU_TEST(array_utils, minloc_seven)
@@ -476,7 +490,7 @@ GPU_TEST(array_utils, maxloc_empty)
   int initVal = -1;
   int result = care_utils::ArrayMaxLoc<int>(a, 0, initVal, loc);
   EXPECT_EQ(result, initVal);
-  EXPECT_EQ(loc, -1);
+  EXPECT_EQ(loc, -1); // empty, not found
 }
 
 GPU_TEST(array_utils, maxloc_seven)
@@ -896,6 +910,7 @@ GPU_TEST(array_utils, arraycount)
   
   int result = -1;
 
+  // count element in array
   result = care_utils::ArrayCount<int>(a, 7, 0);
   EXPECT_EQ(result, 3);
 
@@ -1067,49 +1082,8 @@ GPU_TEST(array_utils, findindexmax)
   EXPECT_EQ(result, -1);
 }
 
-GPU_TEST(array_utils, max_gpu)
-{
-  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
-  care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
-
-  care::host_device_ptr<int> a[2] = {ind0, ind1};
-
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<int> arr0 = a[0];
-      care::local_ptr<int> arr1 = a[1];
-
-      // max of entire array arr0
-      int result = care_utils::ArrayMax<int>(arr0, 7, -1);
-      if (result != 8) {
-         passed.min(false);
-      }
-
-      // max of arr0 starting at index 6
-      //result = care_utils::ArrayMax<int>(arr0, 7, -1, 6);
-      //if (result != 7) {
-      //   passed.min(false);
-      //}
-
-      // max of entire array arr1
-      result = care_utils::ArrayMax<int>(arr1, 7, -1);
-      if (result != 12) {
-         passed.min(false);
-      }
-
-      // value max of arr1 with init val 99
-      result = care_utils::ArrayMax<int>(arr1, 7, 99);
-      if (result != 99) {
-         passed.min(false);
-      }
-
-   } LOOP_REDUCE_END
-
-   ASSERT_TRUE((bool) passed);
-}
-
+// duplicating and copying arrays
+// NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
 GPU_TEST(array_utils, dup_and_copy) {
   const int temp7[7] = {9, 10, -2, 67, 9, 45, -314};
   int zeros1[7] = {0};
@@ -1122,6 +1096,7 @@ GPU_TEST(array_utils, dup_and_copy) {
   care::host_device_ptr<const int> from(temp7, 7, "from7");
   care::host_device_ptr<int> nil = nullptr;
 
+  // duplicate and check that elements are the same
   care::host_device_ptr<int> dup = care_utils::ArrayDup<int>(from, 7);
   RAJAReduceMin<bool> passeddup{true};
   LOOP_REDUCE(i, 0, 7) {
@@ -1131,9 +1106,11 @@ GPU_TEST(array_utils, dup_and_copy) {
   } LOOP_REDUCE_END
   ASSERT_TRUE((bool) passeddup);
 
+  // duplicating nullptr should give nullptr
   care::host_device_ptr<int> dupnil = care_utils::ArrayDup<int>(nil, 0);
   EXPECT_EQ(dupnil, nullptr);
 
+  // copy and check that elements are the same
   care_utils::ArrayCopy<int>(to1, from, 7);
   RAJAReduceMin<bool> passed1{true};
   LOOP_REDUCE(i, 0, 7) {
@@ -1176,8 +1153,6 @@ GPU_TEST(array_utils, dup_and_copy) {
     }
   } LOOP_REDUCE_END
   ASSERT_TRUE((bool) passed3);
-
-  // NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
 }
 
 
@@ -1199,6 +1174,7 @@ GPU_TEST(array_utils, intersectarrays) {
    care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, nil, 0, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
 
+   // intersect c and b
    care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, b, 5, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 3);
    EXPECT_EQ(matches1.pick(0), 2);
@@ -1217,6 +1193,7 @@ GPU_TEST(array_utils, intersectarrays) {
    EXPECT_EQ(matches2.pick(0), 0);
    EXPECT_EQ(matches2.pick(1), 3);
 
+   // intersect a and b
    care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, b, 5, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 2);
    EXPECT_EQ(matches1.pick(0), 1);
