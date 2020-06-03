@@ -812,76 +812,6 @@ TEST(array_utils, findindexmax)
   EXPECT_EQ(result, -1);
 }
 
-TEST(array_utils, dup_and_copy) {
-  const int temp7[7] = {9, 10, -2, 67, 9, 45, -314};
-  int zeros1[7] = {0};
-  int zeros2[7] = {0};
-  int zeros3[7] = {0};
-
-  care::host_device_ptr<int> to1(zeros1, 7, "zeros1");
-  care::host_device_ptr<int> to2(zeros2, 7, "zeros2");
-  care::host_device_ptr<int> to3(zeros3, 7, "zeros3");
-  care::host_device_ptr<const int> from(temp7, 7, "from7");
-  care::host_device_ptr<int> nil = nullptr;
- 
-  care::host_device_ptr<int> dup = care_utils::ArrayDup<int>(from, 7);
-  RAJAReduceMin<bool> passeddup{true};
-  LOOP_REDUCE(i, 0, 7) {
-    if (dup[i] != from[i]) {
-      passeddup.min(false);
-    }
-  } LOOP_REDUCE_END
-  ASSERT_TRUE((bool) passeddup);
-
-  care::host_device_ptr<int> dupnil = care_utils::ArrayDup<int>(nil, 0);
-  EXPECT_EQ(dupnil, nullptr);
-  
-  care_utils::ArrayCopy<int>(to1, from, 7);
-  RAJAReduceMin<bool> passed1{true};
-  LOOP_REDUCE(i, 0, 7) {
-    if (to1[i] != from[i]) {
-      passed1.min(false);
-    }
-  } LOOP_REDUCE_END
-  ASSERT_TRUE((bool) passed1);
-
-  // copy 2 elements, testing different starting points
-  care_utils::ArrayCopy<int>(to2, from, 2, 3, 4);
-  RAJAReduceMin<bool> passed2{true};
-
-  LOOP_REDUCE(i, 0, 1) {
-    if (to2[0] != 0 || to2[1] != 0 || to2[2] != 0 || to2[5] != 0 || to2[6] != 0) {
-      passed2.min(false);
-    }
-    if (to2[3] != 9) {
-      passed2.min(false);
-    }
-    if (to2[4] != 45) {
-      passed2.min(false);
-    }
-  } LOOP_REDUCE_END
-  ASSERT_TRUE((bool) passed2);
-
-  // copy 2 elements, testing different starting points
-  care_utils::ArrayCopy<int>(to3, from, 2, 4, 3);
-  RAJAReduceMin<bool> passed3{true};
-
-  LOOP_REDUCE(i, 0, 1) {
-    if (to3[0] != 0 || to3[1] != 0 || to3[2] != 0 || to3[3] != 0 || to3[6] != 0) {
-      passed3.min(false);
-    }
-    if (to3[4] != 67) {
-      passed3.min(false);
-    }
-    if (to3[5] != 9) {
-      passed3.min(false);
-    }
-  } LOOP_REDUCE_END
-  ASSERT_TRUE((bool) passed3);
-
-  // NOTE: no test for when to and from are the same array or aliased. I;m assuming that is not allowed.
-}
-
 TEST(array_utils, checkSorted) {
   const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
   const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
@@ -1086,6 +1016,77 @@ GPU_TEST(array_utils, min_max_general)
 
   ASSERT_TRUE((bool)passed);
 }
+
+GPU_TEST(array_utils, dup_and_copy) {
+  const int temp7[7] = {9, 10, -2, 67, 9, 45, -314};
+  int zeros1[7] = {0};
+  int zeros2[7] = {0};
+  int zeros3[7] = {0};
+
+  care::host_device_ptr<int> to1(zeros1, 7, "zeros1");
+  care::host_device_ptr<int> to2(zeros2, 7, "zeros2");
+  care::host_device_ptr<int> to3(zeros3, 7, "zeros3");
+  care::host_device_ptr<const int> from(temp7, 7, "from7");
+  care::host_device_ptr<int> nil = nullptr;
+
+  care::host_device_ptr<int> dup = care_utils::ArrayDup<int>(from, 7);
+  RAJAReduceMin<bool> passeddup{true};
+  LOOP_REDUCE(i, 0, 7) {
+    if (dup[i] != from[i]) {
+      passeddup.min(false);
+    }
+  } LOOP_REDUCE_END
+  ASSERT_TRUE((bool) passeddup);
+
+  care::host_device_ptr<int> dupnil = care_utils::ArrayDup<int>(nil, 0);
+  EXPECT_EQ(dupnil, nullptr);
+
+  care_utils::ArrayCopy<int>(to1, from, 7);
+  RAJAReduceMin<bool> passed1{true};
+  LOOP_REDUCE(i, 0, 7) {
+    if (to1[i] != from[i]) {
+      passed1.min(false);
+    }
+  } LOOP_REDUCE_END
+  ASSERT_TRUE((bool) passed1);
+
+  // copy 2 elements, testing different starting points
+  care_utils::ArrayCopy<int>(to2, from, 2, 3, 4);
+  RAJAReduceMin<bool> passed2{true};
+
+  LOOP_REDUCE(i, 0, 1) {
+    if (to2[0] != 0 || to2[1] != 0 || to2[2] != 0 || to2[5] != 0 || to2[6] != 0) {
+      passed2.min(false);
+    }
+    if (to2[3] != 9) {
+      passed2.min(false);
+    }
+    if (to2[4] != 45) {
+      passed2.min(false);
+    }
+  } LOOP_REDUCE_END
+  ASSERT_TRUE((bool) passed2);
+
+  // copy 2 elements, testing different starting points
+  care_utils::ArrayCopy<int>(to3, from, 2, 4, 3);
+  RAJAReduceMin<bool> passed3{true};
+
+  LOOP_REDUCE(i, 0, 1) {
+    if (to3[0] != 0 || to3[1] != 0 || to3[2] != 0 || to3[3] != 0 || to3[6] != 0) {
+      passed3.min(false);
+    }
+    if (to3[4] != 67) {
+      passed3.min(false);
+    }
+    if (to3[5] != 9) {
+      passed3.min(false);
+    }
+  } LOOP_REDUCE_END
+  ASSERT_TRUE((bool) passed3);
+
+  // NOTE: no test for when to and from are the same array or aliased. I;m assuming that is not allowed.
+}
+
 
 #endif // __CUDACC__
 
