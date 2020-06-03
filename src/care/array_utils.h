@@ -632,7 +632,6 @@ template <typename T>
 inline void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_t len, care::host_device_ptr<T> & outArray, int & newLen) {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    T * rawData = getter.getRawArrayData(Array);
-   T * tmp;
    newLen = 0 ;
    care::host_ptr<T> arrout = nullptr ;
    outArray = nullptr;

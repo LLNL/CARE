@@ -106,7 +106,7 @@ namespace care {
          // Write out index
          os << "[CARE] Index: ";
 
-         for (size_t j = 0; j < numSpaces; ++j) {
+         for (int j = 0; j < numSpaces; ++j) {
             os << " ";
          }
 

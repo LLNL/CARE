@@ -121,9 +121,9 @@ CUDA_TEST(Scan, test_scan_everywhere) {
    } LOOP_SEQUENTIAL_END
 }
 
-#ifdef CARE_HAVE_LLNL_GLOBALID
-using globalID_ptr = chai::ManagedArray<globalID>;
+#if CARE_HAVE_LLNL_GLOBALID
 
+using globalID_ptr = chai::ManagedArray<globalID>;
 
 CUDA_TEST(Scan, test_scan_offset_index_gid) {
    const int starting_offset = 13;
@@ -144,4 +144,5 @@ CUDA_TEST(Scan, test_scan_offset_index_gid) {
       EXPECT_EQ(scan_Result[i].Ref(),starting_offset+i);
    } LOOP_SEQUENTIAL_END
 }
+
 #endif
