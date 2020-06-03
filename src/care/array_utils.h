@@ -1443,12 +1443,12 @@ inline void ArrayCopy(RAJA::seq_exec,
 /************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
- * Purpose   : Duplicates a ManagedArray. If input is null or len 0, 
+ * Purpose   : Duplicates a ManagedArray. If input is nullptr, 
  *             returns a nullptr (no allocation occurs).
  * ************************************************************************/
 template <typename T, typename Exec>
 inline care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len) {
-   if (from == nullptr || len <= 0) { // don't make a new array for null input
+   if (from == nullptr) { // don't make a new array for null input
      return nullptr;
    } else {
      care::host_device_ptr<T> newArray(len,"ArrayDup newArray");

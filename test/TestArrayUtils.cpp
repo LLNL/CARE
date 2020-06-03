@@ -22,52 +22,99 @@
 TEST(array_utils, fill_empty)
 {
    care::host_ptr<int> a;
-   care::host_device_ptr<int> b;
  
    care_utils::ArrayFill<int>(a, 0, -12);
-   care_utils::ArrayFill<int>(b, 0, -12);
 }
 
 TEST(array_utils, fill_one)
 {
    int tempa[1] = {1};
-   int tempb[1] = {1};
    care::host_ptr<int> a(tempa);
-   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
-   // disabled for host_device pointer with cuda active?
-   care::host_device_ptr<int> b(tempb, 1, "fillhostdev");
 
    care_utils::ArrayFill<int>(a, 1, -12);
-   care_utils::ArrayFill<int>(b, 1, -12);
-
    EXPECT_EQ(a[0], -12);
-   EXPECT_EQ(b.pick(0), -12);
 }
 
 TEST(array_utils, fill_three)
 {
    int tempa[3] = {1, 2, 3};
-   int tempb[3] = {1, 2, 3};
-
    care::host_ptr<int> a(tempa);
-   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
-   // disabled for host_device pointer with cuda active?
-   care::host_device_ptr<int> b(tempb, 3, "fillhostdev3");
 
    care_utils::ArrayFill<int>(a, 3, -12);
-   care_utils::ArrayFill<int>(b, 3, -12);
 
    EXPECT_EQ(a[0], -12);
    EXPECT_EQ(a[1], -12);
    EXPECT_EQ(a[2], -12);
+}
 
+
+TEST(array_utils, checkSorted) {
+  const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
+  const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
+  const int sorteddup[7] = {-1, 0, 0, 0, 2, 3, 4};
+
+  bool result = false;
+
+  result = care_utils::checkSorted<int>(nullptr, 0, "test", "nil");
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", true);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", false);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", true);
+  ASSERT_TRUE(result);
+
+  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", false);
+  ASSERT_FALSE(result);
+
+  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", true);
+  ASSERT_FALSE(result);
+
+  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", false);
+  ASSERT_FALSE(result);
+}
+
+#ifdef __CUDACC__
+
+// Adapted from CHAI
+#define GPU_TEST(X, Y) \
+   static void gpu_test_##X##Y(); \
+   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
+   static void gpu_test_##X##Y()
+
+GPU_TEST(array_utils, fill_empty) {
+   care::host_device_ptr<int> a;
+   care_utils::ArrayFill<int>(a, 0, -12); // hopefully nothing explodes
+}
+
+GPU_TEST(array_utils, fill_one)
+{
+   int tempb[1] = {1};
+   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
+   // disabled for host_device pointer with cuda active?
+   care::host_device_ptr<int> b(tempb, 1, "fillhostdev");
+
+   care_utils::ArrayFill<int>(b, 1, -12);
+
+   EXPECT_EQ(b.pick(0), -12);
+}
+
+GPU_TEST(array_utils, fill_three) {
+   int tempb[3] = {1, 2, 3};
+   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
+   // disabled for host_device pointer with cuda active?
+   care::host_device_ptr<int> b(tempb, 3, "fillhostdev3");
+
+   care_utils::ArrayFill<int>(b, 3, -12);
    EXPECT_EQ(b.pick(0), -12);
    EXPECT_EQ(b.pick(1), -12);
    EXPECT_EQ(b.pick(2), -12);
 }
 
-// min tests
-TEST(array_utils, min_empty)
+GPU_TEST(array_utils, min_empty)
 {
   care::host_device_ptr<int> a;
   // this works even when the start index is greater than length. Was that intended, or should it die with an error?
@@ -76,7 +123,51 @@ TEST(array_utils, min_empty)
   EXPECT_EQ(result, initVal);
 }
 
-TEST(array_utils, min_seven)
+GPU_TEST(array_utils, min_innerloop)
+{
+  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
+  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
+  care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
+  care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
+
+  care::host_device_ptr<int> a[2] = {ind0, ind1};
+
+   RAJAReduceMin<bool> passed{true};
+   LOOP_REDUCE(i, 0, 1) {
+      care::local_ptr<int> arr0 = a[0];
+      care::local_ptr<int> arr1 = a[1];
+
+      // min of entire array arr0
+      int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
+      if (result != 1) {
+         passed.min(false);
+      }
+
+      // min of arr0 starting at index 6
+      result = care_utils::ArrayMin<int>(arr0, 7, 99, 6);
+      if (result != 7) {
+         passed.min(false);
+      }
+
+      // min of entire array arr1
+      result = care_utils::ArrayMin<int>(arr1, 7, 99, 0);
+      if (result != 0) {
+         passed.min(false);
+      }
+
+      // value min of arr1 with init val -1
+      result = care_utils::ArrayMin<int>(arr1, 7, -1, 7);
+      if (result != -1) {
+         passed.min(false);
+      }
+
+   } LOOP_REDUCE_END
+
+   ASSERT_TRUE((bool) passed);
+}
+
+
+GPU_TEST(array_utils, min_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   care::host_device_ptr<int> a(temp, 7, "minseven");
@@ -95,8 +186,7 @@ TEST(array_utils, min_seven)
   EXPECT_EQ(result, -1);
 }
 
-// max tests
-TEST(array_utils, max_empty)
+GPU_TEST(array_utils, max_empty)
 {
   care::host_device_ptr<int> a;
   // ArrayMin has a value for start index but ArrayMax does not. Why?
@@ -105,7 +195,7 @@ TEST(array_utils, max_empty)
   EXPECT_EQ(result, initVal);
 }
 
-TEST(array_utils, max_seven)
+GPU_TEST(array_utils, max_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   care::host_device_ptr<int> a(temp, 7, "maxseven");
@@ -125,7 +215,44 @@ TEST(array_utils, max_seven)
   EXPECT_EQ(result, 99);
 }
 
-TEST(array_utils, min_max_base)
+GPU_TEST(array_utils, max_innerloop)
+{
+  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
+  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
+  care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
+  care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
+
+  care::host_device_ptr<int> a[2] = {ind0, ind1};
+
+   RAJAReduceMin<bool> passed{true};
+   LOOP_REDUCE(i, 0, 1) {
+      care::local_ptr<int> arr0 = a[0];
+      care::local_ptr<int> arr1 = a[1];
+
+      // max of entire array arr0
+      int result = care_utils::ArrayMax<int>(arr0, 7, -1);
+      if (result != 8) {
+         passed.min(false);
+      }
+
+      // max of entire array arr1
+      result = care_utils::ArrayMax<int>(arr1, 7, -1);
+      if (result != 12) {
+         passed.min(false);
+      }
+
+      // value max of arr1 with init val 99
+      result = care_utils::ArrayMax<int>(arr1, 7, 99);
+      if (result != 99) {
+         passed.min(false);
+      }
+
+   } LOOP_REDUCE_END
+
+   ASSERT_TRUE((bool) passed);
+}
+
+GPU_TEST(array_utils, min_max_base)
 {
   care::host_device_ptr<int> nill;
   double min[1] = {-1};
@@ -156,7 +283,7 @@ TEST(array_utils, min_max_base)
   EXPECT_EQ(result, false);
 }
 
-TEST(array_utils, min_max_general)
+GPU_TEST(array_utils, min_max_general)
 { 
   double min[1] = {-1};
   double max[1] = {-1};
@@ -183,9 +310,47 @@ TEST(array_utils, min_max_general)
   EXPECT_EQ(max[0], 2);
 }
 
+GPU_TEST(array_utils, min_max_innerloop)
+{
+  int vals1[1] = {2};
+  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
+  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
 
-// minloc tests
-TEST(array_utils, minloc_empty)
+  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
+  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
+  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
+
+  care::host_device_ptr<int> a[3] = {a1, a7, mask};
+
+  RAJAReduceMin<bool> passed{true};
+  LOOP_REDUCE(i, 0, 1) {
+     double min[1] = {-1};
+     double max[1] = {-1};
+     care::local_ptr<int> arr1 = a[0];
+     care::local_ptr<int> arr7 = a[1];
+     care::local_ptr<int> mask7 = a[2];
+
+     care_utils::ArrayMinMax<int, double>(arr7, nullptr, 7, min, max);
+     if (min[0] != -2 && max[0] != 9) {
+        passed.min(false);
+     }
+
+     care_utils::ArrayMinMax<int, double>(arr7, mask7, 7, min, max);
+     if (min[0] != 0 && max[0] != 5) {
+        passed.min(false);
+     }
+
+     care_utils::ArrayMinMax<int, double>(arr1, nullptr, 1, min, max);
+     if (min[0] != 2 && max[0] != 2) {
+        passed.min(false);
+     }
+
+  } LOOP_REDUCE_END
+
+  ASSERT_TRUE((bool)passed);
+}
+
+GPU_TEST(array_utils, minloc_empty)
 { 
   care::host_device_ptr<int> a;
   int loc = 10;
@@ -195,7 +360,7 @@ TEST(array_utils, minloc_empty)
   EXPECT_EQ(loc, -1);
 }
 
-TEST(array_utils, minloc_seven)
+GPU_TEST(array_utils, minloc_seven)
 {
   int loc = -10;
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -213,8 +378,7 @@ TEST(array_utils, minloc_seven)
   EXPECT_EQ(loc, -1);
 }
 
-// maxloc tests
-TEST(array_utils, maxloc_empty)
+GPU_TEST(array_utils, maxloc_empty)
 {
   care::host_device_ptr<int> a;
   int loc = 7;
@@ -224,7 +388,7 @@ TEST(array_utils, maxloc_empty)
   EXPECT_EQ(loc, -1);
 }
 
-TEST(array_utils, maxloc_seven)
+GPU_TEST(array_utils, maxloc_seven)
 {
   int loc = -1;
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -248,7 +412,7 @@ TEST(array_utils, maxloc_seven)
   EXPECT_EQ(loc, -1);
 }
 
-TEST(array_utils, arrayfind)
+GPU_TEST(array_utils, arrayfind)
 { 
   int loc = 99;
   int temp1[1] = {10};
@@ -283,7 +447,7 @@ TEST(array_utils, arrayfind)
   EXPECT_EQ(loc, 2);
 }
 
-TEST(array_utils, findabovethreshold)
+GPU_TEST(array_utils, findabovethreshold)
 {
   int result = -1;
   int threshIdx[1] = {0};
@@ -319,7 +483,7 @@ TEST(array_utils, findabovethreshold)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-TEST(array_utils, minindexsubset)
+GPU_TEST(array_utils, minindexsubset)
 { 
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -350,7 +514,7 @@ TEST(array_utils, minindexsubset)
   EXPECT_EQ(result, 3);  
 }
 
-TEST(array_utils, minindexsubsetabovethresh)
+GPU_TEST(array_utils, minindexsubsetabovethresh)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -412,7 +576,7 @@ TEST(array_utils, minindexsubsetabovethresh)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-TEST(array_utils, maxindexsubset)
+GPU_TEST(array_utils, maxindexsubset)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -442,7 +606,7 @@ TEST(array_utils, maxindexsubset)
   EXPECT_EQ(result, 2);
 }
 
-TEST(array_utils, maxindexsubsetabovethresh)
+GPU_TEST(array_utils, maxindexsubsetabovethresh)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -503,7 +667,7 @@ TEST(array_utils, maxindexsubsetabovethresh)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-TEST(array_utils, pickperformfindmax)
+GPU_TEST(array_utils, pickperformfindmax)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int masktemp[7] = {0, 0, 0, 1, 0, 0, 0};
@@ -555,8 +719,8 @@ TEST(array_utils, pickperformfindmax)
   // len 3 subset
   cutoff = 5.0;
   result = care_utils::PickAndPerformFindMaxIndex<int>(a, mask, subset3, 3, threshold3, cutoff, threshIdx);
-  EXPECT_EQ(result, 6);
-  EXPECT_EQ(threshIdx[0], 2);
+  EXPECT_EQ(result, 0);
+  EXPECT_EQ(threshIdx[0], 1);
 
   // len 1 subset
   cutoff = 5.0;
@@ -571,7 +735,7 @@ TEST(array_utils, pickperformfindmax)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-TEST(array_utils, pickperformfindmin)
+GPU_TEST(array_utils, pickperformfindmin)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int masktemp[7] = {0, 1, 1, 0, 0, 0, 0};
@@ -618,7 +782,7 @@ TEST(array_utils, pickperformfindmin)
   // change the cutoff
   cutoff = 5.0;
   result = care_utils::PickAndPerformFindMinIndex<int>(a, nullptr, subsetrev, 7, threshold7, cutoff, threshIdx);
-  EXPECT_EQ(result, 2); // this is the index in the original array
+  EXPECT_EQ(result, -1); // this is the index in the original array
 
   // len 3 subset
   cutoff = 5.0;
@@ -633,7 +797,7 @@ TEST(array_utils, pickperformfindmin)
   EXPECT_EQ(threshIdx[0], 0);
 }
 
-TEST(array_utils, arraycount)
+GPU_TEST(array_utils, arraycount)
 {
   int temp[7] = {0, 1, 0, 3, 4, 0, 6};
   care::host_device_ptr<int> a(temp, 7, "arrseven");
@@ -656,7 +820,7 @@ TEST(array_utils, arraycount)
   EXPECT_EQ(result, 0);
 }
 
-TEST(array_utils, arraysum)
+GPU_TEST(array_utils, arraysum)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -691,7 +855,7 @@ TEST(array_utils, arraysum)
   EXPECT_EQ(result, -5);
 }
 
-TEST(array_utils, arraysumsubset)
+GPU_TEST(array_utils, arraysumsubset)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -732,7 +896,7 @@ TEST(array_utils, arraysumsubset)
   EXPECT_EQ(result, -5);
 }
 
-TEST(array_utils, arraysummaskedsubset)
+GPU_TEST(array_utils, arraysummaskedsubset)
 { 
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -768,7 +932,7 @@ TEST(array_utils, arraysummaskedsubset)
   EXPECT_EQ(result, 0);
 }
 
-TEST(array_utils, findindexgt)
+GPU_TEST(array_utils, findindexgt)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   care::host_device_ptr<int> a(temp7, 7, "arrseven");
@@ -787,7 +951,7 @@ TEST(array_utils, findindexgt)
   EXPECT_EQ(result, -1);
 }
 
-TEST(array_utils, findindexmax)
+GPU_TEST(array_utils, findindexmax)
 {
   int temp7[7] = {0, 1, 0, 3, 99, 0, 6};
   int temp3[3] = {9, 10, -2};
@@ -810,128 +974,6 @@ TEST(array_utils, findindexmax)
   // nil test
   result = care_utils::FindIndexMax<int>(nullptr, 0);
   EXPECT_EQ(result, -1);
-}
-
-TEST(array_utils, checkSorted) {
-  const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
-  const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
-  const int sorteddup[7] = {-1, 0, 0, 0, 2, 3, 4};
-  
-  bool result = false;
-
-  result = care_utils::checkSorted<int>(nullptr, 0, "test", "nil");
-  ASSERT_TRUE(result);
-
-  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", true);
-  ASSERT_TRUE(result);
-
-  result = care_utils::checkSorted<int>(sorted, 7, "test", "sorted", false);
-  ASSERT_TRUE(result);
-
-  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", true);
-  ASSERT_TRUE(result);
-
-  result = care_utils::checkSorted<int>(sorteddup, 7, "test", "sorteddup", false);
-  ASSERT_FALSE(result);
-
-  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", true);
-  ASSERT_FALSE(result);
-
-  result = care_utils::checkSorted<int>(notsorted, 7, "test", "sorteddup", false);
-  ASSERT_FALSE(result);
-}
-
-#ifdef __CUDACC__
-
-// Adapted from CHAI
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
-
-// Array Fill Tests
-GPU_TEST(array_utils, fill_empty)
-{  
-   care::host_device_ptr<int> a;
-   
-   care_utils::ArrayFill<int>(a, 0, -12);
-}
-
-GPU_TEST(array_utils, fill_one)
-{  
-   int temp[1] = {1};
-   care::host_device_ptr<int> a(temp);
-   
-   care_utils::ArrayFill<int>(a, 1, -12);
-
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 1) {
-      if (a[i] != -12) {
-         passed.min(false);
-      }
-   } LOOP_REDUCE_END
-
-   ASSERT_TRUE((bool) passed);
-}
-
-GPU_TEST(array_utils, fill_three)
-{
-   int temp[3] = {1, 2, 3};
-   care::host_device_ptr<int> a(temp);
-
-   care_utils::ArrayFill<int>(a, 3, -12);
-
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 3) {
-      if (a[i] != -12) {
-         passed.min(false);
-      }
-   } LOOP_REDUCE_END
-
-   ASSERT_TRUE((bool) passed);
-}
-
-GPU_TEST(array_utils, min_gpu)
-{
-  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
-  care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
-
-  care::host_device_ptr<int> a[2] = {ind0, ind1};
-
-   RAJAReduceMin<bool> passed{true};
-   LOOP_REDUCE(i, 0, 1) {
-      care::local_ptr<int> arr0 = a[0];
-      care::local_ptr<int> arr1 = a[1]; 
-      
-      // min of entire array arr0
-      int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
-      if (result != 1) {
-         passed.min(false);
-      }
-      
-      // min of arr0 starting at index 6
-      result = care_utils::ArrayMin<int>(arr0, 7, 99, 6);
-      if (result != 7) {
-         passed.min(false);
-      }
-
-      // min of entire array arr1
-      result = care_utils::ArrayMin<int>(arr1, 7, 99, 0);
-      if (result != 0) {
-         passed.min(false);
-      }
-
-      // value min of arr1 with init val -1
-      result = care_utils::ArrayMin<int>(arr1, 7, -1, 7);
-      if (result != -1) {
-         passed.min(false);
-      }
-
-   } LOOP_REDUCE_END
-
-   ASSERT_TRUE((bool) passed);
 }
 
 GPU_TEST(array_utils, max_gpu)
@@ -975,46 +1017,6 @@ GPU_TEST(array_utils, max_gpu)
    } LOOP_REDUCE_END
 
    ASSERT_TRUE((bool) passed);
-}
-
-GPU_TEST(array_utils, min_max_general)
-{
-  int vals1[1] = {2};
-  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
-  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
-  
-  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
-  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
-  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
-
-  care::host_device_ptr<int> a[3] = {a1, a7, mask};
-
-  RAJAReduceMin<bool> passed{true};
-  LOOP_REDUCE(i, 0, 1) {
-     double min[1] = {-1};
-     double max[1] = {-1};
-     care::local_ptr<int> arr1 = a[0];
-     care::local_ptr<int> arr7 = a[1];
-     care::local_ptr<int> mask7 = a[2];
-      
-     care_utils::ArrayMinMax<int, double>(arr7, nullptr, 7, min, max);
-     if (min[0] != -2 && max[0] != 9) {
-        passed.min(false);
-     }
-      
-     care_utils::ArrayMinMax<int, double>(arr7, mask7, 7, min, max);
-     if (min[0] != 0 && max[0] != 5) {
-        passed.min(false);
-     }
-
-     care_utils::ArrayMinMax<int, double>(arr1, nullptr, 1, min, max);
-     if (min[0] != 2 && max[0] != 2) {
-        passed.min(false);
-     }
-
-  } LOOP_REDUCE_END
-
-  ASSERT_TRUE((bool)passed);
 }
 
 GPU_TEST(array_utils, dup_and_copy) {
@@ -1084,7 +1086,7 @@ GPU_TEST(array_utils, dup_and_copy) {
   } LOOP_REDUCE_END
   ASSERT_TRUE((bool) passed3);
 
-  // NOTE: no test for when to and from are the same array or aliased. I;m assuming that is not allowed.
+  // NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
 }
 
 
