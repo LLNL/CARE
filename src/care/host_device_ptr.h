@@ -311,6 +311,10 @@ namespace care {
             }
          }
          // we are happy
+#else // !defined(CHAI_DISABLE_RM) && defined(CARE_DEBUG)
+         // Quiet the compiler warnings
+         (void) pointer;
+         (void) pointer_record;
 #endif // !defined(CHAI_DISABLE_RM) && defined(CARE_DEBUG)
          return;
       }
