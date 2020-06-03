@@ -35,11 +35,9 @@ if (CHAI_DIR)
     include(cmake/libraries/FindCHAI.cmake)
 
     if (CHAI_FOUND)
-        if (ENABLE_CUDA)
-            set (CHAI_DEPENDS cuda CACHE PATH "")
-        else()
-            set (CHAI_DEPENDS CACHE PATH "")
-        endif()
+        set (CHAI_DEPENDS umpire)
+        blt_list_append(TO CHAI_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
+        blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
 
         blt_register_library( NAME       chai
                                 TREAT_INCLUDES_AS_SYSTEM ON
