@@ -168,6 +168,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a sequential RAJA loop of length one that
+///        captures some variables by reference. The legacy version uses a raw
+///        for loop.
+///
+/// @arg[in] CHECK The variable to check that the start and end macros match
+/// @arg[in] __VA_ARGS__ The variables to capture by reference
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) CARE_CHECKED_HOST_CODE_START(CHECK)
+
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end an OpenMP RAJA loop. If OpenMP is not
 ///        available, executes sequentially on the host. The legacy version
 ///        uses raw OpenMP.
@@ -364,6 +378,22 @@
    care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [=] (const int) {
 
 #define CARE_CHECKED_HOST_KERNEL_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a sequential RAJA loop of length one that
+///        captures some variables by reference.
+///
+/// @arg[in] CHECK The variable to check that the start and end macros match
+/// @arg[in] __VA_ARGS__ The variables to capture by reference
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) { \
+   CARE_NEST_BEGIN(CHECK) \
+   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int) {
+
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
 ////////////////////////////////////////////////////////////////////////////////

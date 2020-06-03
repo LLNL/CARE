@@ -103,9 +103,9 @@ void inclusive_scan(chai::ManagedArray<const T> inData, chai::ManagedArray<T> ou
 
 template<typename T>
 inline void getFinalScanCountFromPinned(chai::ManagedArray<T> scanvar_length, T& scanCount) {
-   CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(i, 0, 1, scan_loop_check, scanCount) {
+   CARE_CHECKED_HOST_KERNEL_WITH_REF_START(scan_loop_check, scanCount) {
       scanCount = scanvar_length[0];
-   } CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(scan_loop_check)
+   } CARE_CHECKED_HOST_KERNEL_WITH_REF_END(scan_loop_check)
 }
 
 template<typename T>
