@@ -246,12 +246,14 @@ inline void IntersectArrays(Exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
  *             of indices in the second array.
  *             This is the parallel overload of this method.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 #ifdef RAJA_PARALLEL_ACTIVE
 template <typename ArrayType>
@@ -273,7 +275,7 @@ inline void IntersectArrays(RAJAExec,
       matches2.alloc(smaller);
    }
 
-   /* This algorithm assumes that the nodelists are sorted */
+   /* This algorithm assumes that the nodelists are sorted and unique */
 #ifdef CARE_DEBUG
    bool checkIsSorted = true ;
 #else
@@ -283,6 +285,7 @@ inline void IntersectArrays(RAJAExec,
    if (checkIsSorted) {
       const char* funcname = "IntersectArrays" ;
 
+      // allowDuplicates is false for these checks by default.
       checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
       checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
    }
@@ -369,12 +372,14 @@ inline void IntersectArrays(RAJAExec exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
- *             of indices in the second array.
+ *             of indices in the second array. 
  *             This is the sequential overload of this method, with a care::host_ptr API.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  * Note      : The raw pointers contained in matches1 and matches2
  *             should be deallocated by the caller using free.
  ************************************************************************/
@@ -397,7 +402,7 @@ inline void IntersectArrays(RAJA::seq_exec,
       matches2 = (int*) std::malloc(smaller * sizeof(int));
    }
 
-   /* This algorithm assumes that the nodelists are sorted */
+   /* This algorithm assumes that the nodelists are sorted and unique */
 #ifdef CARE_DEBUG
    bool checkIsSorted = true ;
 #else
@@ -407,6 +412,7 @@ inline void IntersectArrays(RAJA::seq_exec,
    if (checkIsSorted) {
       const char* funcname = "IntersectArrays" ;
 
+      // allowDuplicates is false for this check by default
       checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
       checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
    }
@@ -468,12 +474,14 @@ inline void IntersectArrays(RAJA::seq_exec exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
  * Author(s) : Peter Robinson
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
  *             of indices in the second array.
  *             This is the sequential overload of this method, with a host_device pointer API.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 template <typename ArrayType>
 inline void IntersectArrays(RAJA::seq_exec exec,
@@ -540,7 +548,8 @@ inline int BinarySearch(const T *map, const int start,
       return -1 ;
    }
 #ifdef CARE_DEBUG
-   checkSorted(&(map[start]), mapSize, "BinarySearch", "map") ;
+   const bool allowDuplicates = true;
+   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates) ;
 #endif
 
    while (khi-klo > 1) {
@@ -570,7 +579,9 @@ inline int BinarySearch(const T *map, const int start,
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
-         while (map[khi] == num && khi < start + mapSize) { // Note: fix for last test in TEST(array_utils, binarysearch)
+         // Note: fix for last test in TEST(array_utils, binarysearch). This algorithm has failed to pick up the upper
+         // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
+         while (map[khi] == num && khi < start + mapSize) {
             ++khi;
          }
 
