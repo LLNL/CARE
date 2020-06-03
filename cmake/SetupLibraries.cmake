@@ -29,6 +29,29 @@ else()
 endif()
 
 ################################
+# UMPIRE
+################################
+if (UMPIRE_DIR)
+    include(cmake/libraries/Findumpire.cmake)
+
+    if (UMPIRE_FOUND)
+        set(UMPIRE_DEPENDS )
+        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
+        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ${ENABLE_MPI})
+
+        blt_register_library( NAME      umpire
+                                TREAT_INCLUDES_AS_SYSTEM ON
+                                INCLUDES   ${UMPIRE_INCLUDE_DIRS}
+                                LIBRARIES  ${UMPIRE_LIBRARY}
+                                DEPENDS_ON ${UMPIRE_DEPENDS})
+    else()
+        message(FATAL_ERROR "Unable to find Umpire with given path: ${UMPIRE_DIR}")
+    endif()
+else()
+    message(FATAL_ERROR "Umpire is required! Please set UMPIRE_DIR to a valid install of Umpire.")
+endif()
+
+################################
 # CHAI
 ################################
 if (CHAI_DIR)
@@ -133,29 +156,5 @@ if (LLNL_GLOBALID_DIR)
 else()
     message(STATUS "Library Disabled: LLNL_GlobalID")
     set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
-endif()
-
-
-################################
-# UMPIRE
-################################
-if (UMPIRE_DIR)
-    include(cmake/libraries/Findumpire.cmake)
-
-    if (UMPIRE_FOUND)
-        set(UMPIRE_DEPENDS )
-        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
-        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ${ENABLE_MPI})
-
-        blt_register_library( NAME      umpire
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${UMPIRE_INCLUDE_DIRS}
-                                LIBRARIES  ${UMPIRE_LIBRARY}
-                                DEPENDS_ON ${UMPIRE_DEPENDS})
-    else()
-        message(FATAL_ERROR "Unable to find Umpire with given path: ${UMPIRE_DIR}")
-    endif()
-else()
-    message(FATAL_ERROR "Umpire is required! Please set UMPIRE_DIR to a valid install of Umpire.")
 endif()
 
