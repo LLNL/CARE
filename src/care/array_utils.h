@@ -8,10 +8,6 @@
 #ifndef _CARE_ARRAY_UTILS_H_
 #define _CARE_ARRAY_UTILS_H_
 
-#ifdef __CUDACC__
-#define GPU_ACTIVE
-#endif
-
 // CARE config header
 #include "care/config.h"
 
@@ -1405,7 +1401,8 @@ inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T>
 inline void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
@@ -1416,7 +1413,8 @@ inline void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T, typename Exec>
 inline void ArrayCopy(Exec,
@@ -1430,7 +1428,8 @@ inline void ArrayCopy(Exec,
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T>
 inline void ArrayCopy(RAJA::seq_exec,
@@ -1444,15 +1443,20 @@ inline void ArrayCopy(RAJA::seq_exec,
 /************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
- * Purpose   : Duplicates a ManagedArray
+ * Purpose   : Duplicates a ManagedArray. If input is null or len 0, 
+ *             returns a nullptr (no allocation occurs).
  * ************************************************************************/
 template <typename T, typename Exec>
 inline care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len) {
-   care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
-   LOOP_STREAM(i, 0, len) {
-      newArray[i] = from[i];
-   } LOOP_STREAM_END
-   return newArray;
+   if (from == nullptr || len <= 0) { // don't make a new array for null input
+     return nullptr;
+   } else {
+     care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
+     LOOP_STREAM(i, 0, len) {
+        newArray[i] = from[i];
+     } LOOP_STREAM_END
+     return newArray;
+   }
 }
 
 //******************************************************************************
