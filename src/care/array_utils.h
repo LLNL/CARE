@@ -32,10 +32,10 @@ template <typename T>
 void ArrayFill(care::host_ptr<T> arr, int n, T val) ;
 
 template <typename T, typename Exec=RAJAExec>
-CARE_HOST_DEVICE T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
+T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
 
 template <typename T, typename Exec=RAJAExec>
-CARE_HOST_DEVICE T ArrayMin(care::host_device_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
+T ArrayMin(care::host_device_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
 
 template <typename T>
 CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
@@ -1243,29 +1243,32 @@ int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr
  *             Otherwise, returns 1.
  *             care::local_ptr API to support calls from within RAJA contexts.
  * ************************************************************************/
-template <typename T, typename ReducerType>
+template <typename T>
 CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax) {
    bool result = false;
-   ReducerType min, max;
+   // a previous implementation had min and max as a templated type and then used std::numeric_limits<T>::lowest() and 
+   // std::numeric_limits<ReducerType>::max() for initial values, but that is not valid on the device and results in 
+   // warnings and undefined behavior at runtime.
+   double min, max;
    if (arr) {
-      max =  std::numeric_limits<T>::lowest();
-      min =  std::numeric_limits<ReducerType>::max();
+      max =  -DBL_MAX; 
+      min =  DBL_MAX;
       if (mask) {
          for (int i = 0; i < n; ++i) {
             if (mask[i]) {
-               min = CARE_MIN(min, (ReducerType)arr[i]);
-               max = CARE_MAX(max, (ReducerType)arr[i]);
+               min = CARE_MIN(min, (double)arr[i]);
+               max = CARE_MAX(max, (double)arr[i]);
             }
          }
-         if (min!= std::numeric_limits<ReducerType>::max() ||
-             max != std::numeric_limits<ReducerType>::lowest()) {
+         if (min != DBL_MAX ||
+             max != -DBL_MAX) {
             result = true;
          }
       }
       else {
          for (int i = 0; i < n; ++i) {
-            min = CARE_MIN(min, (ReducerType)arr[i]);
-            max = CARE_MAX(max, (ReducerType)arr[i]);
+            min = CARE_MIN(min, (double)arr[i]);
+            max = CARE_MAX(max, (double)arr[i]);
          }
          result = true;
       }
@@ -1281,10 +1284,10 @@ CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<const T> arr, care::loca
    return (int) result;
 }
 
-template <typename T, typename ReducerType>
+template <typename T>
 CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax)
 {
-   return ArrayMinMax<T, ReducerType>((care::local_ptr<const T>)arr, (care::local_ptr<int const>)mask, n, outMin, outMax);
+   return ArrayMinMax<T>((care::local_ptr<const T>)arr, (care::local_ptr<int const>)mask, n, outMin, outMax);
 }
 
 /************************************************************************

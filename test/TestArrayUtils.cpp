@@ -421,17 +421,17 @@ GPU_TEST(array_utils, min_max_innerloop)
      care::local_ptr<int> arr7 = a[1];
      care::local_ptr<int> mask7 = a[2];
 
-     care_utils::ArrayMinMax<int, double>(arr7, nullptr, 7, min, max);
+     care_utils::ArrayMinMax<int>(arr7, nullptr, 7, min, max);
      if (min[0] != -2 && max[0] != 9) {
         passed.min(false);
      }
 
-     care_utils::ArrayMinMax<int, double>(arr7, mask7, 7, min, max);
+     care_utils::ArrayMinMax<int>(arr7, mask7, 7, min, max);
      if (min[0] != 0 && max[0] != 5) {
         passed.min(false);
      }
 
-     care_utils::ArrayMinMax<int, double>(arr1, nullptr, 1, min, max);
+     care_utils::ArrayMinMax<int>(arr1, nullptr, 1, min, max);
      if (min[0] != 2 && max[0] != 2) {
         passed.min(false);
      }
@@ -1180,8 +1180,57 @@ GPU_TEST(array_utils, dup_and_copy) {
   // NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
 }
 
-GPU_TEST(array_utils, intersectarrays) {
 
+GPU_TEST(array_utils, intersectarrays) {
+   int tempa[3] = {1, 2, 5};
+   int tempb[5] = {2, 3, 4, 5, 6};
+   int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
+   int tempd[9] = {1001, 1002, 2003, 3004, 4005, 5006, 6007, 7008, 8009};
+   int* nil = nullptr;
+   care::host_device_ptr<int> a(tempa);
+   care::host_device_ptr<int> b(tempb);
+   care::host_device_ptr<int> c(tempc);
+   care::host_device_ptr<int> d(tempd);
+
+   care::host_device_ptr<int> matches1, matches2;
+   int numMatches[1] = {77};
+
+   // nil test
+   care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, nil, 0, 0, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 0);
+
+   care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, b, 5, 0, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 3);
+   EXPECT_EQ(matches1.pick(0), 2);
+   EXPECT_EQ(matches1.pick(1), 3);
+   EXPECT_EQ(matches1.pick(2), 4);
+   EXPECT_EQ(matches2.pick(0), 0);
+   EXPECT_EQ(matches2.pick(1), 1);
+   EXPECT_EQ(matches2.pick(2), 4);
+
+   // introduce non-zero starting locations. In this case, matches are given as offsets from those starting locations
+   // and not the zero position of the arrays.
+   care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 3, b, 5, 1, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 2);
+   EXPECT_EQ(matches1.pick(0), 0);
+   EXPECT_EQ(matches1.pick(1), 1);
+   EXPECT_EQ(matches2.pick(0), 0);
+   EXPECT_EQ(matches2.pick(1), 3);
+
+   care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, b, 5, 0, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 2);
+   EXPECT_EQ(matches1.pick(0), 1);
+   EXPECT_EQ(matches1.pick(1), 2);
+   EXPECT_EQ(matches2.pick(0), 0);
+   EXPECT_EQ(matches2.pick(1), 3);
+
+   // offset one past the end
+   care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, b, 5, 98, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 0);
+
+   // no matches
+   care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
+   EXPECT_EQ(numMatches[0], 0);
 }
 
 #endif // __CUDACC__
