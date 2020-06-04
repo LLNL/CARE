@@ -326,8 +326,9 @@ inline void IntersectArrays(RAJAExec,
 
    LOOP_STREAM(i, 0, smaller) {
       if (searches[i] > -1) {
-         smallerMatches[matched[i]] = i + smallStart;
-         largerMatches[matched[i]] = searches[i];
+         // matches reported relative to smallStart and largeStart
+         smallerMatches[matched[i]] = i;
+         largerMatches[matched[i]] = searches[i] - largeStart;
       }
    } LOOP_STREAM_END
 
