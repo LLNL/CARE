@@ -18,8 +18,11 @@ using namespace care;
 using int_ptr = host_device_ptr<int>;
 
 CUDA_TEST(TestPacker, testFuseSort) {
+#if defined(__CUDACC__)
    care::initialize_pool("PINNED","PINNED_pool",chai::PINNED,128*1024*1024,128*1024*1024,true);
    care::initialize_pool("DEVICE","DEVICE_pool",chai::GPU,128*1024*1024,128*1024*1024,true);
+#endif
+
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);

@@ -21,8 +21,11 @@
 using int_ptr = chai::ManagedArray<int>;
 
 CUDA_TEST(Scan, test_scan_offset) {
+#if defined(__CUDACC__)
    care::initialize_pool("PINNED","PINNED_POOL",chai::PINNED,128*1024*1024,128*1024*1024,true);
    care::initialize_pool("DEVICE","DEVICE_POOL",chai::GPU,128*1024*1024,128*1024*1024,true);
+#endif
+
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
