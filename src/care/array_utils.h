@@ -1229,10 +1229,10 @@ int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, i
 template <typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
 
-//template <typename Exec>
-//int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
-//   return ArrayMinMax<globalID, GIDTYPE, Exec>(arr, mask, n, outMin, outMax);
-//}
+template <typename Exec>
+int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
+   return ArrayMinMax<globalID, GIDTYPE, Exec>(arr, mask, n, outMin, outMax);
+}
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
