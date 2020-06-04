@@ -19,8 +19,9 @@ using int_ptr = host_device_ptr<int>;
 
 CUDA_TEST(TestPacker, testFuseSort) {
 #if defined(__CUDACC__)
-   care::initialize_pool("PINNED","PINNED_pool",chai::PINNED,128*1024*1024,128*1024*1024,true);
-   care::initialize_pool("DEVICE","DEVICE_pool",chai::GPU,128*1024*1024,128*1024*1024,true);
+   int poolSize = 128*1024*1024; // 128 MB
+   care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
+   care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);
 #endif
 
    int N = 5; 
@@ -29,8 +30,7 @@ CUDA_TEST(TestPacker, testFuseSort) {
    LOOP_STREAM(i,0,N) {
       arr1[i] = N-1-i;
       arr2[i] = N+3-i;
-   }
-   LOOP_STREAM_END
+   } LOOP_STREAM_END
 
    SortFuser<int> sorter = SortFuser<int>();
    sorter.reset();
@@ -55,8 +55,7 @@ CUDA_TEST(TestPacker, testFuseUniq) {
    LOOP_STREAM(i,0,N) {
       arr1[i] = i - i%2;
       arr2[i] = i + N/2- i%2; 
-   }
-   LOOP_STREAM_END
+   } LOOP_STREAM_END
 
    int_ptr out1,out2;
    int len1, len2;
@@ -92,8 +91,7 @@ CUDA_TEST(TestPacker, testFuseSortUniq) {
       int i = N-1 -j;
       arr1[j] = i - i%2;
       arr2[j] = i + N/2- i%2; 
-   }
-   LOOP_STREAM_END
+   } LOOP_STREAM_END
 
    int_ptr out1,out2;
    int len1, len2;
