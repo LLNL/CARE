@@ -1162,10 +1162,10 @@ GPU_TEST(array_utils, intersectarrays) {
    int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
    int tempd[9] = {1001, 1002, 2003, 3004, 4005, 5006, 6007, 7008, 8009};
    int* nil = nullptr;
-   care::host_device_ptr<int> a(tempa);
-   care::host_device_ptr<int> b(tempb);
-   care::host_device_ptr<int> c(tempc);
-   care::host_device_ptr<int> d(tempd);
+   care::host_device_ptr<int> a(tempa, 3, "a");
+   care::host_device_ptr<int> b(tempb, 5, "b");
+   care::host_device_ptr<int> c(tempc, 7, "c");
+   care::host_device_ptr<int> d(tempd, 9, "d");
 
    care::host_device_ptr<int> matches1, matches2;
    int numMatches[1] = {77};
