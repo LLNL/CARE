@@ -104,7 +104,7 @@ namespace care {
       /// @author Peter Robinson
       /// @note   cannot make this CARE_HOST_DEVICE due to use of standard library.
       //          The test file TestArrayUtils.cpp gives a warning about calling a
-      //          __host__ function from a __host__ __device__ function when compiled on rzansel
+      //          __host__ function from a __host__ __device__ function when compiled on with CUDA.
       /// Construct from a chai::ManagedArray containing non-const elements
       ///
       template <bool B = std::is_const<T>::value,

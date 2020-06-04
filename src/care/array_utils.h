@@ -1220,7 +1220,7 @@ int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int co
 }
 
 template <typename T, typename ReducerType, typename RAJAExec>
-int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax) {
+inline int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax) {
  return ArrayMinMax<T, ReducerType, RAJAExec>((care::host_device_ptr<const T>)arr, (care::host_device_ptr<int const>)mask, n, outMin, outMax);
 }
 
@@ -1230,7 +1230,7 @@ template <typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
 
 template <typename Exec>
-int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
+inline int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
    return ArrayMinMax<globalID, GIDTYPE, Exec>(arr, mask, n, outMin, outMax);
 }
 
@@ -1380,13 +1380,21 @@ T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int c
  * ************************************************************************/
 template <typename T, typename Exec>
 inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
-   RAJAReduceMaxLoc<T> maxLoc { limit, -1 };
+   RAJAReduceMin<int> minIndexAboveLimit {n};
    LOOP_REDUCE(i, 0, n) {
-      maxLoc.maxloc(arr[i], i);
+     if ( arr[i] > limit) {
+          minIndexAboveLimit.min(i);
+      }
    } LOOP_REDUCE_END
-   return maxLoc.getLoc();
 
-   /* above is supposed to be equivalent to below sequenential code, but it isn't.
+   int result = (int)minIndexAboveLimit;
+   if (result >= n) {
+      return -1; // care typically returns -1 for invalid value
+   } else {
+      return result;
+   }
+
+   /* above is supposed to be equivalent to below sequential code.
    int i ;
    for (i=0 ; i<n ; ++i) {
       if (arr[i] > limit) {
@@ -1394,10 +1402,6 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
       }
    }
    return -1 ;
-
-   Note: It is  NOT equivalent to that code. The provided code finds the index which is the most above
-   the limit. for example, for an array [0, 1, 2, 3, 4] with limit 2, the sequential code returns 3 but the
-   LOOP_REDUCE implementation return 4.
    */
 }
 
@@ -1462,8 +1466,7 @@ inline void ArrayCopy(RAJA::seq_exec,
 /************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
- * Purpose   : Duplicates a ManagedArray. If input is nullptr, 
- *             returns a nullptr (no allocation occurs).
+ * Purpose   : Duplicates a ManagedArray.
  * ************************************************************************/
 template <typename T, typename Exec>
 inline care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len) {
