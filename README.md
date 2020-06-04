@@ -10,7 +10,7 @@ cmake -DBLT_SOURCE_DIR=/path/to/blt -DCHAI_DIR=/path/to/chai -DRAJA_DIR=/path/to
 make -j
 ```
 
-Note: CHAI must be built with -DENABLE\_PICK=ON.
+Note: CHAI must be built with `-DENABLE_PICK=ON -DENABLE_PINNED=ON`.
 
 For quick reference, the paths to CHAI, RAJA, and Umpire are the same as CMAKE\_INSTALL\_PREFIX when building those dependencies. That location defaults to /usr/local, but can be specified by passing `-DCMAKE_INSTALL_PREFIX=/desired/path` and running `make install`.
 
