@@ -66,14 +66,21 @@ else()
         )
 endif()
 
-if (LLNL_GLOBALID_DIR)
+if (LLNL_GLOBALID_FOUND)
    list (APPEND care_depends llnl_globalid)
 endif()
 
 if (ENABLE_CUDA)
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
-   list(APPEND care_depends basil)
+   if (BASIL_FOUND)
+      list(APPEND care_depends basil)
+   endif()
+
+   if (NVTOOLSEXT_FOUND)
+      list(APPEND care_depends nvtoolsext)
+   endif()
+
    list(APPEND care_depends cuda)
 endif()
 
