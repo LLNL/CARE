@@ -5,12 +5,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
 #define GPU_ACTIVE
-// This asserts a crash on the GPU, but does not mark gtest as passing.
-#define GPU_FAIL(code) ASSERT_DEATH(code, "")
-#else
-#define GPU_FAIL(code) code
 #endif
 
 // other library headers
@@ -18,6 +14,13 @@
 
 // care headers
 #include "care/care.h"
+
+#if defined(__CUDACC__) && GTEST_HAS_DEATH_TEST
+// This asserts a crash on the GPU, but does not mark gtest as passing.
+#define GPU_FAIL(code) ASSERT_DEATH(code, "")
+#else
+#define GPU_FAIL(code) code
+#endif
 
 // This makes it so we can use device lambdas from within a CUDA_TEST
 #define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
