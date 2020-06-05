@@ -77,21 +77,21 @@ namespace care {
 
    template <typename T,
              typename std::enable_if<detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   void print(std::ostream& os, const T& obj)
+   inline void print(std::ostream& os, const T& obj)
    {
       os << obj;
    }
 
    template <typename T,
              typename std::enable_if<!detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   void print(std::ostream& os, const T& obj)
+   inline void print(std::ostream& os, const T& obj)
    {
       os << "operator<< is not supported for type " << typeid(obj).name();
    }
 
    template <typename T,
              typename std::enable_if<detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   void print(std::ostream& os, const T* array, size_t size)
+   inline void print(std::ostream& os, const T* array, size_t size)
    {
       // Write out size
       os << "[CARE] Size: " << size << std::endl;
@@ -124,7 +124,7 @@ namespace care {
 
    template <typename T,
              typename std::enable_if<!detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   void print(std::ostream& os, const T* /* array */, size_t size)
+   inline void print(std::ostream& os, const T* /* array */, size_t size)
    {
       // Write out size
       os << "[CARE] Size: " << size << std::endl;
