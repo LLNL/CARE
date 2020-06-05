@@ -17,8 +17,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 // CARE headers
-#include "care/CHAIDataGetter.h"
-#include "care/CUDAWatchpoint.h"
 #include "care/policies.h"
 #include "care/RAJAPlugin.h"
 #include "care/util.h"
@@ -67,7 +65,7 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
-         care::RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+         RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
          RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
@@ -75,7 +73,7 @@ namespace care {
          RAJA::forall<ExecutionPolicy>(RAJA::RangeSegment(start, end), body);
 #endif
 
-         care::RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+         RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
       }
    }
 

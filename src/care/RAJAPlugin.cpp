@@ -15,7 +15,7 @@
 #include "chai/ArrayManager.hpp"
 
 /* CUDA profiling macros */
-#ifdef __CUDACC__
+#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
 #include "nvToolsExt.h"
 #endif
 
@@ -78,6 +78,7 @@ namespace care {
          }
       }
 
+#if CARE_HAVE_NVTOOLSEXT
       // Profile the host loops
       if (s_profile_host_loops) {
          if (space == chai::CPU) {
@@ -97,6 +98,7 @@ namespace care {
             nvtxRangePushEx(&eventAttrib);
          }
       }
+#endif // CARE_HAVE_NVTOOLSEXT
 #endif // defined(__CUDACC__)
    }
 
@@ -183,12 +185,14 @@ namespace care {
 
    void RAJAPlugin::post_forall_hook(chai::ExecutionSpace space, const char* fileName, int lineNumber) {
 #if defined(__CUDACC__)
+#if CARE_HAVE_NVTOOLSEXT
       if (s_profile_host_loops) {
          if (space == chai::CPU) {
             // TODO: Add error checking
             nvtxRangePop();
          }
       }
+#endif // CARE_HAVE_NVTOOLSEXT
 
       if (s_synchronize_after) {
          if (space == chai::GPU) {
