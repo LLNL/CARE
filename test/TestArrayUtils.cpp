@@ -21,9 +21,10 @@
 // Array Fill Tests
 TEST(array_utils, fill_empty)
 {
-   care::host_ptr<int> a;
+   care::host_ptr<int> a = nullptr;
  
    care_utils::ArrayFill<int>(a, 0, -12);
+   EXPECT_EQ(a, nullptr);
 }
 
 TEST(array_utils, fill_one)
@@ -230,12 +231,10 @@ GPU_TEST(array_utils, min_innerloop)
   care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
   care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
 
-  care::host_device_ptr<int> a[2] = {ind0, ind1};
-
   RAJAReduceMin<bool> passed{true};
   LOOP_REDUCE(i, 0, 1) {
-     care::local_ptr<int> arr0 = a[0];
-     care::local_ptr<int> arr1 = a[1];
+     care::local_ptr<int> arr0 = ind0;
+     care::local_ptr<int> arr1 = ind1;
 
      // min of entire array arr0
      int result = care_utils::ArrayMin<int>(arr0, 7, 99, 0);
@@ -323,12 +322,10 @@ GPU_TEST(array_utils, max_innerloop)
   care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
   care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
 
-  care::host_device_ptr<int> a[2] = {ind0, ind1};
-
   RAJAReduceMin<bool> passed{true};
   LOOP_REDUCE(i, 0, 1) {
-     care::local_ptr<int> arr0 = a[0];
-     care::local_ptr<int> arr1 = a[1];
+     care::local_ptr<int> arr0 = ind0;
+     care::local_ptr<int> arr1 = ind1;
 
      // max of entire array arr0
      int result = care_utils::ArrayMax<int>(arr0, 7, -1);
@@ -419,21 +416,19 @@ GPU_TEST(array_utils, min_max_innerloop)
   // tests for the local_ptr version of minmax
   int vals1[1] = {2};
   int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
-  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
+  int valsmask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
 
-  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
+  care::host_device_ptr<int> mask(valsmask7, 7, "skippedvals");
   care::host_device_ptr<int> a1(vals1, 1, "minmax1");
   care::host_device_ptr<int> a7(vals7, 7, "minmax7");
-
-  care::host_device_ptr<int> a[3] = {a1, a7, mask};
 
   RAJAReduceMin<bool> passed{true};
   LOOP_REDUCE(i, 0, 1) {
      double min[1] = {-1};
      double max[1] = {-1};
-     care::local_ptr<int> arr1 = a[0];
-     care::local_ptr<int> arr7 = a[1];
-     care::local_ptr<int> mask7 = a[2];
+     care::local_ptr<int> arr1 = a1;
+     care::local_ptr<int> arr7 = a7;
+     care::local_ptr<int> mask7 = mask;
 
      care_utils::ArrayMinMax<int>(arr7, nullptr, 7, min, max);
      if (min[0] != -2 && max[0] != 9) {
@@ -885,9 +880,11 @@ GPU_TEST(array_utils, pickperformfindmin)
   EXPECT_EQ(threshIdx[0], 4); // this is the index in the subset
 
   // change the cutoff
+  // CURRENTLY TEST GIVES DIFFERENT RESULTS WHEN COMPILED RELEASE VS DEBUG!!!
   cutoff = 5.0;
   result = care_utils::PickAndPerformFindMinIndex<int>(a, nullptr, subsetrev, 7, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, -1); // this is the index in the original array
+  EXPECT_EQ(threshIdx[0], -1);
 
   // len 3 subset
   cutoff = 5.0;

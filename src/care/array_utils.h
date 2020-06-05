@@ -1594,7 +1594,6 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
                                       int * thresholdIndex)
 {
    int  ndx = -1 ;
-   ndx = -1;
    if (thresholds) {
       RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), -1 };
       RAJAReduceMinLoc<T> thresholdmin { std::numeric_limits<T>::max(), -1 };
