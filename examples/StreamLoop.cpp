@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////////////
+
 // This macro needs to be defined before including care/care.h,
 // which allows you to port a file at a time. Without this define,
 // LOOP_STREAM will run on the CPU. With this define, LOOP_STREAM
