@@ -7,7 +7,16 @@
 
 cmake_minimum_required(VERSION 3.4)
 
-project(care)
+project(care LANGUAGES CXX)
+
+################################
+# Build options
+################################
+set(ENABLE_CUDA OFF CACHE BOOL "Build CUDA support")
+set(ENABLE_OPENMP OFF CACHE BOOL "Build OpenMP support")
+set(ENABLE_TESTS ON CACHE BOOL "Build tests")
+set(ENABLE_BENCHMARKS ON CACHE BOOL "Build benchmarks")
+set(ENABLE_DOCUMENTATION ON CACHE BOOL "Build documentation")
 
 ################################
 # BLT
@@ -26,10 +35,26 @@ endif()
 
 include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
+################################
+# Set up compiler flags
+################################
+if (ENABLE_CUDA)
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch=sm_35")
+endif()
+
+################################
+# Set up dependencies
+################################
 include(cmake/SetupLibraries.cmake)
 
+################################
+# Build CARE library
+################################
 add_subdirectory(src)
 
+################################
+# Build CARE extras
+################################
 if (ENABLE_TESTS)
    add_subdirectory(test)
 endif()
