@@ -17,6 +17,7 @@ set(ENABLE_OPENMP OFF CACHE BOOL "Build OpenMP support")
 set(ENABLE_TESTS ON CACHE BOOL "Build tests")
 set(ENABLE_BENCHMARKS ON CACHE BOOL "Build benchmarks")
 set(ENABLE_DOCUMENTATION ON CACHE BOOL "Build documentation")
+set(ENABLE_EXAMPLES ON CACHE BOOL "Build examples")
 
 ################################
 # BLT
@@ -65,5 +66,9 @@ endif()
 
 if (ENABLE_DOCUMENTATION)
    add_subdirectory(docs)
+endif ()
+
+if (ENABLE_EXAMPLES)
+   add_subdirectory(examples)
 endif ()
 
