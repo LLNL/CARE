@@ -12,6 +12,7 @@
 #include <benchmark/benchmark.h>
 
 // CARE headers
+#include "care/care.h"
 #include "care/numeric.h"
 
 static void benchmark_std_iota(benchmark::State& state) {
