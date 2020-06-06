@@ -34,23 +34,44 @@ void ArrayFill(care::host_ptr<T> arr, int n, T val) ;
 template <typename T, typename Exec=RAJAExec>
 T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
 
+template <typename T, typename Exec=RAJAExec>
+T ArrayMin(care::host_device_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
+
 template <typename T>
 CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
 
+template <typename T>
+CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
+
 template <typename T, typename Exec=RAJAExec>
 T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal);
+
+template <typename T, typename Exec=RAJAExec>
+T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal);
 
 template <typename T>
 CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<const T> arr, int n, T initVal);
 
 template <typename T>
+CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<T> arr, int n, T initVal);
+
+template <typename T>
 T ArrayMax(care::host_ptr<const T> arr, int n, T initVal);
+
+template <typename T>
+T ArrayMax(care::host_ptr<T> arr, int n, T initVal);
 
 template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
 
+template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
+int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax);
+
 template <typename T>
-int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax);
+CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax);
+
+template <typename T>
+CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax);
 
 template <typename T, typename Exec=RAJAExec>
 T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc);
@@ -225,12 +246,14 @@ inline void IntersectArrays(Exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
  *             of indices in the second array.
  *             This is the parallel overload of this method.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 #ifdef RAJA_PARALLEL_ACTIVE
 template <typename ArrayType>
@@ -252,7 +275,7 @@ inline void IntersectArrays(RAJAExec,
       matches2.alloc(smaller);
    }
 
-   /* This algorithm assumes that the nodelists are sorted */
+   /* This algorithm assumes that the nodelists are sorted and unique */
 #ifdef CARE_DEBUG
    bool checkIsSorted = true ;
 #else
@@ -262,6 +285,7 @@ inline void IntersectArrays(RAJAExec,
    if (checkIsSorted) {
       const char* funcname = "IntersectArrays" ;
 
+      // allowDuplicates is false for these checks by default.
       checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
       checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
    }
@@ -302,8 +326,9 @@ inline void IntersectArrays(RAJAExec,
 
    LOOP_STREAM(i, 0, smaller) {
       if (searches[i] > -1) {
-         smallerMatches[matched[i]] = i + smallStart;
-         largerMatches[matched[i]] = searches[i];
+         // matches reported relative to smallStart and largeStart
+         smallerMatches[matched[i]] = i;
+         largerMatches[matched[i]] = searches[i] - largeStart;
       }
    } LOOP_STREAM_END
 
@@ -348,12 +373,14 @@ inline void IntersectArrays(RAJAExec exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
- *             of indices in the second array.
+ *             of indices in the second array. 
  *             This is the sequential overload of this method, with a care::host_ptr API.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  * Note      : The raw pointers contained in matches1 and matches2
  *             should be deallocated by the caller using free.
  ************************************************************************/
@@ -376,7 +403,7 @@ inline void IntersectArrays(RAJA::seq_exec,
       matches2 = (int*) std::malloc(smaller * sizeof(int));
    }
 
-   /* This algorithm assumes that the nodelists are sorted */
+   /* This algorithm assumes that the nodelists are sorted and unique */
 #ifdef CARE_DEBUG
    bool checkIsSorted = true ;
 #else
@@ -386,6 +413,7 @@ inline void IntersectArrays(RAJA::seq_exec,
    if (checkIsSorted) {
       const char* funcname = "IntersectArrays" ;
 
+      // allowDuplicates is false for this check by default
       checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
       checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
    }
@@ -447,12 +475,14 @@ inline void IntersectArrays(RAJA::seq_exec exec,
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
  * Author(s) : Peter Robinson
- * Purpose   : Given two arrays of type A sorted in  ascending order, this
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
  *             routine returns the number of matching elements, and
  *             two arrays of indices: the indices in the first array
  *             at which intersection occurs, and the corresponding set
  *             of indices in the second array.
  *             This is the sequential overload of this method, with a host_device pointer API.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 template <typename ArrayType>
 inline void IntersectArrays(RAJA::seq_exec exec,
@@ -519,7 +549,8 @@ inline int BinarySearch(const T *map, const int start,
       return -1 ;
    }
 #ifdef CARE_DEBUG
-   checkSorted(&(map[start]), mapSize, "BinarySearch", "map") ;
+   const bool allowDuplicates = true;
+   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates) ;
 #endif
 
    while (khi-klo > 1) {
@@ -549,6 +580,12 @@ inline int BinarySearch(const T *map, const int start,
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
+         // Note: fix for last test in TEST(array_utils, binarysearch). This algorithm has failed to pick up the upper
+         // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
+         while (map[khi] == num && khi < start + mapSize) {
+            ++khi;
+         }
+
          // the upper option bounds num
          if (map[khi] > num) {
             return khi;
@@ -1001,6 +1038,11 @@ inline T ArrayMin(care::host_device_ptr<const T> arr, int n, T initVal, int star
    return (T)min;
 }
 
+template <typename T, typename Exec>
+inline T ArrayMin(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)  {
+   return ArrayMin<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
+}
+
 template <typename T>
 inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int n, T initVal, int startIndex)  {
    T min = initVal;
@@ -1008,6 +1050,11 @@ inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int n, T initVa
       min = CARE_MIN(min, arr[k]);
    }
    return min;
+}
+
+template <typename T>
+inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int n, T initVal, int startIndex)  {
+   return ArrayMin<T>((care::local_ptr<const T>)arr, n, initVal, startIndex);
 }
 
 /************************************************************************
@@ -1054,6 +1101,11 @@ inline T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal)  {
    return (T)max;
 }
 
+template <typename T, typename Exec>
+inline T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal);;
+}
+
 /************************************************************************
  * Function  : ArrayMax
  * Author(s) : Peter Robinson
@@ -1066,6 +1118,11 @@ CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<const T> arr, int n, T initVa
       max = CARE_MAX(max, arr[k]);
    }
    return max;
+}
+
+template <typename T>
+CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T>((care::local_ptr<const T>)arr, n, initVal);
 }
 
 /************************************************************************
@@ -1104,6 +1161,11 @@ int ArrayFind(care::host_device_ptr<const T> arr, const int len, const T val, co
 template <typename T>
 inline T ArrayMax(care::host_ptr<const T> arr, int n, T initVal)  {
    return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>((const T *) arr, n, "ArrayMaxTmp"), n, initVal);
+}
+
+template <typename T>
+inline T ArrayMax(care::host_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T>((care::host_ptr<const T>)arr, n, initVal);
 }
 
 /************************************************************************
@@ -1156,13 +1218,18 @@ int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int co
    return (int) result;
 }
 
+template <typename T, typename ReducerType, typename RAJAExec>
+inline int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax) {
+ return ArrayMinMax<T, ReducerType, RAJAExec>((care::host_device_ptr<const T>)arr, (care::host_device_ptr<int const>)mask, n, outMin, outMax);
+}
+
 #if CARE_HAVE_LLNL_GLOBALID
 
 template <typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
 
 template <typename Exec>
-int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
+inline int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
    return ArrayMinMax<globalID, GIDTYPE, Exec>(arr, mask, n, outMin, outMax);
 }
 
@@ -1176,29 +1243,32 @@ int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr
  *             Otherwise, returns 1.
  *             care::local_ptr API to support calls from within RAJA contexts.
  * ************************************************************************/
-template <typename T, typename ReducerType>
-inline int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax) {
+template <typename T>
+CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax) {
    bool result = false;
-   ReducerType min, max;
+   // a previous implementation had min and max as a templated type and then used std::numeric_limits<T>::lowest() and 
+   // std::numeric_limits<ReducerType>::max() for initial values, but that is not valid on the device and results in 
+   // warnings and undefined behavior at runtime.
+   double min, max;
    if (arr) {
-      max =  std::numeric_limits<T>::lowest();
-      min =  std::numeric_limits<ReducerType>::max();
+      max =  -DBL_MAX; 
+      min =  DBL_MAX;
       if (mask) {
          for (int i = 0; i < n; ++i) {
             if (mask[i]) {
-               min = CARE_MIN(min, (ReducerType)arr[i]);
-               max = CARE_MAX(max, (ReducerType)arr[i]);
+               min = CARE_MIN(min, (double)arr[i]);
+               max = CARE_MAX(max, (double)arr[i]);
             }
          }
-         if (min!= std::numeric_limits<ReducerType>::max() ||
-             max != std::numeric_limits<ReducerType>::lowest()) {
+         if (min != DBL_MAX ||
+             max != -DBL_MAX) {
             result = true;
          }
       }
       else {
          for (int i = 0; i < n; ++i) {
-            min = CARE_MIN(min, (ReducerType)arr[i]);
-            max = CARE_MAX(max, (ReducerType)arr[i]);
+            min = CARE_MIN(min, (double)arr[i]);
+            max = CARE_MAX(max, (double)arr[i]);
          }
          result = true;
       }
@@ -1212,6 +1282,12 @@ inline int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> 
       *outMax = +DBL_MAX;
    }
    return (int) result;
+}
+
+template <typename T>
+CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax)
+{
+   return ArrayMinMax<T>((care::local_ptr<const T>)arr, (care::local_ptr<int const>)mask, n, outMin, outMax);
 }
 
 /************************************************************************
@@ -1247,6 +1323,7 @@ inline T ArraySum(care::host_device_ptr<const T> arr, int n, T initVal)  {
  * Function  : ArraySumSubset
  * Author(s) : Peter Robinson
  * Purpose   : Returns the sum of values in arr at indices in subset.
+ * Note      : length n refers to length of subset, not array
  * ************************************************************************/
 template <typename T, typename ReduceType, typename Exec>
 inline T ArraySumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int n, T initVal) {
@@ -1302,13 +1379,21 @@ T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int c
  * ************************************************************************/
 template <typename T, typename Exec>
 inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
-   RAJAReduceMaxLoc<T> maxLoc { limit, -1 };
+   RAJAReduceMin<int> minIndexAboveLimit {n};
    LOOP_REDUCE(i, 0, n) {
-      maxLoc.maxloc(arr[i], i);
+     if ( arr[i] > limit) {
+          minIndexAboveLimit.min(i);
+      }
    } LOOP_REDUCE_END
-   return maxLoc.getLoc();
 
-   /* above is supposed to be equivalent to below sequenential code:
+   int result = (int)minIndexAboveLimit;
+   if (result >= n) {
+      return -1; // care typically returns -1 for invalid value
+   } else {
+      return result;
+   }
+
+   /* above is supposed to be equivalent to below sequential code.
    int i ;
    for (i=0 ; i<n ; ++i) {
       if (arr[i] > limit) {
@@ -1327,7 +1412,7 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
  * ************************************************************************/
 template <typename T, typename Exec>
 inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
-   RAJAReduceMaxLoc<T> maxLoc { -FLT_MAX, -1 };
+   RAJAReduceMaxLoc<T> maxLoc { std::numeric_limits<T>::lowest(), -1 };
    LOOP_REDUCE(i, 0, n) {
       maxLoc.maxloc(arr[i], i);
    } LOOP_REDUCE_END
@@ -1338,7 +1423,8 @@ inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T>
 inline void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
@@ -1349,7 +1435,8 @@ inline void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T, typename Exec>
 inline void ArrayCopy(Exec,
@@ -1363,7 +1450,8 @@ inline void ArrayCopy(Exec,
 /************************************************************************
  * Function  : ArrayCopy
  * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another.
+ * Purpose   : Copies from one ManagedArray into another. from and to
+ *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
 template<typename T>
 inline void ArrayCopy(RAJA::seq_exec,
@@ -1377,15 +1465,19 @@ inline void ArrayCopy(RAJA::seq_exec,
 /************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
- * Purpose   : Duplicates a ManagedArray
+ * Purpose   : Duplicates a ManagedArray.
  * ************************************************************************/
 template <typename T, typename Exec>
 inline care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len) {
-   care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
-   LOOP_STREAM(i, 0, len) {
-      newArray[i] = from[i];
-   } LOOP_STREAM_END
-   return newArray;
+   if (from == nullptr) { // don't make a new array for null input
+     return nullptr;
+   } else {
+     care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
+     LOOP_STREAM(i, 0, len) {
+        newArray[i] = from[i];
+     } LOOP_STREAM_END
+     return newArray;
+   }
 }
 
 //******************************************************************************
@@ -1489,7 +1581,9 @@ int FindIndexMinSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @param subset     : The subset of arr to find the min value for.
 // @param lenset     : Length of subset.
 // @param thresholds : If thresholds is not nullptr, only look at indices where
-//                     thresholds is above cutoff. length >= max(subset[0:lenset])
+//                     thresholds is above cutoff. length >= max(subset[0:lenset]).
+//                     Indexing of thresholds corresponds to the the subset,
+//                     not of the original array arr.
 // @cutoff           : The cutoff value described above.
 // @thresholdIndex   : (out) the index of the threshold array used for the min vale.
 //
@@ -1499,14 +1593,12 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
                                       int * thresholdIndex)
 {
    int  ndx = -1 ;
-   ndx = -1;
    if (thresholds) {
       RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), -1 };
       RAJAReduceMinLoc<T> thresholdmin { std::numeric_limits<T>::max(), -1 };
       LOOP_REDUCE(i, 0, lenset) {
          int curr = subset[i] ;
-
-         if (thresholds[i] > cutoff) {
+         if (thresholds[i] > cutoff) { // if threshold were sized as arr, this would be thresholds[curr]
             min.minloc(arr[curr], curr);
             thresholdmin.minloc(arr[curr], i);
          }
@@ -1530,6 +1622,10 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
 // @param mask nullptr or Same length as arr, 1 for indices to ignore, 0 otherwise
 // @param subset nullptr or length n, the indices of arr to include in the min search
 //
+// @note: threshold had length and indexing corresponding to the subset while mask
+//        has length and index corresponding to arr
+// @note: even if an element is masked off, thresholdIndex may still be set (if a threshold
+//        is provided), just the returned value will be -1.
 template<typename T, typename Exec>
 int PickAndPerformFindMinIndex(care::host_device_ptr<const T> arr,
                                care::host_device_ptr<int const> mask,
@@ -1615,7 +1711,8 @@ int FindIndexMaxSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @param subset     : The subset of arr to find the max value for.
 // @param lenset     : Length of subset.
 // @param thresholds : If thresholds is not nullptr, only look at indices where
-//                     thresholds is above cutoff. length >= max(subset[0:lenset])
+//                     thresholds is above cutoff. length >= max(subset[0:lenset]).
+//                     Indexing corresponds to subset, the the array arr.
 // @cutoff           : The cutoff value described above.
 // @thresholdIndex   : (out) the index of the threshold array used for the max vale.
 //
@@ -1656,6 +1753,10 @@ int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
 // @param mask nullptr or Same length as arr, 1 for indices to ignore, 0 otherwise
 // @param subset nullptr or length n, the indices of arr to include in the max search
 //
+// @note: threshold had length and indexing corresponding to the subset while mask
+//        has length and index corresponding to arr
+// @note: even if an element is masked off, thresholdIndex may still be set (if a threshold
+//        is provided), just the returned value will be -1.
 template<typename T, typename Exec>
 int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
                                care::host_device_ptr<int const> mask,
