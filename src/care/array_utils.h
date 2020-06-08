@@ -265,7 +265,7 @@ inline void IntersectArrays(RAJAExec,
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller == 0) {
+   if (smaller == 0 || start1 >= size1 || start2 >= size2) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;
@@ -393,7 +393,7 @@ inline void IntersectArrays(RAJA::seq_exec,
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller == 0) {
+   if (smaller <= 0 || start1 >= size1 || start2 >= size2) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;
@@ -582,12 +582,12 @@ inline int BinarySearch(const T *map, const int start,
       if (khi < start + mapSize) {
          // Note: fix for last test in TEST(array_utils, binarysearch). This algorithm has failed to pick up the upper
          // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
-         while (map[khi] == num && khi < start + mapSize) {
+         while ((khi < start + mapSize) && (map[khi] == num)) {
             ++khi;
          }
 
          // the upper option bounds num
-         if (map[khi] > num) {
+         if ((khi < start + mapSize) && (map[khi] > num)) {
             return khi;
          }
          // neither the upper or lower option bound num

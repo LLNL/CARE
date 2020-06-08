@@ -88,6 +88,7 @@ TEST(array_utils, binarysearch) {
    int* nil = nullptr;
    int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
    int  b[7] = {0, 1, 1, 1, 1, 1, 6};       // sorted with duplicates
+   int  c[7] = {1, 1, 1, 1, 1, 1, 1};       // uniform array edge case.
    int result = 0;
   
    // nil test
@@ -121,6 +122,10 @@ TEST(array_utils, binarysearch) {
    // turn on upper bound, should ge the value after all of the ones.
    result = care_utils::BinarySearch<int>(b, 0, 7, 1, true);
    EXPECT_EQ(result, 6);
+
+   // check upper bound on uniform arrary as an edge case
+   result = care_utils::BinarySearch<int>(c, 0, 7, 1, true);
+   EXPECT_EQ(result, -1);
 }
 
 TEST(array_utils, intersectarrays) {
