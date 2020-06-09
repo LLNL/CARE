@@ -53,7 +53,9 @@ int main(int, char**) {
    // Set the size
    int size2 = 1000;
 
-   // Allocate memory on the host and device using a CARE wrapper around a CHAI container
+   // Allocate memory on the host and device using a CARE wrapper around a CHAI container.
+   // This object can be used on both the host and device, so it can be used in a
+   // LOOP_STREAM. Raw arrays should not be used inside a LOOP_STREAM.
    care::host_device_ptr<int> data2(size2);
 
    // Set a conditional
