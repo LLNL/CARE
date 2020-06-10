@@ -7,16 +7,18 @@
 
 cmake_minimum_required(VERSION 3.4)
 
-project(care LANGUAGES CXX)
+project(care LANGUAGES CXX CUDA)
 
 ################################
 # Build options
 ################################
+set(ENABLE_MPI OFF CACHE BOOL "Build MPI support")
 set(ENABLE_CUDA OFF CACHE BOOL "Build CUDA support")
 set(ENABLE_OPENMP OFF CACHE BOOL "Build OpenMP support")
 set(ENABLE_TESTS ON CACHE BOOL "Build tests")
 set(ENABLE_BENCHMARKS ON CACHE BOOL "Build benchmarks")
 set(ENABLE_DOCUMENTATION ON CACHE BOOL "Build documentation")
+set(ENABLE_EXAMPLES ON CACHE BOOL "Build examples")
 
 ################################
 # BLT
@@ -39,6 +41,8 @@ include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 # Set up compiler flags
 ################################
 if (ENABLE_CUDA)
+   set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc" CACHE PATH "")
+   set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch=sm_35")
 endif()
 
@@ -65,5 +69,9 @@ endif()
 
 if (ENABLE_DOCUMENTATION)
    add_subdirectory(docs)
+endif ()
+
+if (ENABLE_EXAMPLES)
+   add_subdirectory(examples)
 endif ()
 
