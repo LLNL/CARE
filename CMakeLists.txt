@@ -7,13 +7,14 @@
 
 cmake_minimum_required(VERSION 3.4)
 
-project(care LANGUAGES CXX CUDA)
+project(care LANGUAGES CXX)
 
 ################################
 # Build options
 ################################
 set(ENABLE_MPI OFF CACHE BOOL "Build MPI support")
 set(ENABLE_CUDA OFF CACHE BOOL "Build CUDA support")
+set(ENABLE_HIP Off CACHE BOOL "Enable HIP")
 set(ENABLE_OPENMP OFF CACHE BOOL "Build OpenMP support")
 set(ENABLE_TESTS ON CACHE BOOL "Build tests")
 set(ENABLE_BENCHMARKS ON CACHE BOOL "Build benchmarks")

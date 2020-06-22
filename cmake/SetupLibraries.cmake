@@ -39,6 +39,7 @@ if (UMPIRE_DIR)
         blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
         blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ${ENABLE_MPI})
 
+        message(STATUS "UMPIRE_INCLUDE_DIRS ${UMPIRE_INCLUDE_DIRS}")
         blt_register_library( NAME      umpire
                                 TREAT_INCLUDES_AS_SYSTEM ON
                                 INCLUDES   ${UMPIRE_INCLUDE_DIRS}
@@ -126,6 +127,7 @@ if (RAJA_DIR)
     if (RAJA_FOUND)
         set(RAJA_DEPENDS )
         blt_list_append(TO RAJA_DEPENDS ELEMENTS cub IF ${CUB_FOUND})
+        message(STATUS "RAJA_INCLUDE_DIRS ${RAJA_INCLUDE_DIRS}")
 
         blt_register_library( NAME       raja
                               TREAT_INCLUDES_AS_SYSTEM ON

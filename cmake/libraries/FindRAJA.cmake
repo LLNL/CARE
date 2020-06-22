@@ -20,8 +20,12 @@ if(NOT RAJA_DIR)
 endif()
 
 # give cmake the install prefix to RAJA cmake target
-list(APPEND CMAKE_PREFIX_PATH ${RAJA_DIR})
+set(raja_DIR ${RAJA_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${raja_DIR})
 find_package(RAJA REQUIRED)
 
 set(RAJA_LIBRARY RAJA)
+if(NOT RAJA_INCLUDE_DIRS)
+    set(RAJA_INCLUDE_DIRS "${raja_DIR}/include")
+endif()
 

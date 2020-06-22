@@ -16,6 +16,9 @@ For quick reference, the paths to CHAI, RAJA, and Umpire are the same as CMAKE\_
 
 To build with CUDA support, use `-DENABLE_CUDA -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit`. CHAI, RAJA, and Umpire must also be built with those options.
 
+To build with HIP, use `-DENABLE_HIP`. RAJA, CHAI, and UMPIRE must also be build with this option. 
+Also do `module load opt`, `module load rocm`, and `setenv HCC_AMDGPU_TARGET gfx900`.
+
 To build with OpenMP support, use `-DENABLE_OPENMP`. RAJA must also be built with that option.
 
 License
