@@ -26,6 +26,7 @@ option(ENABLE_EXAMPLES "Build examples" ON)
 
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
+set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")
 
 ################################
 # BLT
@@ -44,7 +45,7 @@ else()
     set(BLT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/blt")
 
     if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-       message(FATAL_ERROR "BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR.")
+       message(FATAL_ERROR "BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR to external BLT.")
     endif()
 endif()
 
