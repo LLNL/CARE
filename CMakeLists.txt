@@ -7,32 +7,45 @@
 
 cmake_minimum_required(VERSION 3.4)
 
-project(care LANGUAGES CXX CUDA)
+project(care LANGUAGES CXX)
 
 ################################
 # Build options
 ################################
-set(ENABLE_MPI OFF CACHE BOOL "Build MPI support")
-set(ENABLE_CUDA OFF CACHE BOOL "Build CUDA support")
-set(ENABLE_OPENMP OFF CACHE BOOL "Build OpenMP support")
-set(ENABLE_TESTS ON CACHE BOOL "Build tests")
-set(ENABLE_BENCHMARKS ON CACHE BOOL "Build benchmarks")
-set(ENABLE_DOCUMENTATION ON CACHE BOOL "Build documentation")
-set(ENABLE_EXAMPLES ON CACHE BOOL "Build examples")
+
+# Configuration options
+option(ENABLE_MPI "Build MPI support" OFF)
+option(ENABLE_CUDA "Build CUDA support" OFF)
+option(ENABLE_OPENMP "Build OpenMP support" OFF)
+
+# Extra components
+option(ENABLE_TESTS "Build tests" ON)
+option(ENABLE_BENCHMARKS "Build benchmarks" ON)
+option(ENABLE_DOCUMENTATION "Build documentation" ON)
+option(ENABLE_EXAMPLES "Build examples" ON)
+
+# Dependencies
+set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
 ################################
 # BLT
 ################################
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
-if (DEFINED BLT_SOURCE_DIR)
-    # Support having a shared BLT outside of the repository if given a BLT_SOURCE_DIR
+if (BLT_SOURCE_DIR)
+    message(STATUS "Using external BLT")
 
     if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
         message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
     endif()
 else()
-   message(FATAL_ERROR "BLT_SOURCE_DIR not defined")
+    message(STATUS "Using BLT submodule")
+
+    set(BLT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/blt")
+
+    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
+       message(FATAL_ERROR "BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR.")
+    endif()
 endif()
 
 include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
