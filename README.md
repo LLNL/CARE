@@ -6,7 +6,8 @@ Getting Started
 ===============
 ```bash
 mkdir build && cd build
-cmake -DBLT_SOURCE_DIR=/path/to/blt -DCHAI_DIR=/path/to/chai -DRAJA_DIR=/path/to/raja -DUMPIRE_DIR=/path/to/umpire ../
+git submodule update --init
+cmake -DCHAI_DIR=/path/to/chai -DRAJA_DIR=/path/to/raja -DUMPIRE_DIR=/path/to/umpire ../
 make -j
 ```
 
