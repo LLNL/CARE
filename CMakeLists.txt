@@ -18,6 +18,12 @@ option(ENABLE_MPI "Build MPI support" OFF)
 option(ENABLE_CUDA "Build CUDA support" OFF)
 option(ENABLE_OPENMP "Build OpenMP support" OFF)
 
+# Advanced configuration options
+# TODO: If these are disabled, the code will not compile or run correctly.
+#       Fix those issues so that these options are actually configurable.
+option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
+option(ENABLE_PINNED "Enable pinned memory space (used for scans)" ON)
+
 # Extra components
 option(ENABLE_TESTS "Build tests" ON)
 option(ENABLE_BENCHMARKS "Build benchmarks" ON)
