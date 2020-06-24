@@ -30,6 +30,10 @@ option(ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(ENABLE_DOCUMENTATION "Build documentation" ON)
 option(ENABLE_EXAMPLES "Build examples" ON)
 
+# TODO: Not currently used, but allows ENABLE_EXERCISES to be set properly
+#       for submodules. Investigate alternatives.
+option(ENABLE_EXERCISES "Build exercises" OFF)
+
 # Extra submodule components
 option(ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
 option(ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
