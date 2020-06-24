@@ -26,6 +26,26 @@ if (NOT TARGET camp)
 endif ()
 
 ################################
+# RAJA (required)
+################################
+if (NOT TARGET raja)
+   if (raja_DIR)
+      message(STATUS "Using external RAJA")
+
+      list(APPEND CMAKE_PREFIX_PATH ${raja_DIR})
+      find_package(raja CONFIG REQUIRED)
+   else ()
+      message(STATUS "Using RAJA submodule")
+
+      if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/raja/CMakeLists.txt)
+         message(FATAL_ERROR "RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR to use an external build of RAJA.")
+      else ()
+         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
+      endif ()
+   endif ()
+endif ()
+
+################################
 # Umpire (required)
 ################################
 if (NOT TARGET umpire)

@@ -71,28 +71,6 @@ else()
 endif()
 
 ################################
-# RAJA
-################################
-if (RAJA_DIR)
-    include(cmake/libraries/FindRAJA.cmake)
-
-    if (RAJA_FOUND)
-        set(RAJA_DEPENDS )
-        blt_list_append(TO RAJA_DEPENDS ELEMENTS cub IF ${CUB_FOUND})
-
-        blt_register_library( NAME       raja
-                              TREAT_INCLUDES_AS_SYSTEM ON
-                              INCLUDES   ${RAJA_INCLUDE_DIRS}
-                              LIBRARIES  ${RAJA_LIBRARY}
-                              DEPENDS_ON ${RAJA_DEPENDS})
-    else()
-        message(FATAL_ERROR "Unable to find RAJA with given path: ${RAJA_DIR}")
-    endif()
-else()
-    message(FATAL_ERROR "RAJA is required! Please set RAJA_DIR to a valid install of RAJA.")
-endif()
-
-################################
 # LLNL_GlobalID
 ################################
 if (LLNL_GLOBALID_DIR)

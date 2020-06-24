@@ -29,6 +29,7 @@ set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")
 set(umpire_DIR "" CACHE PATH "Path to external umpireConfig.cmake or umpire-config.cmake")
 set(chai_DIR "" CACHE PATH "Path to external chaiConfig.cmake or chai-config.cmake")
+set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cmake")
 
 ################################
 # BLT
