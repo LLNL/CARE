@@ -4,3 +4,6 @@
 [submodule "tpl/camp"]
 	path = tpl/camp
 	url = ../camp
+[submodule "tpl/umpire"]
+	path = tpl/umpire
+	url = ../umpire
