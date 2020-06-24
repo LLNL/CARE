@@ -59,7 +59,7 @@ if (NOT TARGET raja)
          # TODO: When RAJA is updated past v0.11.0, EXTERNAL_CAMP_SOURCE_DIR
          #       does not need to be set since RAJA will be able to use
          #       the "camp" cmake target directly.
-         set(EXTERNAL_CAMP_SOURCE_DIR "${camp_DIR}")
+         set(EXTERNAL_CAMP_SOURCE_DIR "${camp_DIR}" CACHE PATH "Build with a specific external camp source repository")
          add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
       endif ()
    endif ()
