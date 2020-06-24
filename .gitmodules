@@ -13,3 +13,6 @@
 [submodule "tpl/raja"]
 	path = tpl/raja
 	url = ../raja
+[submodule "tpl/cub"]
+	path = tpl/cub
+	url = ../../NVlabs/cub
