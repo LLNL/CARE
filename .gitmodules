@@ -1,3 +1,6 @@
 [submodule "blt"]
 	path = blt
 	url = ../blt
+[submodule "tpl/camp"]
+	path = tpl/camp
+	url = ../camp
