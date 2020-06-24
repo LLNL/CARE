@@ -32,7 +32,12 @@ option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
 
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
-set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")
+
+# TODO: When RAJA is updated past v0.11.0, camp_DIR should point to the
+#       directory containing campConfig.cmake or camp-config.cmake.
+#       Update the variable documentation to reflect that change.
+set(camp_DIR "" CACHE PATH "Path to external CAMP (top level of the install or source directory)")
+
 set(umpire_DIR "" CACHE PATH "Path to external umpireConfig.cmake or umpire-config.cmake")
 set(chai_DIR "" CACHE PATH "Path to external chaiConfig.cmake or chai-config.cmake")
 set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cmake")
