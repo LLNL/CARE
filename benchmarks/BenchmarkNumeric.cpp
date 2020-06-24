@@ -5,15 +5,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Std library headers
-#include <numeric>
+// CARE headers
+#include "care/care.h"
+#include "care/numeric.h"
 
 // Other library headers
 #include <benchmark/benchmark.h>
 
-// CARE headers
-#include "care/care.h"
-#include "care/numeric.h"
+// Std library headers
+#include <climits>
+#include <numeric>
 
 static void benchmark_std_iota(benchmark::State& state) {
    // Perform setup here
