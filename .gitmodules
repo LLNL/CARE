@@ -10,3 +10,6 @@
 [submodule "tpl/chai"]
 	path = tpl/chai
 	url = ../chai
+[submodule "tpl/raja"]
+	path = tpl/raja
+	url = ../raja
