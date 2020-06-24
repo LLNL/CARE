@@ -6,6 +6,14 @@
 ######################################################################################
 
 ################################
+# Extra submodule components
+################################
+set(ENABLE_TESTS "${ENABLE_SUBMODULE_TESTS}")
+set(ENABLE_BENCHMARKS "${ENABLE_SUBMODULE_BENCHMARKS}")
+set(ENABLE_DOCUMENTATION "${ENABLE_SUBMODULE_DOCUMENTATION}")
+set(ENABLE_EXAMPLES "${ENABLE_SUBMODULE_EXAMPLES}")
+
+################################
 # CAMP (required)
 ################################
 if (NOT TARGET camp)

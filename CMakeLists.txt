@@ -24,6 +24,12 @@ option(ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(ENABLE_DOCUMENTATION "Build documentation" ON)
 option(ENABLE_EXAMPLES "Build examples" ON)
 
+# Extra submodule components
+option(ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
+option(ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
+option(ENABLE_SUBMODULE_DOCUMENTATION "Build submodule documentation" OFF)
+option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
+
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")
@@ -42,7 +48,9 @@ set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cma
 #       "docs" target to "raja-docs". A future update of BLT may also change
 #       the default name in BLT to something like "blt-docs", in which case
 #       this would no longer be necessary, either.
-set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
+if (ENABLE_SUBMODULE_DOCUMENTATION)
+    set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
+endif ()
 
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 

@@ -7,7 +7,6 @@ Getting Started
 ```bash
 mkdir build && cd build
 git submodule update --init
-cmake -DRAJA_DIR=/path/to/raja ../
 make -j
 ```
 
