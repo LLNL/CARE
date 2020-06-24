@@ -29,53 +29,6 @@ else()
 endif()
 
 ################################
-# UMPIRE
-################################
-if (UMPIRE_DIR)
-    include(cmake/libraries/Findumpire.cmake)
-
-    if (UMPIRE_FOUND)
-        set(UMPIRE_DEPENDS )
-        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
-        blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ${ENABLE_MPI})
-
-        blt_register_library( NAME      umpire
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${UMPIRE_INCLUDE_DIRS}
-                                LIBRARIES  ${UMPIRE_LIBRARY}
-                                DEPENDS_ON ${UMPIRE_DEPENDS})
-    else()
-        message(FATAL_ERROR "Unable to find Umpire with given path: ${UMPIRE_DIR}")
-    endif()
-else()
-    message(FATAL_ERROR "Umpire is required! Please set UMPIRE_DIR to a valid install of Umpire.")
-endif()
-
-################################
-# CHAI
-################################
-if (CHAI_DIR)
-    include(cmake/libraries/FindCHAI.cmake)
-
-    if (CHAI_FOUND)
-        set (CHAI_DEPENDS umpire)
-        blt_list_append(TO CHAI_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
-        blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
-
-        blt_register_library( NAME       chai
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${CHAI_INCLUDE_DIRS}
-                                LIBRARIES  ${CHAI_LIBRARY}
-                                DEPENDS_ON ${CHAI_DEPENDS}
-                                )
-    else()
-       message(FATAL_ERROR "Unable to find CHAI with given path: ${CHAI_DIR}")
-    endif()
-else()
-    message(FATAL_ERROR "CHAI is required! Please set CHAI_DIR to a valid install of CHAI.")
-endif()
-
-################################
 # CUB
 ################################
 if (CUB_DIR)

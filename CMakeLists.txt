@@ -65,6 +65,7 @@ endif()
 ################################
 # Set up dependencies
 ################################
+add_subdirectory(tpl)
 include(cmake/SetupLibraries.cmake)
 
 ################################
