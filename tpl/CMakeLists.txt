@@ -44,3 +44,23 @@ if (NOT TARGET umpire)
       endif ()
    endif ()
 endif ()
+
+################################
+# CHAI (required)
+################################
+if (NOT TARGET chai)
+   if (chai_DIR)
+      message(STATUS "Using external CHAI")
+
+      list(APPEND CMAKE_PREFIX_PATH ${chai_DIR})
+      find_package(chai CONFIG REQUIRED)
+   else ()
+      message(STATUS "Using CHAI submodule")
+
+      if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/chai/CMakeLists.txt)
+         message(FATAL_ERROR "CHAI submodule not initialized. Run 'git submodule update --init' in the git repository or set chai_DIR to use an external build of CHAI.")
+      else ()
+         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/chai)
+      endif ()
+   endif ()
+endif ()
