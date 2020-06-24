@@ -35,6 +35,7 @@ option(ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
 option(ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
 option(ENABLE_SUBMODULE_DOCUMENTATION "Build submodule documentation" OFF)
 option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
+option(ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
