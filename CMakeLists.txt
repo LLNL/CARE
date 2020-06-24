@@ -34,6 +34,16 @@ set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cma
 ################################
 # BLT
 ################################
+
+# TODO: Setting BLT_DOCS_TARGET_NAME will not be necessary after RAJA is
+#       updated past v0.11.0. BLT and RAJA both define a "docs" target,
+#       which cmake does not allow. The name of the BLT "docs" target is
+#       changed here to "blt-docs". The next version of RAJA renames its
+#       "docs" target to "raja-docs". A future update of BLT may also change
+#       the default name in BLT to something like "blt-docs", in which case
+#       this would no longer be necessary, either.
+set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
+
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
 if (BLT_SOURCE_DIR)
