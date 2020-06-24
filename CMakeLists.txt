@@ -27,6 +27,7 @@ option(ENABLE_EXAMPLES "Build examples" ON)
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")
+set(umpire_DIR "" CACHE PATH "Path to external umpireConfig.cmake or umpire-config.cmake")
 
 ################################
 # BLT

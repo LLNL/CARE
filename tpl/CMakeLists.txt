@@ -20,7 +20,27 @@ if (NOT TARGET camp)
       if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/camp/CMakeLists.txt)
          message(FATAL_ERROR "CAMP submodule not initialized. Run 'git submodule update --init' in the git repository or set camp_DIR to use an external build of CAMP.")
       else ()
-         add_subdirectory(${CMAKE_CURRENT_LISt_DIR}/submodules/camp)
+         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/camp)
+      endif ()
+   endif ()
+endif ()
+
+################################
+# Umpire (required)
+################################
+if (NOT TARGET umpire)
+   if (umpire_DIR)
+      message(STATUS "Using external Umpire")
+
+      list(APPEND CMAKE_PREFIX_PATH ${umpire_DIR})
+      find_package(umpire CONFIG REQUIRED)
+   else ()
+      message(STATUS "Using Umpire submodule")
+
+      if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/umpire/CMakeLists.txt)
+         message(FATAL_ERROR "Umpire submodule not initialized. Run 'git submodule update --init' in the git repository or set umpire_DIR to use an external build of Umpire.")
+      else ()
+         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/umpire)
       endif ()
    endif ()
 endif ()

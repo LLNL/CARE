@@ -7,7 +7,7 @@ Getting Started
 ```bash
 mkdir build && cd build
 git submodule update --init
-cmake -DCHAI_DIR=/path/to/chai -DRAJA_DIR=/path/to/raja -DUMPIRE_DIR=/path/to/umpire ../
+cmake -DCHAI_DIR=/path/to/chai -DRAJA_DIR=/path/to/raja ../
 make -j
 ```
 
