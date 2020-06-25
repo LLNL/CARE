@@ -42,6 +42,30 @@ if (NOT TARGET camp)
 endif ()
 
 ################################
+# CUB (CUDA required)
+################################
+if (ENABLE_CUDA)
+   if (NOT TARGET CUB)
+      if (CUB_DIR)
+         message(STATUS "Using external CUB")
+
+         # TODO: Update RAJA to accept a CUB cmake target and write a
+         #       FindCUB.cmake find module.
+      else ()
+         message(STATUS "Using CUB submodule")
+
+         if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/cub/cub/cub.cuh)
+            message(FATAL_ERROR "CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
+         else ()
+            # TODO: Update RAJA to accept a CUB cmake target and insert
+            #       a call to add_library here.
+            set (CUB_DIR "${CMAKE_CURRENT_LIST_DIR}/cub" CACHE PATH "Path to CUB" FORCE)
+         endif ()
+      endif ()
+   endif ()
+endif ()
+
+################################
 # RAJA (required)
 ################################
 if (NOT TARGET raja)
@@ -60,7 +84,20 @@ if (NOT TARGET raja)
          #       does not need to be set since RAJA will be able to use
          #       the "camp" cmake target directly.
          set(EXTERNAL_CAMP_SOURCE_DIR "${camp_DIR}" CACHE PATH "Build with a specific external camp source repository")
+
+         if (ENABLE_CUDA)
+            # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
+            set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
+            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
+            # CUB_DIR is already set above
+         endif ()
+
          add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
+
+         if (ENABLE_CUDA)
+            # Reset CMAKE_CUDA_FLAGS
+            set(CMAKE_CUDA_FLAGS "${CARE_CMAKE_CUDA_FLAGS}")
+         endif ()
       endif ()
    endif ()
 endif ()

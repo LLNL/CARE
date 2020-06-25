@@ -41,7 +41,7 @@ option(ENABLE_SUBMODULE_DOCUMENTATION "Build submodule documentation" OFF)
 option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
 option(ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 
-# Dependencies
+# Required dependencies (by default uses submodules)
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
 # TODO: When RAJA is updated past v0.11.0, camp_DIR should point to the
@@ -50,8 +50,29 @@ set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 set(camp_DIR "" CACHE PATH "Path to external CAMP (top level of the install or source directory)")
 
 set(umpire_DIR "" CACHE PATH "Path to external umpireConfig.cmake or umpire-config.cmake")
-set(chai_DIR "" CACHE PATH "Path to external chaiConfig.cmake or chai-config.cmake")
 set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cmake")
+set(chai_DIR "" CACHE PATH "Path to external chaiConfig.cmake or chai-config.cmake")
+
+# Optional dependencies without submodules (not open source)
+set(LLNL_GLOBALID_DIR "" CACHE PATH "Path to external LLNL_GlobalID")
+
+# CUDA specific options
+if (ENABLE_CUDA)
+   # CUDA configuration
+   set(CUDA_TOOLKIT_ROOT_DIR "" CACHE PATH "Set the CUDA toolkit path")
+   set(CUDA_ARCH "sm_35" CACHE STRING "Set the CUDA virtual architecture")
+   set(CUDA_CODE "compute_35" CACHE STRING "Set the CUDA actual architecture")
+   option(CUDA_SEPARABLE_COMPILATION "Enable CUDA separable compilation" ON)
+   option(CUDA_LINK_WITH_NVCC "Enable linking with NVCC" OFF)
+
+   # CUDA required dependencies
+   # TODO: Fix RAJA to accept a CUB cmake target
+   set(CUB_DIR "" CACHE PATH "Path to external CUB (top level of the install or source directory)")
+
+   # CUDA optional dependencies without submodules (not open source)
+   set(NVTX_DIR "" CACHE PATH "Path to external NVTX")
+   set(BASIL_DIR "" CACHE PATH "Path to external BASIL")
+endif ()
 
 ################################
 # BLT
@@ -89,12 +110,16 @@ endif()
 include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
 ################################
-# Set up compiler flags
+# Set up compiler and flags
 ################################
 if (ENABLE_CUDA)
    set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc" CACHE PATH "")
    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch=sm_35")
+
+   # nvcc dies if compiler flags are duplicated, and RAJA adds all these compiler flags
+   set(RAJA_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch ${CUDA_CODE} -code ${CUDA_ARCH}")
+   set(CARE_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 endif()
 
 ################################
