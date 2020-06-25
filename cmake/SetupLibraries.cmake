@@ -29,25 +29,6 @@ else()
 endif()
 
 ################################
-# CUB
-################################
-if (CUB_DIR)
-    include(cmake/libraries/FindCUB.cmake)
-    if (CUB_FOUND)
-        blt_register_library( NAME       cub
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${CUB_INCLUDE_DIRS})
-
-        set(CARE_HAVE_CUB "1" CACHE STRING "")
-    else()
-        message(FATAL_ERROR "Unable to find CUB with given path: ${CUB_DIR}")
-    endif()
-else()
-    message(STATUS "Library Disabled: CUB")
-    set(CARE_HAVE_CUB "0" CACHE STRING "")
-endif()
-
-################################
 # NVTOOLSEXT
 ################################
 if (NVTOOLSEXT_DIR)
