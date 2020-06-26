@@ -277,7 +277,7 @@ namespace care {
          forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fused, action);
 
 #if FORCE_SYNC
-         care_gpuErrchk(::cudaDeviceSynchronize());
+         care_gpuErrchk(gpuDeviceSynchronize());
 #endif
 #endif
 
@@ -310,7 +310,7 @@ namespace care {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(__CUDACC__) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(__CUDACC__) || defined(__HIPCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
       const int length = end - start;
 
       if (length != 0) {
@@ -323,7 +323,7 @@ namespace care {
          RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
 
 #if FORCE_SYNC
-         care_gpuErrchk(::cudaDeviceSynchronize());
+         care_gpuErrchk(gpuDeviceSynchronize());
 #endif
 #endif
 

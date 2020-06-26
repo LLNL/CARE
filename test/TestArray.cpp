@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Makes LOOP_REDUCE run on the device
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
 #define GPU_ACTIVE
 #endif
 
@@ -192,7 +192,7 @@ TEST(array, greater_than_or_equal_to)
    EXPECT_FALSE(a3 >= a4);
 }
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || || defined(__HIPCC__)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -537,5 +537,5 @@ GPU_TEST(array, greater_than_or_equal_to)
    ASSERT_TRUE((bool) passed);
 }
 
-#endif // __CUDACC__
+#endif // __CUDACC__ || __HIPCC__
 

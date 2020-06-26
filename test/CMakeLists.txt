@@ -11,6 +11,10 @@ if (ENABLE_CUDA)
    set (care_test_dependencies ${care_test_dependencies} cuda)
 endif()
 
+if (ENABLE_HIP)
+  set (care_test_dependencies ${care_test_dependencies} hip_runtime)
+endif ()
+
 if (ENABLE_OPENMP)
    set (care_test_dependencies ${care_test_dependencies} openmp)
 endif()

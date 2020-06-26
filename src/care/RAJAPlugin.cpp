@@ -70,11 +70,11 @@ namespace care {
       }
 #endif // !defined(CHAI_DISABLE_RM)
 
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) || defined(__HIPCC__)
       // Synchronize
       if (s_synchronize_before) {
          if (space == chai::GPU) {
-            care::gpuAssert(::cudaDeviceSynchronize(), fileName, lineNumber, true);
+            care::gpuAssert(gpuDeviceSynchronize(), fileName, lineNumber, true);
          }
       }
 
@@ -184,7 +184,7 @@ namespace care {
    }
 
    void RAJAPlugin::post_forall_hook(chai::ExecutionSpace space, const char* fileName, int lineNumber) {
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) || defined(__HIPCC__)
 #if CARE_HAVE_NVTOOLSEXT
       if (s_profile_host_loops) {
          if (space == chai::CPU) {
@@ -196,7 +196,7 @@ namespace care {
 
       if (s_synchronize_after) {
          if (space == chai::GPU) {
-            care::gpuAssert(::cudaDeviceSynchronize(), fileName, lineNumber, true);
+            care::gpuAssert(gpuDeviceSynchronize(), fileName, lineNumber, true);
          }
       }
 #endif // defined(__CUDACC__)

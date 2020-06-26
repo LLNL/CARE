@@ -22,10 +22,10 @@
 #include "care/LoopFuser.h"
 #include "care/care.h"
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
+// This makes it so we can use device lambdas from within a GPU_TEST
+#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
+   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
+   static void gpu_test_ ## X_ ## Y()
 
 TEST(UpperBound_binarySearch, checkOffsets) {
    // These come from a segfault that occurred during development
@@ -50,7 +50,8 @@ TEST(UpperBound_binarySearch, checkOffsets) {
    offset = care::binarySearch<int>(offsetArr, 0, 20, 340, true);
    EXPECT_EQ(offset, -1);
 }
-CUDA_TEST(TestPacker, packFixedRange) {
+
+GPU_TEST(TestPacker, packFixedRange) {
    LoopFuser * packer = LoopFuser::getInstance();
    packer->start();
 
@@ -107,7 +108,7 @@ CUDA_TEST(TestPacker, packFixedRange) {
    dst.free();
 }
 
-CUDA_TEST(TestPacker, packFixedRangeMacro) {
+GPU_TEST(TestPacker, packFixedRangeMacro) {
    FUSIBLE_LOOPS_START
 
    int arrSize = 1024;
@@ -162,7 +163,7 @@ CUDA_TEST(TestPacker, packFixedRangeMacro) {
    dst.free();
 }
 
-CUDA_TEST(TestPacker, fuseFixedRangeMacro) {
+GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    FUSIBLE_LOOPS_START
    int arrSize = 8;
    care::host_device_ptr<int> src(arrSize);
@@ -204,7 +205,7 @@ CUDA_TEST(TestPacker, fuseFixedRangeMacro) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(performanceWithoutPacker, allOfTheStreams) {
+GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
    int arrSize = 128;
    int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
@@ -229,7 +230,7 @@ CUDA_TEST(performanceWithoutPacker, allOfTheStreams) {
 }
 
 
-CUDA_TEST(performanceWithPacker, allOfTheFuses) {
+GPU_TEST(performanceWithPacker, allOfTheFuses) {
    int arrSize = 128;
    int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
@@ -256,7 +257,7 @@ CUDA_TEST(performanceWithPacker, allOfTheFuses) {
 }
 
 
-CUDA_TEST(orderDependent, basic_test) {
+GPU_TEST(orderDependent, basic_test) {
    int arrSize = 128;
    int timesteps = 5;
    care::host_device_ptr<int> A(arrSize);
@@ -297,7 +298,7 @@ FUSIBLE_DEVICE bool printAndAssign(care::host_device_ptr<int> B, int i) {
    return B[i] == 1;
 }
 
-CUDA_TEST(fusible_scan, basic_fusible_scan) {
+GPU_TEST(fusible_scan, basic_fusible_scan) {
    // arrSize should be even for this test
    int arrSize = 4;
    care::host_device_ptr<int> A(arrSize, "A");
@@ -353,7 +354,7 @@ CUDA_TEST(fusible_scan, basic_fusible_scan) {
    EXPECT_EQ(ab_pos, arrSize);
 }
 
-CUDA_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
+GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    // sarrSize should be even for this test
    int arrSize = 4;
    care::host_device_ptr<int> A(arrSize, "A");
@@ -429,7 +430,7 @@ CUDA_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    EXPECT_EQ(result_pos, arrSize*2);
 }
 
-CUDA_TEST(fusible_loops_and_scans, mix_and_match) {
+GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    // should be even for this test
    int arrSize = 4;
    care::host_device_ptr<int> A(arrSize, "A");
@@ -533,7 +534,7 @@ CUDA_TEST(fusible_loops_and_scans, mix_and_match) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
+GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    // arrSize should be even for this test
    int arrSize = 4;
    care::host_device_ptr<int> A(arrSize, "A");

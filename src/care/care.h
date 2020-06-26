@@ -84,7 +84,7 @@ using RAJAAtomic = RAJA::auto_atomic;
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.
-#if defined (__CUDACC__)
+#if defined (__CUDACC__) || defined(__HIPCC__)
 
 #define CARE_CUDA_BLOCK_SIZE 256
 #define CARE_CUDA_ASYNC true
@@ -92,14 +92,18 @@ using RAJAAtomic = RAJA::auto_atomic;
 #if CHAI_GPU_SIM_MODE
 using RAJADeviceExec = RAJA::seq_exec;
 #else // CHAI_GPU_SIM_MODE
+#if defined (__CUDACC__)
 using RAJADeviceExec = RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#elif defined(__HIPCC__)
+using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#endif // __CUDACC__
 #endif // CHAI_GPU_SIM_MDOE
 
 #elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC__
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
 
-#else // __CUDACC__
+#else // __CUDACC__ || __HIPCC__
 
 using RAJADeviceExec = RAJA::seq_exec;
 

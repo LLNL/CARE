@@ -252,10 +252,54 @@ namespace care {
 #endif
    }
 
+#elif __HIPCC__
+
+   /////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Convenience function for calling cudaDeviceSynchronize. This overload
+   ///        calls cudaDeviceSynchronize if in a CUDA context and FORCE_SYNC is true.
+   ///
+   /// @arg[in] ExecutionPolicy Used to choose this overload
+   /// @arg[in] file The file where the cudaDeviceSynchronize call occurred
+   /// @arg[in] line The line number where the cudaDeviceSynchronize call occurred
+   /// @arg[in] abort Whether or not to abort if an error occurred
+   ///
+   /////////////////////////////////////////////////////////////////////////////////
+   inline void hipDeviceSynchronize(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>,
+                                     const char* file, const int line,
+                                     const bool abort=true) {
+#if FORCE_SYNC
+      gpuAssert(::hipDeviceSynchronize(), file, line, abort);
 #endif
+   }
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////
+///
+/// @author Danny Taller
+///
+/// @brief Convenience function for calling cuda or hip DeviceSynchronize,
+///        depending on the context.
+////////////////////////////////////////////////////////////////////////////////
+#if defined(__CUDACC__)
+   inline void gpuDeviceSynchronize() {
+      ::cudaDeviceSynchronize();
+   }
+#elif defined(__HIPCC__)
+   inline void gpuDeviceSynchronize() {
+      ::hipDeviceSynchronize();
+   }
+#else
+   inline void gpuDeviceSynchronize() {
+   }
+#endif
+
 } // namespace care
 
-#if defined(__CUDACC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if (defined(__HIPCC__) ||  defined(__CUDACC__)) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
@@ -283,7 +327,7 @@ namespace care {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // defined(__CUDACC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // (defined(__HIPCC__) ||  defined(__CUDACC__)) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

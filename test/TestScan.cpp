@@ -13,14 +13,14 @@
 
 #include "care/care.h"
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
+// This makes it so we can use device lambdas from within a GPU_TEST
+#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
+   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
+   static void gpu_test_ ## X_ ## Y()
 
 using int_ptr = chai::ManagedArray<int>;
 
-CUDA_TEST(Scan, test_scan_offset) {
+GPU_TEST(Scan, test_scan_offset) {
 #if defined(__CUDACC__)
    int poolSize = 128*1024*1024; // 128 MB
    care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
@@ -44,7 +44,7 @@ CUDA_TEST(Scan, test_scan_offset) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(Scan, test_scan_zero_length) {
+GPU_TEST(Scan, test_scan_zero_length) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 0;
@@ -63,7 +63,7 @@ CUDA_TEST(Scan, test_scan_zero_length) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(Scan, test_scan_offset_index) {
+GPU_TEST(Scan, test_scan_offset_index) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -83,7 +83,7 @@ CUDA_TEST(Scan, test_scan_offset_index) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(Scan, test_scan_offset_index_half) {
+GPU_TEST(Scan, test_scan_offset_index_half) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -105,7 +105,7 @@ CUDA_TEST(Scan, test_scan_offset_index_half) {
    } LOOP_SEQUENTIAL_END
 }
 
-CUDA_TEST(Scan, test_scan_everywhere) {
+GPU_TEST(Scan, test_scan_everywhere) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -129,7 +129,7 @@ CUDA_TEST(Scan, test_scan_everywhere) {
 
 using globalID_ptr = chai::ManagedArray<globalID>;
 
-CUDA_TEST(Scan, test_scan_offset_index_gid) {
+GPU_TEST(Scan, test_scan_offset_index_gid) {
    const int starting_offset = 13;
    globalID offset(starting_offset);
    int length = 20;

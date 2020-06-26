@@ -182,7 +182,7 @@ TEST(array_utils, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || || defined(__HIPCC__)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -1212,5 +1212,5 @@ GPU_TEST(array_utils, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
-#endif // __CUDACC__
+#endif // __CUDACC__ || __HIPCC__
 
