@@ -88,6 +88,10 @@ if (ENABLE_OPENMP)
    list(APPEND care_depends openmp)
 endif()
 
+if (ENABLE_HIP)
+  list(APPEND care_depends hip_runtime)
+endif ()
+
 blt_add_library(NAME care
                 SOURCES ${care_sources}
                 HEADERS ${care_headers}

@@ -17,6 +17,7 @@ project(care LANGUAGES CXX)
 option(ENABLE_MPI "Build MPI support" OFF)
 option(ENABLE_CUDA "Build CUDA support" OFF)
 option(ENABLE_OPENMP "Build OpenMP support" OFF)
+option(ENABLE_HIP "Build HIP support" OFF)
 
 # Extra components
 option(ENABLE_TESTS "Build tests" ON)
@@ -58,6 +59,12 @@ if (ENABLE_CUDA)
    set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc" CACHE PATH "")
    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch=sm_35")
+endif()
+
+if (ENABLE_HIP)
+   set(HIP_ROOT_DIR "/opt/rocm-3.5.0/hip" CACHE PATH "")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --hip-device-lib-path=/opt/rocm-3.5.0/lib  -I/opt/rocm-3.5.0/llvm/lib/clang/11.0.0 -x hip")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --hip-device-lib-path=/opt/rocm-3.5.0/lib -I/opt/rocm-3.5.0/llvm/lib/clang/11.0.0 -x hip")
 endif()
 
 ################################

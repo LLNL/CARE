@@ -163,6 +163,36 @@ namespace care {
 #endif
    }
 
+#elif defined(__HIPCC__)
+
+   /////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Checks the return code from CUDA API calls for errors. Prints the
+   ///        name of the file and the line number where the CUDA API call occurred
+   ///        in the event of an error and exits if abort is true.
+   ///
+   /// @arg[in] code The return code from CUDA API calls
+   /// @arg[in] file The file where the CUDA API call occurred
+   /// @arg[in] line The line number where the CUDA API call occurred
+   /// @arg[in] abort Whether or not to abort if an error occurred
+   ///
+   /////////////////////////////////////////////////////////////////////////////////
+   inline void gpuAssert(hipError_t code, const char *file, const int line,
+                         const bool abort=true)
+   {
+      if (code != hipSuccess) {
+         fprintf(stderr, "[CARE] GPUassert: %s %s %d\n", hipGetErrorString(code), file, line);
+         if (abort) {
+            exit(code);
+         }
+      }
+#if defined(CARE_DEBUG)
+      CUDAWatchpoint::setOrCheckWatchpoint<int>();
+#endif
+   }
+
 #else // __CUDACC__
 
    /////////////////////////////////////////////////////////////////////////////////

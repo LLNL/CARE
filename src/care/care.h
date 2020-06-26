@@ -24,7 +24,7 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#if defined(_OPENMP)
+#if defined(_OPENMP) && defined(RAJA_USE_OPENMP)
    #include <omp.h>
 #endif
 
