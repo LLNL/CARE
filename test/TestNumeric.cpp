@@ -5,8 +5,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+#include "care/config.h"
+
 // Makes LOOP_REDUCE run on the device
-#if defined(__CUDACC__) || defined(__HIPCC__)
+#if defined(__CUDACC_OR_HIPCC__)
 #define GPU_ACTIVE
 #endif
 

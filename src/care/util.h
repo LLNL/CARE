@@ -285,15 +285,16 @@ namespace care {
 ///        depending on the context.
 ////////////////////////////////////////////////////////////////////////////////
 #if defined(__CUDACC__)
-   inline void gpuDeviceSynchronize() {
-      ::cudaDeviceSynchronize();
+   inline cudaError_t gpuDeviceSynchronize() {
+      return ::cudaDeviceSynchronize();
    }
 #elif defined(__HIPCC__)
-   inline void gpuDeviceSynchronize() {
-      ::hipDeviceSynchronize();
+   inline hipError_t gpuDeviceSynchronize() {
+      return ::hipDeviceSynchronize();
    }
 #else
-   inline void gpuDeviceSynchronize() {
+   inline int gpuDeviceSynchronize() {
+      return 0;
    }
 #endif
 

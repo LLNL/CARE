@@ -9,15 +9,25 @@
 #define _CARE_CUDA_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
-#if __CUDACC__
+#if defined(__CUDACC_OR_HIPCC__)
 
+#if __CUDACC__
 // Other library headers
 #include "cuda.h"
+#define care_watchpoint_err_t cudaError_t
+#else
+#include "hip/hip_runtime.h"
+#define care_watchpoint_err_t hipError_t
+#endif
 
-inline void watchpoint_gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+inline void watchpoint_gpuAssert(care_watchpoint_err_t code, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess) {
+#if __CUDACC__
       fprintf(stderr, "[CARE] WATCHPOINT GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+#else
+      fprintf(stderr, "[CARE] WATCHPOINT GPUassert: %s %s %d\n", hipGetErrorString(code), file, line);
+#endif
       if (abort) {
          exit(code);
       }
@@ -34,7 +44,11 @@ class CUDAWatchpoint {
          if (!deviceAddress) {
             if (wp) {
                T currentVal;
+#if __CUDACC__
                watchpoint_gpuAssert(cudaMemcpy(&currentVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#else
+               watchpoint_gpuAssert(hipMemcpy(&currentVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#endif               
                if (currentVal != oldVal) {
                   printf("[CARE] CUDA Watchpoint %p change detected!\n", wp);
                   oldVal = currentVal;
@@ -44,12 +58,16 @@ class CUDAWatchpoint {
          // set
          else {
             wp = deviceAddress;
+#if __CUDACC__
             watchpoint_gpuAssert(cudaMemcpy(&oldVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#else
+            watchpoint_gpuAssert(hipMemcpy(&oldVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#endif         
          }
       }
 };
 
-#endif //__CUDACC__
+#endif //__CUDACC_OR_HIPCC__
 #endif //CARE_DEBUG
 
 #endif // !defined(_CARE_CUDA_WATCHPOINT_H_)

@@ -7,7 +7,6 @@
 
 #include "care/config.h"
 
-
 #define GPU_ACTIVE
 #include "gtest/gtest.h"
 
@@ -21,7 +20,7 @@
 using int_ptr = chai::ManagedArray<int>;
 
 GPU_TEST(Scan, test_scan_offset) {
-#if defined(__CUDACC__)
+#if defined(__CUDACC_OR_HIPCC__)
    int poolSize = 128*1024*1024; // 128 MB
    care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
    care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);

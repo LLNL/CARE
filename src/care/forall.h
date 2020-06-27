@@ -35,6 +35,11 @@ namespace care {
    struct ExecutionPolicyToSpace<RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
+#elif defined (__HIPCC__)
+   template <>
+   struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
+      static constexpr const chai::ExecutionSpace value = chai::GPU;
+   };
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
@@ -145,6 +150,9 @@ namespace care {
 #elif defined(GPU_ACTIVE) && defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
+#elif  defined(GPU_ACTIVE) && defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 #endif
@@ -173,6 +181,9 @@ namespace care {
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
 #elif defined(GPU_ACTIVE) && defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, body);
+#elif defined(GPU_ACTIVE) && defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
 #elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
@@ -215,7 +226,7 @@ namespace care {
       }
    }
 
-#if defined __CUDACC__ && defined GPU_ACTIVE
+#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -310,7 +321,7 @@ namespace care {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(__CUDACC__) || defined(__HIPCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(__CUDACC_OR_HIPCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
       const int length = end - start;
 
       if (length != 0) {
@@ -320,7 +331,12 @@ namespace care {
 #if CARE_ENABLE_GPU_SIMULATION_MODE
          RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
 #else
+
+#ifdef __CUDACC__
          RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
+#else // __HIPCC__
+         RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
+#endif
 
 #if FORCE_SYNC
          care_gpuErrchk(gpuDeviceSynchronize());

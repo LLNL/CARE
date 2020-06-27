@@ -5,7 +5,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__CUDACC__)
+#include "care/config.h"
+
+#if defined(__CUDACC_OR_HIPCC__)
 #define GPU_ACTIVE
 #endif
 
@@ -15,7 +17,7 @@
 // care headers
 #include "care/care.h"
 
-#if defined(__CUDACC__) && GTEST_HAS_DEATH_TEST
+#if defined(__CUDACC_OR_HIPCC__) && GTEST_HAS_DEATH_TEST
 // This asserts a crash on the GPU, but does not mark gtest as passing.
 #define GPU_FAIL(code) ASSERT_DEATH(code, "")
 #else

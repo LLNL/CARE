@@ -89,7 +89,11 @@ GPU_TEST(TestPacker, packFixedRange) {
 
 #ifdef __CUDACC__
    cudaDeviceSynchronize();
+#elif defined(__HIPCC__)
+   hipDeviceSynchronize();
+#endif
 
+#ifdef __CUDACC_OR_HIPCC__
    // pack should have happened on the device, so
    // host data should not be updated yet
    for (int i = 0; i < 2; ++i) {
@@ -140,7 +144,10 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
 
 #ifdef __CUDACC__
    cudaDeviceSynchronize();
+#elif defined(__HIPCC__)
+   hipDeviceSynchronize();
 #endif
+
    // pack should  not have happened yet so
    // host data should not be updated yet
    int * host_dst = dst.getPointer(care::CPU, false);
@@ -184,7 +191,10 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
 
 #ifdef __CUDACC__
    cudaDeviceSynchronize();
+#elif defined(__HIPCC__)
+   hipDeviceSynchronize();
 #endif
+
    // pack should  not have happened yet so
    // host data should not be updated yet
    int * host_dst = dst.getPointer(care::CPU, false);

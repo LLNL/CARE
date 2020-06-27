@@ -84,7 +84,7 @@ using RAJAAtomic = RAJA::auto_atomic;
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.
-#if defined (__CUDACC__) || defined(__HIPCC__)
+#if defined (__CUDACC_OR_HIPCC__)
 
 #define CARE_CUDA_BLOCK_SIZE 256
 #define CARE_CUDA_ASYNC true
@@ -99,17 +99,17 @@ using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
 #endif // __CUDACC__
 #endif // CHAI_GPU_SIM_MDOE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC__
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC_OR_HIPCC__
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
 
-#else // __CUDACC__ || __HIPCC__
+#else // __CUDACC_OR_HIPCC__
 
 using RAJADeviceExec = RAJA::seq_exec;
 
-#endif // CUDACC
+#endif // __CUDACC_OR_HIPCC__
 
-#if defined (__CUDACC__) && defined (GPU_ACTIVE)
+#if defined (__CUDACC_OR_HIPCC__) && defined (GPU_ACTIVE)
 
 #if CHAI_GPU_SIM_MODE
 
@@ -149,7 +149,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #endif // CHAI_GPU_SIM_MDOE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC__ and GPU_ACTIVE
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC_OR_HIPCC__ and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
@@ -165,7 +165,7 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::host
 #define RAJA_PARALLEL_ACTIVE
 
-#else // __CUDACC__ and GPU_ACTIVE
+#else // __CUDACC_OR_HIPCC__ and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;
@@ -180,7 +180,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJA::seq_exec ;
 #define thrustExec thrust::seq
 
-#endif // CUDACC and GPU_ACTIVE
+#endif // __CUDACC_OR_HIPCC__
 
 #if 0
 #define ANNOTATE_J2(X, Y) X "_" #Y
@@ -210,7 +210,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 
 
 // ******** Whether RAJA HAS DETECTED GPU ACTIVE ****
-#ifdef __CUDACC__
+#ifdef __CUDACC_OR_HIPCC__
 #ifdef GPU_ACTIVE
 #define RAJA_GPU_ACTIVE
 #endif
@@ -218,11 +218,11 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 // ************ DEFAULT MACRO SELECTION **************
 
 // Define default behavior for work loops
-#if defined(__CUDACC__)
+#if defined(__CUDACC_OR_HIPCC__)
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
 //#define FISSION_LOOPS 1
 #define USE_PERMUTED_CONNECTIVITY 1
-#else // __CUDACC__ is False, CHAI_GPU_SIM_MODE is 0
+#else // __CUDACC_OR_HIPCC__ is False, CHAI_GPU_SIM_MODE is 0
 
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
@@ -233,7 +233,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 #define USE_PERMUTED_CONNECTIVITY 0
 #endif
 
-#endif // __CUDACC__
+#endif // __CUDACC_OR_HIPCC__
 
 #include "care/scan.h"
 

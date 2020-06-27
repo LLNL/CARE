@@ -7,6 +7,8 @@
 
 #define GPU_ACTIVE
 
+#include "care/config.h"
+
 // std library headers
 #include <array>
 
@@ -182,7 +184,7 @@ TEST(array_utils, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
-#if defined(__CUDACC__) || || defined(__HIPCC__)
+#if defined(__CUDACC_OR_HIPCC__)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -1212,5 +1214,5 @@ GPU_TEST(array_utils, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
-#endif // __CUDACC__ || __HIPCC__
+#endif // __CUDACC_OR_HIPCC__
 

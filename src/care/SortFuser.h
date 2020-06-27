@@ -97,7 +97,7 @@ namespace care {
       ///        offsetting their values so that they own their own range of the
       ///        space in T.
       ///////////////////////////////////////////////////////////////////////////
-#ifndef __CUDACC__      
+#ifndef __CUDACC_OR_HIPCC__      
    private:
 #endif
 
