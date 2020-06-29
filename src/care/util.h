@@ -328,7 +328,7 @@ namespace care {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // (defined(__HIPCC__) ||  defined(__CUDACC__)) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // defined(__CUDACC_OR_HIPCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

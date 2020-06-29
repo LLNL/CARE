@@ -70,7 +70,7 @@ namespace care {
       }
 #endif // !defined(CHAI_DISABLE_RM)
 
-#if defined(__CUDACC_OR_HIPCC__) || defined(__HIPCC__)
+#if defined(__CUDACC_OR_HIPCC__)
       // Synchronize
       if (s_synchronize_before) {
          if (space == chai::GPU) {

@@ -17,7 +17,7 @@ project(care LANGUAGES CXX)
 option(ENABLE_MPI "Build MPI support" OFF)
 option(ENABLE_CUDA "Build CUDA support" OFF)
 option(ENABLE_OPENMP "Build OpenMP support" OFF)
-option(ENABLE_HIP "Build HIP support" OFF)
+option(ENABLE_HIP "Build HIP support" OFF) # Building HIP on cz corona using compiler /opt/rocm-3.5.0/llvm/bin/clang++
 
 # Extra components
 option(ENABLE_TESTS "Build tests" ON)
