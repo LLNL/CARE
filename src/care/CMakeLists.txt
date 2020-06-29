@@ -89,7 +89,7 @@ if (ENABLE_OPENMP)
 endif()
 
 if (ENABLE_HIP)
-  list(APPEND care_depends hip_runtime)
+  list(APPEND care_depends hip)
 endif ()
 
 blt_add_library(NAME care

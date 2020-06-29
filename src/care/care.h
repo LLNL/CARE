@@ -127,7 +127,7 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::seq
 #define RAJA_PARALLEL_ACTIVE
 
-#else // CHAI_GPU_SIM_MODE
+#elif defined(__CUDACC__) // CHAI_GPU_SIM_MODE
 
 using RAJACudaReduce = RAJA::cuda_reduce ;
 
@@ -147,7 +147,28 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::device
 #define RAJA_PARALLEL_ACTIVE
 
-#endif // CHAI_GPU_SIM_MDOE
+#else // CHAI_GPU_SIM_MODE
+
+// The defined(__HIPCC__) case is here: 
+using RAJAHipReduce = RAJA::hip_reduce ;
+
+template <class T>
+using RAJAReduceMax = RAJA::ReduceMax<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMin = RAJA::ReduceMin<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMinLoc = RAJA::ReduceMinLoc<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceSum = RAJA::ReduceSum<RAJAHipReduce, T> ;
+using RAJAHipExec = RAJADeviceExec ;
+using RAJAExec = RAJADeviceExec ;
+
+#define thrustExec thrust::device
+#define RAJA_PARALLEL_ACTIVE
+
+#endif // CHAI_GPU_SIM_MODE
 
 #elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC_OR_HIPCC__ and GPU_ACTIVE
 

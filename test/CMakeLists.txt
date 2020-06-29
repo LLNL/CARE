@@ -12,7 +12,7 @@ if (ENABLE_CUDA)
 endif()
 
 if (ENABLE_HIP)
-  set (care_test_dependencies ${care_test_dependencies} hip_runtime)
+  set (care_test_dependencies ${care_test_dependencies} hip)
 endif ()
 
 if (ENABLE_OPENMP)
