@@ -50,14 +50,6 @@ else()
     endif()
 endif()
 
-################################
-# Set up HIP root directory
-################################
-if (ENABLE_HIP)
-   set(HIP_ROOT_DIR "/opt/rocm-3.5.0/hip" CACHE PATH "")
-   set(HIP_CLANG_PATH "/opt/rocm-3.5.0/llvm/bin/" CACHE PATH "")
-endif()
-
 include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
 ################################
