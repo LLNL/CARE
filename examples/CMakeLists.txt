@@ -13,7 +13,7 @@ if (ENABLE_CUDA)
 endif()
 
 if (ENABLE_HIP)
-  set (care_test_dependencies ${care_test_dependencies} hip)
+  list(APPEND care_depends hip)
 endif ()
 
 if (ENABLE_OPENMP)
