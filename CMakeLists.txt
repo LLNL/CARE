@@ -32,7 +32,7 @@ set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cma
 ################################
 # BLT
 ################################
-set(BLT_CXX_STD "c++14" CACHE STRING "Set the c++ standard to use")
+set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
 if (BLT_SOURCE_DIR)
     message(STATUS "Using external BLT")
