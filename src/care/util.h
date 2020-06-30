@@ -300,7 +300,7 @@ namespace care {
 
 } // namespace care
 
-#if (defined(__HIPCC__) ||  defined(__CUDACC__)) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(__CUDACC_OR_HIPCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
