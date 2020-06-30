@@ -18,8 +18,11 @@ For quick reference, the paths to CHAI, RAJA, and Umpire are the same as CMAKE\_
 To build with CUDA support, use `-DENABLE_CUDA -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit`. CHAI, RAJA, and Umpire must also be built with those options.
 
 To build with HIP support, be sure to module load opt, module load rocm, and setenv HCC\_AMDGPU\_TARGET gfx900 prior to compiling. 
-When compiling, please set `-DENABLE_HIP=On -DHIP_ROOT_DIR=/opt/rocm-3.5.0/hip -DHIP_CLANG_PATH=/opt/rocm-3.5.0/llvm/bin/ -DCMAKE_C_COMPILER=/opt/rocm-3.5.0/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/rocm-3.5.0/llvm/bin/clang++ `. BLT needs to be updated to the development version for the HIP build to work. Even when BLT is updated, however, be sure to avoid running blt's hip smoke test, since it dies with a compiler error. 
-Other compilers besides the vendor-supplied clang compiler packaged in /opt/rocm-3.5.0/llvm/bin/ have not yet been tried for HIP builds.
+When compiling, please set `-DENABLE_HIP=On -DHIP_ROOT_DIR=/opt/rocm-3.5.0/hip -DHIP_CLANG_PATH=/opt/rocm-3.5.0/llvm/bin/ 
+-DCMAKE_C_COMPILER=/opt/rocm-3.5.0/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/rocm-3.5.0/llvm/bin/clang++ `. 
+BLT needs to be updated to the development version for the HIP build to work. Even when BLT is updated, however, be sure to avoid 
+running BLT's hip smoke test, since it dies with a compiler error. 
+Other compilers besides the vendor-supplied clang compiler (packaged in /opt/rocm-3.5.0/llvm/bin/) have not yet been tried for HIP builds.
  
 To build with OpenMP support, use `-DENABLE_OPENMP`. RAJA must also be built with that option.
 
