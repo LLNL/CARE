@@ -29,7 +29,7 @@ class CHAIDataGetter {
 
 // Partial specialization of CHAIDataGetter for cuda_exec.
 template <typename T>
-class CHAIDataGetter<T, RAJACudaExec> {
+class CHAIDataGetter<T, RAJADeviceExec> {
    public:
       typedef T raw_type;
       T * getRawArrayData(chai::ManagedArray<T> data) {

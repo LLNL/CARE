@@ -18,9 +18,15 @@
 
 // Other library headers
 #ifdef RAJA_GPU_ACTIVE
+#ifdef __CUDACC__
 #include "cub/cub.cuh"
 #undef CUB_NS_POSTFIX
 #undef CUB_NS_PREFIX
+#endif
+
+#ifdef __HIPCC__
+#include "hipcub/hipcub.hpp"
+#endif
 #endif
 
 namespace care {
@@ -90,10 +96,17 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    // When called with a nullptr for temp storage, this returns how much
    // temp storage should be allocated.
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
+#else
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#endif
    }
 
    // Allocate the temp storage and get raw data to pass to cub
@@ -104,10 +117,17 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    // Now sort
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
+#else
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#endif
    }
 
    // Get the result

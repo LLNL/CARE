@@ -21,6 +21,10 @@
 #undef CUB_NS_PREFIX
 #endif
 
+#ifdef __HIPCC__
+#include "hipcub/hipcub.hpp"
+#endif
+
 #define CARE_MAX(a,b) a > b ? a : b
 #define CARE_MIN(a,b) a < b ? a : b
 
@@ -537,9 +541,9 @@ inline void IntersectArrays(RAJA::seq_exec exec,
  ************************************************************************/
 
 template <typename T>
-inline int BinarySearch(const T *map, const int start,
-                        const int mapSize, const T num,
-                        bool returnUpperBound)
+CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
+                                         const int mapSize, const T num,
+                                         bool returnUpperBound)
 {
    int klo = start ;
    int khi = start + mapSize;
@@ -814,7 +818,11 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
    char * d_temp_storage = nullptr;
    size_t temp_storage_bytes = 0;
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
+#else
+      hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
+#endif   
    }
    // allocate the temp storage
 
@@ -823,7 +831,11 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
 
    // do the sort
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
+#else
+      hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
+#endif   
    }
    // cleanup
    if (noCopy) {
