@@ -17,7 +17,7 @@
 #include "care/care.h"
 
 // Other library headers
-#ifdef __CUDACC_OR_HIPCC__
+#ifdef __GPUCC__
 #include "basil/internal/batch_utils.hpp"
 #endif
 
@@ -25,7 +25,7 @@
 #include <iostream>
 #include <vector>
 
-#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
+#if defined __GPUCC__ && defined GPU_ACTIVE
 #define FUSIBLE_DEVICE CARE_DEVICE
 #else
 #define FUSIBLE_DEVICE CARE_HOST
@@ -190,7 +190,7 @@ FUSIBLE_DEVICE ReturnType launcher(care::host_device_ptr<char> lambda_buf, int i
    return lambda(i, is_fused, action_index, start, end);
 }
 
-#ifdef __CUDACC_OR_HIPCC__
+#ifdef __GPUCC__
 // cuda global function that writes the device wrapper function pointer
 // for the template type to the pointer provided.
 template<typename ReturnType, typename LB>
@@ -211,7 +211,7 @@ __global__ void write_launcher_ptr(basil::detail::device_wrapper_ptr* out)
 template<typename ReturnType, typename kernel_type>
 inline void * get_launcher_wrapper_ptr(bool get_if_null)
 {
-#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
+#if defined __GPUCC__ && defined GPU_ACTIVE
    static_assert(alignof(kernel_type) <= sizeof(basil::detail::device_wrapper_ptr),
                  "kernel_type has excessive alignment requirements");
    static basil::detail::device_wrapper_ptr ptr = nullptr;
@@ -643,7 +643,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          if (m_action_count == m_reserved) {
             flush();
          }
-#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
+#if defined __GPUCC__ && defined GPU_ACTIVE
          size_t lambda_size = basil::detail::aligned_sizeof<LB, sizeof(basil::detail::device_wrapper_ptr)>::value;
          size_t conditional_size = basil::detail::aligned_sizeof<Conditional, sizeof(basil::detail::device_wrapper_ptr)>::value;
 #else
@@ -694,7 +694,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
       if (m_call_as_packed) {
          switch(scan_type) {
             case 0:
-#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
+#if defined __GPUCC__ && defined GPU_ACTIVE
                care::forall(care::raja_fusible {}, 0, end-start, false, -1, action);
 #else
                care::forall(care::raja_fusible_seq {}, 0, end-start, false, -1, action);
@@ -729,7 +729,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
 }
 
-#if defined(CARE_DEBUG) || defined(__CUDACC_OR_HIPCC__)
+#if defined(CARE_DEBUG) || defined(__GPUCC__)
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
@@ -753,7 +753,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // frees
 #define FUSIBLE_FREE(A) LoopFuser::getInstance()->registerFree(A);
 
-#else // defined(CARE_DEBUG) || defined(__CUDACC_OR_HIPCC__)
+#else // defined(CARE_DEBUG) || defined(__GPUCC__)
 
 // in opt, non cuda builds, never start recording
 #define FUSIBLE_LOOPS_START { \
@@ -766,7 +766,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOPS_STOP
 #define FUSIBLE_FREE(A) A.free();
 
-#endif // defined(CARE_DEBUG) || defined(__CUDACC_OR_HIPCC__)
+#endif // defined(CARE_DEBUG) || defined(__GPUCC__)
 
 // Loop definitions
 #ifdef FUSIBLE_KERNEL_DEBUGGING

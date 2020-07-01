@@ -18,7 +18,7 @@ using namespace care;
 using int_ptr = host_device_ptr<int>;
 
 GPU_TEST(TestPacker, testFuseSort) {
-#if defined(__CUDACC_OR_HIPCC__)
+#if defined(__GPUCC__)
    int poolSize = 128*1024*1024; // 128 MB
    care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
    care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);

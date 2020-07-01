@@ -226,7 +226,7 @@ namespace care {
       }
    }
 
-#if defined __CUDACC_OR_HIPCC__ && defined GPU_ACTIVE
+#if defined __GPUCC__ && defined GPU_ACTIVE
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -321,7 +321,7 @@ namespace care {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(__CUDACC_OR_HIPCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(__GPUCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
       const int length = end - start;
 
       if (length != 0) {

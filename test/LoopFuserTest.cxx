@@ -93,7 +93,7 @@ GPU_TEST(TestPacker, packFixedRange) {
    hipDeviceSynchronize();
 #endif
 
-#ifdef __CUDACC_OR_HIPCC__
+#ifdef __GPUCC__
    // pack should have happened on the device, so
    // host data should not be updated yet
    for (int i = 0; i < 2; ++i) {
