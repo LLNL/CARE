@@ -176,9 +176,9 @@ int FindIndexMax(care::host_device_ptr<const T> arr, int n);
 
 
 template <typename T>
-bool checkSorted(const T* array, const int len,
-                 const char* name, const char* argname,
-                 const bool allowDuplicates = false);
+CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates = false);
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -192,9 +192,9 @@ bool checkSorted(const T* array, const int len,
 /// @return true if sorted, false otherwise
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-inline bool checkSorted(const T* array, const int len,
-                        const char* name, const char* argname,
-                        const bool allowDuplicates) {
+CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates) {
    if (len > 0) {
       int last = 0;
       bool failed = false;
@@ -820,7 +820,7 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
    if (len > 0) {
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#else
+#elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #endif   
    }
@@ -833,7 +833,7 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
    if (len > 0) {
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#else
+#elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #endif   
    }

@@ -330,17 +330,14 @@ namespace care {
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
          RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
-#else
-
-#ifdef __CUDACC__
+#elif defined(__CUDACC__)
          RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
-#else // __HIPCC__
+#elif defined(__HIPCC__)
          RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
 #endif
 
-#if FORCE_SYNC
+#if FORCE_SYNC && defined(__GPUCC__)
          care_gpuErrchk(gpuDeviceSynchronize());
-#endif
 #endif
 
          threadRM->setExecutionSpace(chai::NONE);

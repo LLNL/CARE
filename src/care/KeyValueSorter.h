@@ -101,7 +101,7 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
-#else
+#elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
@@ -122,7 +122,7 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
-#else
+#elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,

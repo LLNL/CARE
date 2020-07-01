@@ -21,6 +21,7 @@
 
 #include "care/LoopFuser.h"
 #include "care/care.h"
+#include "care/util.h"
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
@@ -87,11 +88,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    packer->flush();
 
-#ifdef __CUDACC__
-   cudaDeviceSynchronize();
-#elif defined(__HIPCC__)
-   hipDeviceSynchronize();
-#endif
+   gpuDeviceSynchronize();
 
 #ifdef __GPUCC__
    // pack should have happened on the device, so
@@ -142,11 +139,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       });
    }
 
-#ifdef __CUDACC__
-   cudaDeviceSynchronize();
-#elif defined(__HIPCC__)
-   hipDeviceSynchronize();
-#endif
+   gpuDeviceSynchronize();
 
    // pack should  not have happened yet so
    // host data should not be updated yet
@@ -189,11 +182,7 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       dst[pos+i] = src[i+pos]*2;
    } FUSIBLE_LOOP_STREAM_END
 
-#ifdef __CUDACC__
-   cudaDeviceSynchronize();
-#elif defined(__HIPCC__)
-   hipDeviceSynchronize();
-#endif
+   gpuDeviceSynchronize();
 
    // pack should  not have happened yet so
    // host data should not be updated yet
