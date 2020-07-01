@@ -90,6 +90,14 @@ if (NOT TARGET raja)
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
             set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
             # CUB_DIR is already set above
+
+            # TODO: Remove when this fix is in RAJA.
+            # The current patch is a fix for integrating CUB from a neighboring submodule.
+            add_custom_command(TARGET patch-raja PRE_BUILD
+                               COMMAND ${CMAKE_COMMAND} -E copy
+                               ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
+                               ${CMAKE_CURRENT_LIST_DIR}/raja/CMakeLists.txt)
+
          endif ()
 
          add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
