@@ -5,7 +5,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__CUDACC__)
+#include "care/config.h"
+
+#if defined(__GPUCC__)
 #define GPU_ACTIVE
 #endif
 
@@ -15,17 +17,17 @@
 // care headers
 #include "care/care.h"
 
-#if defined(__CUDACC__) && GTEST_HAS_DEATH_TEST
+#if defined(__GPUCC__) && GTEST_HAS_DEATH_TEST
 // This asserts a crash on the GPU, but does not mark gtest as passing.
 #define GPU_FAIL(code) ASSERT_DEATH(code, "")
 #else
 #define GPU_FAIL(code) code
 #endif
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
+// This makes it so we can use device lambdas from within a GPU_TEST
+#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
+   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
+   static void gpu_test_ ## X_ ## Y()
 
 template<typename T>
 void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
@@ -41,7 +43,7 @@ inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
 }
 
 // This initialization pattern works fine
-CUDA_TEST(nestedMA, gpu_init0)
+GPU_TEST(nestedMA, gpu_init0)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -69,7 +71,7 @@ CUDA_TEST(nestedMA, gpu_init0)
 }
 
 // This initialization pattern fails on the GPU build
-CUDA_TEST(nestedMA, gpu_init)
+GPU_TEST(nestedMA, gpu_init)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -103,7 +105,7 @@ CUDA_TEST(nestedMA, gpu_init)
 }
 
 // This initialization pattern works fine
-CUDA_TEST(nestedMA, cpu_init0)
+GPU_TEST(nestedMA, cpu_init0)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -132,7 +134,7 @@ CUDA_TEST(nestedMA, cpu_init0)
 
 }
 // This initialization pattern fails on the GPU build
-CUDA_TEST(nestedMA, cpu_init)
+GPU_TEST(nestedMA, cpu_init)
 {
    const int N = 1 ;
    const int M = 1 ;
