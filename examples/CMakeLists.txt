@@ -12,6 +12,10 @@ if (ENABLE_CUDA)
    list(APPEND care_depends cuda)
 endif()
 
+if (ENABLE_HIP)
+  list(APPEND care_depends hip)
+endif ()
+
 if (ENABLE_OPENMP)
    list(APPEND care_depends openmp)
 endif()

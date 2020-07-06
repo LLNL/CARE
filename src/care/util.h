@@ -163,6 +163,36 @@ namespace care {
 #endif
    }
 
+#elif defined(__HIPCC__)
+
+   /////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Checks the return code from CUDA API calls for errors. Prints the
+   ///        name of the file and the line number where the CUDA API call occurred
+   ///        in the event of an error and exits if abort is true.
+   ///
+   /// @arg[in] code The return code from CUDA API calls
+   /// @arg[in] file The file where the CUDA API call occurred
+   /// @arg[in] line The line number where the CUDA API call occurred
+   /// @arg[in] abort Whether or not to abort if an error occurred
+   ///
+   /////////////////////////////////////////////////////////////////////////////////
+   inline void gpuAssert(hipError_t code, const char *file, const int line,
+                         const bool abort=true)
+   {
+      if (code != hipSuccess) {
+         fprintf(stderr, "[CARE] GPUassert: %s %s %d\n", hipGetErrorString(code), file, line);
+         if (abort) {
+            exit(code);
+         }
+      }
+#if defined(CARE_DEBUG)
+      CUDAWatchpoint::setOrCheckWatchpoint<int>();
+#endif
+   }
+
 #else // __CUDACC__
 
    /////////////////////////////////////////////////////////////////////////////////
@@ -222,10 +252,55 @@ namespace care {
 #endif
    }
 
+#elif __HIPCC__
+
+   /////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Convenience function for calling cudaDeviceSynchronize. This overload
+   ///        calls cudaDeviceSynchronize if in a CUDA context and FORCE_SYNC is true.
+   ///
+   /// @arg[in] ExecutionPolicy Used to choose this overload
+   /// @arg[in] file The file where the cudaDeviceSynchronize call occurred
+   /// @arg[in] line The line number where the cudaDeviceSynchronize call occurred
+   /// @arg[in] abort Whether or not to abort if an error occurred
+   ///
+   /////////////////////////////////////////////////////////////////////////////////
+   inline void hipDeviceSynchronize(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>,
+                                     const char* file, const int line,
+                                     const bool abort=true) {
+#if FORCE_SYNC
+      gpuAssert(::hipDeviceSynchronize(), file, line, abort);
 #endif
+   }
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////
+///
+/// @author Danny Taller
+///
+/// @brief Convenience function for calling cuda or hip DeviceSynchronize,
+///        depending on the context.
+////////////////////////////////////////////////////////////////////////////////
+#if defined(__CUDACC__)
+   inline cudaError_t gpuDeviceSynchronize() {
+      return ::cudaDeviceSynchronize();
+   }
+#elif defined(__HIPCC__)
+   inline hipError_t gpuDeviceSynchronize() {
+      return ::hipDeviceSynchronize();
+   }
+#else
+   inline int gpuDeviceSynchronize() {
+      return 0;
+   }
+#endif
+
 } // namespace care
 
-#if defined(__CUDACC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
@@ -253,7 +328,7 @@ namespace care {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // defined(__CUDACC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

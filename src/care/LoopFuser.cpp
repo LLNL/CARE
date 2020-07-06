@@ -61,6 +61,8 @@ LoopFuser::~LoopFuser() {
    if (m_reserved > 0) {
 #ifdef __CUDACC__
       cudaFree(m_action_offsets);
+#elif defined(__HIPCC__)
+      hipFree(m_action_offsets);
 #else
       free(m_action_offsets);
 #endif
@@ -69,6 +71,8 @@ LoopFuser::~LoopFuser() {
    if (m_lambda_reserved > 0) {
 #ifdef __CUDACC__
       cudaFree(m_lambda_data);
+#elif defined(__HIPCC__)
+      hipFree(m_lambda_data);
 #else
       free(m_lambda_data);
 #endif
@@ -84,6 +88,8 @@ void LoopFuser::reserve(size_t size) {
    size_t totalsize = size*(sizeof(int)*5+sizeof(SerializableDeviceLambda<int>) + sizeof(SerializableDeviceLambda<bool>));
 #ifdef __CUDACC__
    cudaHostAlloc((void **)&pinned_buf, totalsize, cudaHostAllocDefault);
+#elif defined(__HIPCC__)
+   hipHostAlloc((void **)&pinned_buf, totalsize, hipHostAllocDefault);
 #else
    pinned_buf = (char*) malloc(totalsize);
 #endif
@@ -108,6 +114,12 @@ void LoopFuser::reserve_lambda_buffer(size_t size) {
    if (m_lambda_data) {
       cudaMemcpy(tmp, m_lambda_data, size, cudaMemcpyHostToHost);
       cudaFreeHost((void *)m_lambda_data);
+   }
+#elif defined(__HIPCC__)
+   hipHostAlloc((void**)&tmp, size, hipHostAllocDefault);
+   if (m_lambda_data) {
+      hipMemcpy(tmp, m_lambda_data, size, hipMemcpyHostToHost);
+      hipFreeHost((void *)m_lambda_data);
    }
 #else
    tmp = (char *) malloc(size);

@@ -17,6 +17,7 @@ project(care LANGUAGES CXX)
 option(ENABLE_MPI "Build MPI support" OFF)
 option(ENABLE_CUDA "Build CUDA support" OFF)
 option(ENABLE_OPENMP "Build OpenMP support" OFF)
+option(ENABLE_HIP "Build HIP support" OFF)
 
 # Advanced configuration options
 # TODO: If these are disabled, the code will not compile or run correctly.
@@ -121,6 +122,14 @@ if (ENABLE_CUDA)
    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch ${CUDA_CODE} -code ${CUDA_ARCH}")
    set(CARE_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 endif()
+
+### needed if we use hip_runtime as a dependency instead of just hip
+### this is kind of a hack
+#if (ENABLE_HIP)
+#   set(HIP_ROOT_DIR "/opt/rocm-3.5.0/hip" CACHE PATH "")
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --hip-device-lib-path=/opt/rocm-3.5.0/lib  -I/opt/rocm-3.5.0/llvm/lib/clang/11.0.0 -x hip")
+#   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --hip-device-lib-path=/opt/rocm-3.5.0/lib -I/opt/rocm-3.5.0/llvm/lib/clang/11.0.0 -x hip")
+#endif()
 
 ################################
 # Set up dependencies
