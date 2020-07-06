@@ -65,6 +65,7 @@ if (ENABLE_CUDA)
    endif ()
 endif ()
 
+
 ################################
 # RAJA (required)
 ################################
@@ -93,11 +94,8 @@ if (NOT TARGET raja)
 
             # TODO: Remove when this fix is in RAJA.
             # The current patch is a fix for integrating CUB from a neighboring submodule.
-            add_custom_command(TARGET patch-raja PRE_BUILD
-                               COMMAND ${CMAKE_COMMAND} -E copy
-                               ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
-                               ${CMAKE_CURRENT_LIST_DIR}/raja/CMakeLists.txt)
-
+            file(COPY ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
+                 DESTINATION ${CMAKE_CURRENT_LIST_DIR}/raja)
          endif ()
 
          add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
