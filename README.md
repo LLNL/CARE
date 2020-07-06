@@ -14,7 +14,7 @@ Note: CHAI must be built with `-DENABLE_PICK=ON -DENABLE_PINNED=ON`.
 
 For quick reference, the paths to CHAI, RAJA, and Umpire are the same as CMAKE\_INSTALL\_PREFIX when building those dependencies. That location defaults to /usr/local, but can be specified by passing `-DCMAKE_INSTALL_PREFIX=/desired/path` and running `make install`.
 
-To build with CUDA support, use `-DENABLE_CUDA -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit`. CHAI, RAJA, and Umpire must also be built with those options.
+To build with CUDA support, use `-DENABLE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit`. CHAI, RAJA, and Umpire must also be built with those options.
 
 To build with OpenMP support, use `-DENABLE_OPENMP`. RAJA must also be built with that option.
 
