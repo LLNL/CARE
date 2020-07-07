@@ -10,15 +10,15 @@
 
 using namespace care;
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
+// This makes it so we can use device lambdas from within a GPU_TEST
+#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
+   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
+   static void gpu_test_ ## X_ ## Y()
 
 using int_ptr = host_device_ptr<int>;
 
-CUDA_TEST(TestPacker, testFuseSort) {
-#if defined(__CUDACC__)
+GPU_TEST(TestPacker, testFuseSort) {
+#if defined(__GPUCC__)
    int poolSize = 128*1024*1024; // 128 MB
    care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
    care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);
@@ -48,7 +48,7 @@ CUDA_TEST(TestPacker, testFuseSort) {
 
 }
 
-CUDA_TEST(TestPacker, testFuseUniq) {
+GPU_TEST(TestPacker, testFuseUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
@@ -83,7 +83,7 @@ CUDA_TEST(TestPacker, testFuseUniq) {
    EXPECT_EQ(concatanated_lengths.pick(1), len2);
 }
 
-CUDA_TEST(TestPacker, testFuseSortUniq) {
+GPU_TEST(TestPacker, testFuseSortUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
@@ -120,7 +120,7 @@ CUDA_TEST(TestPacker, testFuseSortUniq) {
 }
 
 
-CUDA_TEST(TestPacker, testFuseSortUniqMissingArrays) {
+GPU_TEST(TestPacker, testFuseSortUniqMissingArrays) {
    int a0[3] = {15,16,16};
    int a1[18] = {5,6,6,7,7,8,8,10,11,11,12,12,13,13,17,17,18,18}; 
    int a2[3] = {15,16,16};

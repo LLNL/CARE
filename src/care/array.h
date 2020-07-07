@@ -11,6 +11,10 @@
 // CARE config header
 #include "care/config.h"
 
+#if defined(__HIPCC__)
+#include "hip/hip_runtime.h"
+#endif
+
 namespace care {
    ////////////////////////////////////////////////////////////////
    ///

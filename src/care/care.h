@@ -24,7 +24,7 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#if defined(_OPENMP)
+#if defined(_OPENMP) && defined(RAJA_USE_OPENMP)
    #include <omp.h>
 #endif
 
@@ -84,7 +84,7 @@ using RAJAAtomic = RAJA::auto_atomic;
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.
-#if defined (__CUDACC__)
+#if defined (__GPUCC__)
 
 #define CARE_CUDA_BLOCK_SIZE 256
 #define CARE_CUDA_ASYNC true
@@ -92,20 +92,24 @@ using RAJAAtomic = RAJA::auto_atomic;
 #if CHAI_GPU_SIM_MODE
 using RAJADeviceExec = RAJA::seq_exec;
 #else // CHAI_GPU_SIM_MODE
+#if defined (__CUDACC__)
 using RAJADeviceExec = RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#elif defined(__HIPCC__)
+using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#endif // __CUDACC__
 #endif // CHAI_GPU_SIM_MDOE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC__
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __GPUCC__
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
 
-#else // __CUDACC__
+#else // __GPUCC__
 
 using RAJADeviceExec = RAJA::seq_exec;
 
-#endif // CUDACC
+#endif // __GPUCC__
 
-#if defined (__CUDACC__) && defined (GPU_ACTIVE)
+#if defined (__GPUCC__) && defined (GPU_ACTIVE)
 
 #if CHAI_GPU_SIM_MODE
 
@@ -123,7 +127,7 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::seq
 #define RAJA_PARALLEL_ACTIVE
 
-#else // CHAI_GPU_SIM_MODE
+#elif defined(__CUDACC__) // CHAI_GPU_SIM_MODE
 
 using RAJACudaReduce = RAJA::cuda_reduce ;
 
@@ -143,9 +147,30 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::device
 #define RAJA_PARALLEL_ACTIVE
 
-#endif // CHAI_GPU_SIM_MDOE
+#else // CHAI_GPU_SIM_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __CUDACC__ and GPU_ACTIVE
+// The defined(__HIPCC__) case is here: 
+using RAJAHipReduce = RAJA::hip_reduce ;
+
+template <class T>
+using RAJAReduceMax = RAJA::ReduceMax<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMin = RAJA::ReduceMin<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMinLoc = RAJA::ReduceMinLoc<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc<RAJAHipReduce, T> ;
+template<class T>
+using RAJAReduceSum = RAJA::ReduceSum<RAJAHipReduce, T> ;
+using RAJAHipExec = RAJADeviceExec ;
+using RAJAExec = RAJADeviceExec ;
+
+#define thrustExec thrust::device
+#define RAJA_PARALLEL_ACTIVE
+
+#endif // CHAI_GPU_SIM_MODE
+
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __GPUCC__ and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
@@ -161,7 +186,7 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::host
 #define RAJA_PARALLEL_ACTIVE
 
-#else // __CUDACC__ and GPU_ACTIVE
+#else // __GPUCC__ and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;
@@ -176,7 +201,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJA::seq_exec ;
 #define thrustExec thrust::seq
 
-#endif // CUDACC and GPU_ACTIVE
+#endif // __GPUCC__
 
 #if 0
 #define ANNOTATE_J2(X, Y) X "_" #Y
@@ -206,7 +231,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 
 
 // ******** Whether RAJA HAS DETECTED GPU ACTIVE ****
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 #ifdef GPU_ACTIVE
 #define RAJA_GPU_ACTIVE
 #endif
@@ -214,11 +239,11 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 // ************ DEFAULT MACRO SELECTION **************
 
 // Define default behavior for work loops
-#if defined(__CUDACC__)
+#if defined(__GPUCC__)
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
 //#define FISSION_LOOPS 1
 #define USE_PERMUTED_CONNECTIVITY 1
-#else // __CUDACC__ is False, CHAI_GPU_SIM_MODE is 0
+#else // __GPUCC__ is False, CHAI_GPU_SIM_MODE is 0
 
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
@@ -229,7 +254,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 #define USE_PERMUTED_CONNECTIVITY 0
 #endif
 
-#endif // __CUDACC__
+#endif // __GPUCC__
 
 #include "care/scan.h"
 

@@ -18,9 +18,15 @@
 
 // Other library headers
 #ifdef RAJA_GPU_ACTIVE
+#ifdef __CUDACC__
 #include "cub/cub.cuh"
 #undef CUB_NS_POSTFIX
 #undef CUB_NS_PREFIX
+#endif
+
+#ifdef __HIPCC__
+#include "hipcub/hipcub.hpp"
+#endif
 #endif
 
 namespace care {
@@ -90,10 +96,17 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    // When called with a nullptr for temp storage, this returns how much
    // temp storage should be allocated.
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
+#elif defined(__HIPCC__)
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#endif
    }
 
    // Allocate the temp storage and get raw data to pass to cub
@@ -104,10 +117,17 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    // Now sort
    if (len > 0) {
+#if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
+#elif defined(__HIPCC__)
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#endif
    }
 
    // Get the result
@@ -143,14 +163,14 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 ///    arrays to be compatible with sortKeyValueArrays.
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-class KeyValueSorter<T, RAJACudaExec> {
+class KeyValueSorter<T, RAJADeviceExec> {
    public:
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief Default constructor
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJACudaExec>() = default;
+      KeyValueSorter<T, RAJADeviceExec>() = default;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
@@ -159,7 +179,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] len - The number of elements to allocate space for
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<T, RAJACudaExec>(const size_t len)
+      explicit KeyValueSorter<T, RAJADeviceExec>(const size_t len)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -176,7 +196,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] arr - The raw array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJACudaExec>(const size_t len, const T* arr)
+      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const T* arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -194,7 +214,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJACudaExec>(const size_t len, host_device_ptr<T> const & arr)
+      KeyValueSorter<T, RAJADeviceExec>(const size_t len, host_device_ptr<T> const & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -213,7 +233,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<T, RAJACudaExec>(const KeyValueSorter<T, RAJACudaExec> &other)
+      CARE_HOST_DEVICE KeyValueSorter<T, RAJADeviceExec>(const KeyValueSorter<T, RAJADeviceExec> &other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
@@ -226,7 +246,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @brief Destructor
       /// Frees the underlying memory if this is the owner.
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJACudaExec>()
+      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJADeviceExec>()
       {
 #ifndef __CUDA_ARCH__
          /// Only attempt to free if we are on the CPU
@@ -242,7 +262,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJACudaExec> & operator=(KeyValueSorter<T, RAJACudaExec> & other)
+      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> & other)
       {
          if (this != &other) {
             free();
@@ -264,7 +284,7 @@ class KeyValueSorter<T, RAJACudaExec> {
       /// @param[in] other - The other KeyValueSorter to move from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJACudaExec> & operator=(KeyValueSorter<T, RAJACudaExec> && other)
+      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> && other)
       {
          if (this != &other) {
             free();

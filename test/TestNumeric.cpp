@@ -5,8 +5,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+#include "care/config.h"
+
 // Makes LOOP_REDUCE run on the device
-#ifdef __CUDACC__
+#if defined(__GPUCC__)
 #define GPU_ACTIVE
 #endif
 
@@ -49,7 +51,7 @@ TEST(numeric, iota)
    } LOOP_SEQUENTIAL_END
 }
 
-#ifdef __CUDACC__
+#if defined(__GPUCC__)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -65,7 +67,11 @@ GPU_TEST(numeric, iota)
 
    // Check negative value works
    int offset = -1;
+#if defined(__CUDACC__)
    care::iota(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#elif defined(__HIPCC__)
+   care::iota(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#endif
 
    RAJAReduceMin<bool> passed{true};
 
@@ -79,7 +85,11 @@ GPU_TEST(numeric, iota)
 
    // Check zero value works
    offset = 0;
+#if defined(__CUDACC__)
    care::iota(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#elif defined(__HIPCC__)
+   care::iota(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#endif
 
    LOOP_REDUCE(i, 0, size) {
       if (array[i] != i + offset) {
@@ -91,7 +101,11 @@ GPU_TEST(numeric, iota)
 
    // Check positive value works
    offset = 1;
+#if defined(__CUDACC__)
    care::iota(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#elif defined(__HIPCC__)
+   care::iota(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
+#endif
 
    LOOP_REDUCE(i, 0, size) {
       if (array[i] != i + offset) {

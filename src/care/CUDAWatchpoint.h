@@ -9,15 +9,25 @@
 #define _CARE_CUDA_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
-#if __CUDACC__
+#if defined(__GPUCC__)
 
+#if defined(__CUDACC__)
 // Other library headers
 #include "cuda.h"
+#define care_watchpoint_err_t cudaError_t
+#else
+#include "hip/hip_runtime.h"
+#define care_watchpoint_err_t hipError_t
+#endif
 
-inline void watchpoint_gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+inline void watchpoint_gpuAssert(care_watchpoint_err_t code, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess) {
+#if defined(__CUDACC__)
       fprintf(stderr, "[CARE] WATCHPOINT GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+#elif defined(__HIPCC__)
+      fprintf(stderr, "[CARE] WATCHPOINT GPUassert: %s %s %d\n", hipGetErrorString(code), file, line);
+#endif
       if (abort) {
          exit(code);
       }
@@ -34,7 +44,11 @@ class CUDAWatchpoint {
          if (!deviceAddress) {
             if (wp) {
                T currentVal;
+#if defined(__CUDACC__)
                watchpoint_gpuAssert(cudaMemcpy(&currentVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#elif defined(__HIPCC__)
+               watchpoint_gpuAssert(hipMemcpy(&currentVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#endif               
                if (currentVal != oldVal) {
                   printf("[CARE] CUDA Watchpoint %p change detected!\n", wp);
                   oldVal = currentVal;
@@ -44,12 +58,16 @@ class CUDAWatchpoint {
          // set
          else {
             wp = deviceAddress;
+#if defined(__CUDACC__)
             watchpoint_gpuAssert(cudaMemcpy(&oldVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#elif defined(__HIPCC__)
+            watchpoint_gpuAssert(hipMemcpy(&oldVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+#endif         
          }
       }
 };
 
-#endif //__CUDACC__
+#endif //__GPUCC__
 #endif //CARE_DEBUG
 
 #endif // !defined(_CARE_CUDA_WATCHPOINT_H_)

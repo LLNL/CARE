@@ -17,17 +17,17 @@
 
 // This makes sure the lambdas get decorated with the right __host__ and or
 // __device__ specifiers
-#if defined(__CUDACC__) && defined(GPU_ACTIVE)
+#if defined(__GPUCC__) && defined(GPU_ACTIVE)
 #define CARE_HOST_DEVICE_ACTIVE __host__ __device__
 #define CARE_DEVICE_ACTIVE __device__
 #define CARE_HOST_ACTIVE __host__
 #define CARE_GLOBAL_ACTIVE __global__
-#else // defined __CUDACC__
+#else // defined __GPUCC__
 #define CARE_HOST_DEVICE_ACTIVE
 #define CARE_DEVICE_ACTIVE
 #define CARE_HOST_ACTIVE
 #define CARE_GLOBAL_ACTIVE
-#endif // defined __CUDACC__
+#endif // defined __GPUCC__
 
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
