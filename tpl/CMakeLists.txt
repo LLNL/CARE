@@ -21,22 +21,15 @@ if (NOT TARGET camp)
    if (camp_DIR)
       message(STATUS "Using external CAMP")
 
-      # TODO: When RAJA is updated past v0.11.0, re-enable this code
-      #       since RAJA will be able to use the "camp" cmake target
-      #       directly.
-      # list(APPEND CMAKE_PREFIX_PATH ${camp_DIR})
-      # find_package(camp CONFIG REQUIRED)
+      list(APPEND CMAKE_PREFIX_PATH ${camp_DIR})
+      find_package(camp CONFIG REQUIRED)
    else ()
       message(STATUS "Using CAMP submodule")
 
       if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/camp/CMakeLists.txt)
          message(FATAL_ERROR "CAMP submodule not initialized. Run 'git submodule update --init' in the git repository or set camp_DIR to use an external build of CAMP.")
       else ()
-         # TODO: When RAJA is updated past v0.11.0, re-enable this code
-         #       and remove the enabled code since RAJA will be able to
-         #       use the "camp" cmake target directly.
-         # add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/camp)
-         set (camp_DIR "${CMAKE_CURRENT_LIST_DIR}/camp")
+         add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/camp)
       endif ()
    endif ()
 endif ()
@@ -81,19 +74,15 @@ if (NOT TARGET raja)
       if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/raja/CMakeLists.txt)
          message(FATAL_ERROR "RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR to use an external build of RAJA.")
       else ()
-         # TODO: When RAJA is updated past v0.11.0, EXTERNAL_CAMP_SOURCE_DIR
-         #       does not need to be set since RAJA will be able to use
-         #       the "camp" cmake target directly.
-         set(EXTERNAL_CAMP_SOURCE_DIR "${camp_DIR}" CACHE PATH "Build with a specific external camp source repository")
-
          if (ENABLE_CUDA)
             # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
             set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
             # CUB_DIR is already set above
 
-            # TODO: Remove when this fix is in RAJA.
-            # The current patch is a fix for integrating CUB from a neighboring submodule.
+            # TODO: Remove when these fixes are in RAJA (after v0.11.0).
+            # The current patch includes fixes for integrating CAMP and CUB
+            # as neighbor submodules.
             file(COPY ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
                  DESTINATION ${CMAKE_CURRENT_LIST_DIR}/raja)
          endif ()
