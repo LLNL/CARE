@@ -22,7 +22,6 @@ endif()
 # umpire's installed cmake target is lower case
 set(umpire_DIR ${UMPIRE_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${umpire_DIR})
-find_package(camp REQUIRED)
 find_package(umpire REQUIRED)
 
 set (UMPIRE_FOUND ${umpire_FOUND} CACHE STRING "")
