@@ -398,6 +398,15 @@ namespace care {
       }
    }; // class host_device_ptr
 
+
+   // When ENABLE_IMPLICIT_CONVERSIONS is off, this line is needed for the line 'using stream_insertion_t = decltype(std::cout << std::declval<T>());' in
+   // util.h to compile
+   template<typename T>
+   std::ostream& operator<<(std::ostream& outs, const host_device_ptr<T>& ptr)
+   {
+     return outs << ptr.data();
+   }
+
    /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
    template< typename T>
    void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
