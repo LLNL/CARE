@@ -43,16 +43,22 @@ option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
 option(ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 
 # Required dependencies (by default uses submodules)
+# The upper case variables simply point to the root install location.
+# The lower case variables point to the cmake config file (if applicable).
+# Whichever form is most convenient can be used to specify the dependencies.
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
-# TODO: When RAJA is updated past v0.11.0, camp_DIR should point to the
-#       directory containing campConfig.cmake or camp-config.cmake.
-#       Update the variable documentation to reflect that change.
-set(camp_DIR "" CACHE PATH "Path to external CAMP (top level of the install or source directory)")
+set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
+set(camp_DIR "" CACHE PATH "Path to campConfig.cmake")
 
-set(umpire_DIR "" CACHE PATH "Path to external umpireConfig.cmake or umpire-config.cmake")
+set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
+set(umpire_DIR "" CACHE PATH "Path to umpire-config.cmake")
+
+set(RAJA_DIR "" CACHE PATH "Path to installed RAJA")
 set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cmake")
-set(chai_DIR "" CACHE PATH "Path to external chaiConfig.cmake or chai-config.cmake")
+
+set(CHAI_DIR "" CACHE PATH "Path to installed CHAI")
+set(chai_DIR "" CACHE PATH "Path to chai-config.cmake")
 
 # Optional dependencies without submodules (not open source)
 set(LLNL_GLOBALID_DIR "" CACHE PATH "Path to external LLNL_GlobalID")
