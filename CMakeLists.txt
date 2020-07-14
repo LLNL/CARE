@@ -25,6 +25,9 @@ option(ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(ENABLE_DOCUMENTATION "Build documentation" ON)
 option(ENABLE_EXAMPLES "Build examples" ON)
 
+# The same value should be used when building CHAI
+option(ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
+
 # Dependencies
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 set(camp_DIR "" CACHE PATH "Path to external campConfig.cmake or camp-config.cmake")

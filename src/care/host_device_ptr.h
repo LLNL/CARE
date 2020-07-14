@@ -72,6 +72,7 @@ namespace care {
       ///
       CARE_HOST_DEVICE host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
       ///
       /// @author Peter Robinson
       ///
@@ -85,6 +86,7 @@ namespace care {
          chai::CHAIDISAMBIGUATE name=chai::CHAIDISAMBIGUATE(), //!< Used to disambiguate this constructor
          bool foo=Q) //!< Used to disambiguate this constructor
       : MA(from, name, foo) {}
+#endif
 
       ///
       /// @author Peter Robinson

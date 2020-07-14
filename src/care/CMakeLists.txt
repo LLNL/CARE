@@ -11,6 +11,8 @@ if (WIN32)
   endif ()
 endif ()
 
+set(CARE_ENABLE_IMPLICIT_CONVERSIONS ${ENABLE_IMPLICIT_CONVERSIONS})
+
 configure_file(
     ${PROJECT_SOURCE_DIR}/src/care/config.h.in
     ${PROJECT_BINARY_DIR}/include/care/config.h)
