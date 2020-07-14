@@ -74,17 +74,17 @@ if (NOT TARGET raja)
       if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/raja/CMakeLists.txt)
          message(FATAL_ERROR "RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR to use an external build of RAJA.")
       else ()
+         # TODO: Remove when these fixes are in RAJA (after v0.11.0).
+         # The current patch includes fixes for integrating CAMP and CUB
+         # as neighbor submodules.
+         file(COPY ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
+              DESTINATION ${CMAKE_CURRENT_LIST_DIR}/raja)
+
          if (ENABLE_CUDA)
             # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
             set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
             # CUB_DIR is already set above
-
-            # TODO: Remove when these fixes are in RAJA (after v0.11.0).
-            # The current patch includes fixes for integrating CAMP and CUB
-            # as neighbor submodules.
-            file(COPY ${CMAKE_CURRENT_LIST_DIR}/patches/raja/CMakeLists.txt
-                 DESTINATION ${CMAKE_CURRENT_LIST_DIR}/raja)
          endif ()
 
          add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/raja)
