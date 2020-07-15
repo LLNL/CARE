@@ -72,6 +72,7 @@ namespace care {
       ///
       CARE_HOST_DEVICE host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
       ///
       /// @author Peter Robinson
       ///
@@ -85,6 +86,7 @@ namespace care {
          chai::CHAIDISAMBIGUATE name=chai::CHAIDISAMBIGUATE(), //!< Used to disambiguate this constructor
          bool foo=Q) //!< Used to disambiguate this constructor
       : MA(from, name, foo) {}
+#endif
 
       ///
       /// @author Peter Robinson
@@ -395,6 +397,16 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
    }; // class host_device_ptr
+
+
+   // Prints host_device data to the given ostream. 
+   // When ENABLE_IMPLICIT_CONVERSIONS is off, this line is needed for the line 'using stream_insertion_t = decltype(std::cout << std::declval<T>());' in
+   // util.h to compile.
+   template<typename T>
+   std::ostream& operator<<(std::ostream& os, const host_device_ptr<T>& ptr) {
+     print(os, ptr.data(), ptr.size());
+     return os;
+   }
 
    /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
    template< typename T>

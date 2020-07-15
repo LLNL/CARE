@@ -58,7 +58,7 @@ namespace care {
          ///
          /// Copy constructor
          ///
-         host_ptr(host_ptr const & ptr) noexcept : m_ptr(ptr) {}
+         host_ptr(host_ptr const & ptr) noexcept : m_ptr(ptr.data()) {}
 
          ///
          /// @author Peter Robinson
@@ -67,14 +67,14 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
+         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          ///
          /// @author Peter Robinson
          ///
          /// Construct from chai::ManagedArray
          ///
-         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr((T*) ptr) {}
+         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr((T*) ptr.data()) {}
 
          ///
          /// @author Peter Robinson
@@ -83,7 +83,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr((T_non_const*) ptr) {}
+         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr((T_non_const*) ptr.data()) {}
 
          ///
          /// @author Peter Robinson
@@ -92,12 +92,16 @@ namespace care {
          ///
          inline T & operator[](int index) const { return m_ptr[index]; }
 
+// We will allow this implicit conversion since it is safe for host-only pointers. We could re-consider
+// this in the future, however, but it may require many code changes for users.
+//#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
          ///
          /// @author Peter Robinson
          ///
          /// Convert to a raw pointer
          ///
          operator T*() const { return m_ptr; }
+//#endif
 
          ///
          /// @author Peter Robinson
@@ -120,6 +124,13 @@ namespace care {
          ///
          template<typename Idx>
          host_ptr<T> & operator +=(Idx i) { m_ptr += i; return *this; }
+
+         ///
+         /// @author Danny Taller
+         ///
+         /// Get the underlying data array. In the future, this may replace operator T*()
+         ///
+         T* data() const { return m_ptr; }
 
       private:
          T * m_ptr; //!< Raw host pointer
