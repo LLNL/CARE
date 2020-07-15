@@ -25,6 +25,12 @@ if (NOT TARGET camp)
    elseif (camp_DIR)
       message(STATUS "Using external CAMP")
       find_package(camp CONFIG REQUIRED)
+   endif ()
+
+   if (camp_FOUND)
+      blt_register_library(NAME camp
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${camp_INSTALL_PREFIX}/include)
    else ()
       message(STATUS "Using CAMP submodule")
 
@@ -72,6 +78,15 @@ if (NOT TARGET raja)
    elseif (raja_DIR)
       message(STATUS "Using external RAJA")
       find_package(raja CONFIG REQUIRED)
+   endif ()
+
+   if (raja_FOUND)
+      get_target_property(RAJA_INCLUDE_DIRS RAJA INTERFACE_INCLUDE_DIRECTORIES)
+      blt_register_library(NAME RAJA
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${RAJA_INCLUDE_DIRS}
+                           LIBRARIES RAJA
+                           DEPENDS_ON camp)
    else ()
       message(STATUS "Using RAJA submodule")
 
@@ -112,6 +127,17 @@ if (NOT TARGET umpire)
    elseif (umpire_DIR)
       message(STATUS "Using external Umpire")
       find_package(umpire CONFIG REQUIRED)
+   endif ()
+
+   if (umpire_FOUND)
+      set(UMPIRE_LIBRARIES umpire)
+      set(UMPIRE_DEPENDS camp)
+      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
+      blt_register_library(NAME umpire
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${UMPIRE_INCLUDE_DIRS}
+                           LIBRARIES ${UMPIRE_LIBRARIES}
+                           DEPENDS_ON ${UMPIRE_DEPENDS})
    else ()
       message(STATUS "Using Umpire submodule")
 
@@ -134,6 +160,14 @@ if (NOT TARGET chai)
    elseif (chai_DIR)
       message(STATUS "Using external CHAI")
       find_package(chai CONFIG REQUIRED)
+   endif ()
+
+   if (chai_FOUND)
+      blt_register_library(NAME chai
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${CHAI_INCLUDE_DIRS}
+                           LIBRARIES chai
+                           DEPENDS_ON umpire camp)
    else ()
       message(STATUS "Using CHAI submodule")
 

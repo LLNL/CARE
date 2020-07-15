@@ -53,7 +53,7 @@ set(care_sources
     RAJAPlugin.cpp
     )
 
-set(care_depends chai RAJA umpire)
+set(care_depends chai RAJA umpire camp)
 
 if (ENABLE_MPI)
    list(APPEND care_depends mpi)
