@@ -403,7 +403,7 @@ namespace care {
    /// @brief Prints host_device data to the given ostream. 
    /// When ENABLE_IMPLICIT_CONVERSIONS is off, this line is needed for the 
    /// line 'using stream_insertion_t = decltype(std::cout << std::declval<T>());'
-   /// in util.h to compile
+   /// in util.h to compile.
    /// @param os  - the output stream that we will print to
    /// @param ptr - the host_device_ptr whose data we will print
    /// @return the output stream after printing
