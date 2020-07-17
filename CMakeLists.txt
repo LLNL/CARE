@@ -35,30 +35,23 @@ option(ENABLE_EXAMPLES "Build examples" ON)
 #       for submodules. Investigate alternatives.
 option(ENABLE_EXERCISES "Build exercises" OFF)
 
-# Extra submodule components
-option(ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
-option(ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
-option(ENABLE_SUBMODULE_DOCUMENTATION "Build submodule documentation" OFF)
-option(ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
-option(ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
-
-# Required dependencies (by default uses submodules)
-# The upper case variables simply point to the root install location.
+# Required dependencies (if the following variables are not set, uses submodules)
 # The lower case variables point to the cmake config file (if applicable).
+# The upper case variables simply point to the root install location.
 # Whichever form is most convenient can be used to specify the dependencies.
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
-set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
 set(camp_DIR "" CACHE PATH "Path to campConfig.cmake")
+set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
 
-set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
 set(umpire_DIR "" CACHE PATH "Path to umpire-config.cmake")
+set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
 
+set(raja_DIR "" CACHE PATH "Path to raja-config.cmake")
 set(RAJA_DIR "" CACHE PATH "Path to installed RAJA")
-set(raja_DIR "" CACHE PATH "Path to external rajaConfig.cmake or raja-config.cmake")
 
-set(CHAI_DIR "" CACHE PATH "Path to installed CHAI")
 set(chai_DIR "" CACHE PATH "Path to chai-config.cmake")
+set(CHAI_DIR "" CACHE PATH "Path to installed CHAI")
 
 # Optional dependencies without submodules (not open source)
 set(LLNL_GLOBALID_DIR "" CACHE PATH "Path to external LLNL_GlobalID")
@@ -74,7 +67,7 @@ if (ENABLE_CUDA)
 
    # CUDA required dependencies
    # TODO: Fix RAJA to accept a CUB cmake target
-   set(CUB_DIR "" CACHE PATH "Path to external CUB (top level of the install or source directory)")
+   set(CUB_DIR "" CACHE PATH "Path to external CUB")
 
    # CUDA optional dependencies without submodules (not open source)
    set(NVTX_DIR "" CACHE PATH "Path to external NVTX")
@@ -92,8 +85,8 @@ endif ()
 #       "docs" target to "raja-docs". A future update of BLT may also change
 #       the default name in BLT to something like "blt-docs", in which case
 #       this would no longer be necessary, either.
-if (ENABLE_SUBMODULE_DOCUMENTATION)
-    set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
+if (ENABLE_DOCUMENTATION)
+   set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
 endif ()
 
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
@@ -140,7 +133,6 @@ endif()
 ################################
 # Set up dependencies
 ################################
-add_subdirectory(tpl)
 include(cmake/SetupLibraries.cmake)
 
 ################################

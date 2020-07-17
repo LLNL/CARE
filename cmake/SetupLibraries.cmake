@@ -6,6 +6,176 @@
 ######################################################################################
 
 ################################
+# CUB (required for CUDA build)
+################################
+if (ENABLE_CUDA)
+   if (NOT TARGET CUB)
+      if (CUB_DIR)
+         message(STATUS "Using external CUB")
+
+         # TODO: Update RAJA to accept a CUB cmake target and write a
+         #       FindCUB.cmake find module.
+      else ()
+         message(STATUS "Using CUB submodule")
+
+         if (NOT EXISTS ${PROJECT_SOURCE_DIR}/cub/cub/cub.cuh)
+            message(FATAL_ERROR "CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
+         else ()
+            # TODO: Update RAJA to accept a CUB cmake target and insert
+            #       a call to add_library here.
+            set (CUB_DIR "${PROJECT_SOURCE_DIR}/cub" CACHE PATH "Path to CUB" FORCE)
+         endif ()
+      endif ()
+   endif ()
+endif ()
+
+################################
+# CAMP (required)
+################################
+if (NOT TARGET camp)
+   if (CAMP_DIR)
+      set(camp_DIR ${CAMP_DIR}/lib/cmake/camp)
+   endif ()
+
+   find_package(camp QUIET)
+
+   if (camp_FOUND)
+      message(STATUS "CARE: Using external CAMP")
+
+      set(CAMP_INCLUDE_DIRS ${camp_INSTALL_PREFIX}/include)
+
+      blt_register_library(NAME camp
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${CAMP_INCLUDE_DIRS})
+   else ()
+      message(STATUS "CARE: Using CAMP submodule")
+
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/camp/CMakeLists.txt)
+         message(FATAL_ERROR "CARE: CAMP submodule not initialized. Run 'git submodule update --init' in the git repository or set camp_DIR or CAMP_DIR to use an external build of CAMP.")
+      else ()
+         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/camp)
+      endif ()
+   endif ()
+endif ()
+
+################################
+# Umpire (required)
+################################
+if (NOT TARGET umpire)
+   if (UMPIRE_DIR)
+      set(umpire_DIR ${UMPIRE_DIR}/share/umpire/cmake)
+   endif ()
+
+   find_package(umpire QUIET)
+
+   if (umpire_FOUND)
+      message(STATUS "CARE: Using external Umpire")
+
+      set(UMPIRE_LIBRARIES umpire)
+      set(UMPIRE_DEPENDS camp)
+      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
+
+      blt_register_library(NAME umpire
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${UMPIRE_INCLUDE_DIRS}
+                           LIBRARIES ${UMPIRE_LIBRARIES}
+                           DEPENDS_ON ${UMPIRE_DEPENDS})
+   else ()
+      message(STATUS "CARE: Using Umpire submodule")
+
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/umpire/CMakeLists.txt)
+         message(FATAL_ERROR "CARE: Umpire submodule not initialized. Run 'git submodule update --init' in the git repository or set umpire_DIR or UMPIRE_DIR to use an external build of Umpire.")
+      else ()
+         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/umpire)
+      endif ()
+   endif ()
+endif ()
+
+################################
+# RAJA (required)
+################################
+if (NOT TARGET raja)
+   if (RAJA_DIR)
+      set(raja_DIR ${RAJA_DIR}/share/raja/cmake)
+   endif ()
+
+   find_package(raja QUIET)
+
+   if (raja_FOUND)
+      message(STATUS "CARE: Using external RAJA")
+
+      get_target_property(RAJA_INCLUDE_DIRS RAJA INTERFACE_INCLUDE_DIRECTORIES)
+      set(RAJA_LIBRARIES RAJA)
+      set(RAJA_DEPENDS camp)
+
+      blt_register_library(NAME RAJA
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${RAJA_INCLUDE_DIRS}
+                           LIBRARIES ${RAJA_LIBRARIES}
+                           DEPENDS_ON ${RAJA_DEPENDS})
+   else ()
+      message(STATUS "CARE: Using RAJA submodule")
+
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/raja/CMakeLists.txt)
+         message(FATAL_ERROR "CARE: RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR or RAJA_DIR to use an external build of RAJA.")
+      else ()
+         # TODO: Remove when these fixes are in RAJA (after v0.11.0).
+         # The current patch includes fixes for integrating CAMP and CUB
+         # as neighbor submodules.
+         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/CMakeLists.txt
+              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja)
+
+         if (ENABLE_CUDA)
+            # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
+            set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
+            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
+            # CUB_DIR is already set above
+         endif ()
+
+         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
+
+         if (ENABLE_CUDA)
+            # Reset CMAKE_CUDA_FLAGS
+            set(CMAKE_CUDA_FLAGS "${CARE_CMAKE_CUDA_FLAGS}")
+         endif ()
+      endif ()
+   endif ()
+endif ()
+
+################################
+# CHAI (required)
+################################
+if (NOT TARGET chai)
+   if (CHAI_DIR)
+      set(chai_DIR ${CHAI_DIR}/share/chai/cmake)
+   endif ()
+
+   find_package(chai QUIET)
+
+   if (chai_FOUND)
+      message(STATUS "CARE: Using external CHAI")
+
+      set(CHAI_LIBRARIES chai)
+      set(CHAI_DEPENDS umpire camp)
+      blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
+
+      blt_register_library(NAME chai
+                           TREAT_INCLUDES_AS_SYSTEM ON
+                           INCLUDES ${CHAI_INCLUDE_DIRS}
+                           LIBRARIES ${CHAI_LIBRARIES}
+                           DEPENDS_ON ${CHAI_DEPENDS})
+   else ()
+      message(STATUS "CARE: Using CHAI submodule")
+
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/chai/CMakeLists.txt)
+         message(FATAL_ERROR "CHAI submodule not initialized. Run 'git submodule update --init' in the git repository or set chai_DIR or CHAI_DIR to use an external build of CHAI.")
+      else ()
+         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/chai)
+      endif ()
+   endif ()
+endif ()
+
+################################
 # BASIL
 ################################
 if (BASIL_DIR)
