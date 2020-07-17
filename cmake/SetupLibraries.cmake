@@ -26,10 +26,13 @@ if (NOT TARGET camp)
       message(STATUS "CARE: Using external CAMP")
 
       set(CAMP_INCLUDE_DIRS ${camp_INSTALL_PREFIX}/include)
+      set(CAMP_DEPENDS )
+      blt_list_append(TO CAMP_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
 
       blt_register_library(NAME camp
                            TREAT_INCLUDES_AS_SYSTEM ON
-                           INCLUDES ${CAMP_INCLUDE_DIRS})
+                           INCLUDES ${CAMP_INCLUDE_DIRS}
+                           DEPENDS_ON ${CAMP_DEPENDS})
    else ()
       message(STATUS "CARE: Using CAMP submodule")
 
@@ -57,6 +60,7 @@ if (NOT TARGET umpire)
       set(UMPIRE_LIBRARIES umpire)
       set(UMPIRE_DEPENDS camp)
       blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
+      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
 
       blt_register_library(NAME umpire
                            TREAT_INCLUDES_AS_SYSTEM ON
@@ -100,6 +104,7 @@ if (NOT TARGET raja)
       get_target_property(RAJA_INCLUDE_DIRS RAJA INTERFACE_INCLUDE_DIRECTORIES)
       set(RAJA_LIBRARIES RAJA)
       set(RAJA_DEPENDS camp)
+      blt_list_append(TO RAJA_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
 
       blt_register_library(NAME RAJA
                            TREAT_INCLUDES_AS_SYSTEM ON
@@ -159,6 +164,7 @@ if (NOT TARGET chai)
       set(CHAI_LIBRARIES chai)
       set(CHAI_DEPENDS umpire camp)
       blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
+      blt_list_append(TO CHAI_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
 
       blt_register_library(NAME chai
                            TREAT_INCLUDES_AS_SYSTEM ON
