@@ -398,6 +398,7 @@ namespace care {
       }
    }; // class host_device_ptr
 
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
    /////////////////////////////////////////////////////////////////////////////////
    /// @author Danny Taller
    /// @brief Prints host_device data to the given ostream. 
@@ -413,6 +414,7 @@ namespace care {
      print(os, ptr.data(), ptr.size());
      return os;
    }
+#endif
 
    /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
    template< typename T>
