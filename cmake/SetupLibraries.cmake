@@ -9,21 +9,20 @@
 # CUB (required for CUDA build)
 ################################
 if (ENABLE_CUDA)
-   if (NOT TARGET CUB)
+   if (NOT TARGET cub)
       if (CUB_DIR)
-         message(STATUS "Using external CUB")
+         message(STATUS "CARE: Using external CUB")
 
-         # TODO: Update RAJA to accept a CUB cmake target and write a
-         #       FindCUB.cmake find module.
+         # TODO: Find a better way to handle CUB
+         set(RAJA_CUB_DIR ${CUB_DIR})
       else ()
-         message(STATUS "Using CUB submodule")
+         message(STATUS "CARE: Using CUB submodule")
 
-         if (NOT EXISTS ${PROJECT_SOURCE_DIR}/cub/cub/cub.cuh)
-            message(FATAL_ERROR "CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
+         if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/cub/cub/cub.cuh)
+            message(FATAL_ERROR "CARE: CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
          else ()
-            # TODO: Update RAJA to accept a CUB cmake target and insert
-            #       a call to add_library here.
-            set (CUB_DIR "${PROJECT_SOURCE_DIR}/cub" CACHE PATH "Path to CUB" FORCE)
+            # TODO: Find a better way to handle CUB
+            set(RAJA_CUB_DIR ${PROJECT_SOURCE_DIR}/tpl/cub) 
          endif ()
       endif ()
    endif ()
@@ -142,11 +141,15 @@ if (NOT TARGET raja)
          set(RAJA_ENABLE_REPRODUCERS ${CARE_ENABLE_SUBMODULE_REPRODUCERS} CACHE BOOL "Enable RAJA reproducers")
          set(RAJA_ENABLE_EXERCISES ${CARE_ENABLE_SUBMODULE_EXERCISES} CACHE BOOL "Enable RAJA exercises")
 
+         set(SAVED_CUB_DIR ${CUB_DIR})
+
          if (ENABLE_CUDA)
             # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
+
+            # Use external CUB
             set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
-            # CUB_DIR is already set above
+            set(CUB_DIR ${RAJA_CUB_DIR})
          endif ()
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
@@ -154,6 +157,8 @@ if (NOT TARGET raja)
          if (ENABLE_CUDA)
             # Reset CMAKE_CUDA_FLAGS
             set(CMAKE_CUDA_FLAGS "${CARE_CMAKE_CUDA_FLAGS}")
+
+            set(CUB_DIR ${SAVED_CUB_DIR})
          endif ()
       endif ()
    endif ()

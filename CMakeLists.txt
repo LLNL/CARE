@@ -91,8 +91,8 @@ if (ENABLE_CUDA)
    option(CUDA_LINK_WITH_NVCC "Enable linking with NVCC" OFF)
 
    # CUDA required dependencies
-   # TODO: Fix RAJA to accept a CUB cmake target
-   set(CUB_DIR "" CACHE PATH "Path to external CUB")
+   # TODO: Find a better way to handle CUB
+   set(CUB_DIR "" CACHE PATH "Path to CUB")
 
    # CUDA optional dependencies without submodules (not open source)
    set(NVTX_DIR "" CACHE PATH "Path to external NVTX")
