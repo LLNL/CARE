@@ -105,6 +105,7 @@ if (NOT TARGET raja)
       set(RAJA_LIBRARIES RAJA)
       set(RAJA_DEPENDS camp)
       blt_list_append(TO RAJA_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
+      blt_list_append(TO RAJA_DEPENDS ELEMENTS openmp IF ENABLE_OPENMP)
 
       blt_register_library(NAME RAJA
                            TREAT_INCLUDES_AS_SYSTEM ON
