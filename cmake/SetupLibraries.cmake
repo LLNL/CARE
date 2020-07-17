@@ -125,15 +125,12 @@ if (NOT TARGET raja)
          set(RAJA_ENABLE_REPRODUCERS ${CARE_ENABLE_SUBMODULE_REPRODUCERS} CACHE BOOL "Enable RAJA reproducers")
          set(RAJA_ENABLE_EXERCISES ${CARE_ENABLE_SUBMODULE_EXERCISES} CACHE BOOL "Enable RAJA exercises")
 
-         set(SAVED_CUB_DIR ${CUB_DIR})
-
          if (ENABLE_CUDA)
             # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
 
             # Use external CUB
-            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Enable use of external CUB in RAJA")
-            set(CUB_DIR ${RAJA_CUB_DIR})
+            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
          endif ()
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
@@ -141,8 +138,6 @@ if (NOT TARGET raja)
          if (ENABLE_CUDA)
             # Reset CMAKE_CUDA_FLAGS
             set(CMAKE_CUDA_FLAGS "${CARE_CMAKE_CUDA_FLAGS}")
-
-            set(CUB_DIR ${SAVED_CUB_DIR})
          endif ()
       endif ()
    endif ()
