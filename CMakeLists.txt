@@ -96,7 +96,7 @@ if (ENABLE_CUDA)
    set(CUB_DIR "" CACHE PATH "Path to CUB")
 
    # CUDA optional dependencies without submodules (not open source)
-   set(NVTX_DIR "" CACHE PATH "Path to external NVTX")
+   set(NVTOOLSEXT_DIR "" CACHE PATH "Path to external NVTOOLSEXT")
    set(BASIL_DIR "" CACHE PATH "Path to external BASIL")
 endif ()
 

@@ -234,7 +234,7 @@ if (NVTOOLSEXT_DIR)
        endif()
     endif()
 else()
-    message(STATUS "CARE: NVTX disabled")
+    message(STATUS "CARE: NVTOOLSEXT disabled")
     set(CARE_HAVE_NVTOOLSEXT "0" CACHE STRING "")
 endif()
 
