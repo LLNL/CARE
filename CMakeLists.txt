@@ -36,8 +36,9 @@ option(CARE_ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
 option(CARE_ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
 option(CARE_ENABLE_SUBMODULE_DOCS "Build submodule documentation" OFF)
 option(CARE_ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
-option(CARE_ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 option(CARE_ENABLE_SUBMODULE_TOOLS "Build submodule tools" OFF)
+option(CARE_ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
+option(CARE_ENABLE_SUBMODULE_REPRODUCERS "Build submodule reproducers" OFF)
 
 # Enable tests
 if (CARE_ENABLE_TESTS OR CARE_ENABLE_SUBMODULE_TESTS)

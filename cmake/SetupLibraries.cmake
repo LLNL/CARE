@@ -135,6 +135,13 @@ if (NOT TARGET raja)
          file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/CMakeLists.txt
               DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja)
 
+         set(RAJA_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable RAJA tests")
+         set(RAJA_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable RAJA benchmarks")
+         set(RAJA_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable RAJA examples")
+         set(RAJA_ENABLE_DOCS ${CARE_ENABLE_SUBMODULE_DOCS} CACHE BOOL "Enable RAJA documentation")
+         set(RAJA_ENABLE_REPRODUCERS ${CARE_ENABLE_SUBMODULE_REPRODUCERS} CACHE BOOL "Enable RAJA reproducers")
+         set(RAJA_ENABLE_EXERCISES ${CARE_ENABLE_SUBMODULE_EXERCISES} CACHE BOOL "Enable RAJA exercises")
+
          if (ENABLE_CUDA)
             # nvcc dies if compiler flags are duplicated, and RAJA adds duplicates
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
