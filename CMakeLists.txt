@@ -118,18 +118,18 @@ endif ()
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
 if (BLT_SOURCE_DIR)
-    message(STATUS "Using external BLT")
+    message(STATUS "CARE: Using external BLT")
 
     if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-        message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
+        message(FATAL_ERROR "CARE: Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
     endif()
 else()
-    message(STATUS "Using BLT submodule")
+    message(STATUS "CARE: Using BLT submodule")
 
     set(BLT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/blt")
 
     if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-       message(FATAL_ERROR "BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR to external BLT.")
+       message(FATAL_ERROR "CARE: BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR to external BLT.")
     endif()
 endif()
 
