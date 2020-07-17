@@ -47,10 +47,7 @@ if (NOT TARGET cub)
    if (CUB_FOUND)
       set(CUB_INCLUDE_DIRS ${CUB_INCLUDE_DIR})
 
-      if (NOT TARGET cub)
-         add_library(cub UNKNOWN IMPORTED)
-         set_target_properties(cub PROPERTIES
-                               INTERFACE_INCLUDE_DIRECTORIES ${CUB_INCLUDE_DIR})
-      endif ()
+      blt_register_library(NAME cub
+                           INCLUDES ${CUB_INCLUDE_DIR})
    endif ()
 endif ()
