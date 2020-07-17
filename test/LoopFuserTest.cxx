@@ -88,7 +88,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    packer->flush();
 
-   gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize();
 
 #ifdef __GPUCC__
    // pack should have happened on the device, so
@@ -139,7 +139,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       });
    }
 
-   gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize();
 
    // pack should  not have happened yet so
    // host data should not be updated yet
@@ -182,7 +182,7 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       dst[pos+i] = src[i+pos]*2;
    } FUSIBLE_LOOP_STREAM_END
 
-   gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize();
 
    // pack should  not have happened yet so
    // host data should not be updated yet

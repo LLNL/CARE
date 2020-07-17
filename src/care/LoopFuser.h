@@ -181,12 +181,12 @@ namespace care {
 
 // templated launcher that provides a device method that knows how to deserialize the lambda LB and call it
 template <typename ReturnType, typename LB>
-FUSIBLE_DEVICE ReturnType launcher(care::host_device_ptr<char> lambda_buf, int i, bool is_fused, int action_index, int start, int end);
+FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int action_index, int start, int end);
 
 template <typename ReturnType, typename LB>
-FUSIBLE_DEVICE ReturnType launcher(care::host_device_ptr<char> lambda_buf, int i, bool is_fused, int action_index, int start, int end) {
+FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int action_index, int start, int end) {
    using lambda_type = typename std::decay<LB>::type;
-   LB lambda = *reinterpret_cast<lambda_type *> ((char *) lambda_buf);
+   LB lambda = *reinterpret_cast<lambda_type *> (lambda_buf);
    return lambda(i, is_fused, action_index, start, end);
 }
 
@@ -269,7 +269,7 @@ class SerializableDeviceLambda {
       template <typename LB>
       SerializableDeviceLambda(LB && lambda,  char * buf) {
          using lambda_type = typename std::decay<LB>::type;
-         m_launcher = (ReturnType (*)(care::host_device_ptr<char>, int, bool, int, int, int))get_launcher_wrapper_ptr<ReturnType, lambda_type>(true);
+         m_launcher = (ReturnType (*)(char *, int, bool, int, int, int))get_launcher_wrapper_ptr<ReturnType, lambda_type>(true);
          //size_t size = sizeof(LB);
          m_lambda = buf;
          /* we make a copy of the lambda to trigger chai copy constructors that are required by captured variables in the lambda*/
@@ -336,7 +336,7 @@ class SerializableDeviceLambda {
       ///
       /// Our launcher method
       ///
-      ReturnType (*m_launcher)(care::host_device_ptr<char>, int, bool, int, int, int);
+      ReturnType (*m_launcher)(char *, int, bool, int, int, int);
 };
 
 

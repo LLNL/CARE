@@ -21,7 +21,7 @@ static void benchmark_std_iota(benchmark::State& state) {
    const int size = state.range(0);
 
    care::host_device_ptr<int> data(size, "data");
-   int* host_data = data;
+   int* host_data = data.data();
 
    while (state.KeepRunning()) {
       std::iota(host_data, host_data + size, 0);
