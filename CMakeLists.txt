@@ -26,14 +26,38 @@ option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space (used for scans)" ON)
 
 # Extra components
-option(ENABLE_TESTS "Build tests" ON)
-option(ENABLE_BENCHMARKS "Build benchmarks" ON)
-option(ENABLE_DOCUMENTATION "Build documentation" ON)
-option(ENABLE_EXAMPLES "Build examples" ON)
+option(CARE_ENABLE_TESTS "Build CARE tests" ON)
+option(CARE_ENABLE_BENCHMARKS "Build CARE benchmarks" ON)
+option(CARE_ENABLE_DOCS "Build CARE documentation" ON)
+option(CARE_ENABLE_EXAMPLES "Build CARE examples" ON)
 
-# TODO: Not currently used, but allows ENABLE_EXERCISES to be set properly
-#       for submodules. Investigate alternatives.
-option(ENABLE_EXERCISES "Build exercises" OFF)
+# Extra submodule components
+option(CARE_ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
+option(CARE_ENABLE_SUBMODULE_BENCHMARKS "Build submodule benchmarks" OFF)
+option(CARE_ENABLE_SUBMODULE_DOCS "Build submodule documentation" OFF)
+option(CARE_ENABLE_SUBMODULE_EXAMPLES "Build submodule examples" OFF)
+option(CARE_ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
+option(CARE_ENABLE_SUBMODULE_TOOLS "Build submodule tools" OFF)
+
+# Enable tests
+if (CARE_ENABLE_TESTS OR CARE_ENABLE_SUBMODULE_TESTS)
+   option(ENABLE_TESTS "Build tests" ON)
+endif ()
+
+# Enable benchmarks
+if (CARE_ENABLE_BENCHMARKS OR CARE_ENABLE_SUBMODULE_BENCHMARKS)
+   option(ENABLE_BENCHMARKS "Build benchmarks" ON)
+endif ()
+
+# Enable documentation
+if (CARE_ENABLE_DOCS OR CARE_ENABLE_SUBMODULE_DOCS)
+   option(ENABLE_DOCS "Build documentation" ON)
+endif ()
+
+# Enable examples
+if (CARE_ENABLE_EXAMPLES OR CARE_ENABLE_SUBMODULE_EXAMPLES)
+   option(ENABLE_EXAMPLES "Build examples" ON)
+endif ()
 
 # Required dependencies (if the following variables are not set, uses submodules)
 # The lower case variables point to the cmake config file (if applicable).
@@ -85,7 +109,7 @@ endif ()
 #       "docs" target to "raja-docs". A future update of BLT may also change
 #       the default name in BLT to something like "blt-docs", in which case
 #       this would no longer be necessary, either.
-if (ENABLE_DOCUMENTATION)
+if (CARE_ENABLE_DOCUMENTATION)
    set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
 endif ()
 
@@ -143,19 +167,19 @@ add_subdirectory(src)
 ################################
 # Build CARE extras
 ################################
-if (ENABLE_TESTS)
+if (CARE_ENABLE_TESTS)
    add_subdirectory(test)
 endif()
 
-if (ENABLE_BENCHMARKS)
+if (CARE_ENABLE_BENCHMARKS)
    add_subdirectory(benchmarks)
 endif()
 
-if (ENABLE_DOCUMENTATION)
+if (CARE_ENABLE_DOCS)
    add_subdirectory(docs)
 endif ()
 
-if (ENABLE_EXAMPLES)
+if (CARE_ENABLE_EXAMPLES)
    add_subdirectory(examples)
 endif ()
 
