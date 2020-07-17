@@ -197,29 +197,6 @@ if (NOT TARGET chai)
 endif ()
 
 ################################
-# BASIL
-################################
-if (BASIL_DIR)
-    include(cmake/libraries/FindBasil.cmake)
-    if (BASIL_FOUND)
-        set(BASIL_DEPENDS )
-        blt_list_append(TO BASIL_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
-        blt_register_library( NAME       basil
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${BASIL_INCLUDE_DIR}
-                                LIBRARIES  ${BASIL_LIBRARY}
-                                DEPENDS_ON ${BASIL_DEPENDS})
-
-        set(CARE_HAVE_BASIL "1" CACHE STRING "")
-    else()
-        message(FATAL_ERROR "CARE: Unable to find BASIL with given path: ${BASIL_DIR}")
-    endif()
-else()
-    message(STATUS "CARE: BASIL disabled")
-    set(CARE_HAVE_BASIL "0" CACHE STRING "")
-endif()
-
-################################
 # NVTOOLSEXT
 ################################
 if (NVTOOLSEXT_DIR)
@@ -240,6 +217,29 @@ if (NVTOOLSEXT_DIR)
 else()
     message(STATUS "CARE: NVTOOLSEXT disabled")
     set(CARE_HAVE_NVTOOLSEXT "0" CACHE STRING "")
+endif()
+
+################################
+# BASIL
+################################
+if (BASIL_DIR)
+    include(cmake/libraries/FindBasil.cmake)
+    if (BASIL_FOUND)
+        set(BASIL_DEPENDS )
+        blt_list_append(TO BASIL_DEPENDS ELEMENTS cuda IF ${ENABLE_CUDA})
+        blt_register_library( NAME       basil
+                                TREAT_INCLUDES_AS_SYSTEM ON
+                                INCLUDES   ${BASIL_INCLUDE_DIR}
+                                LIBRARIES  ${BASIL_LIBRARY}
+                                DEPENDS_ON ${BASIL_DEPENDS})
+
+        set(CARE_HAVE_BASIL "1" CACHE STRING "")
+    else()
+        message(FATAL_ERROR "CARE: Unable to find BASIL with given path: ${BASIL_DIR}")
+    endif()
+else()
+    message(STATUS "CARE: BASIL disabled")
+    set(CARE_HAVE_BASIL "0" CACHE STRING "")
 endif()
 
 ################################
