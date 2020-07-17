@@ -28,6 +28,7 @@ if (NOT TARGET camp)
       set(CAMP_INCLUDE_DIRS ${camp_INSTALL_PREFIX}/include)
       set(CAMP_DEPENDS )
       blt_list_append(TO CAMP_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
+      blt_list_append(TO CAMP_DEPENDS ELEMENTS hip IF ENABLE_HIP)
 
       blt_register_library(NAME camp
                            TREAT_INCLUDES_AS_SYSTEM ON
@@ -61,6 +62,7 @@ if (NOT TARGET umpire)
       set(UMPIRE_DEPENDS camp)
       blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
       blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
+      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS hip IF ENABLE_HIP)
 
       blt_register_library(NAME umpire
                            TREAT_INCLUDES_AS_SYSTEM ON
@@ -106,6 +108,7 @@ if (NOT TARGET raja)
       set(RAJA_DEPENDS camp)
       blt_list_append(TO RAJA_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
       blt_list_append(TO RAJA_DEPENDS ELEMENTS openmp IF ENABLE_OPENMP)
+      blt_list_append(TO RAJA_DEPENDS ELEMENTS hip IF ENABLE_HIP)
 
       blt_register_library(NAME RAJA
                            TREAT_INCLUDES_AS_SYSTEM ON
@@ -166,6 +169,7 @@ if (NOT TARGET chai)
       set(CHAI_DEPENDS umpire camp)
       blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
       blt_list_append(TO CHAI_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
+      blt_list_append(TO CHAI_DEPENDS ELEMENTS hip IF ENABLE_HIP)
 
       blt_register_library(NAME chai
                            TREAT_INCLUDES_AS_SYSTEM ON
