@@ -114,7 +114,7 @@ endif ()
 #       "docs" target to "raja-docs". A future update of BLT may also change
 #       the default name in BLT to something like "blt-docs", in which case
 #       this would no longer be necessary, either.
-if (CARE_ENABLE_SUBMODULE_DOCUMENTATION)
+if (CARE_ENABLE_SUBMODULE_DOCS)
    set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
 endif ()
 
