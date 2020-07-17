@@ -9,23 +9,7 @@
 # CUB (required for CUDA build)
 ################################
 if (ENABLE_CUDA)
-   if (NOT TARGET cub)
-      if (CUB_DIR)
-         message(STATUS "CARE: Using external CUB")
-
-         # TODO: Find a better way to handle CUB
-         set(RAJA_CUB_DIR ${CUB_DIR})
-      else ()
-         message(STATUS "CARE: Using CUB submodule")
-
-         if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/cub/cub/cub.cuh)
-            message(FATAL_ERROR "CARE: CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
-         else ()
-            # TODO: Find a better way to handle CUB
-            set(RAJA_CUB_DIR ${PROJECT_SOURCE_DIR}/tpl/cub) 
-         endif ()
-      endif ()
-   endif ()
+   include(cmake/libraries/FindCUB.cmake)
 endif ()
 
 ################################

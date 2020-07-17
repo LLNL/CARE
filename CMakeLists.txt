@@ -60,22 +60,24 @@ if (CARE_ENABLE_EXAMPLES OR CARE_ENABLE_SUBMODULE_EXAMPLES)
    option(ENABLE_EXAMPLES "Build examples" ON)
 endif ()
 
+# BLT is required to build the code
+set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
+
 # Required dependencies (if the following variables are not set, uses submodules)
 # The lower case variables point to the cmake config file (if applicable).
 # The upper case variables simply point to the root install location.
 # Whichever form is most convenient can be used to specify the dependencies.
-set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
+# These variables point to the installed config files
 set(camp_DIR "" CACHE PATH "Path to campConfig.cmake")
-set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
-
 set(umpire_DIR "" CACHE PATH "Path to umpire-config.cmake")
-set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
-
 set(raja_DIR "" CACHE PATH "Path to raja-config.cmake")
-set(RAJA_DIR "" CACHE PATH "Path to installed RAJA")
-
 set(chai_DIR "" CACHE PATH "Path to chai-config.cmake")
+
+# These variables point to the root install location
+set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
+set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
+set(RAJA_DIR "" CACHE PATH "Path to installed RAJA")
 set(CHAI_DIR "" CACHE PATH "Path to installed CHAI")
 
 # Optional dependencies without submodules (not open source)
@@ -91,7 +93,6 @@ if (ENABLE_CUDA)
    option(CUDA_LINK_WITH_NVCC "Enable linking with NVCC" OFF)
 
    # CUDA required dependencies
-   # TODO: Find a better way to handle CUB
    set(CUB_DIR "" CACHE PATH "Path to CUB")
 
    # CUDA optional dependencies without submodules (not open source)
@@ -110,7 +111,7 @@ endif ()
 #       "docs" target to "raja-docs". A future update of BLT may also change
 #       the default name in BLT to something like "blt-docs", in which case
 #       this would no longer be necessary, either.
-if (CARE_ENABLE_DOCUMENTATION)
+if (CARE_ENABLE_SUBMODULE_DOCUMENTATION)
    set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
 endif ()
 
