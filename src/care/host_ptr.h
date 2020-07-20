@@ -69,15 +69,15 @@ namespace care {
                    typename std::enable_if<B, int>::type = 1>
          host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
-         // TODO: We can probably just use .data in the future, but some
-         // packages that depend on CARE use an older version of CHAI.
-#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+         // TODO: When CHAI has a new tagged version greather than v2.1.1,
+         //       use .data instead of .getPointer.
+
          ///
          /// @author Peter Robinson
          ///
          /// Construct from chai::ManagedArray
          ///
-         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr(ptr.data()) {}
+         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
 
          ///
          /// @author Peter Robinson
@@ -86,24 +86,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.data()) {}
-#else
-         ///
-         /// @author Peter Robinson
-         ///
-         /// Construct from chai::ManagedArray
-         ///
-         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr((T*) ptr) {}
-
-         ///
-         /// @author Peter Robinson
-         ///
-         /// Construct from chai::ManagedArray containing non-const elements if T is const
-         ///
-         template <bool B = std::is_const<T>::value,
-                   typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr((T_non_const*) ptr) {}
-#endif
+         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
 
          ///
          /// @author Peter Robinson
