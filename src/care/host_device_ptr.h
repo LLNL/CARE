@@ -398,11 +398,10 @@ namespace care {
       }
    }; // class host_device_ptr
 
-#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
    /////////////////////////////////////////////////////////////////////////////////
    /// @author Danny Taller
    /// @brief Prints host_device data to the given ostream. 
-   /// When ENABLE_IMPLICIT_CONVERSIONS is off, this line is needed for the 
+   /// When ENABLE_IMPLICIT_CONVERSIONS is off, this function is needed for the
    /// line 'using stream_insertion_t = decltype(std::cout << std::declval<T>());'
    /// in util.h to compile.
    /// @param os  - the output stream that we will print to
@@ -411,10 +410,11 @@ namespace care {
    /////////////////////////////////////////////////////////////////////////////////
    template<typename T>
    std::ostream& operator<<(std::ostream& os, const host_device_ptr<T>& ptr) {
-     print(os, ptr.data(), ptr.size());
-     return os;
+      // TODO: When CHAI has a new tagged version greather than v2.1.1,
+      //       use .data instead of .getPointer.
+      print(os, ptr.getPointer(chai::CPU), ptr.size());
+      return os;
    }
-#endif
 
    /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
    template< typename T>
