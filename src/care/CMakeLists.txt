@@ -55,18 +55,11 @@ set(care_sources
     RAJAPlugin.cpp
     )
 
+set(care_depends chai RAJA umpire camp)
+
 if (ENABLE_MPI)
-    set(care_depends
-        mpi
-        chai
-        raja
-        )
-else()
-    set(care_depends
-        chai
-        raja
-        )
-endif()
+   list(APPEND care_depends mpi)
+endif ()
 
 if (LLNL_GLOBALID_FOUND)
    list (APPEND care_depends llnl_globalid)

@@ -5,23 +5,31 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Std library headers
-#include <numeric> // for std::iota (which will be compared to care::iota)
-#include <climits> // for INT_MAX
+// CARE headers
+#include "care/care.h"
+#include "care/numeric.h"
 
 // Other library headers
 #include <benchmark/benchmark.h>
 
-// CARE headers
-#include "care/care.h"
-#include "care/numeric.h"
+// Std library headers
+#include <climits>
+#include <numeric>
 
 static void benchmark_std_iota(benchmark::State& state) {
    // Perform setup here
    const int size = state.range(0);
 
    care::host_device_ptr<int> data(size, "data");
+
+   // TODO: Can probably just use data.data() in the future,
+   // but we are currently using an older version of CHAI
+   // in some projects that depend on CARE.
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+   int* host_data = data;
+#else
    int* host_data = data.data();
+#endif
 
    while (state.KeepRunning()) {
       std::iota(host_data, host_data + size, 0);

@@ -11,24 +11,47 @@
 # This file defines:
 #  CUB_FOUND - If CUB was found
 #  CUB_INCLUDE_DIRS - The CUB include directories
+#  cub - An imported target
 
-# first Check for CUB_DIR
+if (NOT TARGET cub)
+   if (CUB_DIR)
+      message(STATUS "CARE: Using external CUB")
 
-if(NOT CUB_DIR)
-    MESSAGE(FATAL_ERROR "Could not find CUB. CUB support needs explicit CUB_DIR")
-endif()
+      set(CUB_PATHS ${CUB_DIR} ${CUB_DIR}/include)
+   else ()
+      message(STATUS "CARE: Using CUB submodule")
 
-#find includes
-find_path( CUB_INCLUDE_DIRS cub/cub.cuh
-           PATHS  ${CUB_DIR}/include/
-           NO_DEFAULT_PATH
-           NO_CMAKE_ENVIRONMENT_PATH
-           NO_CMAKE_PATH
-           NO_SYSTEM_ENVIRONMENT_PATH
-           NO_CMAKE_SYSTEM_PATH)
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/cub/cub/cub.cuh)
+         message(FATAL_ERROR "CARE: CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
+      else ()
+         set(CUB_PATHS ${PROJECT_SOURCE_DIR}/tpl/cub)
+      endif ()
+   endif ()
 
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set CUB_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(CUB  DEFAULT_MSG
-                                  CUB_INCLUDE_DIRS )
+   find_path(CUB_INCLUDE_DIR
+             NAMES cub/cub.cuh
+             PATHS ${CUB_PATHS}
+             NO_DEFAULT_PATH
+             NO_PACKAGE_ROOT_PATH
+             NO_CMAKE_PATH
+             NO_CMAKE_ENVIRONMENT_PATH
+             NO_SYSTEM_ENVIRONMENT_PATH
+             NO_CMAKE_SYSTEM_PATH)
+
+   include(FindPackageHandleStandardArgs)
+
+   find_package_handle_standard_args(CUB
+                                     DEFAULT_MSG
+                                     CUB_INCLUDE_DIR)
+
+   if (CUB_FOUND)
+      set(CUB_INCLUDE_DIRS ${CUB_INCLUDE_DIR})
+      set(CUB_DEPENDS cuda)
+
+      blt_register_library(NAME cub
+                           INCLUDES ${CUB_INCLUDE_DIR}
+                           DEPENDS_ON ${CUB_DEPENDS})
+   else ()
+      message(FATAL_ERROR "CARE: CUB not found. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
+   endif ()
+endif ()
