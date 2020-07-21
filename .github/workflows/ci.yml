@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: init submodules
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Initialize submodules
       run: git submodule update --init
-    - name: build directory
+    - name: Make build directory
       run: mkdir build
-    - name: cmake
+    - name: Run cmake
       run: cmake ../
       working-directory: build
-    - name: make
+    - name: Run make
       run: make -j
       working-directory: build
-    - name: make test
+    - name: Run tests
       run: make test
       working-directory: build
