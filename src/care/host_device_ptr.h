@@ -411,7 +411,8 @@ namespace care {
    template<typename T>
    std::ostream& operator<<(std::ostream& os, host_device_ptr<T> ptr) {
       // TODO: When CHAI has a new tagged version greather than v2.1.1,
-      //       use .data instead of .getPointer.
+      //       use .data instead of .getPointer. Also, we should be able
+      //       to pass const host_device_ptr<T>& ptr to this function.
       print(os, ptr.getPointer(care::CPU), ptr.size());
       return os;
    }

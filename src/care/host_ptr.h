@@ -70,7 +70,8 @@ namespace care {
          host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          // TODO: When CHAI has a new tagged version greather than v2.1.1,
-         //       use .data instead of .getPointer.
+         //       use .data instead of .getPointer. Also, we should be able
+         //       to pass const references to chai::ManagedArrays.
 
          ///
          /// @author Peter Robinson
