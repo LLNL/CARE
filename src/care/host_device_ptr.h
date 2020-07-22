@@ -385,7 +385,7 @@ namespace care {
          return MA::pick((size_t) idx);
       }
 
-      CARE_HOST T* getPointer(ExecutionSpace space, bool moveToSpace = true) {
+      CARE_HOST T* getPointer(ExecutionSpace space, bool moveToSpace = true) const {
          return MA::getPointer(chai::ExecutionSpace((int)space), moveToSpace);
       }
 
@@ -412,7 +412,7 @@ namespace care {
    std::ostream& operator<<(std::ostream& os, const host_device_ptr<T>& ptr) {
       // TODO: When CHAI has a new tagged version greather than v2.1.1,
       //       use .data instead of .getPointer.
-      print(os, ptr.getPointer(chai::CPU), ptr.size());
+      print(os, ptr.getPointer(care::CPU), ptr.size());
       return os;
    }
 
