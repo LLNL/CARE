@@ -409,10 +409,10 @@ namespace care {
    /// @return the output stream after printing
    /////////////////////////////////////////////////////////////////////////////////
    template<typename T>
-   std::ostream& operator<<(std::ostream& os, const host_device_ptr<T>& ptr) {
+   std::ostream& operator<<(std::ostream& os, host_device_ptr<T> ptr) {
       // TODO: When CHAI has a new tagged version greather than v2.1.1,
       //       use .data instead of .getPointer.
-      print(os, ptr.getPointer(chai::CPU), ptr.size());
+      print(os, ptr.getPointer(care::CPU), ptr.size());
       return os;
    }
 
