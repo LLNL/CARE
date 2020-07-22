@@ -1,0 +1,29 @@
+name: C/C++ CI
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Initialize submodules
+      run: git submodule update --init
+    - name: Make build directory
+      run: mkdir build
+    - name: Run cmake
+      run: cmake ../
+      working-directory: build
+    - name: Run make
+      run: make -j
+      working-directory: build
+    - name: Run tests
+      run: make test
+      working-directory: build
+    - name: Clean up
+      run: rm -rf build

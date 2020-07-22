@@ -70,14 +70,15 @@ namespace care {
          host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          // TODO: When CHAI has a new tagged version greather than v2.1.1,
-         //       use .data instead of .getPointer.
+         //       use .data instead of .getPointer. Also, we should be able
+         //       to pass const references to chai::ManagedArrays.
 
          ///
          /// @author Peter Robinson
          ///
          /// Construct from chai::ManagedArray
          ///
-         host_ptr(chai::ManagedArray<T> const &ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
+         host_ptr(chai::ManagedArray<T> ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
 
          ///
          /// @author Peter Robinson
@@ -86,7 +87,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
+         host_ptr<T>(chai::ManagedArray<T_non_const> ptr) : m_ptr(ptr.getPointer(chai::CPU)) {}
 
          ///
          /// @author Peter Robinson
