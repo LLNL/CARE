@@ -25,3 +25,5 @@ jobs:
     - name: Run tests
       run: make test
       working-directory: build
+    - name: Clean up
+      run: rm -rf build
