@@ -1135,15 +1135,15 @@ class KeyValueSorter<T, RAJA::seq_exec> {
             std::sort(rawData, rawData + lsize, cmpKeys<T>);
 
             // Reallocate memory
-            if (m_keyValues) {
+            if (m_keyValues != nullptr) {
                m_keyValues.realloc(lsize);
             }
 
-            if (m_keys) {
+            if (m_keys != nullptr) {
                m_keys.realloc(lsize);
             }
 
-            if (m_values) {
+            if (m_values != nullptr) {
                m_values.realloc(lsize);
             }
 
@@ -1159,7 +1159,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeKeys() const {
-         if (!m_keys) {
+         if (m_keys == nullptr) {
             m_keys.alloc(m_len);
             m_keys.namePointer("m_keys");
 
@@ -1182,7 +1182,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeValues() const {
-         if (!m_values) {
+         if (m_values == nullptr) {
             m_values.alloc(m_len);
             m_values.namePointer("m_values");
 
@@ -1206,7 +1206,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return whether keys are allocated
       ///////////////////////////////////////////////////////////////////////////
       bool keysAllocated() const {
-         return m_keys ;
+         return m_keys != nullptr;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1218,7 +1218,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return whether values are allocated
       ///////////////////////////////////////////////////////////////////////////
       bool valuesAllocated() const {
-         return m_values ;
+         return m_values != nullptr;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1230,7 +1230,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void freeKeys() const {
-         if (m_keys) {
+         if (m_keys != nullptr) {
             m_keys.free();
          }
 
@@ -1246,7 +1246,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void freeValues() const {
-         if (m_values) {
+         if (m_values != nullptr) {
             m_values.free();
          }
 
@@ -1267,15 +1267,15 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       inline void free() {
          if (m_ownsPointers) {
-            if (m_keyValues) {
+            if (m_keyValues != nullptr) {
                m_keyValues.free();
             }
 
-            if (m_keys) {
+            if (m_keys != nullptr) {
                m_keys.free();
             }
 
-            if (m_values) {
+            if (m_values != nullptr) {
                m_values.free();
             }
          }
