@@ -85,10 +85,6 @@ namespace care {
          CARE_HOST_DEVICE local_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
-         /// TODO: When CHAI is updated, change the following constructors to ptr.data() instead of ptr.getPointer()
-         /// 
-
-         ///
          /// @author Peter Robinson
          ///
          /// Construct from chai::ManagedArray
