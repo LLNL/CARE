@@ -263,6 +263,13 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, con
                              bool returnUpperBound = false) ;
 #endif
 
+template <typename ArrayType, typename Exec>
+inline void IntersectArrays(Exec,
+                            care::host_device_ptr<const ArrayType> arr1, int size1, int start1,
+                            care::host_device_ptr<const ArrayType> arr2, int size2, int start2,
+                            care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
+                            int *numMatches);
+
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
