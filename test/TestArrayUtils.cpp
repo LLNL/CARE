@@ -91,6 +91,8 @@ TEST(array_utils, binarysearch) {
    int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
    int  b[7] = {0, 1, 1, 1, 1, 1, 6};       // sorted with duplicates
    int  c[7] = {1, 1, 1, 1, 1, 1, 1};       // uniform array edge case.
+   care::host_ptr<int> aptr(a);
+
    int result = 0;
   
    // nil test
@@ -99,6 +101,9 @@ TEST(array_utils, binarysearch) {
 
    // search for 77
    result = care_utils::BinarySearch<int>(a, 0, 7, 77, false);
+   EXPECT_EQ(result, 4);
+
+   result = care_utils::BinarySearch<int>(aptr, 0, 7, 77, false);
    EXPECT_EQ(result, 4);
 
    // start after the number
@@ -1159,13 +1164,11 @@ GPU_TEST(array_utils, dup_and_copy) {
   ASSERT_TRUE((bool) passed3);
 }
 
-
 GPU_TEST(array_utils, intersectarrays) {
    int tempa[3] = {1, 2, 5};
    int tempb[5] = {2, 3, 4, 5, 6};
    int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
    int tempd[9] = {1001, 1002, 2003, 3004, 4005, 5006, 6007, 7008, 8009};
-   int* nil = nullptr;
    care::host_device_ptr<int> a(tempa, 3, "a");
    care::host_device_ptr<int> b(tempb, 5, "b");
    care::host_device_ptr<int> c(tempc, 7, "c");
@@ -1175,7 +1178,7 @@ GPU_TEST(array_utils, intersectarrays) {
    int numMatches[1] = {77};
 
    // nil test
-   care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, nil, 0, 0, matches1, matches2, numMatches);
+   care_utils::IntersectArrays<int>(RAJAExec(), c, 7, 0, nullptr, 0, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
 
    // intersect c and b
@@ -1212,6 +1215,16 @@ GPU_TEST(array_utils, intersectarrays) {
    // no matches
    care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
+}
+
+GPU_TEST(array_utils, binarsearchhostdev) {
+   int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
+   care::host_device_ptr<int> aptr(a, 7, "asorted");
+
+   int result = 0;
+   
+   result = care_utils::BinarySearch<int>(aptr, 0, 7, 77, false);
+   EXPECT_EQ(result, 4);
 }
 
 #endif // __GPUCC__

@@ -181,6 +181,13 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
                                   const bool allowDuplicates = false);
 
 
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates = false);
+#endif
+
 ///////////////////////////////////////////////////////////////////////////
 /// @author Ben Liu, Peter Robinson, Alan Dayton
 /// @brief Checks whether an array of type T is sorted and optionally unique.
@@ -233,19 +240,28 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
    return true;
 }
 
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates)
+{
+   return checkSorted<T>(array.data(), len, name, argname, allowDuplicates);
+}
+#endif
 
 template<typename mapType>
 CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
                              const int mapSize, const mapType num,
                              bool returnUpperBound = false) ;
 
-
-template <typename ArrayType, typename Exec>
-inline void IntersectArrays(Exec,
-                            care::host_device_ptr<const ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<const ArrayType> arr2, int size2, int start2,
-                            care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
-                            int *numMatches);
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+// this is needed when implicit cast to mapType* is disabled
+template<typename mapType>
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+                             const int mapSize, const mapType num,
+                             bool returnUpperBound = false) ;
+#endif
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
@@ -290,8 +306,8 @@ inline void IntersectArrays(RAJAExec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for these checks by default.
-      checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
+      checkSorted<const ArrayType>(arr1, size1, funcname, "arr1") ;
+      checkSorted<const ArrayType>(arr2, size2, funcname, "arr2") ;
    }
 
    care::host_device_ptr<int> smallerMatches, largerMatches;
@@ -322,7 +338,7 @@ inline void IntersectArrays(RAJAExec,
    care::host_device_ptr<int> matched(smaller + 1, "IntersectArrays matched");
 
    LOOP_STREAM(i, 0, smaller + 1) {
-      searches[i] = i != smaller ? BinarySearch<ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
+      searches[i] = i != smaller ? BinarySearch<const ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } LOOP_STREAM_END
 
@@ -609,6 +625,26 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
       return -1 ;
    }
 }
+
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+template<typename mapType>
+CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+                                         const int mapSize, const mapType num,
+                                         bool returnUpperBound)
+{
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) 
+   return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
+#else
+   int result = -1;
+   LOOP_SEQUENTIAL_REF(i, 0, 1, result) {
+      result = BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
+   } LOOP_SEQUENTIAL_REF_END
+
+   return result;
+#endif
+}
+#endif
+
 
 #ifdef RAJA_PARALLEL_ACTIVE
 /************************************************************************
@@ -914,7 +950,7 @@ inline void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, const i
    care::host_device_ptr<T> tmp(arrLen-removedLen, "CompressArray_tmp");
    int numKept = 0;
    SCAN_LOOP(i, 0, arrLen, pos, numKept,
-             -1 == BinarySearch<int>(removed, 0, removedLen, i)) {
+             -1 == BinarySearch<int const>(removed, 0, removedLen, i)) {
       tmp[pos] = arr[i];
    } SCAN_LOOP_END(arrLen, pos, numKept)
 
