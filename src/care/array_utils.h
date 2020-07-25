@@ -183,7 +183,7 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
 
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
                                   const char* name, const char* argname,
                                   const bool allowDuplicates = false);
 #endif
@@ -242,11 +242,11 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
 
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
                                   const char* name, const char* argname,
                                   const bool allowDuplicates)
 {
-   return checkSorted<T>(array.data(), len, name, argname, allowDuplicates);
+   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
 }
 #endif
 
@@ -258,9 +258,9 @@ CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 // this is needed when implicit cast to mapType* is disabled
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
-                             const int mapSize, const mapType num,
-                             bool returnUpperBound = false) ;
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
+                                  const int mapSize, const mapType num,
+                                  bool returnUpperBound = false) ;
 #endif
 
 template <typename ArrayType, typename Exec>
@@ -313,8 +313,8 @@ inline void IntersectArrays(RAJAExec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for these checks by default.
-      checkSorted<const ArrayType>(arr1, size1, funcname, "arr1") ;
-      checkSorted<const ArrayType>(arr2, size2, funcname, "arr2") ;
+      checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
+      checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
    }
 
    care::host_device_ptr<int> smallerMatches, largerMatches;
@@ -345,7 +345,7 @@ inline void IntersectArrays(RAJAExec,
    care::host_device_ptr<int> matched(smaller + 1, "IntersectArrays matched");
 
    LOOP_STREAM(i, 0, smaller + 1) {
-      searches[i] = i != smaller ? BinarySearch<const ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
+      searches[i] = i != smaller ? BinarySearch<ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } LOOP_STREAM_END
 
@@ -635,16 +635,16 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
 
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template<typename mapType>
-CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
                                          const int mapSize, const mapType num,
                                          bool returnUpperBound)
 {
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) 
-   return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
+   return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
 #else
    int result = -1;
    LOOP_SEQUENTIAL_REF(i, 0, 1, result) {
-      result = BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
+      result = BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
    } LOOP_SEQUENTIAL_REF_END
 
    return result;
