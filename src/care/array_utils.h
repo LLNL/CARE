@@ -181,6 +181,7 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
                                   const bool allowDuplicates = false);
 
 
+// TODO: revisit macro guard when CHAI is updated
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
@@ -240,6 +241,7 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
    return true;
 }
 
+// TODO: revisit macro guard when CHAI is updated
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
@@ -255,6 +257,7 @@ CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
                              const int mapSize, const mapType num,
                              bool returnUpperBound = false) ;
 
+// TODO: revisit macro guard when CHAI is updated
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 // this is needed when implicit cast to mapType* is disabled
 template<typename mapType>
@@ -633,6 +636,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
    }
 }
 
+// TODO: revisit macro guard when CHAI is updated
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 template<typename mapType>
 CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
