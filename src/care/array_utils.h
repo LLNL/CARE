@@ -639,16 +639,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapTy
                                          const int mapSize, const mapType num,
                                          bool returnUpperBound)
 {
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) 
    return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
-#else
-   int result = -1;
-   LOOP_SEQUENTIAL_REF(i, 0, 1, result) {
-      result = BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
-   } LOOP_SEQUENTIAL_REF_END
-
-   return result;
-#endif
 }
 #endif
 
