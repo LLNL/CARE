@@ -246,6 +246,14 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
    return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
 }
 
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates)
+{
+   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
+}
+
 template<typename mapType>
 CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
                              const int mapSize, const mapType num,
@@ -253,6 +261,11 @@ CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
 
 template<typename mapType>
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
+                                  const int mapSize, const mapType num,
+                                  bool returnUpperBound = false) ;
+
+template<typename mapType>
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 
@@ -627,6 +640,14 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
 }
 
 template<typename mapType>
+CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+                                         const int mapSize, const mapType num,
+                                         bool returnUpperBound)
+{
+   return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
+}
+
+template<typename mapType>
 CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
                                          const int mapSize, const mapType num,
                                          bool returnUpperBound)
@@ -939,7 +960,7 @@ inline void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, const i
    care::host_device_ptr<T> tmp(arrLen-removedLen, "CompressArray_tmp");
    int numKept = 0;
    SCAN_LOOP(i, 0, arrLen, pos, numKept,
-             -1 == BinarySearch<int const>(removed, 0, removedLen, i)) {
+             -1 == BinarySearch<int>(removed, 0, removedLen, i)) {
       tmp[pos] = arr[i];
    } SCAN_LOOP_END(arrLen, pos, numKept)
 
