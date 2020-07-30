@@ -1227,5 +1227,51 @@ GPU_TEST(array_utils, binarsearchhostdev) {
    EXPECT_EQ(result, 4);
 }
 
+// test insertion sort and also sortLocal (which currently uses InsertionSort),
+// and then unique the result
+GPU_TEST(array_utils, localsortunique) {
+   // set up arrays
+   int a[4] = {4, 0, 2, 0}; // note that 0 is duplicate, will be eliminated in uniq operation
+   int b[4] = {4, 0, 2, 0};
+   care::host_device_ptr<int> aptr(a, 4, "unsorta");
+   care::host_device_ptr<int> bptr(b, 4, "unsortb");
+ 
+   // sort on local ptrs  
+   LOOP_STREAM(i, 0, 1) {
+     care::local_ptr<int> aloc = aptr;
+     care::local_ptr<int> bloc = bptr;
+
+     care_utils::sortLocal(aloc, 4);
+     care_utils::InsertionSort(bloc, 4);
+   } LOOP_STREAM_END
+
+   // check results of sortLocal
+   EXPECT_EQ(aptr.pick(0), 0);
+   EXPECT_EQ(aptr.pick(1), 0);
+   EXPECT_EQ(aptr.pick(2), 2);
+   EXPECT_EQ(aptr.pick(3), 4);
+
+   // test results for InsertionSort
+   EXPECT_EQ(bptr.pick(0), 0);
+   EXPECT_EQ(bptr.pick(1), 0);
+   EXPECT_EQ(bptr.pick(2), 2);
+   EXPECT_EQ(bptr.pick(3), 4);
+
+   // perform unique. Should eliminate the extra 0, give a length
+   // of one less (for the deleted duplicate number)
+   RAJAReduceMin<int> newlen{4};
+   LOOP_REDUCE(i, 0, 1) {
+     int len = 4;
+     care::local_ptr<int> aloc = aptr;
+     care_utils::uniqLocal(aloc, len);
+     newlen.min(len);
+   } LOOP_REDUCE_END
+
+   EXPECT_EQ((int)newlen, 3);
+   EXPECT_EQ(aptr.pick(0), 0);
+   EXPECT_EQ(aptr.pick(1), 2);
+   EXPECT_EQ(aptr.pick(2), 4);
+}
+
 #endif // __GPUCC__
 
