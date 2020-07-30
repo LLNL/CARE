@@ -114,6 +114,12 @@ namespace care {
          ///
          CARE_HOST_DEVICE operator T*() const { return m_ptr; }
 
+         ///
+         /// @author Danny Taller
+         ///
+         /// Convert to a raw pointer
+         ///
+         CARE_HOST_DEVICE T* data() const { return m_ptr; }
       private:
          T * m_ptr; //!< Raw pointer
    };
