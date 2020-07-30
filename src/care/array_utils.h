@@ -983,6 +983,80 @@ inline void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, const i
 #endif // RAJA_PARALLEL_ACTIVE
 
 /************************************************************************
+ * Function  : InsertionSort
+ * Author(s) : Rob Neely
+ * Purpose   : Simple insertion sort function.  Should only be used on
+ *             small arrays - otherwise use the qsort function from the
+ *             standard C library.  Sorts in ascending order.
+ ************************************************************************/
+template <typename T>
+inline CARE_HOST_DEVICE void InsertionSort(care::local_ptr<T> array, int len)
+{
+   if (len <= 1) {
+      return;
+   }
+
+   for (int i=1 ; i<len ; ++i) {
+      T tmp = array[i] ;
+      int j ;
+      for (j=i-1 ; (j >= 0) && (array[j] > tmp) ; --j) {
+         array[j+1] = array[j];
+      }
+      array[j+1] = tmp ;
+   }
+}
+/************************************************************************
+ * Function  : sortLocal
+ * Author(s) : Benjamin Liu
+ * Purpose   : General sort routine to call from within RAJA loops.
+ *             Sorts in ascending order.
+ ************************************************************************/
+template <typename T>
+inline CARE_HOST_DEVICE void sortLocal(care::local_ptr<T> array, int len)
+{  
+   if (len > 1) {
+#if defined(__CUDA_ARCH__)
+      // TODO this should be replaced with a CUDA GPU sort implementation that
+      // is reasonable for longer arrays.
+      InsertionSort(array, len) ;
+#elif defined(__HIP_DEVICE_COMPILE__)
+      // TODO this should be replaced with a HIPCC GPU sort implementation that
+      // is reasonable for longer arrays.
+      InsertionSort(array, len) ;
+#else
+      // host compile case
+      std::sort(array.data(), array.data()+len) ;
+#endif
+   }
+}
+
+/************************************************************************
+ * Function  : uniqLocal
+ * Author(s) : Benjamin Liu
+ * Purpose   : Remove duplicates in-place from an array that is sorted
+ *             in ascending order and updates len.
+ *             For calls from within RAJA loops.
+ *             Does not reallocate array.
+ ************************************************************************/
+template <typename T>
+inline CARE_HOST_DEVICE void uniqLocal(care::local_ptr<T> array, int& len)
+{
+   int origLen = len ;
+   len = 0 ;
+
+   int i = 0 ;
+   while (i < origLen) {
+      /* copy the unique value into the array */
+      array[len] = array[i] ;
+      /* skip over all the redundant elements */
+      while (i < origLen && array[i] == array[len]) {
+         ++i ;
+      }
+      ++len ;
+   }
+}
+
+/************************************************************************
 * Function  : CompressArray<T>
 * Author(s) : Peter Robinson
 * Purpose   : Removes items at indices defined in removed from arr.
