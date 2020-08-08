@@ -225,6 +225,24 @@ class KeyValueSorter<T, RAJADeviceExec> {
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
+      /// @brief Constructor
+      /// Allocates space and initializes the KeyValueSorter by copying
+      ///    elements and ordering from the given managed array
+      /// @param[in] len - The number of elements to allocate space for
+      /// @param[in] arr - The managed array to copy elements from
+      /// @return a KeyValueSorter instance
+      ///////////////////////////////////////////////////////////////////////////
+      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<const T>& arr)
+      : m_len(len)
+      , m_ownsPointers(true)
+      , m_keys(len, "m_keys")
+      , m_values(len, "m_values")
+      {
+         setFromArray(len, arr);
+      }
+
+      ///////////////////////////////////////////////////////////////////////////
+      /// @author Alan Dayton
       /// @brief (Shallow) Copy constructor
       /// Does a shallow copy and indicates that the copy should NOT free
       ///    the underlying memory. This must be a shallow copy because it is
@@ -755,6 +773,25 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       , m_keyValues(len, "m_keyValues")
       {
          setFromArray(len, arr);
+      }
+
+      ///////////////////////////////////////////////////////////////////////////
+      /// @author Alan Dayton
+      /// @brief Constructor
+      /// Allocates space and initializes the KeyValueSorter by copying
+      ///    elements and ordering from the given managed array
+      /// @param[in] len - The number of elements to allocate space for
+      /// @param[in] arr - The managed array to copy elements from
+      /// @return a KeyValueSorter instance
+      ///////////////////////////////////////////////////////////////////////////
+      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<const T>& arr)
+      : m_len(len)
+      , m_ownsPointers(true)
+      , m_keys(nullptr)
+      , m_values(nullptr)
+      , m_keyValues(len, "m_keyValues")
+      {
+         setFromArray(len, arr.data());
       }
 
       ///////////////////////////////////////////////////////////////////////////
