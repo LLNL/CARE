@@ -238,7 +238,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       , m_keys(len, "m_keys")
       , m_values(len, "m_values")
       {
-         setFromArray(len, arr);
+         setFromArray(len, arr.data());
       }
 
       ///////////////////////////////////////////////////////////////////////////
