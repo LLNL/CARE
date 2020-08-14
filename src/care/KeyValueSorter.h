@@ -214,7 +214,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, host_device_ptr<T> const & arr)
+      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<const T> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -331,7 +331,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// This method must be public because device lambda functions cannot be in
       /// private or protected functions. They cannot be in constructors, either.
       ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, host_device_ptr<T> const & arr) {
+      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
          host_device_ptr<size_t> keys = m_keys;
          host_device_ptr<T> values = m_values;
 
@@ -747,7 +747,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, host_device_ptr<T> const & arr)
+      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<const T> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -867,7 +867,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// This method must be public because device lambda functions cannot be in
       /// private or protected functions. They cannot be in constructors, either.
       ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, host_device_ptr<T> const & arr) {
+      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
          host_device_ptr<_kv<T> > keyValues = m_keyValues;
 
          FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
