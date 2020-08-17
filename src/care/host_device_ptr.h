@@ -428,7 +428,8 @@ namespace care {
 /// This implementation of getRawPointers handles the CARE host_device_ptr type.
 /// Note that without this function, care host_device_ptrs will go to the The non-CHAI type
 /// version of this function (NOT the ManagedArray version), so the make managed paradigm
-/// will fail unless implicit conversions are allowed.
+/// will fail unless implicit conversions are allowed. See also similar getRawPointers
+/// functions within CHAI managed_ptr header.
 ///
 /// @param[in] arg The host_device_ptr from which to extract a raw pointer
 ///
