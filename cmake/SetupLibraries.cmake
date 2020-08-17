@@ -24,16 +24,7 @@ if (NOT TARGET camp)
 
    if (camp_FOUND)
       message(STATUS "CARE: Using external CAMP")
-
-      set(CAMP_INCLUDE_DIRS ${camp_INSTALL_PREFIX}/include)
-      set(CAMP_DEPENDS )
-      blt_list_append(TO CAMP_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
-      blt_list_append(TO CAMP_DEPENDS ELEMENTS hip IF ENABLE_HIP)
-
-      blt_register_library(NAME camp
-                           TREAT_INCLUDES_AS_SYSTEM ON
-                           INCLUDES ${CAMP_INCLUDE_DIRS}
-                           DEPENDS_ON ${CAMP_DEPENDS})
+      set_target_properties(camp PROPERTIES IMPORTED_GLOBAL TRUE)
    else ()
       message(STATUS "CARE: Using CAMP submodule")
 
@@ -42,6 +33,12 @@ if (NOT TARGET camp)
       else ()
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/camp)
       endif ()
+   endif ()
+
+   if (ENABLE_CUDA)
+      blt_add_target_definitions(TO camp
+                                 SCOPE INTERFACE
+                                 TARGET_DEFINITIONS CAMP_HAVE_CUDA)
    endif ()
 endif ()
 
