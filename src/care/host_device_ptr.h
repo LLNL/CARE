@@ -422,5 +422,26 @@ namespace care {
    void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
 
+///
+/// @author Danny Taller
+///
+/// This implementation of getRawPointers handles the CARE host_device_ptr type.
+/// Note that without this function, care host_device_ptrs will go to the The non-CHAI type
+/// version of this function (NOT the ManagedArray version), so the make managed paradigm
+/// will fail unless implicit conversions are allowed.
+///
+/// @param[in] arg The host_device_ptr from which to extract a raw pointer
+///
+/// @return arg cast to a raw pointer
+/// 
+namespace chai {
+   namespace detail {
+      template <typename T>
+      CARE_HOST_DEVICE T* getRawPointers(care::host_device_ptr<T> arg) {
+         return arg.data();
+      }
+   } // namespace detail
+} // namespace chai
+
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 
