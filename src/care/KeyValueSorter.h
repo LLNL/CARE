@@ -223,6 +223,31 @@ class KeyValueSorter<T, RAJADeviceExec> {
          setFromArray(len, arr);
       }
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+      ///////////////////////////////////////////////////////////////////////////
+      /// @author Alan Dayton
+      ///
+      /// @brief Constructor
+      ///
+      /// Allocates space and initializes the KeyValueSorter by copying
+      ///    elements and ordering from the given managed array
+      ///
+      /// @note This overload is needed to prevent ambiguity when implicit
+      ///       casts are enabled
+      ///
+      /// @param[in] len - The number of elements to allocate space for
+      /// @param[in] arr - The managed array to copy elements from
+      ///
+      /// @return a KeyValueSorter instance
+      ///////////////////////////////////////////////////////////////////////////
+      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<T> & arr)
+      : KeyValueSorter<T, RAJADeviceExec>(len, host_device_ptr<const T>(arr))
+      {
+      }
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       /// @brief (Shallow) Copy constructor
@@ -777,14 +802,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       ///
       ///////////////////////////////////////////////////////////////////////////
       KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<T> & arr)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
+      : KeyValueSorter<T, RAJA::seq_exec>(len, host_device_ptr<const T>(arr))
       {
-         const host_device_ptr<const T> temp = arr;
-         setFromArray(len, temp);
       }
 
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
