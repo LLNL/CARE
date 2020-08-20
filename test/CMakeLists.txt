@@ -71,6 +71,19 @@ target_include_directories(TestArrayUtils
 blt_add_test( NAME TestArrayUtils
               COMMAND TestArrayUtils )
 
+blt_add_executable( NAME TestKeyValueSorter
+                    SOURCES TestKeyValueSorter.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestKeyValueSorter
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestKeyValueSorter
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestKeyValueSorter
+              COMMAND TestKeyValueSorter )
+
 blt_add_executable( NAME TestNumeric
                     SOURCES TestNumeric.cpp
                     DEPENDS_ON ${care_test_dependencies} )
