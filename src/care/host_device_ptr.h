@@ -46,6 +46,22 @@ namespace care {
    };
 
    ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Overload operator<< for the _kv struct
+   ///
+   /// @param[in] os   The output stream
+   /// @param[in] kv   The struct to process
+   ///
+   /// @return   The output stream for chaining of operations
+   ///
+   template <typename T>
+   inline std::ostream& operator<<(std::ostream& os, const _kv<T>& kv) {
+      os << kv.key << ": " << kv.value;
+      return os;
+   }
+
+   ///
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
    template <typename T>
