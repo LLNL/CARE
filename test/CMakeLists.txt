@@ -84,6 +84,19 @@ target_include_directories(TestKeyValueSorter
 blt_add_test( NAME TestKeyValueSorter
               COMMAND TestKeyValueSorter )
 
+blt_add_executable( NAME TestManagedPtr
+                    SOURCES TestManagedPtr.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestManagedPtr
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestManagedPtr
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestManagedPtr
+              COMMAND TestManagedPtr )
+
 blt_add_executable( NAME TestNumeric
                     SOURCES TestNumeric.cpp
                     DEPENDS_ON ${care_test_dependencies} )
