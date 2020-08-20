@@ -19,6 +19,39 @@
 #include "care/KeyValueSorter.h"
 #include "care/care.h"
 
+TEST(KeyValueSorter, SizeConstructor)
+{
+   int length = 5;
+   int data[5] = {4, 1, 2, 0, 3};
+   care::KeyValueSorter<int, RAJA::seq_exec> sorter(length);
+
+   LOOP_SEQUENTIAL(i, 0, length) {
+      sorter.setKey(i, i);
+      sorter.setValue(i, data[i]);
+   } LOOP_SEQUENTIAL_END
+
+   LOOP_SEQUENTIAL(i, 0, length) {
+      EXPECT_EQ(sorter.key(i), i);
+      EXPECT_EQ(sorter.value(i), data[i]);
+   } LOOP_SEQUENTIAL_END
+
+   sorter.sort();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(sorter.key(0), 3);
+      EXPECT_EQ(sorter.key(1), 1);
+      EXPECT_EQ(sorter.key(2), 2);
+      EXPECT_EQ(sorter.key(3), 4);
+      EXPECT_EQ(sorter.key(4), 0);
+
+      EXPECT_EQ(sorter.value(0), 0);
+      EXPECT_EQ(sorter.value(1), 1);
+      EXPECT_EQ(sorter.value(2), 2);
+      EXPECT_EQ(sorter.value(3), 3);
+      EXPECT_EQ(sorter.value(4), 4);
+   } CARE_HOST_KERNEL_END
+}
+
 TEST(KeyValueSorter, RawArrayConstructor)
 {
    int length = 5;
