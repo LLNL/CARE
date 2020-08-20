@@ -652,9 +652,9 @@ inline bool cmpValsStable(_kv<T> const & left, _kv<T> const & right)
    }
 }
 
-/// cmpValsStable<real8> specialization
+/// cmpValsStable<double> specialization
 template <>
-inline bool cmpValsStable<real8>(_kv<real8> const & left, _kv<real8> const & right)
+inline bool cmpValsStable<double>(_kv<double> const & left, _kv<double> const & right)
 {
    if (left < right) {
       return true;
