@@ -21,15 +21,7 @@ static void benchmark_std_iota(benchmark::State& state) {
    const int size = state.range(0);
 
    care::host_device_ptr<int> data(size, "data");
-
-   // TODO: Can probably just use data.data() in the future,
-   // but we are currently using an older version of CHAI
-   // in some projects that depend on CARE.
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-   int* host_data = data;
-#else
    int* host_data = data.data();
-#endif
 
    while (state.KeepRunning()) {
       std::iota(host_data, host_data + size, 0);
