@@ -147,7 +147,20 @@ if (ENABLE_CUDA)
 
    # nvcc dies if compiler flags are duplicated, and RAJA adds all these compiler flags
    set(RAJA_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
-   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch ${CUDA_CODE} -code ${CUDA_ARCH}")
+
+   # Only add these flags if they are not already present or nvcc will die
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "--expt-extended-lambda")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+   endif ()
+
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "-arch")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch ${CUDA_CODE}")
+   endif ()
+
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "-code")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -code ${CUDA_ARCH}")
+   endif ()
+
    set(CARE_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 endif()
 
