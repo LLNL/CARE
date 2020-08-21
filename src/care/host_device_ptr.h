@@ -446,7 +446,8 @@ namespace care {
 //       Perhaps having an object wrapper like chai::ManagedDataSplitter would be
 //       a good way to indicate to chai::make_managed that raw pointers actually
 //       should be extracted. Basically, we break if a constructor takes both
-//       c-style arrays and ManagedArrays/host_device_ptrs.
+//       c-style arrays and ManagedArrays/host_device_ptrs. There is a reproducer
+//       of this issue in the reproducers directory.
 
 ///
 /// @author Danny Taller
