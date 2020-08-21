@@ -76,7 +76,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src;.\include;..\..\..\imports\umpire\src;..\..\..\imports\camp\include;..\..\..\imports\umpire\Win32\include;..\..\..\imports\chai\src;..\..\..\imports\chai\Win32\include;..\..\..\imports\raja\include;..\..\..\imports\raja\Win32\include;..\..\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;.\include;..\..\umpire\src;..\..\camp\include;..\..\umpire\Win32\include;..\..\chai\src;..\..\chai\Win32\include;..\..\raja\include;..\..\raja\Win32\include;..\..\..\exports\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -125,7 +125,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CUDADebug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src;.\include;..\..\..\imports\umpire\src;..\..\..\imports\camp\include;..\..\..\imports\umpire\Win32\include;..\..\..\imports\chai\src;..\..\..\imports\chai\Win32\include;..\..\..\imports\raja\include;..\..\..\imports\raja\Win32\include;..\..\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;.\include;..\..\umpire\src;..\..\camp\include;..\..\umpire\Win32\include;..\..\chai\src;..\..\chai\Win32\include;..\..\raja\include;..\..\raja\Win32\include;..\..\..\exports\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -189,7 +189,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src;.\include;..\..\..\imports\umpire\src;..\..\..\imports\camp\include;..\..\..\imports\umpire\Win32\include;..\..\..\imports\chai\src;..\..\..\imports\chai\Win32\include;..\..\..\imports\raja\include;..\..\..\imports\raja\Win32\include;..\..\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;.\include;..\..\umpire\src;..\..\camp\include;..\..\umpire\Win32\include;..\..\chai\src;..\..\chai\Win32\include;..\..\raja\include;..\..\raja\Win32\include;..\..\..\exports\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -238,7 +238,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CUDARelease|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src;.\include;..\..\..\imports\umpire\src;..\..\..\imports\camp\include;..\..\..\imports\umpire\Win32\include;..\..\..\imports\chai\src;..\..\..\imports\chai\Win32\include;..\..\..\imports\raja\include;..\..\..\imports\raja\Win32\include;..\..\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;.\include;..\..\umpire\src;..\..\camp\include;..\..\umpire\Win32\include;..\..\chai\src;..\..\chai\Win32\include;..\..\raja\include;..\..\raja\Win32\include;..\..\..\exports\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -300,7 +300,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebugInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\src;.\include;..\..\..\imports\umpire\src;..\..\..\imports\camp\include;..\..\..\imports\umpire\Win32\include;..\..\..\imports\chai\src;..\..\..\imports\chai\Win32\include;..\..\..\imports\raja\include;..\..\..\imports\raja\Win32\include;..\..\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;.\include;..\..\umpire\src;..\..\camp\include;..\..\umpire\Win32\include;..\..\chai\src;..\..\chai\Win32\include;..\..\raja\include;..\..\raja\Win32\include;..\..\..\exports\LLNL_GlobalID;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>ReleaseWithDebugInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -381,10 +381,10 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\imports\chai\Win32\chai.vcxproj">
+    <ProjectReference Include="..\..\chai\Win32\chai.vcxproj">
       <Project>{2d980298-7258-3672-a49f-5f323802d26a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\imports\umpire\Win32\umpire.vcxproj">
+    <ProjectReference Include="..\..\umpire\Win32\umpire.vcxproj">
       <Project>{8b884c3a-651b-3b63-826a-5d024c31c87d}</Project>
     </ProjectReference>
   </ItemGroup>
