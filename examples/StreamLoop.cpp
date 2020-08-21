@@ -7,7 +7,7 @@
 
 // This macro needs to be defined before including care/care.h,
 // which allows you to port a file at a time. Without this define,
-// LOOP_STREAM will run on the CPU. With this define, LOOP_STREAM
+// CARE_STREAM_LOOP will run on the CPU. With this define, CARE_STREAM_LOOP
 // will run on the GPU only if you built with CUDA enabled. Otherwise,
 // if CUDA is disabled, it will default back to running on the host.
 #define GPU_ACTIVE
@@ -53,14 +53,14 @@ int main(int, char**) {
 
    // Allocate memory on the host and device using a CARE wrapper around a CHAI container.
    // This object can be used on both the host and device, so it can be used in a
-   // LOOP_STREAM. Raw arrays should not be used inside a LOOP_STREAM.
+   // CARE_STREAM_LOOP. Raw arrays should not be used inside a CARE_STREAM_LOOP.
    care::host_device_ptr<int> data2(size2);
 
    // Fill the memory on the host or the device depending on whether the code
    // is compiled with nvcc and if GPU_ACTIVE is defined.
-   LOOP_STREAM(i, 0, size2) {
+   CARE_STREAM_LOOP(i, 0, size2) {
       data2[i] = i * i;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    // data2 is readable and writeable, but data3 is read only, which can decrease
    // the number of copies between host and device.

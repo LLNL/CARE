@@ -37,9 +37,9 @@ void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
 
 template <typename T>
 inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
-   LOOP_STREAM(i, 0, n) {
+   CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 }
 
 // This initialization pattern works fine
@@ -51,22 +51,22 @@ GPU_TEST(nestedMA, gpu_init0)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    std::string name("test") ;
-   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
+   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       ArrayFill<int>(nestedMA[i], M, 0) ;
-   } LOOP_SEQUENTIAL_REF_END
+   } CARE_SEQUENTIAL_REF_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i][j] = 1 ;
       }
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
 }
 
@@ -79,28 +79,28 @@ GPU_TEST(nestedMA, gpu_init)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    std::string name("test") ;
-   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
+   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       ArrayFill<int>(nestedMA[i], M, 0) ;
-   } LOOP_SEQUENTIAL_REF_END
+   } CARE_SEQUENTIAL_REF_LOOP_END
 
-   LOOP_STREAM(i, 0, N) {
+   CARE_STREAM_LOOP(i, 0, N) {
       if (nestedMA) {}
       (void) i; // quiet compiler
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    GPU_FAIL(
-      LOOP_SEQUENTIAL(i, 0, N) {
+      CARE_SEQUENTIAL_LOOP(i, 0, N) {
          for (int j = 0 ; j < M ; ++j) {
             nestedMA[i][j] = 1 ;
          }
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
    ) ;
 }
 
@@ -113,24 +113,24 @@ GPU_TEST(nestedMA, cpu_init0)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    std::string name("test") ;
-   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
+   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i].set(j, 0) ;
       }
-   } LOOP_SEQUENTIAL_REF_END
+   } CARE_SEQUENTIAL_REF_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i][j] = 1 ;
       }
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
 }
 // This initialization pattern fails on the GPU build
@@ -142,30 +142,30 @@ GPU_TEST(nestedMA, cpu_init)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   LOOP_SEQUENTIAL(i, 0, N) {
+   CARE_SEQUENTIAL_LOOP(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    std::string name("test") ;
-   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
+   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i].set(j, 0) ;
       }
-   } LOOP_SEQUENTIAL_REF_END
+   } CARE_SEQUENTIAL_REF_LOOP_END
 
-   LOOP_STREAM(i, 0, N) {
+   CARE_STREAM_LOOP(i, 0, N) {
       if (nestedMA) {}
       (void) i; // quiet compiler
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    GPU_FAIL(
-      LOOP_SEQUENTIAL(i, 0, N) {
+      CARE_SEQUENTIAL_LOOP(i, 0, N) {
          for (int j = 0 ; j < M ; ++j) {
             nestedMA[i][j] = 1 ;
          }
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
    ) ;
 
 }

@@ -27,10 +27,10 @@ GPU_TEST(TestPacker, testFuseSort) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(i,0,N) {
+   CARE_STREAM_LOOP(i,0,N) {
       arr1[i] = N-1-i;
       arr2[i] = N+3-i;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    SortFuser<int> sorter = SortFuser<int>();
    sorter.reset();
@@ -39,12 +39,12 @@ GPU_TEST(TestPacker, testFuseSort) {
    sorter.sort();
    int_ptr concatanated = sorter.getConcatenatedResult();
    
-   LOOP_SEQUENTIAL(i,0,N) {
+   CARE_SEQUENTIAL_LOOP(i,0,N) {
       EXPECT_EQ(arr1[i],concatanated[i]);
       EXPECT_EQ(arr2[i],concatanated[i+N]);
       EXPECT_EQ(arr1[i],i);
       EXPECT_EQ(arr2[i],i+4);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
 }
 
@@ -52,10 +52,10 @@ GPU_TEST(TestPacker, testFuseUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(i,0,N) {
+   CARE_STREAM_LOOP(i,0,N) {
       arr1[i] = i - i%2;
       arr2[i] = i + N/2- i%2; 
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    int_ptr out1,out2;
    int len1, len2;
@@ -68,16 +68,16 @@ GPU_TEST(TestPacker, testFuseUniq) {
    int_ptr concatanated_lengths = sorter.getConcatenatedLengths();
    
    EXPECT_EQ(len1,3); 
-   LOOP_SEQUENTIAL(i,0,len1) {
+   CARE_SEQUENTIAL_LOOP(i,0,len1) {
       EXPECT_EQ(out1[i],concatanated[i]);
       EXPECT_EQ(out1[i],i*2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    
    EXPECT_EQ(len2,3); 
-   LOOP_SEQUENTIAL(i,0,len2) {
+   CARE_SEQUENTIAL_LOOP(i,0,len2) {
       EXPECT_EQ(out2[i],concatanated[i+len1]);
       EXPECT_EQ(out2[i],i*2+N/2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    EXPECT_EQ(concatanated_lengths.pick(0), len1);
    EXPECT_EQ(concatanated_lengths.pick(1), len2);
@@ -87,11 +87,11 @@ GPU_TEST(TestPacker, testFuseSortUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(j,0,N) {
+   CARE_STREAM_LOOP(j,0,N) {
       int i = N-1 -j;
       arr1[j] = i - i%2;
       arr2[j] = i + N/2- i%2; 
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    int_ptr out1,out2;
    int len1, len2;
@@ -104,16 +104,16 @@ GPU_TEST(TestPacker, testFuseSortUniq) {
    int_ptr concatanated_lengths = sorter.getConcatenatedLengths();
    
    EXPECT_EQ(len1,3); 
-   LOOP_SEQUENTIAL(i,0,len1) {
+   CARE_SEQUENTIAL_LOOP(i,0,len1) {
       EXPECT_EQ(out1[i],concatanated[i]);
       EXPECT_EQ(out1[i],i*2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    
    EXPECT_EQ(len2,3); 
-   LOOP_SEQUENTIAL(i,0,len2) {
+   CARE_SEQUENTIAL_LOOP(i,0,len2) {
       EXPECT_EQ(out2[i],concatanated[i+len1]);
       EXPECT_EQ(out2[i],i*2+N/2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    EXPECT_EQ(concatanated_lengths.pick(0), len1);
    EXPECT_EQ(concatanated_lengths.pick(1), len2);

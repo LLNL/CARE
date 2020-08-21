@@ -350,20 +350,20 @@ inline void IntersectArrays(RAJAExec,
    care::host_device_ptr<int> searches(smaller + 1,"IntersectArrays searches");
    care::host_device_ptr<int> matched(smaller + 1, "IntersectArrays matched");
 
-   LOOP_STREAM(i, 0, smaller + 1) {
+   CARE_STREAM_LOOP(i, 0, smaller + 1) {
       searches[i] = i != smaller ? BinarySearch<ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    exclusive_scan<int, RAJAExec>(matched, nullptr, smaller + 1, RAJA::operators::plus<int>{}, 0, true);
 
-   LOOP_STREAM(i, 0, smaller) {
+   CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {
          // matches reported relative to smallStart and largeStart
          smallerMatches[matched[i]] = i;
          largerMatches[matched[i]] = searches[i] - largeStart;
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    *numMatches = matched.pick(smaller);
 
@@ -667,20 +667,20 @@ template <typename T>
 inline void uniqArray(RAJAExec, care::host_device_ptr<T>  Array, size_t len, care::host_device_ptr<T> & outArray, int & outLen, bool noCopy=false) {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
    ArrayFill<int, RAJAExec>(uniq, len+1, 0);
-   LOOP_STREAM(i, 0, len) {
+   CARE_STREAM_LOOP(i, 0, len) {
       uniq[i] = (int) ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) ;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    exclusive_scan<int, RAJAExec>(uniq, nullptr, len+1, RAJA::operators::plus<int>{}, 0, true);
    int numUniq;
    uniq.pick(len, numUniq);
    care::host_device_ptr<T> & tmp = outArray;
    tmp.alloc(numUniq);
-   LOOP_STREAM(i, 0, len) {
+   CARE_STREAM_LOOP(i, 0, len) {
       if ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) {
          tmp[uniq[i]] = Array[i];
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    uniq.free();
    outLen = numUniq;
    return;
@@ -1126,10 +1126,10 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
    if (length > 0) {
       care::host_device_ptr<T> array_copy(length, "ExpandArrayInPlace array_copy");
       ArrayCopy<double>(array_copy, array, length);
-      LOOP_STREAM(i, 0, length) {
+      CARE_STREAM_LOOP(i, 0, length) {
          int nL = indexSet[i] ;
          array[nL] = array_copy[i] ;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
       array_copy.free();
    }
 }
@@ -1144,9 +1144,9 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
  * ************************************************************************/
 template <typename T, typename Exec>
 inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
-   LOOP_STREAM(i, 0, n) {
+   CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 }
 
 template <typename T>
@@ -1164,9 +1164,9 @@ void ArrayFill(care::host_ptr<T> arr, int n, T val)  {
 template <typename T, typename Exec>
 inline T ArrayMin(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex)  {
    RAJAReduceMin<T> min { initVal };
-   LOOP_REDUCE(k, startIndex, n) {
+   CARE_REDUCE_LOOP(k, startIndex, n) {
       min.min(arr[k]);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (T)min;
 }
 
@@ -1197,9 +1197,9 @@ inline CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int n, T initVal, int
 template <typename T, typename Exec>
 inline T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc)  {
    RAJAReduceMinLoc<T> min { initVal, -1 };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       min.minloc(arr[k], k);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    loc = min.getLoc();
    return (T)min;
 }
@@ -1212,9 +1212,9 @@ inline T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, int &
 template <typename T, typename Exec>
 inline T ArrayMaxLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc)  {
    RAJAReduceMaxLoc<T> max { initVal, -1 };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       max.maxloc(arr[k], k);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    loc = max.getLoc();
    return (T)max;
 }
@@ -1227,9 +1227,9 @@ inline T ArrayMaxLoc(care::host_device_ptr<const T> arr, int n, T initVal, int &
 template <typename T, typename Exec>
 inline T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal)  {
    RAJAReduceMax<T> max { initVal };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       max.max(arr[k]);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (T)max;
 }
 
@@ -1268,11 +1268,11 @@ int ArrayFind(care::host_device_ptr<const T> arr, const int len, const T val, co
 {
    RAJAReduceMin<int> min { len };
 
-   LOOP_REDUCE(i, start, len) {
+   CARE_REDUCE_LOOP(i, start, len) {
       if (arr[i] == val) {
          min.min(i);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    int result = (int) min;
 
@@ -1315,12 +1315,12 @@ int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int co
       RAJAReduceMax<ReducerType> max { std::numeric_limits<ReducerType>::lowest() };
       RAJAReduceMin<ReducerType> min { std::numeric_limits<ReducerType>::max() };
       if (mask) {
-         LOOP_REDUCE(i, 0, n) {
+         CARE_REDUCE_LOOP(i, 0, n) {
             if (mask[i]) {
                min.min((ReducerType) arr[i]);
                max.max((ReducerType) arr[i]);
             }
-         } LOOP_REDUCE_END
+         } CARE_REDUCE_LOOP_END
          minVal = (ReducerType) min;
          maxVal = (ReducerType) max;
          if (minVal!= std::numeric_limits<ReducerType>::max() ||
@@ -1329,10 +1329,10 @@ int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int co
          }
       }
       else {
-         LOOP_REDUCE(i, 0, n) {
+         CARE_REDUCE_LOOP(i, 0, n) {
             min.min((ReducerType)arr[i]);
             max.max((ReducerType)arr[i]);
-         } LOOP_REDUCE_END
+         } CARE_REDUCE_LOOP_END
          minVal = (ReducerType) min;
          maxVal = (ReducerType) max;
          result = true;
@@ -1430,9 +1430,9 @@ CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<
 template <typename T, typename Exec>
 inline int  ArrayCount(care::host_device_ptr<const T> arr, int length, T val)  {
    RAJAReduceSum<int> count { 0 };
-   LOOP_REDUCE(k, 0, length) {
+   CARE_REDUCE_LOOP(k, 0, length) {
       count += (int) arr[k] == val;
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (int) count ;
 }
 
@@ -1445,9 +1445,9 @@ template <typename T, typename ReduceType, typename Exec>
 inline T ArraySum(care::host_device_ptr<const T> arr, int n, T initVal)  {
    ReduceType iVal = initVal;
    RAJAReduceSum<ReduceType> sum { iVal };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       sum += arr[k];
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (T) (ReduceType) sum;
 }
 
@@ -1461,9 +1461,9 @@ template <typename T, typename ReduceType, typename Exec>
 inline T ArraySumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int n, T initVal) {
    ReduceType iVal = initVal;
    RAJAReduceSum<ReduceType> sum { iVal };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       sum += arr[subset[k]];
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (T) (ReduceType) sum;
 }
 
@@ -1476,12 +1476,12 @@ template <typename T, typename ReduceType, typename Exec>
 inline T ArrayMaskedSumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, care::host_device_ptr<int const> subset, int n, T initVal) {
    ReduceType iVal =initVal;
    RAJAReduceSum<ReduceType> sum { iVal };
-   LOOP_REDUCE(k, 0, n) {
+   CARE_REDUCE_LOOP(k, 0, n) {
       int ndx = subset[k];
       if (mask[ndx] == 0) {
          sum += arr[ndx];
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return (T) (ReduceType) sum;
 }
 
@@ -1496,9 +1496,9 @@ T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int c
    ReduceType iVal = initVal;
    RAJAReduceSum<ReduceType> sum { iVal };
 
-   LOOP_STREAM(i, 0, n) {
+   CARE_STREAM_LOOP(i, 0, n) {
       sum += arr[i] * T(mask[i] == 0);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    return (T) (ReduceType) sum ;
 }
@@ -1512,11 +1512,11 @@ T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int c
 template <typename T, typename Exec>
 inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
    RAJAReduceMin<int> minIndexAboveLimit {n};
-   LOOP_REDUCE(i, 0, n) {
+   CARE_REDUCE_LOOP(i, 0, n) {
      if ( arr[i] > limit) {
           minIndexAboveLimit.min(i);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    int result = (int)minIndexAboveLimit;
    if (result >= n) {
@@ -1545,9 +1545,9 @@ inline int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit) {
 template <typename T, typename Exec>
 inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
    RAJAReduceMaxLoc<T> maxLoc { std::numeric_limits<T>::lowest(), -1 };
-   LOOP_REDUCE(i, 0, n) {
+   CARE_REDUCE_LOOP(i, 0, n) {
       maxLoc.maxloc(arr[i], i);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return maxLoc.getLoc();
 }
 
@@ -1574,9 +1574,9 @@ template<typename T, typename Exec>
 inline void ArrayCopy(Exec,
                       care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
                       int n, int start1, int start2) {
-   LOOP_STREAM(i, 0, n) {
+   CARE_STREAM_LOOP(i, 0, n) {
       into[i+start1] = from[i+start2];
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 }
 
 /************************************************************************
@@ -1589,9 +1589,9 @@ template<typename T>
 inline void ArrayCopy(RAJA::seq_exec,
                       care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
                       int n, int start1, int start2) {
-   LOOP_SEQUENTIAL(i, 0, n) {
+   CARE_SEQUENTIAL_LOOP(i, 0, n) {
       into[i+start1] = from[i+start2];
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 /************************************************************************
@@ -1605,9 +1605,9 @@ inline care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, in
      return nullptr;
    } else {
      care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
-     LOOP_STREAM(i, 0, len) {
+     CARE_STREAM_LOOP(i, 0, len) {
         newArray[i] = from[i];
-     } LOOP_STREAM_END
+     } CARE_STREAM_LOOP_END
      return newArray;
    }
 }
@@ -1671,11 +1671,11 @@ int FindIndexMinAboveThresholds(care::host_device_ptr<const T> arr, int n,
    int ndx = -1;
    if (thresholds) {
       RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), ndx };
-      LOOP_REDUCE(i, 0, n) {
+      CARE_REDUCE_LOOP(i, 0, n) {
          if (thresholds[i] > cutoff) {
             min.minloc(arr[i], i);
          }
-      } LOOP_REDUCE_END
+      } CARE_REDUCE_LOOP_END
       ndx = min.getLoc();
       *thresholdIndex = ndx;
    }
@@ -1698,10 +1698,10 @@ template<typename T, typename Exec>
 int FindIndexMinSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset)
 {
    RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), -1 };
-   LOOP_REDUCE(i, 0, lenset) {
+   CARE_REDUCE_LOOP(i, 0, lenset) {
       int curr = subset[i] ;
       min.minloc(arr[curr], curr);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return min.getLoc();
 }
 
@@ -1728,13 +1728,13 @@ int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
    if (thresholds) {
       RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), -1 };
       RAJAReduceMinLoc<T> thresholdmin { std::numeric_limits<T>::max(), -1 };
-      LOOP_REDUCE(i, 0, lenset) {
+      CARE_REDUCE_LOOP(i, 0, lenset) {
          int curr = subset[i] ;
          if (thresholds[i] > cutoff) { // if threshold were sized as arr, this would be thresholds[curr]
             min.minloc(arr[curr], curr);
             thresholdmin.minloc(arr[curr], i);
          }
-      } LOOP_REDUCE_END
+      } CARE_REDUCE_LOOP_END
       *thresholdIndex = thresholdmin.getLoc();
       ndx = min.getLoc();
    }
@@ -1801,11 +1801,11 @@ int FindIndexMaxAboveThresholds(care::host_device_ptr<const T> arr, int n,
    int ndx = -1;
    if (thresholds) {
       RAJAReduceMaxLoc<T> max { std::numeric_limits<T>::lowest(), ndx };
-      LOOP_REDUCE(i, 0, n) {
+      CARE_REDUCE_LOOP(i, 0, n) {
          if (thresholds[i] > cutoff) {
             max.maxloc(arr[i], i);
          }
-      } LOOP_REDUCE_END
+      } CARE_REDUCE_LOOP_END
       ndx = max.getLoc();
       *thresholdIndex = ndx;
    }
@@ -1828,10 +1828,10 @@ template<typename T, typename Exec>
 int FindIndexMaxSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset)
 {
    RAJAReduceMaxLoc<T> max { std::numeric_limits<T>::lowest(), -1 };
-   LOOP_REDUCE(i, 0, lenset) {
+   CARE_REDUCE_LOOP(i, 0, lenset) {
       int curr = subset[i] ;
       max.maxloc(arr[curr], curr);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
    return max.getLoc();
 }
 
@@ -1858,14 +1858,14 @@ int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::
    if (thresholds) {
       RAJAReduceMaxLoc<T> max { std::numeric_limits<T>::lowest(), -1 };
       RAJAReduceMaxLoc<T> thresholdmax { std::numeric_limits<T>::lowest(), -1 };
-      LOOP_REDUCE(i, 0, lenset) {
+      CARE_REDUCE_LOOP(i, 0, lenset) {
          int curr = subset[i] ;
 
          if (thresholds[i] > cutoff) {
             max.maxloc(arr[curr], curr);
             thresholdmax.maxloc(arr[curr], i);
          }
-      } LOOP_REDUCE_END
+      } CARE_REDUCE_LOOP_END
       *thresholdIndex = thresholdmax.getLoc();
       ndx = max.getLoc();
    }
