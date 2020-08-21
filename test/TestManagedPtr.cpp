@@ -37,7 +37,7 @@ class DerivedClass : public BaseClass {
       int* m_data;
 };
 
-TEST(ManagedPtr, make_managed)
+TEST(ManagedPtr, SplitHostDevicePointer)
 {
    // Set up data
    int length = 10;
@@ -70,6 +70,32 @@ TEST(ManagedPtr, make_managed)
          return false; // Let the default actions be taken
       }
    });
+
+   LOOP_SEQUENTIAL(i, 0, length) {
+      base->setData(i, i);
+   } LOOP_SEQUENTIAL_END
+
+   LOOP_SEQUENTIAL(i, 0, length) {
+      EXPECT_EQ(base->getData(i), i);
+   } LOOP_SEQUENTIAL_END
+
+   base.free();
+}
+
+TEST(ManagedPtr, RawPointer)
+{
+   // Set up data
+   int length = 10;
+   int data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+   // This will construct an instance of DerivedClass on the host and an instance of
+   // DerivedClass on the device. This gives the host pointer to both the host instance
+   // and the device instance. Therefore, it is not safe to use on the device. This
+   // is a common pattern in some codes (i.e. a c-style string that is only ever
+   // accessed on the host, enforced by __host__ only accessors), and to avoid forcing
+   // users to make separate constructors for the host and device, we need to ensure
+   // that this works.
+   care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
 
    LOOP_SEQUENTIAL(i, 0, length) {
       base->setData(i, i);
