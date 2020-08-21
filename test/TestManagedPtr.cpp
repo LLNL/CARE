@@ -117,6 +117,90 @@ TEST(ManagedPtr, RawPointer)
    TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
    static void gpu_test_##X##Y()
 
+GPU_TEST(ManagedPtr, SplitHostDevicePointer)
+{
+   // Set up data
+   int length = 10;
+   care::host_device_ptr<int> data(length);
+   care_utils::ArrayFill<int>(data, length, 0);
+
+   // This will construct an instance of DerivedClass on the host and an instance of
+   // DerivedClass on the device. It is aware of host_device_ptr types, so it gives
+   // the host pointer in data to the host instance and the device pointer in data to
+   // the device instance.
+   care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
+
+   // Now if data is changed on the host or the device and we want the changes to be
+   // reflected in the other execution space, we need to set a callback that triggers
+   // the copy constructor of data. We can also use this callback to free the
+   // host_device_ptr.
+   base.set_callback([=] (chai::Action action,
+                          chai::ExecutionSpace space,
+                          void* /* pointer */) mutable {
+      if (action == chai::ACTION_MOVE) {
+         auto dataTemp = data; // Trigger move of data in host_device_ptr
+         (void) dataTemp; // Quiet compiler
+         return true;
+      }
+      else if (action == chai::ACTION_FREE && space == chai::NONE) {
+         data.free(); // Free data in host_device_ptr
+         return true;
+      }
+      else {
+         return false; // Let the default actions be taken
+      }
+   });
+
+   LOOP_STREAM(i, 0, length) {
+      base->setData(i, i);
+   } LOOP_SEQUENTIAL_END
+
+   LOOP_SEQUENTIAL(i, 0, length) {
+      EXPECT_EQ(base->getData(i), i);
+   } LOOP_SEQUENTIAL_END
+
+   base.free();
+}
+
+GPU_TEST(ManagedPtr, RawPointer)
+{
+   // Set up data
+   int length = 10;
+   int* data;
+
+#ifdef __CUDACC__
+   cudaMalloc(&data, length * sizeof(int));
+   cudaMemset(data, 0, length * sizeof(int));
+#else
+   hipMalloc(&data, length * sizeof(int));
+   hipMemset(data, 0, length * sizeof(int));
+#endif
+
+   // This will construct an instance of DerivedClass on the host and an instance of
+   // DerivedClass on the device. This gives the host pointer to both the host instance
+   // and the device instance. Therefore, it is not safe to use on the device. This
+   // is a common pattern in some codes (i.e. a c-style string that is only ever
+   // accessed on the host, enforced by __host__ only accessors), and to avoid forcing
+   // users to make separate constructors for the host and device, we need to ensure
+   // that this works.
+   care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
+
+   LOOP_STREAM(i, 0, length) {
+      base->setData(i, i);
+   } LOOP_STREAM_END
+
+   RAJAReduceMin<bool> passed{true};
+
+   LOOP_REDUCE(i, 0, length) {
+      if (base->getData(i) != i) {
+         passed.min(false);
+      }
+   } LOOP_REDUCE_END
+
+   EXPECT_TRUE((bool) passed);
+
+   base.free();
+}
 
 #endif // __GPUCC__
 
