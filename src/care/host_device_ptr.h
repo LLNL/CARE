@@ -438,6 +438,16 @@ namespace care {
    void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
 
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+// TODO: Declaring these functions causes problems with a project that depends on CARE
+//       and has not eliminated implicit casts. Having this macro guard around these
+//       functions is a temporary workaround. A better solution needs to be found.
+//       Perhaps having an object wrapper like chai::ManagedDataSplitter would be
+//       a good way to indicate to chai::make_managed that raw pointers actually
+//       should be extracted. Basically, we break if a constructor takes both
+//       c-style arrays and ManagedArrays/host_device_ptrs.
+
 ///
 /// @author Danny Taller
 ///
@@ -459,6 +469,8 @@ namespace chai {
       }
    } // namespace detail
 } // namespace chai
+
+#endif // !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 
