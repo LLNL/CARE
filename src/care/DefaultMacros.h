@@ -39,7 +39,7 @@
 #endif // !NDEBUG
 
 /// Used to capture variables by reference into a lambda (combine with FOR_EACH)
-#define REF_CAPTURE(X) , &X
+#define CARE_REF_CAPTURE(X) , &X
 
 
 
@@ -361,7 +361,7 @@
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -391,7 +391,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int) {
+   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int) {
 
 #define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -430,7 +430,7 @@
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -574,9 +574,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_loop_check)
+#define CARE_SEQUENTIAL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_loop_check)
 
-#define LOOP_SEQUENTIAL_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_loop_check)
+#define CARE_SEQUENTIAL_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -589,9 +589,9 @@
 /// @arg[in] __VA_ARGS__ The variables to capture by reference
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_REF(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_loop_check, __VA_ARGS__)
+#define CARE_SEQUENTIAL_REF_LOOP(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_loop_check, __VA_ARGS__)
 
-#define LOOP_SEQUENTIAL_REF_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_loop_check)
+#define CARE_SEQUENTIAL_REF_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -607,9 +607,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_P(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_p_loop_check)
+#define CARE_SEQUENTIAL_P_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_p_loop_check)
 
-#define LOOP_SEQUENTIAL_P_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_p_loop_check)
+#define CARE_SEQUENTIAL_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_p_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -626,9 +626,9 @@
 /// @arg[in] __VA_ARGS__ The variables to capture by reference
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_P_REF(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_p_loop_check, __VA_ARGS__)
+#define CARE_SEQUENTIAL_REF_P_LOOP(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_p_loop_check, __VA_ARGS__)
 
-#define LOOP_SEQUENTIAL_P_REF_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_p_loop_check)
+#define CARE_SEQUENTIAL_REF_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_p_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -647,9 +647,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_STREAM_P(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_p_loop_check)
+#define CARE_STREAM_P_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_p_loop_check)
 
-#define LOOP_STREAM_P_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_stream_p_loop_check)
+#define CARE_STREAM_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_stream_p_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -694,9 +694,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_WORK(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_work_loop_check)
+#define CARE_WORK_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_work_loop_check)
 
-#define LOOP_WORK_END CARE_CHECKED_PARALLEL_LOOP_END(care_work_loop_check)
+#define CARE_WORK_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_work_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -712,9 +712,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_STREAM(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_loop_check)
+#define CARE_STREAM_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_loop_check)
 
-#define LOOP_STREAM_END CARE_CHECKED_PARALLEL_LOOP_END(care_stream_loop_check)
+#define CARE_STREAM_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_stream_loop_check)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -731,9 +731,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_REDUCE(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
+#define CARE_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
 
-#define LOOP_REDUCE_END CARE_CHECKED_PARALLEL_LOOP_END(care_reduce_loop_check)
+#define CARE_REDUCE_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_reduce_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

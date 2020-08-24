@@ -47,3 +47,4 @@ Indices and tables
    :maxdepth: 2
 
    install
+   tutorial

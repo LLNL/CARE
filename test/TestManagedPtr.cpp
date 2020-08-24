@@ -171,13 +171,13 @@ TEST(ManagedPtr, SplitHostDevicePointer)
       }
    });
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       base->setData(i, i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(base->getData(i), i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    base.free();
 }
@@ -203,13 +203,13 @@ TEST(ManagedPtr, RawPointer)
    // that this works.
    care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       base->setData(i, i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(base->getData(i), i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    base.free();
 }
@@ -220,7 +220,7 @@ TEST(ManagedPtr, RawPointer)
 /////////////////////////////////////////////////////////////////////////
 ///
 /// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
-///        LOOP_STREAM) to be used in google tests. Essentially,
+///        CARE_STREAM_LOOP) to be used in google tests. Essentially,
 ///        extended __host__ __device__ lambdas cannot be used in
 ///        private or protected members, and the TEST macro creates a
 ///        protected member function. We get around this by creating a
@@ -274,13 +274,13 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
       }
    });
 
-   LOOP_STREAM(i, 0, length) {
+   CARE_STREAM_LOOP(i, 0, length) {
       base->setData(i, i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(base->getData(i), i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    base.free();
 }
@@ -314,9 +314,9 @@ GPU_TEST(ManagedPtr, RawPointer)
    // ensure that this works.
    care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
 
-   LOOP_STREAM(i, 0, length) {
+   CARE_STREAM_LOOP(i, 0, length) {
       base->setData(i, i);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    RAJAReduceMin<bool> passed{true};
 

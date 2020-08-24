@@ -38,9 +38,9 @@ GPU_TEST(Scan, test_scan_offset) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(Scan, test_scan_zero_length) {
@@ -57,9 +57,9 @@ GPU_TEST(Scan, test_scan_zero_length) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(Scan, test_scan_offset_index) {
@@ -77,9 +77,9 @@ GPU_TEST(Scan, test_scan_offset_index) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(Scan, test_scan_offset_index_half) {
@@ -97,11 +97,11 @@ GPU_TEST(Scan, test_scan_offset_index_half) {
 
    EXPECT_EQ(offset,starting_offset+length/2);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       if ((i+start)%2 == 0) {
          EXPECT_EQ(scan_Result[i],starting_offset+i/2);
       }
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(Scan, test_scan_everywhere) {
@@ -119,9 +119,9 @@ GPU_TEST(Scan, test_scan_everywhere) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 #if CARE_HAVE_LLNL_GLOBALID
@@ -143,9 +143,9 @@ GPU_TEST(Scan, test_scan_offset_index_gid) {
 
    EXPECT_EQ(offset.Ref(),starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i].Ref(),starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 #endif

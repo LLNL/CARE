@@ -369,14 +369,14 @@ namespace care {
          registerCallbacks();
          MA & me = *this;
          if (initOnDevice) { 
-            LOOP_STREAM(i,startIndx,N) {
+            CARE_STREAM_LOOP(i,startIndx,N) {
                me[i] = initial;
-            } LOOP_STREAM_END
+            } CARE_STREAM_LOOP_END
          }
          else {
-            LOOP_SEQUENTIAL(i,startIndx,N) {
+            CARE_SEQUENTIAL_LOOP(i,startIndx,N) {
                me[i] = initial;
-            } LOOP_SEQUENTIAL_END
+            } CARE_SEQUENTIAL_LOOP_END
          }
       }
 

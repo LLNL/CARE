@@ -273,7 +273,7 @@ namespace care {
 
       int num_arrays = m_num_arrays;
       T max_range = m_max_range;
-      LOOP_STREAM(i,0,outLen+1) {
+      CARE_STREAM_LOOP(i,0,outLen+1) {
          int prev_array = i == 0 ? -1 :  concatenated_out[i-1] / max_range;
          int next_array = i == outLen ? num_arrays : concatenated_out[i] / max_range;
          if (prev_array != next_array) {
@@ -282,7 +282,7 @@ namespace care {
                out_offsets[j] = i;
             }
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       host_ptr<const int> host_out_offsets = out_offsets;
       host_device_ptr<int> concatenated_lengths(m_num_arrays, "concatenated_lengths");

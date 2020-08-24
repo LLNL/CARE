@@ -30,25 +30,25 @@ TEST(numeric, iota)
    int offset = -1;
    care::iota(RAJA::seq_exec{}, array, size, offset);
 
-   LOOP_SEQUENTIAL(i, 0, size) {
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
       EXPECT_EQ(array[i], i + offset);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    // Check zero value works
    offset = 0;
    care::iota(RAJA::seq_exec{}, array, size, offset);
 
-   LOOP_SEQUENTIAL(i, 0, size) {
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
       EXPECT_EQ(array[i], i + offset);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    // Check positive value works
    offset = 1;
    care::iota(RAJA::seq_exec{}, array, size, offset);
 
-   LOOP_SEQUENTIAL(i, 0, size) {
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
       EXPECT_EQ(array[i], i + offset);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 #if defined(__GPUCC__)
