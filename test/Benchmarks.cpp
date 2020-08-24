@@ -77,10 +77,10 @@ CUDA_TEST(TestFuser, OneMillionSmallKernels) {
    int_ptr b(loopLength,"b");
    
    for (int i = 0; i < numLoops; ++i) {
-      LOOP_STREAM(j,0,loopLength) {
+      CARE_STREAM_LOOP(j,0,loopLength) {
          a[j] = i;
          b[j] = i/2;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 
    a.free();
@@ -118,10 +118,10 @@ CUDA_TEST(TestFuser, OneThousandLargeKernels) {
    int_ptr b(loopLength,"b");
    
    for (int i = 0; i < numLoops; ++i) {
-      LOOP_STREAM(j,0,loopLength) {
+      CARE_STREAM_LOOP(j,0,loopLength) {
          a[j] = i;
          b[j] = i/2;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 
    a.free();
@@ -161,10 +161,10 @@ CUDA_TEST(TestFuser, TenThousandMediumKernels) {
    int_ptr b(loopLength,"b");
    
    for (int i = 0; i < numLoops; ++i) {
-      LOOP_STREAM(j,0,loopLength) {
+      CARE_STREAM_LOOP(j,0,loopLength) {
          a[j] = i;
          b[j] = i/2;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 
    a.free();

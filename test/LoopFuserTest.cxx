@@ -211,14 +211,14 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
    care::host_device_ptr<int> dst(arrSize);
    // initialize the src and dst on the device
    for (int t = 0; t < timesteps; ++t) {
-      LOOP_STREAM(i, 0, arrSize) {
+      CARE_STREAM_LOOP(i, 0, arrSize) {
          src[i] = i;
          dst[i] = -1;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
       for (int i = 0; i < arrSize; ++i) {
-         LOOP_STREAM(j, i, i+1) {
+         CARE_STREAM_LOOP(j, i, i+1) {
             dst[j] = src[j];
-         } LOOP_STREAM_END
+         } CARE_STREAM_LOOP_END
       }
       // bringing stuff back to the host, dst[i] should now be i
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
@@ -236,10 +236,10 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
    care::host_device_ptr<int> dst(arrSize);
    for (int t = 0; t < timesteps; ++t) {
       // initialize the src and dst on the device
-      LOOP_STREAM(i, 0, arrSize) {
+      CARE_STREAM_LOOP(i, 0, arrSize) {
          src[i] = i;
          dst[i] = -1;
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
       FUSIBLE_LOOPS_START
       for (int i = 0; i < arrSize; ++i) {
          FUSIBLE_LOOP_STREAM(j, i, i+1) {
@@ -262,10 +262,10 @@ GPU_TEST(orderDependent, basic_test) {
    care::host_device_ptr<int> A(arrSize);
    care::host_device_ptr<int> B(arrSize);
    // initialize A on the host
-   LOOP_STREAM(i, 0, arrSize) {
+   CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = 0;
       B[i] = 0;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    FUSIBLE_LOOPS_PRESERVE_ORDER_START
    for (int t = 0; t < timesteps; ++t) {
       FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
@@ -277,14 +277,14 @@ GPU_TEST(orderDependent, basic_test) {
          }
       } FUSIBLE_LOOP_STREAM_END
       // do the same thing, but as separate kernels in a sequence
-      LOOP_STREAM(i, 0, arrSize) {
+      CARE_STREAM_LOOP(i, 0, arrSize) {
          if (t %2 == 0) {
             B[i] = (B[i] + 1)<<t;
          }
          else {
             B[i] = (B[i] + 1)>>t;
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, A[i] should now be B[i]
@@ -306,13 +306,13 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    care::host_device_ptr<int> B_scan(arrSize, "B_scan");
    care::host_device_ptr<int> AB_scan(arrSize, "AB_scan");
    // initialize A on the host
-   LOOP_STREAM(i, 0, arrSize) {
+   CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = i%2;
       B[i] = (i+1)%2;
       A_scan[i] = 0;
       B_scan[i] = 0;
       AB_scan[i] = 0;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
    LoopFuser::getInstance()->setVerbose(true);
@@ -337,11 +337,11 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    RAJAReduceSum<int> sumA(0);
    RAJAReduceSum<int> sumB(0);
    RAJAReduceSum<int> sumAB(0);
-   LOOP_STREAM(i, 0, arrSize) {
+   CARE_STREAM_LOOP(i, 0, arrSize) {
       sumA += A_scan[i];
       sumB += B_scan[i];
       sumAB += AB_scan[i];
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    // check sums
    EXPECT_EQ((int)sumA, arrSize/2);
@@ -363,16 +363,16 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    care::host_device_ptr<int> AB_scan(3*arrSize, "AB_scan");
 
    // initialize
-   LOOP_STREAM(i, 0, arrSize) {
+   CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = i%2;
       B[i] = (i+1)%2;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
-   LOOP_STREAM(i, 0, 3*arrSize) {
+   CARE_STREAM_LOOP(i, 0, 3*arrSize) {
       A_scan[i] = 0;
       B_scan[i] = 0;
       AB_scan[i] = 0;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
 
@@ -394,11 +394,11 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
-      LOOP_STREAM(i, 0, 3*arrSize) {
+      CARE_STREAM_LOOP(i, 0, 3*arrSize) {
          sumA += A_scan[i];
          sumB += B_scan[i];
          sumAB += AB_scan[i];
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       // check sums
       EXPECT_EQ((int)sumA, arrSize/2);
@@ -410,15 +410,15 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
-      LOOP_STREAM(i, 0, arrSize/2) {
+      CARE_STREAM_LOOP(i, 0, arrSize/2) {
          sumA += A_scan[i];
-      } LOOP_STREAM_END
-      LOOP_STREAM(i, arrSize/2, arrSize) {
+      } CARE_STREAM_LOOP_END
+      CARE_STREAM_LOOP(i, arrSize/2, arrSize) {
          sumB += B_scan[i];
-      } LOOP_STREAM_END
-      LOOP_STREAM(i, arrSize, 2*arrSize) {
+      } CARE_STREAM_LOOP_END
+      CARE_STREAM_LOOP(i, arrSize, 2*arrSize) {
          sumAB += AB_scan[i];
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       // check sums
       EXPECT_EQ((int)sumA, arrSize/2);
@@ -441,16 +441,16 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    care::host_device_ptr<int> B_scan(3*arrSize, "B_scan");
    care::host_device_ptr<int> AB_scan(3*arrSize, "AB_scan");
    // initialize A on the host
-   LOOP_STREAM(i, 0, arrSize) {
+   CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = i%2;
       B[i] = (i+1)%2;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
-   LOOP_STREAM(i, 0, 3*arrSize) {
+   CARE_STREAM_LOOP(i, 0, 3*arrSize) {
       A_scan[i] = 0;
       B_scan[i] = 0;
       AB_scan[i] = 0;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
    FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
@@ -487,11 +487,11 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
-      LOOP_STREAM(i, 0, 3*arrSize) {
+      CARE_STREAM_LOOP(i, 0, 3*arrSize) {
          sumA += A_scan[i];
          sumB += B_scan[i];
          sumAB += AB_scan[i];
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       // check sums
       EXPECT_EQ((int)sumA, arrSize/2);
@@ -503,15 +503,15 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
-      LOOP_STREAM(i, 0, arrSize/2) {
+      CARE_STREAM_LOOP(i, 0, arrSize/2) {
          sumA += A_scan[i];
-      } LOOP_STREAM_END
-      LOOP_STREAM(i, arrSize/2, arrSize) {
+      } CARE_STREAM_LOOP_END
+      CARE_STREAM_LOOP(i, arrSize/2, arrSize) {
          sumB += B_scan[i];
-      } LOOP_STREAM_END
-      LOOP_STREAM(i, arrSize, 2*arrSize) {
+      } CARE_STREAM_LOOP_END
+      CARE_STREAM_LOOP(i, arrSize, 2*arrSize) {
          sumAB += AB_scan[i];
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       // check sums
       EXPECT_EQ((int)sumA, arrSize/2);
@@ -540,19 +540,19 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    care::host_device_ptr<int> B(arrSize, "B");
    care::host_device_ptr<int> AB_scan(arrSize*2, "AB_scan");
    // initialize A on the host
-   LOOP_STREAM(i, 0, arrSize*2) {
+   CARE_STREAM_LOOP(i, 0, arrSize*2) {
       if (i / arrSize == 0) { 
          AB_scan[i] = 2;
       }
       else {
          AB_scan[i] = 3;
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    // convert to offsets
    exclusive_scan<int, RAJAExec>(AB_scan, nullptr, arrSize*2, RAJA::operators::plus<int>{}, 0, true);
-   LOOP_STREAM(i,arrSize,arrSize*2) {
+   CARE_STREAM_LOOP(i,arrSize,arrSize*2) {
       AB_scan[i] -= AB_scan[arrSize];
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
    LoopFuser::getInstance()->setVerbose(true);
