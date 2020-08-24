@@ -61,10 +61,10 @@ GPU_TEST(TestPacker, packFixedRange) {
    care::host_device_ptr<int> dst(arrSize);
 
    // initialize the src and dst on the host
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       src[i] = i;
       dst[i] = -1;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    int pos = 0;
    packer->registerAction(0, arrSize, pos,
@@ -100,10 +100,10 @@ GPU_TEST(TestPacker, packFixedRange) {
 #endif
 
    // bringing stuff back to the host, dst[i] should now be i
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       EXPECT_EQ(dst[i], i);
       EXPECT_EQ(src[i], i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    src.free();
    dst.free();
@@ -117,10 +117,10 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    care::host_device_ptr<int> dst(arrSize);
 
    // initialize the src and dst on the host
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       src[i] = i;
       dst[i] = -1;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    int pos = 0;
 
@@ -154,10 +154,10 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    FUSIBLE_LOOPS_STOP
 
    // bringing stuff back to the host, dst[i] should now be i
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       EXPECT_EQ(dst[i], i);
       EXPECT_EQ(src[i], i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    src.free();
    dst.free();
@@ -169,10 +169,10 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
    // initialize the src and dst on the host
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       src[i] = i;
       dst[i] = -1;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    int pos = 0;
    FUSIBLE_LOOP_STREAM(i, 0, arrSize/2) {
       dst[pos+i] = src[i];
@@ -194,14 +194,14 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    }
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, dst[i] should now be i
-   LOOP_SEQUENTIAL(i, 0, arrSize/2) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize/2) {
       EXPECT_EQ(dst[i], i);
       EXPECT_EQ(src[i], i);
-   } LOOP_SEQUENTIAL_END
-   LOOP_SEQUENTIAL(i, arrSize/2, arrSize) {
+   } CARE_SEQUENTIAL_LOOP_END
+   CARE_SEQUENTIAL_LOOP(i, arrSize/2, arrSize) {
       EXPECT_EQ(dst[i], i*2);
       EXPECT_EQ(src[i], i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
@@ -221,10 +221,10 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
          } LOOP_STREAM_END
       }
       // bringing stuff back to the host, dst[i] should now be i
-      LOOP_SEQUENTIAL(i, 0, arrSize) {
+      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(dst[i], i);
          EXPECT_EQ(src[i], i);
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
    }
 }
 
@@ -248,10 +248,10 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
       }
       FUSIBLE_LOOPS_STOP
       // bringing stuff back to the host, dst[i] should now be i
-      LOOP_SEQUENTIAL(i, 0, arrSize) {
+      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(dst[i], i);
          EXPECT_EQ(src[i], i);
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
    }
 }
 
@@ -288,9 +288,9 @@ GPU_TEST(orderDependent, basic_test) {
    }
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, A[i] should now be B[i]
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       EXPECT_EQ(A[i], B[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 static
 FUSIBLE_DEVICE bool printAndAssign(care::host_device_ptr<int> B, int i) {
@@ -526,11 +526,11 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    // Check that FUSIBLE STREAM loops interwoven between scans also worked (yes, they had race conditions, but all races should have
    // written the same value)
 
-   LOOP_SEQUENTIAL(i, 0, arrSize) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       EXPECT_EQ(C[i], i);
       EXPECT_EQ(D[i], 2*i);
       EXPECT_EQ(E[i], 3*i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
@@ -569,7 +569,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    LoopFuser::getInstance()->setVerbose(false);
 
    //  check answer
-   LOOP_SEQUENTIAL(i, 0, arrSize*2) {
+   CARE_SEQUENTIAL_LOOP(i, 0, arrSize*2) {
       int indx = i%arrSize;
       if (i / arrSize == 0 ) { 
          EXPECT_EQ(AB_scan[i],A[indx]);
@@ -577,7 +577,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
       else {
          EXPECT_EQ(AB_scan[i],B[indx]);
       }
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
 }
 
