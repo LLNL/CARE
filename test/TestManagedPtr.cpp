@@ -320,11 +320,11 @@ GPU_TEST(ManagedPtr, RawPointer)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, length) {
+   CARE_REDUCE_LOOP(i, 0, length) {
       if (base->getData(i) != i) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    EXPECT_TRUE((bool) passed);
 
