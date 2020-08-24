@@ -141,10 +141,10 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       values = valueResult;
    }
    else {
-      LOOP_STREAM(i, start, start + len) {
+      CARE_STREAM_LOOP(i, start, start + len) {
          keys[i] = keyResult[i];
          values[i] = valueResult[i];
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       if (len > 0) {
          keyResult.free();
@@ -340,10 +340,10 @@ class KeyValueSorter<T, RAJADeviceExec> {
          host_device_ptr<size_t> keys = m_keys;
          host_device_ptr<T> values = m_values;
 
-         LOOP_SEQUENTIAL(i, 0, len) {
+         CARE_SEQUENTIAL_LOOP(i, 0, len) {
             keys[i] = i;
             values[i] = arr[i];
-         } LOOP_SEQUENTIAL_END
+         } CARE_SEQUENTIAL_LOOP_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -902,10 +902,10 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       void setFromArray(const size_t len, const T* arr) {
          host_device_ptr<_kv<T> > keyValues = m_keyValues;
 
-         LOOP_SEQUENTIAL(i, 0, (int) len) {
+         CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
             keyValues[i].key = i;
             keyValues[i].value = arr[i];
-         } LOOP_SEQUENTIAL_END
+         } CARE_SEQUENTIAL_LOOP_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1217,9 +1217,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
             host_device_ptr<size_t> keys = m_keys;
             host_device_ptr<_kv<T> const> keyValues = m_keyValues;
 
-            LOOP_STREAM(i, 0, m_len) {
+            CARE_STREAM_LOOP(i, 0, m_len) {
                keys[i] = keyValues[i].key;
-            } LOOP_STREAM_END
+            } CARE_STREAM_LOOP_END
          }
 
          return;
@@ -1240,9 +1240,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
             host_device_ptr<T> values = m_values;
             host_device_ptr<_kv<T> const> keyValues = m_keyValues;
 
-            LOOP_STREAM(i, 0, m_len) {
+            CARE_STREAM_LOOP(i, 0, m_len) {
                values[i] = keyValues[i].value;
-            } LOOP_STREAM_END
+            } CARE_STREAM_LOOP_END
          }
 
          return;
@@ -1388,19 +1388,19 @@ void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size
 
    host_device_ptr<int> searches{smaller+1};
    host_device_ptr<int> matched{smaller+1};
-   LOOP_STREAM(i, 0, smaller+1) {
+   CARE_STREAM_LOOP(i, 0, smaller+1) {
       searches[i] = i != smaller ? care_utils::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    exclusive_scan<int, RAJAExec>(matched, nullptr, smaller+1, RAJA::operators::plus<int>{}, 0, true);
 
-   LOOP_STREAM(i, 0, smaller) {
+   CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {
          smallerMatches[matched[i]] = smallerKeys[i+smallStart];
          largerMatches[matched[i]] = largerKeys[searches[i]];
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    numMatches =  matched.pick(smaller);
    searches.free();
    matched.free();
