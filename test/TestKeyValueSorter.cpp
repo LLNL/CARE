@@ -29,15 +29,15 @@ TEST(KeyValueSorter, SizeConstructor)
    int data[5] = {4, 1, 2, 0, 3};
    care::KeyValueSorter<int, RAJA::seq_exec> sorter(length);
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       sorter.setKey(i, i);
       sorter.setValue(i, data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
@@ -68,10 +68,10 @@ TEST(KeyValueSorter, RawArrayConstructor)
    int data[5] = {4, 1, 2, 0, 3};
    care::KeyValueSorter<int, RAJA::seq_exec> sorter(length, data);
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
@@ -111,10 +111,10 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
 
    care::KeyValueSorter<int, RAJA::seq_exec> sorter(length, data);
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
@@ -138,7 +138,7 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
 /////////////////////////////////////////////////////////////////////////
 ///
 /// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
-///        LOOP_STREAM) to be used in google tests. Essentially,
+///        CARE_STREAM_LOOP) to be used in google tests. Essentially,
 ///        extended __host__ __device__ lambdas cannot be used in
 ///        private or protected members, and the TEST macro creates a
 ///        protected member function. We get around this by creating a
@@ -164,15 +164,15 @@ GPU_TEST(KeyValueSorter, SizeConstructor)
    care::array<int, 5> data{{4, 1, 2, 0, 3}};
    care::KeyValueSorter<int, RAJAExec> sorter(length);
 
-   LOOP_STREAM(i, 0, length) {
+   CARE_STREAM_LOOP(i, 0, length) {
       sorter.setKey(i, i);
       sorter.setValue(i, data[i]);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
@@ -203,10 +203,10 @@ GPU_TEST(KeyValueSorter, RawArrayConstructor)
    care::array<int, 5> data{{4, 1, 2, 0, 3}};
    care::KeyValueSorter<int, RAJAExec> sorter(length, data.data());
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
@@ -246,10 +246,10 @@ GPU_TEST(KeyValueSorter, host_device_ptr_Constructor)
 
    care::KeyValueSorter<int, RAJAExec> sorter(length, data);
 
-   LOOP_SEQUENTIAL(i, 0, length) {
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
       EXPECT_EQ(sorter.value(i), data[i]);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    sorter.sort();
 
