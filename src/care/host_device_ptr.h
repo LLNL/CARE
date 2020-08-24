@@ -46,6 +46,22 @@ namespace care {
    };
 
    ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Overload operator<< for the _kv struct
+   ///
+   /// @param[in] os   The output stream
+   /// @param[in] kv   The struct to process
+   ///
+   /// @return   The output stream for chaining of operations
+   ///
+   template <typename T>
+   inline std::ostream& operator<<(std::ostream& os, const _kv<T>& kv) {
+      os << kv.key << ": " << kv.value;
+      return os;
+   }
+
+   ///
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
    template <typename T>
@@ -353,14 +369,14 @@ namespace care {
          registerCallbacks();
          MA & me = *this;
          if (initOnDevice) { 
-            LOOP_STREAM(i,startIndx,N) {
+            CARE_STREAM_LOOP(i,startIndx,N) {
                me[i] = initial;
-            } LOOP_STREAM_END
+            } CARE_STREAM_LOOP_END
          }
          else {
-            LOOP_SEQUENTIAL(i,startIndx,N) {
+            CARE_SEQUENTIAL_LOOP(i,startIndx,N) {
                me[i] = initial;
-            } LOOP_SEQUENTIAL_END
+            } CARE_SEQUENTIAL_LOOP_END
          }
       }
 
@@ -422,6 +438,17 @@ namespace care {
    void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
 
+#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+// TODO: Declaring these functions causes problems with a project that depends on CARE
+//       and has not eliminated implicit casts. Having this macro guard around these
+//       functions is a temporary workaround. A better solution needs to be found.
+//       Perhaps having an object wrapper like chai::ManagedDataSplitter would be
+//       a good way to indicate to chai::make_managed that raw pointers actually
+//       should be extracted. Basically, we break if a constructor takes both
+//       c-style arrays and ManagedArrays/host_device_ptrs. There is a reproducer
+//       of this issue in the reproducers directory.
+
 ///
 /// @author Danny Taller
 ///
@@ -443,6 +470,8 @@ namespace chai {
       }
    } // namespace detail
 } // namespace chai
+
+#endif // !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 

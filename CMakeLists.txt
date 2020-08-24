@@ -26,13 +26,14 @@ option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space (used for scans)" ON)
 # Option to diable implicit conversion between host_device_ptr and raw arrays. 
 # The same value used here should be used when building CHAI
-option(ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
+option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)
 option(CARE_ENABLE_BENCHMARKS "Build CARE benchmarks" ON)
 option(CARE_ENABLE_DOCS "Build CARE documentation" ON)
 option(CARE_ENABLE_EXAMPLES "Build CARE examples" ON)
+option(CARE_ENABLE_REPRODUCERS "Build CARE reproducers" OFF)
 
 # Extra submodule components
 option(CARE_ENABLE_SUBMODULE_TESTS "Build submodule tests" OFF)
@@ -61,6 +62,11 @@ endif ()
 # Enable examples
 if (CARE_ENABLE_EXAMPLES OR CARE_ENABLE_SUBMODULE_EXAMPLES)
    option(ENABLE_EXAMPLES "Build examples" ON)
+endif ()
+
+# Enable reproducers
+if (CARE_ENABLE_REPRODUCERS OR CARE_ENABLE_SUBMODULE_REPRODUCERS)
+   option(ENABLE_REPRODUCERS "Build reproducers" ON)
 endif ()
 
 # BLT is required to build the code
@@ -147,7 +153,20 @@ if (ENABLE_CUDA)
 
    # nvcc dies if compiler flags are duplicated, and RAJA adds all these compiler flags
    set(RAJA_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
-   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -arch ${CUDA_CODE} -code ${CUDA_ARCH}")
+
+   # Only add these flags if they are not already present or nvcc will die
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "--expt-extended-lambda")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+   endif ()
+
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "-arch")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch ${CUDA_CODE}")
+   endif ()
+
+   if (NOT CMAKE_CUDA_FLAGS MATCHES "-code")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -code ${CUDA_ARCH}")
+   endif ()
+
    set(CARE_CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 endif()
 
@@ -188,3 +207,6 @@ if (CARE_ENABLE_EXAMPLES)
    add_subdirectory(examples)
 endif ()
 
+if (CARE_ENABLE_REPRODUCERS)
+   add_subdirectory(reproducers)
+endif ()

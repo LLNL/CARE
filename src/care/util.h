@@ -17,6 +17,7 @@
 #endif
 
 // Std library headers
+#include <iostream>
 #include <type_traits>
 
 /// Whether or not to force CUDA device synchronization after every call to forall
