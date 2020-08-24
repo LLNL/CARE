@@ -35,7 +35,7 @@ Some sample code is provided below to demonstrate the CARE concepts described ab
       int length = 10;
       care::host_device_ptr<int> array(length, "array");
 
-      // Will run on the GPU if this is compiled with nvcc.
+      // Will run on the GPU if this is compiled with nvcc or hip.
       // Otherwise will run sequentially on the host.
       CARE_GPU_LOOP(i, 0, length) {
          array[i] = i;
@@ -47,7 +47,7 @@ Some sample code is provided below to demonstrate the CARE concepts described ab
          array[i] = array[i] * i;
       } CARE_OPENMP_LOOP_END
 
-      // Will run on the GPU if compiled with nvcc.
+      // Will run on the GPU if compiled with nvcc or hip.
       // Otherwise, will run in parallel on the host if compiled with the OpenMP flags.
       // Otherwise, will run sequentially on the host.
       CARE_PARALLEL_LOOP(i, 0, length) {
