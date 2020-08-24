@@ -75,11 +75,11 @@ GPU_TEST(numeric, iota)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, size) {
+   CARE_REDUCE_LOOP(i, 0, size) {
       if (array[i] != i + offset) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 
@@ -91,11 +91,11 @@ GPU_TEST(numeric, iota)
    care::iota(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
 #endif
 
-   LOOP_REDUCE(i, 0, size) {
+   CARE_REDUCE_LOOP(i, 0, size) {
       if (array[i] != i + offset) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 
@@ -107,11 +107,11 @@ GPU_TEST(numeric, iota)
    care::iota(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{}, array, size, offset);
 #endif
 
-   LOOP_REDUCE(i, 0, size) {
+   CARE_REDUCE_LOOP(i, 0, size) {
       if (array[i] != i + offset) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }

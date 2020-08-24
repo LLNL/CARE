@@ -244,7 +244,7 @@ GPU_TEST(array_utils, min_innerloop)
   care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
 
   RAJAReduceMin<bool> passed{true};
-  LOOP_REDUCE(i, 0, 1) {
+  CARE_REDUCE_LOOP(i, 0, 1) {
      care::local_ptr<int> arr0 = ind0;
      care::local_ptr<int> arr1 = ind1;
 
@@ -272,7 +272,7 @@ GPU_TEST(array_utils, min_innerloop)
         passed.min(false);
      }
 
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -335,7 +335,7 @@ GPU_TEST(array_utils, max_innerloop)
   care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
 
   RAJAReduceMin<bool> passed{true};
-  LOOP_REDUCE(i, 0, 1) {
+  CARE_REDUCE_LOOP(i, 0, 1) {
      care::local_ptr<int> arr0 = ind0;
      care::local_ptr<int> arr1 = ind1;
 
@@ -357,7 +357,7 @@ GPU_TEST(array_utils, max_innerloop)
         passed.min(false);
      }
 
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
 
   ASSERT_TRUE((bool) passed);
 }
@@ -435,7 +435,7 @@ GPU_TEST(array_utils, min_max_innerloop)
   care::host_device_ptr<int> a7(vals7, 7, "minmax7");
 
   RAJAReduceMin<bool> passed{true};
-  LOOP_REDUCE(i, 0, 1) {
+  CARE_REDUCE_LOOP(i, 0, 1) {
      double min[1] = {-1};
      double max[1] = {-1};
      care::local_ptr<int> arr1 = a1;
@@ -457,7 +457,7 @@ GPU_TEST(array_utils, min_max_innerloop)
         passed.min(false);
      }
 
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
 
   ASSERT_TRUE((bool)passed);
 }
@@ -1108,11 +1108,11 @@ GPU_TEST(array_utils, dup_and_copy) {
   // duplicate and check that elements are the same
   care::host_device_ptr<int> dup = care_utils::ArrayDup<int>(from, 7);
   RAJAReduceMin<bool> passeddup{true};
-  LOOP_REDUCE(i, 0, 7) {
+  CARE_REDUCE_LOOP(i, 0, 7) {
     if (dup[i] != from[i]) {
       passeddup.min(false);
     }
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
   ASSERT_TRUE((bool) passeddup);
 
   // duplicating nullptr should give nullptr
@@ -1122,18 +1122,18 @@ GPU_TEST(array_utils, dup_and_copy) {
   // copy and check that elements are the same
   care_utils::ArrayCopy<int>(to1, from, 7);
   RAJAReduceMin<bool> passed1{true};
-  LOOP_REDUCE(i, 0, 7) {
+  CARE_REDUCE_LOOP(i, 0, 7) {
     if (to1[i] != from[i]) {
       passed1.min(false);
     }
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
   ASSERT_TRUE((bool) passed1);
 
   // copy 2 elements, testing different starting points
   care_utils::ArrayCopy<int>(to2, from, 2, 3, 4);
   RAJAReduceMin<bool> passed2{true};
 
-  LOOP_REDUCE(i, 0, 1) {
+  CARE_REDUCE_LOOP(i, 0, 1) {
     if (to2[0] != 0 || to2[1] != 0 || to2[2] != 0 || to2[5] != 0 || to2[6] != 0) {
       passed2.min(false);
     }
@@ -1143,14 +1143,14 @@ GPU_TEST(array_utils, dup_and_copy) {
     if (to2[4] != 45) {
       passed2.min(false);
     }
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
   ASSERT_TRUE((bool) passed2);
 
   // copy 2 elements, testing different starting points
   care_utils::ArrayCopy<int>(to3, from, 2, 4, 3);
   RAJAReduceMin<bool> passed3{true};
 
-  LOOP_REDUCE(i, 0, 1) {
+  CARE_REDUCE_LOOP(i, 0, 1) {
     if (to3[0] != 0 || to3[1] != 0 || to3[2] != 0 || to3[3] != 0 || to3[6] != 0) {
       passed3.min(false);
     }
@@ -1160,7 +1160,7 @@ GPU_TEST(array_utils, dup_and_copy) {
     if (to3[5] != 9) {
       passed3.min(false);
     }
-  } LOOP_REDUCE_END
+  } CARE_REDUCE_LOOP_END
   ASSERT_TRUE((bool) passed3);
 }
 
@@ -1237,13 +1237,13 @@ GPU_TEST(array_utils, localsortunique) {
    care::host_device_ptr<int> bptr(b, 4, "unsortb");
  
    // sort on local ptrs  
-   LOOP_STREAM(i, 0, 1) {
+   CARE_STREAM_LOOP(i, 0, 1) {
      care::local_ptr<int> aloc = aptr;
      care::local_ptr<int> bloc = bptr;
 
      care_utils::sortLocal(aloc, 4);
      care_utils::InsertionSort(bloc, 4);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    // check results of sortLocal
    EXPECT_EQ(aptr.pick(0), 0);
@@ -1260,12 +1260,12 @@ GPU_TEST(array_utils, localsortunique) {
    // perform unique. Should eliminate the extra 0, give a length
    // of one less (for the deleted duplicate number)
    RAJAReduceMin<int> newlen{4};
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
      int len = 4;
      care::local_ptr<int> aloc = aptr;
      care_utils::uniqLocal(aloc, len);
      newlen.min(len);
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    EXPECT_EQ((int)newlen, 3);
    EXPECT_EQ(aptr.pick(0), 0);
