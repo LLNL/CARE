@@ -17,6 +17,12 @@
 #include "care/care.h"
 #include "care/KeyValueSorter.h"
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks that the size constructor and manually
+///        filling in the keys and values behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 TEST(KeyValueSorter, SizeConstructor)
 {
    int length = 5;
@@ -50,6 +56,12 @@ TEST(KeyValueSorter, SizeConstructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks that the c-style array constructor
+///        behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 TEST(KeyValueSorter, RawArrayConstructor)
 {
    int length = 5;
@@ -78,6 +90,12 @@ TEST(KeyValueSorter, RawArrayConstructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks that the host_device_ptr constructor
+///        behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 TEST(KeyValueSorter, host_device_ptr_Constructor)
 {
    int length = 5;
@@ -117,12 +135,29 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
 
 #if defined(__GPUCC__)
 
-// Adapted from CHAI
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
+///        LOOP_STREAM) to be used in google tests. Essentially,
+///        extended __host__ __device__ lambdas cannot be used in
+///        private or protected members, and the TEST macro creates a
+///        protected member function. We get around this by creating a
+///        function that the TEST macro then calls.
+///
+/// @note  Adapted from CHAI
+///
+/////////////////////////////////////////////////////////////////////////
 #define GPU_TEST(X, Y) \
    static void gpu_test_##X##Y(); \
    TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
    static void gpu_test_##X##Y()
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief GPU test case that checks that the size constructor and
+///        manually filling in the keys and values behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 GPU_TEST(KeyValueSorter, SizeConstructor)
 {
    int length = 5;
@@ -156,6 +191,12 @@ GPU_TEST(KeyValueSorter, SizeConstructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief GPU test case that checks that the c-style array constructor
+///        behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 GPU_TEST(KeyValueSorter, RawArrayConstructor)
 {
    int length = 5;
@@ -184,6 +225,12 @@ GPU_TEST(KeyValueSorter, RawArrayConstructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief GPU test case that checks that the host_device_ptr constructor
+///        behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 GPU_TEST(KeyValueSorter, host_device_ptr_Constructor)
 {
    int length = 5;
