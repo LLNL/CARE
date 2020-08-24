@@ -7,7 +7,7 @@
 
 #include "care/config.h"
 
-// Makes LOOP_REDUCE run on the device
+// Makes CARE_REDUCE_LOOP run on the device
 #if defined(__GPUCC__)
 #define GPU_ACTIVE
 #endif
@@ -208,7 +208,7 @@ GPU_TEST(array, constructor)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (a[0] != 1) {
          passed.min(false);
          return;
@@ -221,7 +221,7 @@ GPU_TEST(array, constructor)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -236,7 +236,7 @@ GPU_TEST(array, write)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (a[0] != 7) {
          passed.min(false);
          return;
@@ -249,7 +249,7 @@ GPU_TEST(array, write)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -260,11 +260,11 @@ GPU_TEST(array, front)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (a.front() != 7) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -275,11 +275,11 @@ GPU_TEST(array, back)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (a.back() != 3) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -290,7 +290,7 @@ GPU_TEST(array, data)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       int const * temp = a.data();
 
       if (temp[0] != 6) {
@@ -301,7 +301,7 @@ GPU_TEST(array, data)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -313,7 +313,7 @@ GPU_TEST(array, empty)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (!a1.empty()) {
          passed.min(false);
          return;
@@ -322,7 +322,7 @@ GPU_TEST(array, empty)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -334,7 +334,7 @@ GPU_TEST(array, size)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 1) {
+   CARE_REDUCE_LOOP(i, 0, 1) {
       if (a1.size() != 0) {
          passed.min(false);
          return;
@@ -343,7 +343,7 @@ GPU_TEST(array, size)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -355,11 +355,11 @@ GPU_TEST(array, fill)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 4) {
+   CARE_REDUCE_LOOP(i, 0, 4) {
       if (a[i] != 13) {
          passed.min(false);
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -373,7 +373,7 @@ GPU_TEST(array, swap)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (a1[i] != 5) {
          passed.min(false);
          return;
@@ -382,7 +382,7 @@ GPU_TEST(array, swap)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -395,7 +395,7 @@ GPU_TEST(array, equal_to)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (!(a1 == a2)) {
          passed.min(false);
          return;
@@ -404,7 +404,7 @@ GPU_TEST(array, equal_to)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -417,7 +417,7 @@ GPU_TEST(array, not_equal_to)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (a1 != a2) {
          passed.min(false);
          return;
@@ -426,7 +426,7 @@ GPU_TEST(array, not_equal_to)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -440,7 +440,7 @@ GPU_TEST(array, less_than)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (!(a1 < a2)) {
          passed.min(false);
          return;
@@ -453,7 +453,7 @@ GPU_TEST(array, less_than)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -467,7 +467,7 @@ GPU_TEST(array, less_than_or_equal_to)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (!(a1 <= a2)) {
          passed.min(false);
          return;
@@ -480,7 +480,7 @@ GPU_TEST(array, less_than_or_equal_to)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -494,7 +494,7 @@ GPU_TEST(array, greater_than)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (!(a1 > a2)) {
          passed.min(false);
          return;
@@ -507,7 +507,7 @@ GPU_TEST(array, greater_than)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
@@ -521,7 +521,7 @@ GPU_TEST(array, greater_than_or_equal_to)
 
    RAJAReduceMin<bool> passed{true};
 
-   LOOP_REDUCE(i, 0, 3) {
+   CARE_REDUCE_LOOP(i, 0, 3) {
       if (!(a1 >= a2)) {
          passed.min(false);
          return;
@@ -534,7 +534,7 @@ GPU_TEST(array, greater_than_or_equal_to)
          passed.min(false);
          return;
       }
-   } LOOP_REDUCE_END
+   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
 }
