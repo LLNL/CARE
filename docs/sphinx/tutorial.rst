@@ -22,33 +22,45 @@ Finally, there are fusible policies. Loops can be "fused" together into a single
 
 These policies can be used with care::forall, which then forwards the arguments to RAJA::forall. CARE also provides convenient macros that can fall back to vanilla for loops if CARE is configured with -DENABLE_LEGACY_CARE=ON. These macros generally start with CARE and end with LOOP. For example, CARE_SEQUENTIAL_LOOP always executes sequentially. CARE_STREAM_LOOP executes on the GPU if GPU_ACTIVE is defined in the compilation unit and nvcc is used to compile the code, otherwise it falls back to executing using OpenMP on the host if OPENMP_ACTIVE is defined in the compilation unit and the correct OpenMP flags are passed to the compiler, otherwise it falls back to running sequentially on the host.
 
-``
-#define GPU_ACTIVE // If this is not defined in the compilation unit, will not run on the device
-#define OPENMP_ACTIVE // If this is not defined in the compilation unit, will not run with OpenMP
+.. code-block:: c++
 
-#include "care/care.h"
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, will not run on the device
+   #define OPENMP_ACTIVE // If this is not defined in the compilation unit, will not run with OpenMP
 
-int main(int argc, char* argv[]) {
-   int length = 10;
-   care::host_device_ptr<int> array(length, "array");
+   #include "care/care.h"
 
-   // Will run on the device if this is compiled with nvcc. Otherwise will run on the host.
-   CARE_GPU_LOOP(i, 0, length) {
-      array[i] = i;
-   } CARE_GPU_LOOP_END
+   int main(int argc, char* argv[]) {
+      int length = 10;
+      care::host_device_ptr<int> array(length, "array");
 
-   // Will run in parallel on the host if compiled with the OpenMP flags 
-   CARE_OPENMP_LOOP(i, 0, length) {
-      array[i] = array[i] * i;
-   } CARE_OPENMP_LOOP_END
+      // Will run on the GPU if this is compiled with nvcc.
+      // Otherwise will run sequentially on the host.
+      CARE_GPU_LOOP(i, 0, length) {
+         array[i] = i;
+      } CARE_GPU_LOOP_END
 
-   // Will always run sequentially on the host
-   CARE_SEQUENTIAL_LOOP(i, 0, length) {
-      printf("array[%d]: %d", i, array[i]);
-   } CARE_SEQUENTIAL_LOOP_END
+      // Will run in parallel on the host if compiled with the OpenMP flags.
+      // Otherwise will run sequentially on the host.
+      CARE_OPENMP_LOOP(i, 0, length) {
+         array[i] = array[i] * i;
+      } CARE_OPENMP_LOOP_END
 
-   // You can specify the policy
-   CARE_LOOP(sequential{}, i, 0, length) {
-      printf("array[%d]: %d", i, array[i]);
-   } CARE_LOOP_END
-}
+      // Will run on the GPU if compiled with nvcc.
+      // Otherwise, will run in parallel on the host if compiled with the OpenMP flags.
+      // Otherwise, will run sequentially on the host.
+      CARE_PARALLEL_LOOP(i, 0, length) {
+         array[i] = array[i] * i;
+      } CARE_PARALLEL_LOOP_END
+
+      // Will always run sequentially on the host.
+      CARE_SEQUENTIAL_LOOP(i, 0, length) {
+         printf("array[%d]: %d", i, array[i]);
+      } CARE_SEQUENTIAL_LOOP_END
+
+      // The policy can be specified.
+      CARE_LOOP(care::sequential{}, i, 0, length) {
+         printf("array[%d]: %d", i, array[i]);
+      } CARE_LOOP_END
+
+      return 0;
+   }
