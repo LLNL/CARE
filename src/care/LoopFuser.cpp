@@ -71,7 +71,7 @@ LoopFuser::~LoopFuser() {
 #ifdef __CUDACC__
       cudaFree(m_lambda_data);
 #elif defined(__HIPCC__)
-      hipFree(m_action_offsets);
+      hipFree(m_lambda_data);
 #else
       free(m_lambda_data);
 #endif
@@ -419,7 +419,8 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
    } LOOP_STREAM_END
 
    if (!async) {
-      // need to do a synchronize data so subsequent writes to buffers to overlap with zero copy reads
+      // need to do a synchronize data so subsequent writes to this fuser's buffers do not overlap with zero copy reads.
+      // If async is on, programmer takes responsibility for ensuring this does not happen.
       care::syncIfNeeded();
    }
 
