@@ -169,7 +169,7 @@ void LoopFuser::flush_parallel_actions() {
    }
 #endif
    bool reverse_indices = m_reverse_indices;
-   LOOP_STREAM(i, 0, end) {
+   CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -183,7 +183,7 @@ void LoopFuser::flush_parallel_actions() {
       }
 #endif
       actions[actionIndex](index, true, actionIndex, -1, -1);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    care::syncIfNeeded();
 }
 
@@ -202,7 +202,7 @@ void LoopFuser::flush_order_preserving_actions() {
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
 #endif
-   LOOP_STREAM(i, 0, m_max_action_length) {
+   CARE_STREAM_LOOP(i, 0, m_max_action_length) {
       for (int actionIndex = 0; actionIndex < action_count; ++actionIndex) {
 #ifdef FUSER_VERBOSE
          if (i == 0 && verbose) {
@@ -211,7 +211,7 @@ void LoopFuser::flush_order_preserving_actions() {
 #endif
          actions[actionIndex](i, true, actionIndex, -1, -1);
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 }
 
 void LoopFuser::flush_parallel_scans() {
@@ -233,13 +233,13 @@ void LoopFuser::flush_parallel_scans() {
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
    if (verbose) {
-      LOOP_STREAM(actionIndex, 0, action_count) {
+      CARE_STREAM_LOOP(actionIndex, 0, action_count) {
          printf("offsets[%i] = %i\n", actionIndex, offsets[actionIndex]);
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 #endif
    bool reverse_indices = m_reverse_indices;
-   LOOP_STREAM(i, 0, end+1) {
+   CARE_STREAM_LOOP(i, 0, end+1) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -263,15 +263,15 @@ void LoopFuser::flush_parallel_scans() {
          }
 #endif
       }
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    int scanvar_offset = 0;
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
-      LOOP_STREAM(i, 0, end+1) {
+      CARE_STREAM_LOOP(i, 0, end+1) {
          if (scan_var[i] == 1) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
       printf("SCAN\n");
    }
 #endif
@@ -279,15 +279,15 @@ void LoopFuser::flush_parallel_scans() {
 
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
-      LOOP_STREAM(i, 1, end+1) {
+      CARE_STREAM_LOOP(i, 1, end+1) {
          if (scan_var[i-1] != scan_var[i]) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 #endif
    // grab the outputs for the individual scans
-   LOOP_STREAM(i, 0, m_action_count) {
+   CARE_STREAM_LOOP(i, 0, m_action_count) {
 #ifdef FUSER_VERBOSE
       if (verbose) {
          printf("offsets[%i] = %i\n", i, offsets[i]);
@@ -299,10 +299,10 @@ void LoopFuser::flush_parallel_scans() {
          printf("scan_pos_outputs[%i] = %i\n", i, scan_pos_outputs[i]);
       }
 #endif
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    // execute the loop body
-   LOOP_STREAM(i, 0, end) {
+   CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -329,18 +329,18 @@ void LoopFuser::flush_parallel_scans() {
       }
 #endif
       actions[actionIndex](index, true, actionIndex, pos, -1);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
    // need to do a synchronize data so pinned memory reads are valid
    care::syncIfNeeded();
 
    /* need to write the scan positions to the output destinations */
    /* each destination is computed */
-   LOOP_SEQUENTIAL(actionIndex, 0, action_count) {
+   CARE_SEQUENTIAL_LOOP(actionIndex, 0, action_count) {
       int scan_pos_offset = actionIndex == 0 ? 0 : scan_pos_outputs[actionIndex-1];
       int pos = scan_pos_outputs[actionIndex];
       pos -= scan_pos_offset;
       *(m_pos_output_destinations[actionIndex]) += pos;
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();
 }
 void LoopFuser::flush_parallel_counts_to_offsets_scans() {
@@ -360,13 +360,13 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans() {
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
    if (verbose) {
-      LOOP_STREAM(actionIndex, 0, action_count) {
+      CARE_STREAM_LOOP(actionIndex, 0, action_count) {
          printf("offsets[%i] = %i\n", actionIndex, offsets[actionIndex]);
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
    }
 #endif
    bool reverse_indices = m_reverse_indices;
-   LOOP_STREAM(i, 0, end) {
+   CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -387,11 +387,11 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans() {
       }
 #endif
       
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
 
-   LOOP_STREAM(i, 0, end) {
+   CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -413,7 +413,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans() {
       }
 #endif
       conditionals[actionIndex](index,true,scan_var[index]-scan_var[offset],-1,-1);
-   } LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    // need to do a synchronize data so pinned memory reads are valid
    care::syncIfNeeded();
