@@ -54,7 +54,7 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 
 GPU_TEST(TestPacker, packFixedRange) {
    LoopFuser * packer = LoopFuser::getInstance();
-   packer->start();
+   packer->startRecording();
 
    int arrSize = 1024;
    care::host_device_ptr<int> src(arrSize);
@@ -86,7 +86,7 @@ GPU_TEST(TestPacker, packFixedRange) {
       EXPECT_EQ(host_src[i], i);
    }
 
-   packer->flush();
+   packer->flushActions();
 
    care::gpuDeviceSynchronize();
 
@@ -550,8 +550,9 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } LOOP_STREAM_END
    // convert to offsets
    exclusive_scan<int, RAJAExec>(AB_scan, nullptr, arrSize*2, RAJA::operators::plus<int>{}, 0, true);
+   int offset = AB_scan.pick(arrSize);
    LOOP_STREAM(i,arrSize,arrSize*2) {
-      AB_scan[i] -= AB_scan[arrSize];
+      AB_scan[i] -= offset;
    } LOOP_STREAM_END
 
    FUSIBLE_LOOPS_START
@@ -581,7 +582,105 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
 
 }
 
+GPU_TEST(fusible_phase, fusible_loop_phase) {
+   int arrSize = 128;
+   int timesteps = 3;
+   care::host_device_ptr<int> A1(arrSize);
+   care::host_device_ptr<int> A2(arrSize);
+   care::host_device_ptr<int> A3(arrSize);
+   care::host_device_ptr<int> B1(arrSize);
+   care::host_device_ptr<int> B2(arrSize);
+   care::host_device_ptr<int> B3(arrSize);
+   care::host_device_ptr<int> C1(arrSize);
+   care::host_device_ptr<int> C2(arrSize);
+   care::host_device_ptr<int> C3(arrSize);
 
+   care::host_device_ptr<int> As[] = {A1,A2,A3};
+   care::host_device_ptr<int> Bs[] = {B1,B2,B3};
+   care::host_device_ptr<int> Cs[] = {C1,C2,C3};
+
+   printf(" starting fusible_phases\n");
+   FUSIBLE_LOOPS_START
+   for (int t = 0; t < timesteps; ++t) {
+      care::host_device_ptr<int> A = As[t];
+      care::host_device_ptr<int> B = Bs[t];
+      care::host_device_ptr<int> C = Cs[t];
+
+
+      LOOP_STREAM(i, 0, arrSize) {
+         A[i] = -2;
+         C[i] = -2;
+         switch (t) {
+            case 0:
+               B[i] = -1;
+               break;
+            case 1:
+               B[i] = 0;
+               break;
+            case 2:
+               B[i] = -2;
+               break;
+         }
+      } LOOP_STREAM_END
+
+      if (t != 2) {
+         FUSIBLE_LOOP_PHASE(i, 0, arrSize, __LINE__) {
+            A[i] /= 2 ;
+         } FUSIBLE_LOOP_PHASE_END
+      }
+
+      if (t == 1) {
+         FUSIBLE_LOOP_PHASE(i, 0, arrSize, __LINE__) {
+            /* only increment if the the /=2 actually happened and A[i] changed from -2 to -1 */
+            if (A[i] == -1) {
+               A[i] += 1 ;
+            }
+            C[i] = A[i];
+         } FUSIBLE_LOOP_PHASE_END
+      }
+
+      FUSIBLE_LOOP_PHASE(i, 0, arrSize, __LINE__) {
+         if (t %2 == 0) {
+            A[i] = (A[i] + 1)<<t;
+         }
+         else {
+            A[i] = (A[i] + 1)>>t;
+         }
+      } FUSIBLE_LOOP_PHASE_END
+      // do the same thing, but as separate kernels in a sequence
+      LOOP_STREAM(i, 0, arrSize) {
+         if (t %2 == 0) {
+            B[i] = (B[i] + 1)<<t;
+         }
+         else {
+            B[i] = (B[i] + 1)>>t;
+         }
+      } LOOP_STREAM_END
+
+      LOOP_SEQUENTIAL(i, 0, arrSize) {
+         EXPECT_EQ(C[i], -2);
+      } LOOP_SEQUENTIAL_END
+      C.registerTouch(care::GPU);
+      FUSIBLE_PHASE_RESET
+   }
+   FUSIBLE_LOOPS_STOP_ASYNC
+   // bringing stuff back to the host, A[i] should now be B[i], C[i] should remember what A[i] was on the second phase.
+   for (int t = 0; t < timesteps; ++t) {
+      care::host_device_ptr<int> A = As[t];
+      care::host_device_ptr<int> B = Bs[t];
+      care::host_device_ptr<int> C = Cs[t];
+      LOOP_SEQUENTIAL(i, 0, 5) {
+         EXPECT_EQ(A[i], B[i]);
+         if (t == 1) {
+            EXPECT_EQ(C[i], 0);
+         }
+         else {
+            EXPECT_EQ(C[i], -2);
+         }
+      } LOOP_SEQUENTIAL_END
+   }
+
+}
 // TODO: FUSIBLE_LOOP_STREAM Should not batch if FUSIBLE_LOOPS_START has not been called.
 // TODO: test with two START and STOP to make sure new stuff is overwriting the old stuff.
 //
