@@ -18,25 +18,125 @@
 #include "care/KeyValueSorter.h"
 #include "care/PointerTypes.h"
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @author Alan Dayton
+///
+/// @brief Custom base class used to verify managed_ptr and make_managed
+///        behave correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 class BaseClass {
    public:
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Constructor
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE BaseClass() {}
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Destructor
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE virtual ~BaseClass() {}
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Data accessor.
+      ///
+      /// @param[in] index   The index into the contained data
+      ///
+      /// @return   The value of the data at the given index
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE virtual int getData(int index) = 0;
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Data setter.
+      ///
+      /// @param[in] index   The index into the contained data
+      /// @param[in] value   The new value of the data at the given index
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE virtual void setData(int index, int value) = 0;
 };
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @author Alan Dayton
+///
+/// @brief Custom derived class used to verify managed_ptr and make_managed
+///        behave correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 class DerivedClass : public BaseClass {
    public:
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Constructor
+      ///
+      /// @param[in] data    The data to store
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE DerivedClass(int* data) : BaseClass(), m_data(data) {}
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Destructor
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE virtual ~DerivedClass() {}
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Data accessor.
+      ///
+      /// @param[in] index   The index into the contained data
+      ///
+      /// @return   The value of the data at the given index
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE int getData(int index) override { return m_data[index]; }
+
+      /////////////////////////////////////////////////////////////////////////
+      ///
+      /// @author Alan Dayton
+      ///
+      /// @brief Data setter.
+      ///
+      /// @param[in] index   The index into the contained data
+      /// @param[in] value   The new value of the data at the given index
+      ///
+      /////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE void setData(int index, int value) override { m_data[index] = value; }
 
    private:
-      int* m_data;
+      int* m_data; //!< The data to store
 };
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks that splitting a host_device_ptr through
+///        the call to make_managed behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 TEST(ManagedPtr, SplitHostDevicePointer)
 {
    // Set up data
@@ -82,6 +182,12 @@ TEST(ManagedPtr, SplitHostDevicePointer)
    base.free();
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks that passing a c-style array to
+///        make_managed behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 TEST(ManagedPtr, RawPointer)
 {
    // Set up data
@@ -111,12 +217,29 @@ TEST(ManagedPtr, RawPointer)
 
 #if defined(__GPUCC__)
 
-// Adapted from CHAI
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
+///        LOOP_STREAM) to be used in google tests. Essentially,
+///        extended __host__ __device__ lambdas cannot be used in
+///        private or protected members, and the TEST macro creates a
+///        protected member function. We get around this by creating a
+///        function that the TEST macro then calls.
+///
+/// @note  Adapted from CHAI
+///
+/////////////////////////////////////////////////////////////////////////
 #define GPU_TEST(X, Y) \
    static void gpu_test_##X##Y(); \
    TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
    static void gpu_test_##X##Y()
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief GPU test case that checks that splitting a host_device_ptr
+///        through the call to make_managed behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 GPU_TEST(ManagedPtr, SplitHostDevicePointer)
 {
    // Set up data
@@ -162,6 +285,12 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
    base.free();
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief GPU test case that checks that passing a c-style array to
+///        make_managed behaves correctly.
+///
+/////////////////////////////////////////////////////////////////////////
 GPU_TEST(ManagedPtr, RawPointer)
 {
    // Set up data
@@ -176,13 +305,13 @@ GPU_TEST(ManagedPtr, RawPointer)
    hipMemset(data, 0, length * sizeof(int));
 #endif
 
-   // This will construct an instance of DerivedClass on the host and an instance of
-   // DerivedClass on the device. This gives the host pointer to both the host instance
-   // and the device instance. Therefore, it is not safe to use on the device. This
-   // is a common pattern in some codes (i.e. a c-style string that is only ever
-   // accessed on the host, enforced by __host__ only accessors), and to avoid forcing
-   // users to make separate constructors for the host and device, we need to ensure
-   // that this works.
+   // This will construct an instance of DerivedClass on the host and an instance
+   // of DerivedClass on the device. This gives the device pointer to both the host
+   // instance and the device instance. Therefore, it is not safe to use on the host.
+   // This could be a common pattern in some codes (i.e. a specific value that is only
+   // ever accessed on the device, enforced by __device__ only accessors), and to avoid
+   // forcing users to make separate constructors for the host and device, we need to
+   // ensure that this works.
    care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
 
    LOOP_STREAM(i, 0, length) {
@@ -203,4 +332,3 @@ GPU_TEST(ManagedPtr, RawPointer)
 }
 
 #endif // __GPUCC__
-
