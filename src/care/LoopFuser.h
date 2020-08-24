@@ -371,8 +371,8 @@ public:
    ///////////////////////////////////////////////////////////////////////////
    /// @brief whether we are currently recording
    ///////////////////////////////////////////////////////////////////////////
-   bool isRecording() { return m_recording;} 
-   
+   bool isRecording() { return m_recording;}
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief number of actions we will fuse
    ///////////////////////////////////////////////////////////////////////////
@@ -382,7 +382,7 @@ public:
    /// @brief execute all actions as a fused action
    ///////////////////////////////////////////////////////////////////////////
    virtual void flushActions(bool async) = 0;
-   
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief execute all actions as a fused action
    ///////////////////////////////////////////////////////////////////////////
@@ -391,14 +391,13 @@ public:
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set preserveOrder mode
    ///////////////////////////////////////////////////////////////////////////
-   virtual void preserveOrder(bool preserveOrder) { m_preserve_action_order = preserveOrder;} 
-      
-      
+   virtual void preserveOrder(bool preserveOrder) { m_preserve_action_order = preserveOrder;}
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set scan mode
    ///////////////////////////////////////////////////////////////////////////
    virtual void setScan(bool scan) { m_is_scan = scan; }
-   
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set countsToOffsetsScan
    ///////////////////////////////////////////////////////////////////////////
@@ -418,7 +417,7 @@ protected:
          std::cout << "FusedActions not flushed when expected." << std::endl;
       }
    }
-      
+
 
    ///
    /// whether to we are actually recording anything registered with us
@@ -432,12 +431,12 @@ protected:
 
    ///
    /// whether to preserve order (TODO - do we need this anymore?)
-   /// 
+   ///
    bool m_preserve_action_order;
-   
+
    ///
    /// whether we are a scan operation
-   /// 
+   ///
    bool m_is_scan;
    
    ///
@@ -449,17 +448,17 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson
-/// @brief The observer of FusesActions. Any FusedActions that is 
-///        registered with the default FusedActionsObserver (accessed via 
-///         FusedActionsObserver::getInstance() or FusedActionsObserver::activeObserver()
+/// @brief The observer of FusesActions. Any FusedActions that is
+///        registered with the default FusedActionsObserver (accessed via
+///        FusedActionsObserver::getInstance() or FusedActionsObserver::activeObserver()
 ///        will be controlled via FUSIBLE_LOOPS_START and FUSIBLE_LOOPS_END macros.
 ///////////////////////////////////////////////////////////////////////////
 class FusedActionsObserver : public FusedActions {
 public:
    CARE_DLL_API static FusedActionsObserver * activeObserver;
 
-   FusedActionsObserver() : FusedActions() , 
-                            m_fused_actions(), 
+   FusedActionsObserver() : FusedActions(),
+                            m_fused_actions(),
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
@@ -482,33 +481,32 @@ public:
       }
       m_recording = false;
    }
-   
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set preserveOrder mode
    ///////////////////////////////////////////////////////////////////////////
    void preserveOrder(bool preserveOrder) {
-      
       for (auto & action_priority : m_fused_actions) {
          action_priority.first->preserveOrder(preserveOrder);
       }
       m_preserve_action_order = preserveOrder;
    }
-      
-      
+
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set scan mode
    ///////////////////////////////////////////////////////////////////////////
-   virtual void setScan(bool scan) { 
+   virtual void setScan(bool scan) {
       for (auto & action_priority : m_fused_actions) {
          action_priority.first->setScan(scan);
       }
-      m_is_scan = scan; 
+      m_is_scan = scan;
    }
-   
+
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set counts_to_offsets_scan mode
    ///////////////////////////////////////////////////////////////////////////
-   virtual void setCountsToOffsetsScan(bool scan) { 
+   virtual void setCountsToOffsetsScan(bool scan) {
       for (auto & action_priority : m_fused_actions) {
          action_priority.first->setCountsToOffsetsScan(scan);
       }
@@ -524,8 +522,8 @@ public:
          FusedActions * const & actions = priority_action.second;
 #ifdef FUSER_VERBOSE
          printf("Observer::flushActions::action count %i\n",actions->actionCount());
-#endif         
-         if (actions -> actionCount() > 0) { 
+#endif
+         if (actions -> actionCount() > 0) {
 #ifdef FUSER_VERBOSE
             printf("Observer::flushActions priority:%g ptr:%p\n",priority_action.first, actions);
 #endif
@@ -539,7 +537,6 @@ public:
    }
 
    void registerFusedActions(FusedActions * actions, double priority) {
-       
       auto this_iter = m_fused_actions.find(actions);
       if (this_iter == m_fused_actions.end()) {
          if (m_recording) {
@@ -563,7 +560,7 @@ public:
 
 
    int actionCount() {
-      int count = 0; 
+      int count = 0;
       for (auto actions_priority : m_fused_actions) {
          count += actions_priority.first->actionCount();
       }
@@ -589,14 +586,14 @@ public:
    void registerFree(care::host_device_ptr<T> & array) {
       m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
    }
-   
+
    protected:
       std::unordered_map<FusedActions *, double> m_fused_actions;
       std::map<double, FusedActions *> m_fused_action_order;
       double m_last_insert_priority = -1.0;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
       bool m_recording;
-   
+
 };
 
 
@@ -1146,7 +1143,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_KERNEL_END return 0;}); }
 
-#define FUSIBLE_PHASE_RESET FusedActionsObserver::activeObserver->reset_phases(); 
+#define FUSIBLE_PHASE_RESET FusedActionsObserver::activeObserver->reset_phases();
 
 #define FUSIBLE_LOOPS_FENCEPOST { \
    int __fusible_action_count__ = LoopFuser::getInstance()->size(); \
