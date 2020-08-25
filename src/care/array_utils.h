@@ -186,6 +186,15 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
                                   const char* name, const char* argname,
                                   const bool allowDuplicates = false);
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates = false);
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
 ///////////////////////////////////////////////////////////////////////////
 /// @author Ben Liu, Peter Robinson, Alan Dayton
 /// @brief Checks whether an array of type T is sorted and optionally unique.
@@ -246,13 +255,17 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
    return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
 }
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
                                   const char* name, const char* argname,
                                   const bool allowDuplicates)
 {
-   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
+   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates);
 }
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template<typename mapType>
 CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
