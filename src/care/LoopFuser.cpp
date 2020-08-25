@@ -197,7 +197,7 @@ void LoopFuser::flush_parallel_actions(bool async) {
    }
 }
 
-void LoopFuser::flush_order_preserving_actions(bool async) {
+void LoopFuser::flush_order_preserving_actions(bool /*async*/) {
    // Do the thing
    SerializableDeviceLambda<int> *actions = m_actions;
 

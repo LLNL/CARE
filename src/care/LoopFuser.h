@@ -1173,7 +1173,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
       }, \
       [=] FUSIBLE_DEVICE(int INDEX, bool /*__is_fused__*/, int /*__action_index__*/, int POS, int)->int { \
          INDEX += __fusible_start_index__ -  __fusible_offset__ ; \
-         if (INDEX < __fusible_end_index__ && BOOL_EXPR) { \
+         if (INDEX < __fusible_end_index__ && (BOOL_EXPR)) { \
 
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
 
