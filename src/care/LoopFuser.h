@@ -4,7 +4,6 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef _CARE_LOOP_FUSER_H_
 #define _CARE_LOOP_FUSER_H_
 
@@ -608,7 +607,7 @@ public:
 // You register loops' bodies as actions, the start and end of the index set you want for that action,
 // and a conditional lambda takes a single argument and returns a boolean if you want the action
 // to occur at that index.
-// flush() will then orchestrate the scan operation to fuse all of your scans into a single one.
+// flushActions() will then orchestrate the scan operation to fuse all of your scans into a single one.
 class LoopFuser : public FusedActions {
    public:
       ///////////////////////////////////////////////////////////////////////////
@@ -877,13 +876,6 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
          }
 #endif
-         /* lambdas need to be written to an alligned memory address , or you get runtime errors (that are surprisingly helpful)*/
-         if (m_action_count == m_reserved) {
-#ifdef FUSER_VERBOSE
-            printf("hit reserved flushActions\n");
-#endif
-            flushActions();
-         }
 #if defined __GPUCC__ && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
          size_t conditional_size = care::aligned_sizeof<Conditional, sizeof(care::device_wrapper_ptr)>::value;
@@ -891,9 +883,6 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          size_t lambda_size = sizeof(LB);
          size_t conditional_size = sizeof(Conditional);
 #endif
-         if (m_lambda_reserved <= lambda_size + conditional_size + m_lambda_size) {
-            flushActions();
-         }
 
          m_actions[m_action_count] = SerializableDeviceLambda<int> { action, &m_lambda_data[m_lambda_size]};
          m_lambda_size += lambda_size;
@@ -931,6 +920,23 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          }
          m_pos_output_destinations[m_action_count] = &pos_store;
          ++m_action_count;
+
+         if (m_action_count == m_reserved) {
+#ifdef FUSER_VERBOSE
+            printf("hit reserved flushActions\n");
+#endif
+            flushActions();
+         }
+         // flush if we are approaching our buffer allocation - we add some fuzz here because we do not know
+         // a priori what the next lamba size is going to be, but we need to ensure a flush so the 
+         // FUSIBLE_LOOP_STREAM macro gets good information for what the next offset will be to construct
+         // its lambda.
+         if (m_lambda_reserved <= 100*(lambda_size + conditional_size) + m_lambda_size) {
+#ifdef FUSER_VERBOSE
+            printf("hit lambda_reserved flushActions\n");
+#endif
+            flushActions();
+         }
       }
       if (m_call_as_packed) {
 #ifdef FUSER_VERBOSE

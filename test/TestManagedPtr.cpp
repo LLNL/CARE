@@ -276,7 +276,7 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
 
    CARE_STREAM_LOOP(i, 0, length) {
       base->setData(i, i);
-   } CARE_SEQUENTIAL_LOOP_END
+   } CARE_STREAM_LOOP_END
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(base->getData(i), i);

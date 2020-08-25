@@ -142,6 +142,7 @@ void LoopFuser::reset(bool async) {
    // need to do a synchronize data so the previous fusion data doesn't accidentally
    // get reused for the next one. (Yes, this was a very fun race condition to find).
    if (!async) {
+      care_gpuErrchk(cudaDeviceSynchronize());
       care::syncIfNeeded();
    }
 }
@@ -186,6 +187,11 @@ void LoopFuser::flush_parallel_actions(bool async) {
       actions[actionIndex](index, true, actionIndex, -1, -1);
    } CARE_STREAM_LOOP_END
    if (!async) {
+#ifdef FUSER_VERBOSE
+      if (m_verbose) {
+         printf("syncing \n");
+      }
+#endif
       care::syncIfNeeded();
    }
 }
