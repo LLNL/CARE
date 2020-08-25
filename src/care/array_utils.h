@@ -319,8 +319,8 @@ inline void IntersectArrays(RAJAExec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for these checks by default.
-      checkSorted<ArrayType>(arr1.slice(start1), size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(arr2.slice(start2), size2, funcname, "arr2") ;
+      checkSorted<ArrayType>(care::host_device_ptr<const ArrayType>(arr1.slice(start1)), size1, funcname, "arr1") ;
+      checkSorted<ArrayType>(care::host_device_ptr<const ArrayType>(arr2.slice(start2)), size2, funcname, "arr2") ;
    }
 
    care::host_device_ptr<int> smallerMatches, largerMatches;
