@@ -515,7 +515,7 @@ public:
    }
 
 
-   void flushActions(bool async) {
+   inline void flushActions(bool async) {
 #ifdef FUSER_VERBOSE
       printf("Observer flushActions()\n");
 #endif
@@ -537,7 +537,7 @@ public:
       m_to_be_freed.clear();
    }
 
-   void registerFusedActions(FusedActions * actions, double priority) {
+   inline void registerFusedActions(FusedActions * actions, double priority) {
       auto this_iter = m_fused_actions.find(actions);
       if (this_iter == m_fused_actions.end()) {
          if (m_recording) {
@@ -555,12 +555,12 @@ public:
 
    }
 
-   void reset_phases() {
+   inline void reset_phases() {
       m_last_insert_priority = -FLT_MAX;
    }
 
 
-   int actionCount() {
+   inline int actionCount() {
       int count = 0;
       for (auto actions_priority : m_fused_actions) {
          count += actions_priority.first->actionCount();
@@ -569,7 +569,7 @@ public:
    }
 
 
-   void reset(bool /*async*/) {
+   inline void reset(bool /*async*/) {
       m_fused_actions.clear();
       m_fused_action_order.clear();
       m_to_be_freed.clear();
@@ -584,14 +584,14 @@ public:
    /// @param[in] array : the array to be freed after a flushActions
    ///////////////////////////////////////////////////////////////////////////
    template <typename T>
-   void registerFree(care::host_device_ptr<T> & array) {
+   inline void registerFree(care::host_device_ptr<T> & array) {
       m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
    }
 
    protected:
       std::unordered_map<FusedActions *, double> m_fused_actions;
       std::map<double, FusedActions *> m_fused_action_order;
-      double m_last_insert_priority = -1.0;
+      double m_last_insert_priority;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
       bool m_recording;
 
