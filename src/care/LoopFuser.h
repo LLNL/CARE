@@ -11,15 +11,11 @@
 // CARE config header
 #include "care/config.h"
 
-#if CARE_HAVE_LOOP_FUSER
+#if CARE_ENABLE_LOOP_FUSER
 
 // Other CARE headers
 #include "care/care.h"
-
-// Other library headers
-#ifdef __GPUCC__
-#include "basil/internal/batch_utils.hpp"
-#endif
+#include "care/util.h"
 
 // Std library headers
 #include <iostream>
@@ -177,6 +173,12 @@ namespace care {
          return -1 ;
       }
    }
+   /* Thanks to Jason Burmark for the aligned_sizeof and device_wrapper_ptr types. Copied with permission. */
+   template < typename T, size_t align>
+   struct aligned_sizeof {
+      static const size_t value = sizeof(T) + ((sizeof(T) % align != 0) ? (align - (sizeof(T) % align)) : 0);
+   };
+   using device_wrapper_ptr = const volatile void*(*)(const volatile void*);
 } // namespace care
 
 // templated launcher that provides a device method that knows how to deserialize the lambda LB and call it
@@ -189,16 +191,15 @@ FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int 
    LB lambda = *reinterpret_cast<lambda_type *> (lambda_buf);
    return lambda(i, is_fused, action_index, start, end);
 }
-
 #ifdef __GPUCC__
 // cuda global function that writes the device wrapper function pointer
 // for the template type to the pointer provided.
 template<typename ReturnType, typename LB>
-__global__ void write_launcher_ptr(basil::detail::device_wrapper_ptr* out)
+__global__ void write_launcher_ptr(care::device_wrapper_ptr* out)
 {
    using lambda_type = typename std::decay<LB>::type;
    auto p = &launcher<ReturnType, lambda_type>;
-   *out = (basil::detail::device_wrapper_ptr) p;
+   *out = (care::device_wrapper_ptr) p;
 }
 
 #endif
@@ -212,16 +213,17 @@ template<typename ReturnType, typename kernel_type>
 inline void * get_launcher_wrapper_ptr(bool get_if_null)
 {
 #if defined __GPUCC__ && defined GPU_ACTIVE
-   static_assert(alignof(kernel_type) <= sizeof(basil::detail::device_wrapper_ptr),
+   static_assert(alignof(kernel_type) <= sizeof(care::device_wrapper_ptr),
                  "kernel_type has excessive alignment requirements");
-   static basil::detail::device_wrapper_ptr ptr = nullptr;
+   static care::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
-      basil::detail::device_wrapper_ptr* pinned_buf = basil::detail::get_pinned_device_wrapper_ptr_buf();
+      care::device_wrapper_ptr* pinned_buf;
+      care_gpuErrchk(cudaHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
       cudaStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      BASIL_cudaCheck(cudaLaunchKernel(func, 1, 1, args, 0, stream));
-      BASIL_cudaCheck(cudaStreamSynchronize(stream));
+      care_gpuErrchk(cudaLaunchKernel(func, 1, 1, args, 0, stream));
+      care_gpuErrchk(cudaStreamSynchronize(stream));
       ptr = *pinned_buf;
    }
 
@@ -883,8 +885,8 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             flushActions();
          }
 #if defined __GPUCC__ && defined GPU_ACTIVE
-         size_t lambda_size = basil::detail::aligned_sizeof<LB, sizeof(basil::detail::device_wrapper_ptr)>::value;
-         size_t conditional_size = basil::detail::aligned_sizeof<Conditional, sizeof(basil::detail::device_wrapper_ptr)>::value;
+         size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
+         size_t conditional_size = care::aligned_sizeof<Conditional, sizeof(care::device_wrapper_ptr)>::value;
 #else
          size_t lambda_size = sizeof(LB);
          size_t conditional_size = sizeof(Conditional);
@@ -1078,7 +1080,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOP_PHASE_END \
    } return 0;}); }}
 
-#define FUSIBLE_KERNEL_PHASE { \
+#define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
    static LoopFuser * __this_fuser__ = new LoopFuser(); \
    FusedActionsObserver::activeObserver->registerFusedActions(__this_fuser__, PRIORITY); \
    int __fusible_scan_pos__ = 0; \
@@ -1129,7 +1131,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOP_PHASE_END \
    } return 0;}); }}
 
-#define FUSIBLE_KERNEL_PHASE { \
+#define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
    static LoopFuser * __fuser__ = new LoopFuser(); \
    FusedActionsObserver::activeObserver->registerFusedActions(__fuser__, PRIORITY); \
    int __fusible_scan_pos__ = 0; \
@@ -1183,10 +1185,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(INDEX, LENGTH, SCANVAR)  } return SCANVAR[INDEX];}, 2, __fusible_scan_pos__ , SCANVAR); }
-#else /* CARE_HAVE_LOOP_FUSER */
+#else /* CARE_ENABLE_LOOP_FUSER */
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) CARE_STREAM_LOOP(INDEX, START, END)
+#define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) CARE_STREAM_LOOP(INDEX, START, END)
 #define FUSIBLE_KERNEL CARE_PARALLEL_KERNEL
+#define FUSIBLE_KERNEL_PHASE CARE_PARALLEL_KERNEL
 #define FUSIBLE_LOOP_STREAM_END  CARE_STREAM_LOOP_END
 #define FUSIBLE_KERNEL_END CARE_PARALLEL_KERNEL_END
 #define FUSIBLE_LOOPS_FENCEPOST
@@ -1200,7 +1204,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(INDEX, LENGTH, SCANVAR) SCAN_COUNTS_TO_OFFSETS_LOOP_END(INDEX, LENGTH, SCANVAR)
 
-#endif /* CARE_HAVE_LOOP_FUSER */
+#endif /* CARE_ENABLE_LOOP_FUSER */
 
 
 #endif // !defined(_CARE_LOOP_FUSER_H_)

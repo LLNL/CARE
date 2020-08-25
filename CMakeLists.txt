@@ -44,6 +44,9 @@ option(CARE_ENABLE_SUBMODULE_TOOLS "Build submodule tools" OFF)
 option(CARE_ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 option(CARE_ENABLE_SUBMODULE_REPRODUCERS "Build submodule reproducers" OFF)
 
+# Optional features
+option(CARE_ENABLE_LOOP_FUSER "Enable the loop fuser" ON)
+
 # Enable tests
 if (CARE_ENABLE_TESTS OR CARE_ENABLE_SUBMODULE_TESTS)
    option(ENABLE_TESTS "Build tests" ON)

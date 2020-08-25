@@ -10,7 +10,7 @@
 // CARE config header
 #include "care/config.h"
 
-#if CARE_HAVE_LOOP_FUSER
+#if CARE_ENABLE_LOOP_FUSER
 
 // Other CARE headers
 #include "care/care.h"

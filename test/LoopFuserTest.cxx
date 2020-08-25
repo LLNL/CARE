@@ -7,10 +7,10 @@
 
 #include "care/config.h"
 
-#if CARE_HAVE_LOOP_FUSER
+#if CARE_ENABLE_LOOP_FUSER
 
 #define GPU_ACTIVE
-#define HAVE_FUSER_TEST CARE_HAVE_LOOP_FUSER
+#define HAVE_FUSER_TEST CARE_ENABLE_LOOP_FUSER
 #if HAVE_FUSER_TEST
 // always have DEBUG on to force the packer to be on for CPU builds.
 #ifdef DEBUG
@@ -607,7 +607,7 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
       care::host_device_ptr<int> C = Cs[t];
 
 
-      LOOP_STREAM(i, 0, arrSize) {
+      CARE_STREAM_LOOP(i, 0, arrSize) {
          A[i] = -2;
          C[i] = -2;
          switch (t) {
@@ -621,7 +621,7 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
                B[i] = -2;
                break;
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
       if (t != 2) {
          FUSIBLE_LOOP_PHASE(i, 0, arrSize, __LINE__) {
@@ -648,18 +648,18 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          }
       } FUSIBLE_LOOP_PHASE_END
       // do the same thing, but as separate kernels in a sequence
-      LOOP_STREAM(i, 0, arrSize) {
+      CARE_STREAM_LOOP(i, 0, arrSize) {
          if (t %2 == 0) {
             B[i] = (B[i] + 1)<<t;
          }
          else {
             B[i] = (B[i] + 1)>>t;
          }
-      } LOOP_STREAM_END
+      } CARE_STREAM_LOOP_END
 
-      LOOP_SEQUENTIAL(i, 0, arrSize) {
+      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(C[i], -2);
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
       C.registerTouch(care::GPU);
       FUSIBLE_PHASE_RESET
    }
@@ -669,7 +669,7 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
       care::host_device_ptr<int> A = As[t];
       care::host_device_ptr<int> B = Bs[t];
       care::host_device_ptr<int> C = Cs[t];
-      LOOP_SEQUENTIAL(i, 0, 5) {
+      CARE_SEQUENTIAL_LOOP(i, 0, 5) {
          EXPECT_EQ(A[i], B[i]);
          if (t == 1) {
             EXPECT_EQ(C[i], 0);
@@ -677,7 +677,7 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          else {
             EXPECT_EQ(C[i], -2);
          }
-      } LOOP_SEQUENTIAL_END
+      } CARE_SEQUENTIAL_LOOP_END
    }
 
 }
@@ -685,4 +685,4 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
 // TODO: test with two START and STOP to make sure new stuff is overwriting the old stuff.
 //
 #endif
-#endif // CARE_HAVE_LOOP_FUSER
+#endif // CARE_ENABLE_LOOP_FUSER
