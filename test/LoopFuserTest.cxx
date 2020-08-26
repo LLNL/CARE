@@ -599,7 +599,14 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
    care::host_device_ptr<int> Bs[] = {B1,B2,B3};
    care::host_device_ptr<int> Cs[] = {C1,C2,C3};
 
-   printf(" starting fusible_phases\n");
+   /* OK, so this is a bit convoluted, but the idea is to have a test where both execution order
+    * matters, awe shuffle which order we introduce kernels, and we have some memory as to whether
+    * kernels were executed in the right order.
+    * The A arrays are going to be written during phase exection, the B arrays should be written
+    * in a Stream execution in the same order, and the C arrays are used to make sure the second
+    * phase is happening after the first phase as a basic test of the phase scheduler.
+    * */
+
    FUSIBLE_LOOPS_START
    for (int t = 0; t < timesteps; ++t) {
       care::host_device_ptr<int> A = As[t];
@@ -656,8 +663,9 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
             B[i] = (B[i] + 1)>>t;
          }
       } CARE_STREAM_LOOP_END
-
+      // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
+         EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
       C.registerTouch(care::GPU);
