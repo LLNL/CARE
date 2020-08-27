@@ -600,9 +600,9 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
    care::host_device_ptr<int> Cs[] = {C1,C2,C3};
 
    /* OK, so this is a bit convoluted, but the idea is to have a test where both execution order
-    * matters, awe shuffle which order we introduce kernels, and we have some memory as to whether
+    * matters, we shuffle which order we introduce kernels, and we have some memory as to whether
     * kernels were executed in the right order.
-    * The A arrays are going to be written during phase exection, the B arrays should be written
+    * The A arrays are going to be written during phase execution, the B arrays should be written
     * in a Stream execution in the same order, and the C arrays are used to make sure the second
     * phase is happening after the first phase as a basic test of the phase scheduler.
     * */
@@ -668,7 +668,7 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
-      /* the captures and CHAI checks have already occured, the FUSIBLE_LOOPS_STOP
+      /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
        * won't update them, so we need to mark A and C as touched on the device
        * so we get fresh data after the flush */
       A.registerTouch(care::GPU);
