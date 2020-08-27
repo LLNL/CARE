@@ -58,5 +58,28 @@
 #define CARE_GLOBAL
 #endif // defined(__GPUCC__)
 
+// set various aliases
+#if defined(__CUDACC__)
+#define gpuStream_t cudaStream_t
+#define gpuHostAllocDefault cudaHostAllocDefault;
+
+#define gpuMemcpyKind cudaMemcpyKind
+#define gpuMemcpyHostToHost cudaMemcpyHostToHost
+#define gpuMemcpyHostToDevice cudaMemcpyHostToDevice
+#define gpuMemcpyDeviceToHost cudaMemcpyDeviceToHost
+#define gpuMemcpyDeviceToDevice cudaMemcpyDeviceToDevice
+#define gpuMemcpyDefault cudaMemcpyDefault
+#elif defined(__HIPCC__)
+#define gpuStream_t hipStream_t
+#define gpuHostAllocDefault hipHostAllocDefault;
+
+#define gpuMemcpyKind hipMemcpyKind
+#define gpuMemcpyHostToHost hipMemcpyHostToHost
+#define gpuMemcpyHostToDevice hipMemcpyHostToDevice
+#define gpuMemcpyDeviceToHost hipMemcpyDeviceToHost
+#define gpuMemcpyDeviceToDevice hipMemcpyDeviceToDevice
+#define gpuMemcpyDefault hipMemcpyDefault
+#endif
+
 #endif // !defined(_CARE_CONFIG_H_)
 

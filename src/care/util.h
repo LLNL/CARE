@@ -299,6 +299,78 @@ namespace care {
    }
 #endif
 
+// wrapper for hip/cuda free
+CARE_HOST inline void gpuFree(void* buffer) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipFree(buffer), "gpuFree", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaFree(buffer), "gpuFree", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda free host
+CARE_HOST inline void gpuFreeHost(void* buffer) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipHostFree(buffer), "gpuFreeHost", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaFreeHost(buffer), "gpuFreeHost", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda mem copy
+CARE_HOST inline void  gpuMemcpy(void* dst, const void* src, size_t count, gpuMemcpyKind kind) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda malloc
+CARE_HOST inline void gpuMalloc(void** devPtr, size_t size) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipMalloc(devPtr, size), "gpuMalloc", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaMalloc(devPtr, size), "gpuMalloc", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda managed malloc
+CARE_HOST inline void gpuMallocManaged(void** devPtr, size_t size) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda host alloc
+CARE_HOST inline void gpuHostAlloc(void** pHost, size_t size, unsigned int flags) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipHostMalloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaHostAlloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
+#endif
+}
+
+// kernel launch
+CARE_HOST inline void gpuLaunchKernel(const void* func, dim3 gridDim, dim3 blockDim, void** args, size_t sharedMem, gpuStream_t stream) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipLaunchKernel(func, gridDim, blockDim, args, sharedMem, stream), "gpuLaunchKernel", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaLaunchKernel(func, gridDim, blockDim, args, sharedMem, stream), "gpuLaunchKernel", __LINE__);
+#endif
+}
+
+// wrapper for stream synchronize
+CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
+#if defined(ENABLE_HIP)
+   gpuAssert(hipStreamSynchronize(stream), "gpuStreamSynchronize", __LINE__);
+#elif defined(ENABLE_CUDA)
+   gpuAssert(cudaStreamSynchronize(stream), "gpuStreamSynchronize", __LINE__);
+#endif
+}
+
 } // namespace care
 
 #if defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)

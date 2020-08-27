@@ -15,6 +15,7 @@
 
 // Other CARE headers
 #include "care/care.h"
+#include "care/util.h"
 
 // Other library headers
 #ifdef __GPUCC__
@@ -215,11 +216,11 @@ inline void * get_launcher_wrapper_ptr(bool get_if_null)
    static basil::detail::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
       basil::detail::device_wrapper_ptr* pinned_buf = basil::detail::get_pinned_device_wrapper_ptr_buf();
-      cudaStream_t stream = 0;
+      gpuStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      BASIL_cudaCheck(cudaLaunchKernel(func, 1, 1, args, 0, stream));
-      BASIL_cudaCheck(cudaStreamSynchronize(stream));
+      care::gpuLaunchKernel(func, 1, 1, args, 0, stream);
+      care::gpuStreamSynchronize(stream);
       ptr = *pinned_buf;
    }
 
