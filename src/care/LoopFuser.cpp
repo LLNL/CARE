@@ -10,7 +10,7 @@
 // CARE config header
 #include "care/config.h"
 
-#if CARE_HAVE_LOOP_FUSER
+#if CARE_ENABLE_LOOP_FUSER
 
 // Other CARE headers
 #include "care/care.h"
@@ -18,13 +18,13 @@
 #include "care/LoopFuser.h"
 
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
+static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
+CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
-LoopFuser::LoopFuser() :
+LoopFuser::LoopFuser() : FusedActions(),
    m_delay_pack(false),
    m_call_as_packed(true),
-   m_preserve_action_order(false),
    m_max_action_length(0),
-   m_action_count(0),
    m_reserved(0),
    m_action_offsets(nullptr),
    m_action_starts(nullptr),
@@ -34,24 +34,25 @@ LoopFuser::LoopFuser() :
    m_lambda_reserved(0),
    m_lambda_size(0),
    m_lambda_data(nullptr),
-   m_is_scan(false),
-   m_is_counts_to_offsets_scan(false),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
    m_verbose(false),
    m_reverse_indices(false) {
+
+      // Supports fusing up to 10k loops of average lambda size of 256 bytes
+      // will flush if we exceed the 10k count or if the lambda size requirements
+      // are exceeded.
+      reserve(10*1024);
+      reserve_lambda_buffer(256*10*1024);
 }
 
 LoopFuser * LoopFuser::getInstance() {
    static LoopFuser * instance = nullptr;
    if (instance == nullptr) {
       instance = new LoopFuser();
-
-      // Supports fusing up to 1M loops of average lambda size of 256 bytes
-      // will flush if we exceed the 1M count or if the lambda size requirements
-      // are exceeded.
-      instance->reserve(1024*1024);
-      instance->reserve_lambda_buffer(256*1024*1024);
+      // start the priority at > -FLT_MAX to ensure no warnings for registering priorities that are out of
+      // order
+      defaultObserver->registerFusedActions(instance, -FLT_MAX/2);
    }
    return instance;
 }
@@ -133,7 +134,7 @@ void LoopFuser::reserve_lambda_buffer(size_t size) {
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
-void LoopFuser::reset() {
+void LoopFuser::reset(bool async) {
    m_lambda_size = 0;
    m_action_count = 0;
    m_max_action_length = 0;
@@ -142,16 +143,18 @@ void LoopFuser::reset() {
    m_is_counts_to_offsets_scan = false;
    // need to do a synchronize data so the previous fusion data doesn't accidentally
    // get reused for the next one. (Yes, this was a very fun race condition to find).
-   care::syncIfNeeded();
+   if (!async) {
+      care::syncIfNeeded();
+   }
 }
 
 void LoopFuser::warnIfNotFlushed() {
    if (m_action_count > 0) {
-      std::cout << "LoopFuser not flushed when expected." << std::endl;
+      std::cout << (void *)this<<" LoopFuser not flushed when expected." << std::endl;
    }
 }
 
-void LoopFuser::flush_parallel_actions() {
+void LoopFuser::flush_parallel_actions(bool async) {
    // Do the thing
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
@@ -184,10 +187,17 @@ void LoopFuser::flush_parallel_actions() {
 #endif
       actions[actionIndex](index, true, actionIndex, -1, -1);
    } CARE_STREAM_LOOP_END
-   care::syncIfNeeded();
+   if (!async) {
+#ifdef FUSER_VERBOSE
+      if (m_verbose) {
+         printf("syncing \n");
+      }
+#endif
+      care::syncIfNeeded();
+   }
 }
 
-void LoopFuser::flush_order_preserving_actions() {
+void LoopFuser::flush_order_preserving_actions(bool /*async*/) {
    // Do the thing
    SerializableDeviceLambda<int> *actions = m_actions;
 
@@ -343,7 +353,7 @@ void LoopFuser::flush_parallel_scans() {
    } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();
 }
-void LoopFuser::flush_parallel_counts_to_offsets_scans() {
+void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
       printf("in flush_counts_to_offsets_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
@@ -415,26 +425,44 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans() {
       conditionals[actionIndex](index,true,scan_var[index]-scan_var[offset],-1,-1);
    } CARE_STREAM_LOOP_END
 
-   // need to do a synchronize data so pinned memory reads are valid
-   care::syncIfNeeded();
+   if (!async) {
+      // need to do a synchronize data so subsequent writes to this fuser's buffers do not overlap with zero copy reads.
+      // If async is on, programmer takes responsibility for ensuring this does not happen.
+      care::syncIfNeeded();
+   }
 
    scan_var.free();
 }
 
-void LoopFuser::flush() {
+void LoopFuser::flushActions(bool async) {
+#ifdef FUSER_VERBOSE
+   printf("Loop fuser flushActions\n");
+#endif
    if (m_action_count > 0) {
       if (m_is_scan) {
+#ifdef FUSER_VERBOSE
+         printf("loop fuser flush parallel scans\n");
+#endif
          flush_parallel_scans();
       }
       else if (m_is_counts_to_offsets_scan) {
-         flush_parallel_counts_to_offsets_scans();
+#ifdef FUSER_VERBOSE
+         printf("loop fuser flush counts to offsets scans\n");
+#endif
+         flush_parallel_counts_to_offsets_scans(async);
       }
       else {
          if (m_preserve_action_order) {
-            flush_order_preserving_actions();
+#ifdef FUSER_VERBOSE
+            printf("loop fuser flush order preserving actions\n");
+#endif
+            flush_order_preserving_actions(async);
          }
          else {
-            flush_parallel_actions();
+#ifdef FUSER_VERBOSE
+            printf("loop fuser flush parallel actions\n");
+#endif
+            flush_parallel_actions(async);
          }
       }
    }
@@ -442,7 +470,7 @@ void LoopFuser::flush() {
       arr.free();
    }
    m_to_be_freed.clear();
-   reset();
+   reset(async);
 }
 
 #endif
