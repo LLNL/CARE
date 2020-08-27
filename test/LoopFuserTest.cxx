@@ -668,6 +668,10 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
+      /* the captures and CHAI checks have already occured, the FUSIBLE_LOOPS_STOP
+       * won't update them, so we need to mark A and C as touched on the device
+       * so we get fresh data after the flush */
+      A.registerTouch(care::GPU);
       C.registerTouch(care::GPU);
       FUSIBLE_PHASE_RESET
    }
