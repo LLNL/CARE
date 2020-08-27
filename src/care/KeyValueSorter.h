@@ -273,7 +273,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE ~KeyValueSorter<T, RAJADeviceExec>()
       {
-#ifndef __CUDA_ARCH__
+#ifndef __DEVICE_COMPILE__
          /// Only attempt to free if we are on the CPU
          free();
 #endif
@@ -834,7 +834,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE ~KeyValueSorter<T, RAJA::seq_exec>()
       {
-#ifndef __CUDA_ARCH__
+#ifndef __DEVICE_COMPILE__
          free();
 #endif
       }

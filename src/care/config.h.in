@@ -13,6 +13,8 @@
 #cmakedefine CARE_DEBUG
 #cmakedefine01 CARE_ENABLE_GPU_SIMULATION_MODE
 #cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
+#cmakedefine ENABLE_HIP
+#cmakedefine ENABLE_CUDA
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_BASIL
@@ -30,8 +32,18 @@
 #define CARE_DLL_API
 #endif // defined(_WIN32) && !defined(CARESTATICLIB)
 
+#if defined(ENABLE_CUDA)
+#include <cuda_runtime_api.h>
+#elif defined(ENABLE_HIP)
+#include <hip/hip_runtime.h> // HIPCC is defined in this header, needed to define GPUCC below
+#endif
+
 #if defined(__CUDACC__) || defined(__HIPCC__)
 #define __GPUCC__
+#endif
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+#define __DEVICE_COMPILE__
 #endif
 
 #if defined(__GPUCC__)

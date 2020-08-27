@@ -117,11 +117,9 @@ namespace care {
          return -1 ;
       }
 
-#ifndef __CUDA_ARCH__
-#ifndef __HIP_DEVICE_COMPILE__
+#ifndef __DEVICE_COMPILE__
 #ifdef CARE_DEBUG
       CheckSorted(&(map[start]), mapSize, "binarySearch", "map") ;
-#endif
 #endif
 #endif
 

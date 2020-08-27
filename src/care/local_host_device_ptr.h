@@ -94,7 +94,7 @@ namespace care {
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<!B, int>::type = 0>
          CARE_HOST_DEVICE operator local_host_device_ptr<const T> () const{
-#if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__DEVICE_COMPILE__)
 #if defined(CHAI_DISABLE_RM)
              return host_device_ptr<const T>(const_cast<const T*>(MA::m_host_ptr));
 #else
