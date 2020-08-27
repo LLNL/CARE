@@ -33,31 +33,6 @@
 #include <string>
 #include <set>
 
-#if defined(ENABLE_CUDA)
-#include <cuda_runtime_api.h>
-#elif defined(ENABLE_HIP)
-#include <hip/hip_runtime.h> // HIPCC only gets defined when we include this. Needed to define GPUCC below
-#endif
-
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
-#define __DEVICE_COMPILE__
-#endif
-
-#if defined(__CUDACC__) || defined(__HIPCC__)
-#define __GPUCC__
-#endif
-
-#if defined(__GPUCC__)
-#define CARE_HOST_DEVICE __host__ __device__
-#define CARE_DEVICE __device__
-#define CARE_HOST __host__
-#define CARE_GLOBAL __global__
-#else // defined(__GPUCC__)
-#define CARE_HOST_DEVICE
-#define CARE_DEVICE
-#define CARE_HOST
-#define CARE_GLOBAL
-#endif // defined(__GPUCC__)
 
 #if defined __CUDACC__ && defined GPU_ACTIVE
 

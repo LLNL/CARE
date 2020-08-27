@@ -35,15 +35,15 @@
 #if defined(ENABLE_CUDA)
 #include <cuda_runtime_api.h>
 #elif defined(ENABLE_HIP)
-#include <hip/hip_runtime.h> // HIPCC is defined in this header, needed to define GPUCC below
-#endif
-
-#if defined(__CUDACC__) || defined(__HIPCC__)
-#define __GPUCC__
+#include <hip/hip_runtime.h> // HIPCC only gets defined when we include this. Needed to define GPUCC below
 #endif
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define __DEVICE_COMPILE__
+#endif
+
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#define __GPUCC__
 #endif
 
 #if defined(__GPUCC__)
@@ -60,6 +60,7 @@
 
 // set various aliases
 #if defined(__CUDACC__)
+
 #define gpuStream_t cudaStream_t
 #define gpuHostAllocDefault cudaHostAllocDefault;
 
@@ -69,7 +70,9 @@
 #define gpuMemcpyDeviceToHost cudaMemcpyDeviceToHost
 #define gpuMemcpyDeviceToDevice cudaMemcpyDeviceToDevice
 #define gpuMemcpyDefault cudaMemcpyDefault
+
 #elif defined(__HIPCC__)
+
 #define gpuStream_t hipStream_t
 #define gpuHostAllocDefault hipHostAllocDefault;
 
@@ -79,7 +82,8 @@
 #define gpuMemcpyDeviceToHost hipMemcpyDeviceToHost
 #define gpuMemcpyDeviceToDevice hipMemcpyDeviceToDevice
 #define gpuMemcpyDefault hipMemcpyDefault
-#endif
+
+#endif // end __HIPCC__ case
 
 #endif // !defined(_CARE_CONFIG_H_)
 

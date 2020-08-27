@@ -299,6 +299,9 @@ namespace care {
    }
 #endif
 
+// various GPU wrappers, only needed for GPU compiles
+#if defined (__GPUCC__)
+
 // wrapper for hip/cuda free
 CARE_HOST inline void gpuFree(void* buffer) {
 #if defined(ENABLE_HIP)
@@ -370,6 +373,8 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
    gpuAssert(cudaStreamSynchronize(stream), "gpuStreamSynchronize", __LINE__);
 #endif
 }
+
+#endif // #if defined (__GPUCC__)
 
 } // namespace care
 
