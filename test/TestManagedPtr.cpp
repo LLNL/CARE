@@ -215,7 +215,7 @@ TEST(ManagedPtr, RawPointer)
 }
 
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 /////////////////////////////////////////////////////////////////////////
 ///
@@ -331,4 +331,4 @@ GPU_TEST(ManagedPtr, RawPointer)
    base.free();
 }
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC

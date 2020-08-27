@@ -8,7 +8,7 @@
 #include "care/config.h"
 
 // Makes CARE_REDUCE_LOOP run on the device
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 #define GPU_ACTIVE
 #endif
 
@@ -194,7 +194,7 @@ TEST(array, greater_than_or_equal_to)
    EXPECT_FALSE(a3 >= a4);
 }
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -539,5 +539,5 @@ GPU_TEST(array, greater_than_or_equal_to)
    ASSERT_TRUE((bool) passed);
 }
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 

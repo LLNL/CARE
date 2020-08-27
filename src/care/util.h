@@ -300,7 +300,7 @@ namespace care {
 #endif
 
 // various GPU wrappers, only needed for GPU compiles
-#if defined (__GPUCC__)
+#if defined (CARE_GPUCC)
 
 // wrapper for hip/cuda free
 CARE_HOST inline void gpuFree(void* buffer) {
@@ -374,11 +374,11 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 #endif
 }
 
-#endif // #if defined (__GPUCC__)
+#endif // #if defined (CARE_GPUCC)
 
 } // namespace care
 
-#if defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
@@ -406,7 +406,7 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

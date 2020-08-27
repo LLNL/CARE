@@ -109,9 +109,9 @@ namespace care {
 
 template <typename T>
 int TV_ttf_display_type(const care::host_device_ptr<T> * a) {
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
    return TV_ttf_format_raw;
-#else // defined(__GPUCC__)
+#else // defined(CARE_GPUCC)
    // Add a row for the data
    char type[4096];
    snprintf(type, sizeof(type), "%s[%lu]", care::type_name<T>::value, a->size());
@@ -121,7 +121,7 @@ int TV_ttf_display_type(const care::host_device_ptr<T> * a) {
    }
 
    return TV_ttf_format_ok;
-#endif // defined(__GPUCC__)
+#endif // defined(CARE_GPUCC)
 }
 
 #endif // !defined(_CARE_DEBUG_H_)

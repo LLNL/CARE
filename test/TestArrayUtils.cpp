@@ -189,7 +189,7 @@ TEST(array_utils, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \
@@ -1273,5 +1273,5 @@ GPU_TEST(array_utils, localsortunique) {
    EXPECT_EQ(aptr.pick(2), 4);
 }
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 

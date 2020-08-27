@@ -64,13 +64,13 @@ namespace care {
          s_current_loop_line_number = lineNumber;
          s_active_pointers_in_loop.clear();
 
-#if defined(__GPUCC__) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          CUDAWatchpoint::setOrCheckWatchpoint<int>();
-#endif // defined(__GPUCC__) && defined(CARE_DEBUG)
+#endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 #endif // !defined(CHAI_DISABLE_RM)
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
       // Synchronize
       if (s_synchronize_before) {
          if (space == chai::GPU) {
@@ -99,7 +99,7 @@ namespace care {
          }
       }
 #endif // CARE_HAVE_NVTOOLSEXT
-#endif // defined(__GPUCC__)
+#endif // defined(CARE_GPUCC)
    }
 
    /////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +184,7 @@ namespace care {
    }
 
    void RAJAPlugin::post_forall_hook(chai::ExecutionSpace space, const char* fileName, int lineNumber) {
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 #if CARE_HAVE_NVTOOLSEXT
       if (s_profile_host_loops) {
          if (space == chai::CPU) {
@@ -199,7 +199,7 @@ namespace care {
             care::gpuAssert(gpuDeviceSynchronize(), fileName, lineNumber, true);
          }
       }
-#endif // defined(__GPUCC__)
+#endif // defined(CARE_GPUCC)
 
 #if !defined(CHAI_DISABLE_RM)
       if (CHAICallback::isActive()) {
@@ -208,9 +208,9 @@ namespace care {
          // Clear out the captured arrays
          s_active_pointers_in_loop.clear();
 
-#if defined(__GPUCC__) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          CUDAWatchpoint::setOrCheckWatchpoint<int>();
-#endif // defined(__GPUCC__) && defined(CARE_DEBUG)
+#endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 
       if (s_update_chai_execution_space) {

@@ -7,7 +7,7 @@
 
 #include "care/config.h"
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 #define GPU_ACTIVE
 #endif
 
@@ -17,7 +17,7 @@
 // care headers
 #include "care/care.h"
 
-#if defined(__GPUCC__) && GTEST_HAS_DEATH_TEST
+#if defined(CARE_GPUCC) && GTEST_HAS_DEATH_TEST
 // This asserts a crash on the GPU, but does not mark gtest as passing.
 #define GPU_FAIL(code) ASSERT_DEATH(code, "")
 #else

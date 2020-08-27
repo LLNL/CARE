@@ -39,24 +39,24 @@
 #endif
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
-#define __DEVICE_COMPILE__
+#define CARE_DEVICE_COMPILE
 #endif
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
-#define __GPUCC__
+#define CARE_GPUCC
 #endif
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 #define CARE_HOST_DEVICE __host__ __device__
 #define CARE_DEVICE __device__
 #define CARE_HOST __host__
 #define CARE_GLOBAL __global__
-#else // defined(__GPUCC__)
+#else // defined(CARE_GPUCC)
 #define CARE_HOST_DEVICE
 #define CARE_DEVICE
 #define CARE_HOST
 #define CARE_GLOBAL
-#endif // defined(__GPUCC__)
+#endif // defined(CARE_GPUCC)
 
 // set various aliases
 #if defined(__CUDACC__)
