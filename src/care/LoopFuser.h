@@ -356,7 +356,7 @@ public:
    ///        a flush call.
    ///////////////////////////////////////////////////////////////////////////
    virtual void startRecording() {
-#ifndef FUSIBLE_LOOPS_DISABLE
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE
       m_recording = true; warnIfNotFlushed();
 #endif
    }
@@ -655,7 +655,7 @@ class LoopFuser : public FusedActions {
       ///        a flush call.
       ///////////////////////////////////////////////////////////////////////////
       void startRecording() {
-#ifndef FUSIBLE_LOOPS_DISABLE
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE
          m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
 #endif
       }
