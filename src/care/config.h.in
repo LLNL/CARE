@@ -32,12 +32,6 @@
 #define CARE_DLL_API
 #endif // defined(_WIN32) && !defined(CARESTATICLIB)
 
-#if defined(ENABLE_CUDA)
-#include <cuda_runtime_api.h>
-#elif defined(ENABLE_HIP)
-#include <hip/hip_runtime.h> // HIPCC only gets defined when we include this. Needed to define GPUCC below
-#endif
-
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define CARE_DEVICE_COMPILE
 #endif
