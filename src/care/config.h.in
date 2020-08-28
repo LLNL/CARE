@@ -36,6 +36,10 @@
 #define CARE_DEVICE_COMPILE
 #endif
 
+// note: if we use the hipcc compiler wrapper, HIPCC gets defined at compile time.
+// However, if we compile with a regular compiler and then include hip_runtime (as is done with chai), then 
+// HIPCC won't be defined unless we have a #include <hip/hip_runtime.h> . Please beware if you change
+// the way in which CARE is built.
 #if defined(__CUDACC__) || defined(__HIPCC__)
 #define CARE_GPUCC
 #endif
