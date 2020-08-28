@@ -28,6 +28,7 @@ set(care_headers
     ExecutionSpace.h
     forall.h
     FOREACHMACRO.h
+    GPUMacros.h
     host_device_ptr.h
     host_ptr.h
     KeyValueSorter.h
