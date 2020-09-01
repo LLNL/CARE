@@ -15,7 +15,6 @@
 #cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
 
 // Optional dependencies
-#cmakedefine01 CARE_HAVE_BASIL
 #cmakedefine01 CARE_HAVE_CUB
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID
 #cmakedefine01 CARE_HAVE_NVTOOLSEXT
