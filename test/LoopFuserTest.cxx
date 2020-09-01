@@ -163,6 +163,21 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    dst.free();
 }
 
+GPU_TEST(TestPacker, singleFusedLoop) {
+
+   FUSIBLE_LOOPS_START
+   chai::ManagedArray<int> test(2) ;
+   FUSIBLE_LOOP_STREAM(i, 0, 2) {
+      test[i] = 0 ;
+   } FUSIBLE_LOOP_STREAM_END
+   FUSIBLE_LOOPS_STOP
+
+   CARE_SEQUENTIAL_LOOP(i,0,2) {
+      EXPECT_EQ(test[i],0);
+   } CARE_SEQUENTIAL_LOOP_END
+   test.free();
+}
+
 GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    FUSIBLE_LOOPS_START
    int arrSize = 8;
