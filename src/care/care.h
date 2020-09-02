@@ -11,6 +11,9 @@
 // CARE config header
 #include "care/config.h"
 
+// Priority phase value for the default loop fuser
+const double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
+
 // Other CARE headers
 #include "care/CHAICallback.h"
 #include "care/CUDAWatchpoint.h"

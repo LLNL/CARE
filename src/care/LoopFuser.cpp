@@ -50,9 +50,7 @@ LoopFuser * LoopFuser::getInstance() {
    static LoopFuser * instance = nullptr;
    if (instance == nullptr) {
       instance = new LoopFuser();
-      // start the priority at > -FLT_MAX to ensure no warnings for registering priorities that are out of
-      // order
-      defaultObserver->registerFusedActions(instance, -FLT_MAX/2);
+      defaultObserver->registerFusedActions(instance, CARE_DEFAULT_PHASE);
    }
    return instance;
 }

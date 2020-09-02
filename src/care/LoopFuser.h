@@ -552,7 +552,13 @@ public:
          m_fused_actions[actions] = priority;
       }
       m_last_insert_priority = priority;
-
+   }
+   template<typename ActionsType>
+   inline FusedActions * getFusedActions(double priority) {
+      if (m_fused_action_order.count(priority) == 0) {
+         registerFusedActions(new ActionsType(), priority);
+      }
+      return m_fused_action_order[priority];
    }
 
    inline void reset_phases() {
@@ -568,7 +574,13 @@ public:
       return count;
    }
 
-
+   /* while this complies with the FusedActions API, it is frought with potential memory leak issues
+    * as currently implemented. In practice these observers are associated with static locations
+    * in a codebase and we won't actively be leaking a bunch of memory, but I would not be surprised
+    * if memory checkers will notice it. The ownership model of these needs to be rethought eventually.
+    * Maybe ditch the m_fused_actions map and only have the m_fused_action_order map, initializing with
+    * emplace instead of with news in static locations?
+    */
    inline void reset(bool /*async*/) {
       m_fused_actions.clear();
       m_fused_action_order.clear();
@@ -1174,8 +1186,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 }
 
 // SCANS
-#define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) { \
-   auto __fuser__ = LoopFuser::getInstance(); \
+#define _FUSIBLE_LOOP_SCAN(FUSER, START, END, POS, INIT_POS, BOOL_EXPR) { \
+   auto __fuser__ = FUSER; \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, INIT_POS, \
                               [=] FUSIBLE_DEVICE(int INDEX, bool, int, int, int)->bool { \
@@ -1185,7 +1197,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                               [=] FUSIBLE_DEVICE(int INDEX, bool /*__is_fused__*/, int /*__action_index__*/, int POS, int)->int { \
                                  FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR) { \
 
+#define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) _FUSIBLE_LOOP_SCAN(LoopFuser::getInstance(), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
+
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
+
+#define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY) \
+   _FUSIBLE_LOOP_SCAN(FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR)  { \
    auto __fuser__ = LoopFuser::getInstance(); \
@@ -1221,6 +1238,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOPS_STOP_ASYNC
 #define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) SCAN_LOOP(INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) SCAN_LOOP_END(LENGTH, POS, POS_STORE_DESTINATION)
+#define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PHASE) SCAN_LOOP(INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
+#define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) SCAN_LOOP_END(LENGTH, POS, POS_STORE_DESTINATION)
 #define FUSIBLE_FREE(A) A.free()
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDX,START,END,SCANVAR) SCAN_COUNTS_TO_OFFSETS_LOOP(INDX, START, END, SCANVAR)
 
