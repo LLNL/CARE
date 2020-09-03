@@ -8,8 +8,6 @@ set(ENABLE_HIP ON CACHE BOOL "Enable HIP")
 set(HIP_CLANG_PATH "/opt/rocm/llvm/bin" CACHE PATH "Path to HIP CLANG")
 set(HCC_AMDGPU_TARGET "gfx900" CACHE STRING "Set the AMD actual architecture")
 
-set(NVTOOLSEXT_DIR "${CUDA_TOOLKIT_ROOT_DIR}" CACHE PATH "Path to NVTOOLSEXT")
-
 set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "Path to clang++")
 set(CMAKE_C_COMPILER "/opt/rocm/llvm/bin/clang" CACHE FILEPATH "Path to clang++")
 
