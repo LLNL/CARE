@@ -226,7 +226,7 @@ namespace care {
       }
    }
 
-#if defined __GPUCC__ && defined GPU_ACTIVE
+#if defined CARE_GPUCC && defined GPU_ACTIVE
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -321,7 +321,7 @@ namespace care {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(__GPUCC__) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
       const int length = end - start;
 
       if (length != 0) {
@@ -336,7 +336,7 @@ namespace care {
          RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
 #endif
 
-#if FORCE_SYNC && defined(__GPUCC__)
+#if FORCE_SYNC && defined(CARE_GPUCC)
          care_gpuErrchk(gpuDeviceSynchronize());
 #endif
 

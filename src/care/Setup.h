@@ -64,7 +64,7 @@ namespace care {
    }
 
    inline void evict_device_memory() {
-#ifdef __GPUCC__
+#ifdef CARE_GPUCC
       evict_memory(chai::ExecutionSpace::GPU, chai::ExecutionSpace::CPU);
 #endif
 

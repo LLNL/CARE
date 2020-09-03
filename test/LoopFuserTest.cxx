@@ -90,7 +90,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    care::gpuDeviceSynchronize();
 
-#ifdef __GPUCC__
+#ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
    for (int i = 0; i < 2; ++i) {

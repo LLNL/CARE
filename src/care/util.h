@@ -299,9 +299,86 @@ namespace care {
    }
 #endif
 
+// various GPU wrappers, only needed for GPU compiles
+#if defined (CARE_GPUCC)
+
+// wrapper for hip/cuda free
+CARE_HOST inline void gpuFree(void* buffer) {
+#if defined(__HIPCC__)
+   gpuAssert(hipFree(buffer), "gpuFree", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaFree(buffer), "gpuFree", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda free host
+CARE_HOST inline void gpuFreeHost(void* buffer) {
+#if defined(__HIPCC__)
+   gpuAssert(hipHostFree(buffer), "gpuFreeHost", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaFreeHost(buffer), "gpuFreeHost", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda mem copy
+CARE_HOST inline void  gpuMemcpy(void* dst, const void* src, size_t count, gpuMemcpyKind kind) {
+#if defined(__HIPCC__)
+   gpuAssert(hipMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda malloc
+CARE_HOST inline void gpuMalloc(void** devPtr, size_t size) {
+#if defined(__HIPCC__)
+   gpuAssert(hipMalloc(devPtr, size), "gpuMalloc", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaMalloc(devPtr, size), "gpuMalloc", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda managed malloc
+CARE_HOST inline void gpuMallocManaged(void** devPtr, size_t size) {
+#if defined(__HIPCC__)
+   gpuAssert(hipMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
+#endif
+}
+
+// wrapper for hip/cuda host alloc
+CARE_HOST inline void gpuHostAlloc(void** pHost, size_t size, unsigned int flags) {
+#if defined(__HIPCC__)
+   gpuAssert(hipHostMalloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaHostAlloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
+#endif
+}
+
+// kernel launch
+CARE_HOST inline void gpuLaunchKernel(const void* func, dim3 gridDim, dim3 blockDim, void** args, size_t sharedMem, gpuStream_t stream) {
+#if defined(__HIPCC__)
+   gpuAssert(hipLaunchKernel(func, gridDim, blockDim, args, sharedMem, stream), "gpuLaunchKernel", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaLaunchKernel(func, gridDim, blockDim, args, sharedMem, stream), "gpuLaunchKernel", __LINE__);
+#endif
+}
+
+// wrapper for stream synchronize
+CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
+#if defined(__HIPCC__)
+   gpuAssert(hipStreamSynchronize(stream), "gpuStreamSynchronize", __LINE__);
+#elif defined(__CUDACC__)
+   gpuAssert(cudaStreamSynchronize(stream), "gpuStreamSynchronize", __LINE__);
+#endif
+}
+
+#endif // #if defined (CARE_GPUCC)
+
 } // namespace care
 
-#if defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
@@ -329,7 +406,7 @@ namespace care {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // defined(__GPUCC__) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

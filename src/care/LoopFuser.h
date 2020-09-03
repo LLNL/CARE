@@ -20,7 +20,7 @@
 #include <iostream>
 #include <vector>
 
-#if defined __GPUCC__ && defined GPU_ACTIVE
+#if defined CARE_GPUCC && defined GPU_ACTIVE
 #define FUSIBLE_DEVICE CARE_DEVICE
 #else
 #define FUSIBLE_DEVICE CARE_HOST
@@ -112,11 +112,9 @@ namespace care {
          return -1 ;
       }
 
-#ifndef __CUDA_ARCH__
-#ifndef __HIP_DEVICE_COMPILE__
+#ifndef CARE_DEVICE_COMPILE
 #ifdef CARE_DEBUG
       CheckSorted(&(map[start]), mapSize, "binarySearch", "map") ;
-#endif
 #endif
 #endif
 
@@ -190,7 +188,9 @@ FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int 
    LB lambda = *reinterpret_cast<lambda_type *> (lambda_buf);
    return lambda(i, is_fused, action_index, start, end);
 }
-#ifdef __GPUCC__
+
+#ifdef CARE_GPUCC
+
 // cuda global function that writes the device wrapper function pointer
 // for the template type to the pointer provided.
 template<typename ReturnType, typename LB>
@@ -211,18 +211,18 @@ __global__ void write_launcher_ptr(care::device_wrapper_ptr* out)
 template<typename ReturnType, typename kernel_type>
 inline void * get_launcher_wrapper_ptr(bool get_if_null)
 {
-#if defined __GPUCC__ && defined GPU_ACTIVE
+#if defined CARE_GPUCC && defined GPU_ACTIVE
    static_assert(alignof(kernel_type) <= sizeof(care::device_wrapper_ptr),
                  "kernel_type has excessive alignment requirements");
    static care::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
       care::device_wrapper_ptr* pinned_buf;
-      care_gpuErrchk(cudaHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
-      cudaStream_t stream = 0;
+      care_gpuErrchk(gpuHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
+      gpuStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      care_gpuErrchk(cudaLaunchKernel(func, 1, 1, args, 0, stream));
-      care_gpuErrchk(cudaStreamSynchronize(stream));
+      care_gpuErrchk(gpuLaunchKernel(func, 1, 1, args, 0, stream));
+      care_gpuErrchk(gpuStreamSynchronize(stream));
       ptr = *pinned_buf;
    }
 
@@ -876,7 +876,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
          }
 #endif
-#if defined __GPUCC__ && defined GPU_ACTIVE
+#if defined CARE_GPUCC && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
          size_t conditional_size = care::aligned_sizeof<Conditional, sizeof(care::device_wrapper_ptr)>::value;
 #else
@@ -944,7 +944,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #endif
          switch(scan_type) {
             case 0:
-#if defined __GPUCC__ && defined GPU_ACTIVE
+#if defined CARE_GPUCC && defined GPU_ACTIVE
                care::forall(care::raja_fusible {}, 0, end-start, false, -1, action);
 #else
                care::forall(care::raja_fusible_seq {}, 0, end-start, false, -1, action);
@@ -979,7 +979,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
 }
 
-#if defined(CARE_DEBUG) || defined(__GPUCC__)
+#if defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
@@ -1021,7 +1021,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // frees
 #define FUSIBLE_FREE(A) LoopFuser::getInstance()->registerFree(A);
 
-#else // defined(CARE_DEBUG) || defined(__GPUCC__)
+#else // defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
 // in opt, non cuda builds, never start recording
 #define FUSIBLE_LOOPS_START \
@@ -1041,7 +1041,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOPS_STOP_ASYNC FusedActionsObserver::activeObserver = nullptr;
 #define FUSIBLE_FREE(A) A.free();
 
-#endif // defined(CARE_DEBUG) || defined(__GPUCC__)
+#endif // defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
 
 // initializes index start, end and offset variables for boilerplate reduction
