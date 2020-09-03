@@ -18,7 +18,7 @@
 #include "care/care.h"
 #include "care/policies.h"
 
-#if CARE_HAVE_LOOP_FUSER
+#if CARE_ENABLE_LOOP_FUSER
 /* CUDA profiling macros */
 #ifdef __CUDACC__
 #include "nvToolsExt.h"

@@ -1215,6 +1215,12 @@ GPU_TEST(array_utils, intersectarrays) {
    // no matches
    care_utils::IntersectArrays<int>(RAJAExec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
+
+   // clean up device memory
+   a.freeDeviceMemory();
+   b.freeDeviceMemory();
+   c.freeDeviceMemory();
+   d.freeDeviceMemory();
 }
 
 GPU_TEST(array_utils, binarsearchhostdev) {

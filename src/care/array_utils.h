@@ -186,6 +186,11 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
                                   const char* name, const char* argname,
                                   const bool allowDuplicates = false);
 
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates = false);
+
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template <typename T>
@@ -249,6 +254,14 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
 
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
+                                  const char* name, const char* argname,
+                                  const bool allowDuplicates)
+{
+   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
+}
+
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>&& array, const int len,
                                   const char* name, const char* argname,
                                   const bool allowDuplicates)
 {
@@ -332,8 +345,11 @@ inline void IntersectArrays(RAJAExec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for these checks by default.
-      checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
+      care::host_device_ptr<const ArrayType> slice1(arr1.slice(start1));
+      care::host_device_ptr<const ArrayType> slice2(arr2.slice(start2));
+
+      checkSorted<ArrayType>(slice1, size1, funcname, "arr1") ;
+      checkSorted<ArrayType>(slice2, size2, funcname, "arr2") ;
    }
 
    care::host_device_ptr<int> smallerMatches, largerMatches;
@@ -460,8 +476,8 @@ inline void IntersectArrays(RAJA::seq_exec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for this check by default
-      checkSorted<ArrayType>(arr1, size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(arr2, size2, funcname, "arr2") ;
+      checkSorted<ArrayType>(&arr1[start1], size1, funcname, "arr1") ;
+      checkSorted<ArrayType>(&arr2[start2], size2, funcname, "arr2") ;
    }
 
    int i, j;

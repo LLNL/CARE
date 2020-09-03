@@ -27,7 +27,6 @@ Required Dependencies
 
 Optional Dependencies
 =====================
-* Basil (optional)
 * Cub (optional)
 * LLNL_GlobalID (optional)
 * NVTX (optional)

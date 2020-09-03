@@ -9,13 +9,12 @@
 #define _CARE_CONFIG_H_
 
 #cmakedefine CARE_LOOP_VVERBOSE_ENABLED
-#cmakedefine01 CARE_HAVE_LOOP_FUSER
+#cmakedefine01 CARE_ENABLE_LOOP_FUSER
 #cmakedefine CARE_DEBUG
 #cmakedefine01 CARE_ENABLE_GPU_SIMULATION_MODE
 #cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
 
 // Optional dependencies
-#cmakedefine01 CARE_HAVE_BASIL
 #cmakedefine01 CARE_HAVE_CUB
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID
 #cmakedefine01 CARE_HAVE_NVTOOLSEXT
