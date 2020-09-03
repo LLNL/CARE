@@ -11,8 +11,6 @@
 // CARE config header
 #include "care/config.h"
 
-// Priority phase value for the default loop fuser
-const double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 
 // Other CARE headers
 #include "care/CHAICallback.h"
@@ -268,6 +266,9 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 #endif
 
 #include "care/PointerTypes.h"
+
+// Priority phase value for the default loop fuser
+const double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 
 #endif // !defined(_CARE_CARE_H_)
 

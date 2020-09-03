@@ -459,7 +459,6 @@ public:
    CARE_DLL_API static FusedActionsObserver * activeObserver;
 
    FusedActionsObserver() : FusedActions(),
-                            m_fused_actions(),
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
@@ -467,18 +466,18 @@ public:
     }
 
    void startRecording() {
-      for (auto & action_priority : m_fused_actions) {
+      for (auto & priority_action: m_fused_action_order) {
 #ifdef FUSER_VERBOSE
-         printf("starting recording %p\n", action_priority.first);
+         printf("starting recording %p\n", priority_action.second);
 #endif
-         action_priority.first->startRecording();
+         priority_action.second->startRecording();
       }
       m_recording = true;
    }
 
    void stopRecording() {
-      for ( auto & action_priority : m_fused_actions) {
-         action_priority.first->stopRecording();
+      for ( auto & priority_action: m_fused_action_order) {
+         priority_action.second->stopRecording();
       }
       m_recording = false;
    }
@@ -487,8 +486,8 @@ public:
    /// @brief set preserveOrder mode
    ///////////////////////////////////////////////////////////////////////////
    void preserveOrder(bool preserveOrder) {
-      for (auto & action_priority : m_fused_actions) {
-         action_priority.first->preserveOrder(preserveOrder);
+      for (auto & priority_action: m_fused_action_order) {
+         priority_action.second->preserveOrder(preserveOrder);
       }
       m_preserve_action_order = preserveOrder;
    }
@@ -498,8 +497,8 @@ public:
    /// @brief set scan mode
    ///////////////////////////////////////////////////////////////////////////
    virtual void setScan(bool scan) {
-      for (auto & action_priority : m_fused_actions) {
-         action_priority.first->setScan(scan);
+      for (auto & priority_action: m_fused_action_order) {
+         priority_action.second->setScan(scan);
       }
       m_is_scan = scan;
    }
@@ -508,8 +507,8 @@ public:
    /// @brief set counts_to_offsets_scan mode
    ///////////////////////////////////////////////////////////////////////////
    virtual void setCountsToOffsetsScan(bool scan) {
-      for (auto & action_priority : m_fused_actions) {
-         action_priority.first->setCountsToOffsetsScan(scan);
+      for (auto & priority_action: m_fused_action_order) {
+         priority_action.second->setCountsToOffsetsScan(scan);
       }
       m_is_counts_to_offsets_scan = scan;
    }
@@ -537,28 +536,27 @@ public:
       m_to_be_freed.clear();
    }
 
-   inline void registerFusedActions(FusedActions * actions, double priority) {
-      auto this_iter = m_fused_actions.find(actions);
-      if (this_iter == m_fused_actions.end()) {
+   template<typename ActionsType>
+   inline ActionsType * getFusedActions(double priority) {
+      ActionsType * actions = nullptr;
+      auto iter = m_fused_action_order.find(priority);
+      if (iter == m_fused_action_order.end()) {
+         actions = new ActionsType();
          if (m_recording) {
             actions->startRecording();
          } else {
             actions->stopRecording();
          }
-         if (m_last_insert_priority >= priority) {
-            printf("CARE: WARNING fused action registered out of priority order\n");
+         if (m_last_insert_priority > priority) {
+            printf("CARE: WARNING fused action encountered out of priority order\n");
          }
          m_fused_action_order[priority] = actions;
-         m_fused_actions[actions] = priority;
+      }
+      else {
+         actions = static_cast<ActionsType *>(iter->second);
       }
       m_last_insert_priority = priority;
-   }
-   template<typename ActionsType>
-   inline FusedActions * getFusedActions(double priority) {
-      if (m_fused_action_order.count(priority) == 0) {
-         registerFusedActions(new ActionsType(), priority);
-      }
-      return m_fused_action_order[priority];
+      return actions;
    }
 
    inline void reset_phases() {
@@ -568,25 +566,20 @@ public:
 
    inline int actionCount() {
       int count = 0;
-      for (auto actions_priority : m_fused_actions) {
-         count += actions_priority.first->actionCount();
+      for (auto priority_action: m_fused_action_order) {
+         count += priority_action.second->actionCount();
       }
       return count;
    }
 
-   /* while this complies with the FusedActions API, it is frought with potential memory leak issues
-    * as currently implemented. In practice these observers are associated with static locations
-    * in a codebase and we won't actively be leaking a bunch of memory, but I would not be surprised
-    * if memory checkers will notice it. The ownership model of these needs to be rethought eventually.
-    * Maybe ditch the m_fused_actions map and only have the m_fused_action_order map, initializing with
-    * emplace instead of with news in static locations?
-    */
+ 
    inline void reset(bool /*async*/) {
-      m_fused_actions.clear();
+      for (auto priority_action: m_fused_action_order) {
+         delete priority_action.second;
+      }
       m_fused_action_order.clear();
       m_to_be_freed.clear();
       m_recording = false;
-
    }
 
 
@@ -601,7 +594,6 @@ public:
    }
 
    protected:
-      std::unordered_map<FusedActions *, double> m_fused_actions;
       std::map<double, FusedActions *> m_fused_action_order;
       double m_last_insert_priority;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
@@ -1108,8 +1100,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
    if (END > START) { \
-      static LoopFuser * __this_fuser__ = new LoopFuser(); \
-      FusedActionsObserver::activeObserver->registerFusedActions(__this_fuser__, PRIORITY); \
+      LoopFuser * __this_fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__this_fuser__, START,END) \
       int __fusible_scan_pos__ = 0; \
       __this_fuser__->registerAction(FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
@@ -1121,8 +1112,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                      } return 0;}); }}
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
-   static LoopFuser * __this_fuser__ = new LoopFuser(); \
-   FusedActionsObserver::activeObserver->registerFusedActions(__this_fuser__, PRIORITY); \
+   LoopFuser * __this_fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
    int __fusible_scan_pos__ = 0; \
    __this_fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                                   [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
@@ -1149,8 +1139,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
    if (END > START) { \
-      static LoopFuser * __fuser__ = new LoopFuser(); \
-      FusedActionsObserver::activeObserver->registerFusedActions(__fuser__, PRIORITY); \
+      LoopFuser * __fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
       int __fusible_scan_pos__ = 0; \
       __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
@@ -1164,8 +1153,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                     return 0;}); }}
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
-   static LoopFuser * __fuser__ = new LoopFuser(); \
-   FusedActionsObserver::activeObserver->registerFusedActions(__fuser__, PRIORITY); \
+   LoopFuser * __fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
    int __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                              [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
@@ -1186,7 +1174,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 }
 
 // SCANS
-#define _FUSIBLE_LOOP_SCAN(FUSER, START, END, POS, INIT_POS, BOOL_EXPR) { \
+#define _FUSIBLE_LOOP_SCAN(FUSER, INDEX, START, END, POS, INIT_POS, BOOL_EXPR) { \
    auto __fuser__ = FUSER; \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, INIT_POS, \
@@ -1203,6 +1191,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY) \
    _FUSIBLE_LOOP_SCAN(FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
+
+#define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR)  { \
    auto __fuser__ = LoopFuser::getInstance(); \

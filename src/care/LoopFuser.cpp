@@ -49,8 +49,7 @@ LoopFuser::LoopFuser() : FusedActions(),
 LoopFuser * LoopFuser::getInstance() {
    static LoopFuser * instance = nullptr;
    if (instance == nullptr) {
-      instance = new LoopFuser();
-      defaultObserver->registerFusedActions(instance, CARE_DEFAULT_PHASE);
+      instance = defaultObserver->getFusedActions<LoopFuser>(CARE_DEFAULT_PHASE);
    }
    return instance;
 }
