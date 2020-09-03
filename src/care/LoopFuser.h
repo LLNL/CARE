@@ -451,12 +451,16 @@ protected:
 /// @author Peter Robinson
 /// @brief The observer of FusesActions. Any FusedActions that is
 ///        registered with the default FusedActionsObserver (accessed via
-///        FusedActionsObserver::getInstance() or FusedActionsObserver::activeObserver()
+///        FusedActionsObserver::getInstance() or FusedActionsObserver::getActiveObserver()
 ///        will be controlled via FUSIBLE_LOOPS_START and FUSIBLE_LOOPS_END macros.
 ///////////////////////////////////////////////////////////////////////////
 class FusedActionsObserver : public FusedActions {
-public:
+protected:
    CARE_DLL_API static FusedActionsObserver * activeObserver;
+public:
+   CARE_DLL_API static FusedActionsObserver * getActiveObserver();
+   CARE_DLL_API static void setActiveObserver(FusedActionsObserver * observer);
+
 
    FusedActionsObserver() : FusedActions(),
                             m_fused_action_order(),
@@ -993,7 +997,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
       __fuser__->preserveOrder(false); \
       __fuser__->setScan(false); \
    } \
-   FusedActionsObserver::activeObserver = __phase_observer; \
+   FusedActionsObserver::setActiveObserver(__phase_observer); \
 }
 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START { \
@@ -1003,16 +1007,16 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
       __fuser__->preserveOrder(true); \
       __fuser__->setScan(false); \
    } \
-   FusedActionsObserver::activeObserver = __phase_observer; \
+   FusedActionsObserver::setActiveObserver(__phase_observer); \
 }
 
 // Execute, then stop recording
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
-   for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(FusedActionsObserver::activeObserver)}) { \
+   for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
       __fuser__->stopRecording(); \
       __fuser__->flushActions(ASYNC); \
    } \
-   FusedActionsObserver::activeObserver = nullptr; \
+   FusedActionsObserver::setActiveObserver(nullptr); \
 }
 
 // Execute, then stop recording
@@ -1037,12 +1041,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
       __fuser__->preserveOrder(false); \
       __fuser__->setCountsToOffsetsScan(false); \
    } \
-   FusedActionsObserver::activeObserver = __phase_observer; \
+   FusedActionsObserver::setActiveObserver(__phase_observer); \
 }
 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START
-#define FUSIBLE_LOOPS_STOP FusedActionsObserver::activeObserver = nullptr;
-#define FUSIBLE_LOOPS_STOP_ASYNC FusedActionsObserver::activeObserver = nullptr;
+#define FUSIBLE_LOOPS_STOP FusedActionsObserver::setActiveObserver(nullptr);
+#define FUSIBLE_LOOPS_STOP_ASYNC FusedActionsObserver::setActiveObserver(nullptr);
 #define FUSIBLE_FREE(A) A.free();
 
 #endif // defined(CARE_DEBUG) || defined(__GPUCC__)
@@ -1100,7 +1104,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
    if (END > START) { \
-      LoopFuser * __this_fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
+      LoopFuser * __this_fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__this_fuser__, START,END) \
       int __fusible_scan_pos__ = 0; \
       __this_fuser__->registerAction(FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
@@ -1112,7 +1116,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                      } return 0;}); }}
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
-   LoopFuser * __this_fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
+   LoopFuser * __this_fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
    int __fusible_scan_pos__ = 0; \
    __this_fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                                   [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
@@ -1139,7 +1143,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
    if (END > START) { \
-      LoopFuser * __fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
+      LoopFuser * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
       int __fusible_scan_pos__ = 0; \
       __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
@@ -1153,7 +1157,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                     return 0;}); }}
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
-   LoopFuser * __fuser__ = FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY); \
+   LoopFuser * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
    int __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                              [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
@@ -1164,7 +1168,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_KERNEL_END return 0;}); }
 
-#define FUSIBLE_PHASE_RESET FusedActionsObserver::activeObserver->reset_phases();
+#define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
 
 #define FUSIBLE_LOOPS_FENCEPOST { \
    int __fusible_action_count__ = LoopFuser::getInstance()->size(); \
@@ -1190,7 +1194,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
 
 #define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY) \
-   _FUSIBLE_LOOP_SCAN(FusedActionsObserver::activeObserver->getFusedActions<LoopFuser>(PRIORITY), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
+   _FUSIBLE_LOOP_SCAN(FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
 
 #define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION)
 

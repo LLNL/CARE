@@ -21,6 +21,17 @@ CARE_DLL_API int LoopFuser::non_scan_store = 0;
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
+CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() { 
+   if (activeObserver == nullptr) {
+      activeObserver = defaultObserver;
+   }
+   return activeObserver;
+}
+
+CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver * observer) {
+   activeObserver = observer;
+}
+
 LoopFuser::LoopFuser() : FusedActions(),
    m_delay_pack(false),
    m_call_as_packed(true),
