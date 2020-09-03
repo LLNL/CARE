@@ -188,12 +188,9 @@ FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int 
    LB lambda = *reinterpret_cast<lambda_type *> (lambda_buf);
    return lambda(i, is_fused, action_index, start, end);
 }
-<<<<<<< HEAD
 
 #ifdef CARE_GPUCC
-=======
-#ifdef __GPUCC__
->>>>>>> develop
+
 // cuda global function that writes the device wrapper function pointer
 // for the template type to the pointer provided.
 template<typename ReturnType, typename LB>
@@ -214,32 +211,18 @@ __global__ void write_launcher_ptr(care::device_wrapper_ptr* out)
 template<typename ReturnType, typename kernel_type>
 inline void * get_launcher_wrapper_ptr(bool get_if_null)
 {
-<<<<<<< HEAD
 #if defined CARE_GPUCC && defined GPU_ACTIVE
-   static_assert(alignof(kernel_type) <= sizeof(basil::detail::device_wrapper_ptr),
-=======
-#if defined __GPUCC__ && defined GPU_ACTIVE
    static_assert(alignof(kernel_type) <= sizeof(care::device_wrapper_ptr),
->>>>>>> develop
                  "kernel_type has excessive alignment requirements");
    static care::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
-<<<<<<< HEAD
-      basil::detail::device_wrapper_ptr* pinned_buf = basil::detail::get_pinned_device_wrapper_ptr_buf();
+      care::device_wrapper_ptr* pinned_buf;
+      care_gpuErrchk(gpuHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
       gpuStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      care::gpuLaunchKernel(func, 1, 1, args, 0, stream);
-      care::gpuStreamSynchronize(stream);
-=======
-      care::device_wrapper_ptr* pinned_buf;
-      care_gpuErrchk(cudaHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
-      cudaStream_t stream = 0;
-      void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
-      void* args[] = { &pinned_buf };
-      care_gpuErrchk(cudaLaunchKernel(func, 1, 1, args, 0, stream));
-      care_gpuErrchk(cudaStreamSynchronize(stream));
->>>>>>> develop
+      care_gpuErrchk(gpuLaunchKernel(func, 1, 1, args, 0, stream));
+      care_gpuErrchk(gpuStreamSynchronize(stream));
       ptr = *pinned_buf;
    }
 
@@ -893,19 +876,9 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
          }
 #endif
-<<<<<<< HEAD
-         /* lambdas need to be written to an alligned memory address , or you get runtime errors (that are surprisingly helpful)*/
-         if (m_action_count == m_reserved) {
-            flush();
-         }
 #if defined CARE_GPUCC && defined GPU_ACTIVE
-         size_t lambda_size = basil::detail::aligned_sizeof<LB, sizeof(basil::detail::device_wrapper_ptr)>::value;
-         size_t conditional_size = basil::detail::aligned_sizeof<Conditional, sizeof(basil::detail::device_wrapper_ptr)>::value;
-=======
-#if defined __GPUCC__ && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
          size_t conditional_size = care::aligned_sizeof<Conditional, sizeof(care::device_wrapper_ptr)>::value;
->>>>>>> develop
 #else
          size_t lambda_size = sizeof(LB);
          size_t conditional_size = sizeof(Conditional);
