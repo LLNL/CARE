@@ -1,3 +1,4 @@
+# Things to do before building:
 #module load opt
 #module load rocm
 #setenv HCC_AMDGPU_TARGET gfx900
