@@ -382,7 +382,7 @@ namespace care {
 
       void freeDeviceMemory(bool deregisterPointer=true) {
 #if !defined(CHAI_DISABLE_RM) 
-#if defined(CHAI_ENABLE_CUDA) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CHAI_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
          MA::move(chai::CPU);
          MA::free(chai::GPU);
 #endif

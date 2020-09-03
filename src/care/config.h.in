@@ -13,8 +13,6 @@
 #cmakedefine CARE_DEBUG
 #cmakedefine01 CARE_ENABLE_GPU_SIMULATION_MODE
 #cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
-#cmakedefine ENABLE_HIP
-#cmakedefine ENABLE_CUDA
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_BASIL
