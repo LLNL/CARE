@@ -21,6 +21,17 @@ CARE_DLL_API int LoopFuser::non_scan_store = 0;
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
+CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() { 
+   if (activeObserver == nullptr) {
+      activeObserver = defaultObserver;
+   }
+   return activeObserver;
+}
+
+CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver * observer) {
+   activeObserver = observer;
+}
+
 LoopFuser::LoopFuser() : FusedActions(),
    m_delay_pack(false),
    m_call_as_packed(true),
@@ -49,10 +60,7 @@ LoopFuser::LoopFuser() : FusedActions(),
 LoopFuser * LoopFuser::getInstance() {
    static LoopFuser * instance = nullptr;
    if (instance == nullptr) {
-      instance = new LoopFuser();
-      // start the priority at > -FLT_MAX to ensure no warnings for registering priorities that are out of
-      // order
-      defaultObserver->registerFusedActions(instance, -FLT_MAX/2);
+      instance = defaultObserver->getFusedActions<LoopFuser>(CARE_DEFAULT_PHASE);
    }
    return instance;
 }
