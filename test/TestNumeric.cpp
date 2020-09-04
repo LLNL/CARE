@@ -8,7 +8,7 @@
 #include "care/config.h"
 
 // Makes LOOP_REDUCE run on the device
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 #define GPU_ACTIVE
 #endif
 
@@ -51,7 +51,7 @@ TEST(numeric, iota)
    } CARE_SEQUENTIAL_LOOP_END
 }
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 // Adapted from CHAI
 #define GPU_TEST(X, Y) \

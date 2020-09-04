@@ -9,7 +9,7 @@
 #define _CARE_CUDA_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 #if defined(__CUDACC__)
 // Other library headers
@@ -67,7 +67,7 @@ class CUDAWatchpoint {
       }
 };
 
-#endif //__GPUCC__
+#endif //CARE_GPUCC
 #endif //CARE_DEBUG
 
 #endif // !defined(_CARE_CUDA_WATCHPOINT_H_)

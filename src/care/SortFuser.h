@@ -97,7 +97,7 @@ namespace care {
       ///        offsetting their values so that they own their own range of the
       ///        space in T.
       ///////////////////////////////////////////////////////////////////////////
-#ifndef __GPUCC__      
+#ifndef CARE_GPUCC      
    private:
 #endif
 
