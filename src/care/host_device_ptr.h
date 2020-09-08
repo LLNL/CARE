@@ -212,7 +212,7 @@ namespace care {
       // This will trigger a compiler error if used on a  non-captured-by-value (const) host_device_ptr
       //template<typename Idx, bool B = std::is_base_of<chai::CHAICopyable,T>::value, typename std::enable_if<B,int>::type = 0 >
       template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx) const { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
+      inline CARE_HOST_DEVICE T& operator[](const Idx) { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
 #endif
 #endif
 
