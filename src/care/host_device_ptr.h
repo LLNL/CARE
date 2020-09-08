@@ -202,11 +202,9 @@ namespace care {
       /// Return the value at the given index
       ///
       template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx i)
-#ifndef CARE_LEGACY_COMPATIBILITY_MODE
-      const
-#endif
-      { return MA::operator[](i); }
+      inline CARE_HOST_DEVICE T& operator[](const Idx i) const { 
+         return MA::operator[](i); 
+      }
 
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 #ifdef CARE_ERROR_ON_HOSTDEV_USAGE_OUTSIDE_OF_RAJA_LOOP
@@ -214,7 +212,7 @@ namespace care {
       // This will trigger a compiler error if used on a  non-captured-by-value (const) host_device_ptr
       //template<typename Idx, bool B = std::is_base_of<chai::CHAICopyable,T>::value, typename std::enable_if<B,int>::type = 0 >
       template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx) { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
+      inline CARE_HOST_DEVICE T& operator[](const Idx) const { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
 #endif
 #endif
 
