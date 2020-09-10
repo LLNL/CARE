@@ -85,7 +85,7 @@ using RAJAAtomic = RAJA::auto_atomic;
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.
-#if defined (__GPUCC__)
+#if defined (CARE_GPUCC)
 
 #define CARE_CUDA_BLOCK_SIZE 256
 #define CARE_CUDA_ASYNC true
@@ -100,17 +100,17 @@ using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
 #endif // __CUDACC__
 #endif // CHAI_GPU_SIM_MDOE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __GPUCC__
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // CARE_GPUCC
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
 
-#else // __GPUCC__
+#else // CARE_GPUCC
 
 using RAJADeviceExec = RAJA::seq_exec;
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 
-#if defined (__GPUCC__) && defined (GPU_ACTIVE)
+#if defined (CARE_GPUCC) && defined (GPU_ACTIVE)
 
 #if CHAI_GPU_SIM_MODE
 
@@ -171,7 +171,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #endif // CHAI_GPU_SIM_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // __GPUCC__ and GPU_ACTIVE
+#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // CARE_GPUCC and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
@@ -187,7 +187,7 @@ using RAJAExec = RAJADeviceExec ;
 #define thrustExec thrust::host
 #define RAJA_PARALLEL_ACTIVE
 
-#else // __GPUCC__ and GPU_ACTIVE
+#else // CARE_GPUCC and GPU_ACTIVE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;
@@ -202,7 +202,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJA::seq_exec ;
 #define thrustExec thrust::seq
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 
 #if 0
 #define ANNOTATE_J2(X, Y) X "_" #Y
@@ -232,7 +232,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 
 
 // ******** Whether RAJA HAS DETECTED GPU ACTIVE ****
-#ifdef __GPUCC__
+#ifdef CARE_GPUCC
 #ifdef GPU_ACTIVE
 #define RAJA_GPU_ACTIVE
 #endif
@@ -240,11 +240,11 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 // ************ DEFAULT MACRO SELECTION **************
 
 // Define default behavior for work loops
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
 //#define FISSION_LOOPS 1
 #define USE_PERMUTED_CONNECTIVITY 1
-#else // __GPUCC__ is False, CHAI_GPU_SIM_MODE is 0
+#else // CARE_GPUCC is False, CHAI_GPU_SIM_MODE is 0
 
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 // As of 30 July 2018, cycle and lagrange run faster with FISSION_LOOPS turned off
@@ -255,7 +255,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 #define USE_PERMUTED_CONNECTIVITY 0
 #endif
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 
 #include "care/scan.h"
 

@@ -68,20 +68,16 @@ LoopFuser * LoopFuser::getInstance() {
 LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
-#ifdef __CUDACC__
-      cudaFree(m_action_offsets);
-#elif defined(__HIPCC__)
-      hipFree(m_action_offsets);
+#if defined(CARE_GPUCC)
+      care::gpuFree(m_action_offsets);
 #else
       free(m_action_offsets);
 #endif
    }
 
    if (m_lambda_reserved > 0) {
-#ifdef __CUDACC__
-      cudaFree(m_lambda_data);
-#elif defined(__HIPCC__)
-      hipFree(m_lambda_data);
+#if defined(CARE_GPUCC)
+      care::gpuFree(m_lambda_data);
 #else
       free(m_lambda_data);
 #endif
@@ -95,10 +91,8 @@ LoopFuser::~LoopFuser() {
 void LoopFuser::reserve(size_t size) {
    static char * pinned_buf;
    size_t totalsize = size*(sizeof(int)*5+sizeof(SerializableDeviceLambda<int>) + sizeof(SerializableDeviceLambda<bool>));
-#ifdef __CUDACC__
-   cudaHostAlloc((void **)&pinned_buf, totalsize, cudaHostAllocDefault);
-#elif defined(__HIPCC__)
-   hipHostAlloc((void **)&pinned_buf, totalsize, hipHostAllocDefault);
+#if defined(CARE_GPUCC)
+   care::gpuHostAlloc((void **)&pinned_buf, totalsize, gpuHostAllocDefault);
 #else
    pinned_buf = (char*) malloc(totalsize);
 #endif
@@ -118,17 +112,11 @@ void LoopFuser::reserve_lambda_buffer(size_t size) {
    /* the buffer we will slice out of for packing the lambdas */
    m_lambda_reserved = size;
    char * tmp;
-#ifdef __CUDACC__
-   cudaHostAlloc((void**)&tmp, size, cudaHostAllocDefault);
+#if defined(CARE_GPUCC)
+   care::gpuHostAlloc((void**)&tmp, size, gpuHostAllocDefault);
    if (m_lambda_data) {
-      cudaMemcpy(tmp, m_lambda_data, size, cudaMemcpyHostToHost);
-      cudaFreeHost((void *)m_lambda_data);
-   }
-#elif defined(__HIPCC__)
-   hipHostAlloc((void**)&tmp, size, hipHostAllocDefault);
-   if (m_lambda_data) {
-      hipMemcpy(tmp, m_lambda_data, size, hipMemcpyHostToHost);
-      hipFreeHost((void *)m_lambda_data);
+      care::gpuMemcpy(tmp, m_lambda_data, size, gpuMemcpyHostToHost);
+      care::gpuFreeHost((void *)m_lambda_data);
    }
 #else
    tmp = (char *) malloc(size);

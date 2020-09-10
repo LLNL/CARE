@@ -9,7 +9,7 @@
 #define _CARE_CUDA_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 #if defined(__CUDACC__)
 // Other library headers
@@ -22,7 +22,7 @@
 
 inline void watchpoint_gpuAssert(care_watchpoint_err_t code, const char *file, int line, bool abort=true)
 {
-   if (code != cudaSuccess) {
+   if (code != gpuSuccess) {
 #if defined(__CUDACC__)
       fprintf(stderr, "[CARE] WATCHPOINT GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
 #elif defined(__HIPCC__)
@@ -67,7 +67,7 @@ class CUDAWatchpoint {
       }
 };
 
-#endif //__GPUCC__
+#endif //CARE_GPUCC
 #endif //CARE_DEBUG
 
 #endif // !defined(_CARE_CUDA_WATCHPOINT_H_)

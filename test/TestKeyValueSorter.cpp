@@ -133,7 +133,7 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
    } CARE_HOST_KERNEL_END
 }
 
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
 
 /////////////////////////////////////////////////////////////////////////
 ///
@@ -268,5 +268,5 @@ GPU_TEST(KeyValueSorter, host_device_ptr_Constructor)
    } CARE_HOST_KERNEL_END
 }
 
-#endif // __GPUCC__
+#endif // CARE_GPUCC
 

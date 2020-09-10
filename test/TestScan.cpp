@@ -20,7 +20,7 @@
 using int_ptr = chai::ManagedArray<int>;
 
 GPU_TEST(Scan, test_scan_offset) {
-#if defined(__GPUCC__)
+#if defined(CARE_GPUCC)
    int poolSize = 128*1024*1024; // 128 MB
    care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
    care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);
