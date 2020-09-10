@@ -945,6 +945,13 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #endif
             flushActions();
          }
+         // if we are approaching the 2^31-1 limit proactively flush
+         if (m_action_offsets[m_action_count-1] > 2000000000) {
+#ifdef FUSER_VERBOSE
+            printf("hit m_action_offsets flushActions\n");
+#endif
+            flushActions();
+         }
       }
       if (m_call_as_packed) {
 #ifdef FUSER_VERBOSE
