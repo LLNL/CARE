@@ -217,12 +217,12 @@ inline void * get_launcher_wrapper_ptr(bool get_if_null)
    static care::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
       care::device_wrapper_ptr* pinned_buf;
-      care_gpuErrchk(gpuHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
+      care::gpuHostAlloc((void **)&pinned_buf, sizeof(care::device_wrapper_ptr), gpuHostAllocDefault);
       gpuStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      care_gpuErrchk(gpuLaunchKernel(func, 1, 1, args, 0, stream));
-      care_gpuErrchk(gpuStreamSynchronize(stream));
+      care::gpuLaunchKernel(func, 1, 1, args, 0, stream);
+      care::gpuStreamSynchronize(stream);
       ptr = *pinned_buf;
    }
 
