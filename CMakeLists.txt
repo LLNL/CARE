@@ -27,6 +27,7 @@ option(ENABLE_PINNED "Enable pinned memory space (used for scans)" ON)
 # Option to diable implicit conversion between host_device_ptr and raw arrays. 
 # The same value used here should be used when building CHAI
 option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
+option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)

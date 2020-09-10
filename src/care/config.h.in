@@ -13,6 +13,7 @@
 #cmakedefine CARE_DEBUG
 #cmakedefine01 CARE_ENABLE_GPU_SIMULATION_MODE
 #cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
+#cmakedefine CARE_LEGACY_COMPATIBILITY_MODE
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_CUB
