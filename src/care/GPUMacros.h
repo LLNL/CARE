@@ -36,7 +36,7 @@
 #if defined(__CUDACC__)
 
 #define gpuStream_t cudaStream_t
-#define gpuHostAllocDefault cudaHostAllocDefault;
+#define gpuHostAllocDefault cudaHostAllocDefault
 
 #define gpuMemcpyKind cudaMemcpyKind
 #define gpuMemcpyHostToHost cudaMemcpyHostToHost
