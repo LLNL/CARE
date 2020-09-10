@@ -438,6 +438,7 @@ namespace care {
    void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
 
+#if defined(CARE_ENABLE_MANAGED_PTR)
 #if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 // TODO: Declaring these functions causes problems with a project that depends on CARE
@@ -472,6 +473,7 @@ namespace chai {
 } // namespace chai
 
 #endif // !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+#endif // defined(CARE_ENABLE_MANAGED_PTR)
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 
