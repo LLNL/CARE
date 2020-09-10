@@ -3,7 +3,6 @@
 #module load rocm
 #setenv HCC_AMDGPU_TARGET gfx900
 #setenv HIP_CLANG_PATH /opt/rocm/llvm/bin
-# disable blt smoke test (hello world HIP test fails, the HIP developers have been informed)
 
 set(ENABLE_HIP ON CACHE BOOL "Enable HIP")
 set(HIP_CLANG_PATH "/opt/rocm/llvm/bin" CACHE PATH "Path to HIP CLANG")
