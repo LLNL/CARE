@@ -45,6 +45,8 @@
 #define gpuMemcpyDeviceToDevice cudaMemcpyDeviceToDevice
 #define gpuMemcpyDefault cudaMemcpyDefault
 
+#define gpuSuccess cudaSuccess
+
 #elif defined(__HIPCC__)
 
 #define gpuStream_t hipStream_t
@@ -56,6 +58,8 @@
 #define gpuMemcpyDeviceToHost hipMemcpyDeviceToHost
 #define gpuMemcpyDeviceToDevice hipMemcpyDeviceToDevice
 #define gpuMemcpyDefault hipMemcpyDefault
+
+#define gpuSuccess hipSuccess
 
 #endif // end __HIPCC__ case
 
