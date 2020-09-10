@@ -11,3 +11,5 @@ set(HCC_AMDGPU_TARGET "gfx900" CACHE STRING "Set the AMD actual architecture")
 set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "Path to clang++")
 set(CMAKE_C_COMPILER "/opt/rocm/llvm/bin/clang" CACHE FILEPATH "Path to clang++")
 
+# Virtual functions are not supported in HIP device code
+set(CARE_ENABLE_MANAGED_PTR OFF CACHE BOOL "Enable aliases, tests, and reproducer for managed_ptr")

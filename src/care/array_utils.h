@@ -186,11 +186,6 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
                                   const char* name, const char* argname,
                                   const bool allowDuplicates = false);
 
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
-
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template <typename T>
@@ -254,14 +249,6 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
 
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates)
-{
-   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
-}
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>&& array, const int len,
                                   const char* name, const char* argname,
                                   const bool allowDuplicates)
 {

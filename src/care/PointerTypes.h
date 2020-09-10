@@ -27,7 +27,10 @@
 // CHAI headers
 #include "chai/config.hpp"
 #include "chai/ManagedArray.hpp"
+
+#if defined(CARE_ENABLE_MANAGED_PTR)
 #include "chai/managed_ptr.hpp"
+#endif // defined(CARE_ENABLE_MANAGED_PTR)
 
 // Std library headers
 #include <cstring>
@@ -38,6 +41,8 @@
 
 namespace care{
    using CARECopyable = chai::CHAICopyable;
+
+#if defined(CARE_ENABLE_MANAGED_PTR)
 
    template <typename T>
    using managed_ptr = chai::managed_ptr<T>;
@@ -54,6 +59,8 @@ namespace care{
    inline managed_ptr<T> make_managed_from_factory(F&& f, Args&&... args) {
       return chai::make_managed_from_factory<T>(std::forward<F>(f), std::forward<Args>(args)...);
    }
+
+#endif // defined(CARE_ENABLE_MANAGED_PTR)
 }
 
 #endif // !defined(_CARE_CHAI_INTERFACE_H_)
