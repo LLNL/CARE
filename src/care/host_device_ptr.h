@@ -202,9 +202,18 @@ namespace care {
       /// Return the value at the given index
       ///
       template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx i) const { 
-         return MA::operator[](i); 
-      }
+      inline CARE_HOST_DEVICE T& operator[](const Idx i)
+#ifndef CARE_LEGACY_COMPATIBILITY_MODE
+      const
+#endif
+      { return MA::operator[](i); }
+
+#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+     template<typename Idx>
+     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
+        return MA::operator[](i);
+     }
+#endif
 
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 #ifdef CARE_ERROR_ON_HOSTDEV_USAGE_OUTSIDE_OF_RAJA_LOOP

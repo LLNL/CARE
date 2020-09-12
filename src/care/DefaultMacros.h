@@ -60,7 +60,7 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) for (int INDEX = START_INDEX; INDEX < END_INDEX; ++INDEX) CARE_NEST_BEGIN(CHECK)
+#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) for (int INDEX = START_INDEX; INDEX < (int)END_INDEX; ++INDEX) CARE_NEST_BEGIN(CHECK)
 
 #define CARE_CHECKED_FOR_LOOP_END(CHECK) CARE_NEST_END(CHECK)
 
