@@ -65,5 +65,97 @@ Some sample code is provided below for proper use of care::host_device_ptr.
          printf("myArray[%d]: %d", i, myArray[i]);
       } CARE_SEQUENTIAL_LOOP_END
 
+      // Free memory
+      myArray.free();
+
+      return 0;
+   }
+
+care::host_ptr
+--------------
+
+This type is a lightweight wrapper for a raw host array that prevents the host memory from erroneously being accessed on the device. For obvious reasons, the data it contains cannot be accessed in STREAM or WORK loops, but it can be accessed in plain host code outside of the loop macros and within SEQUENTIAL loops.
+
+Some sample code is provided below for proper use of care::host_ptr.
+
+.. code-block:: c++
+
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
+
+   template <typename T>
+   void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
+      ptr = care::host_device_ptr<T>(length, name.c_str());
+   }
+
+   #define ALLOCATE_PTR(LENGTH, PTR) allocatePtr(LENGTH, PTR, __FILE__ ":" std::to_string(__LINE__) ":" #PTR);
+
+   #include "care/care.h"
+
+   int main(int argc, char* argv[]) {
+      // wrap a raw array
+      int length = 100;
+      int* array1 = new int[length];
+      care::host_ptr<int> host_array1 = array1.data();
+      host_array1[5] = 5;
+      delete[] array1;
+
+      // move data to host
+      int length = 100;
+      care::host_device_ptr<int> array2;
+      ALLOCATE_PTR(length, array2);
+      care::host_ptr<int> host_array2 = array2;
+      host_array2[5] = 5; // If only reading/writing one element, using pick/set directly on array2 would be a better choice. But if reading/writing multiple elements, this pattern is preferred since it does fewer memory transfers.
+      array2.free();
+
+      return 0;
+   }
+
+care::device_ptr
+----------------
+
+This type is a lightweight wrapper for a raw device array that prevents the device memory from erroneously being accessed on the host. For obvious reasons, the data it contains cannot be accessed in SEQUENTIAL loops, but it can be accessed in plain device code outside of the loop macros and within STREAM or WORK loops.
+
+Some sample code is provided below for proper use of care::device_ptr.
+
+.. code-block:: c++
+
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
+
+   template <typename T>
+   void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
+      ptr = care::host_device_ptr<T>(length, name.c_str());
+   }
+
+   #define ALLOCATE_PTR(LENGTH, PTR) allocatePtr(LENGTH, PTR, __FILE__ ":" std::to_string(__LINE__) ":" #PTR);
+
+   #include "care/care.h"
+
+   int main(int argc, char* argv[]) {
+      // wrap a raw array
+      int length = 100;
+      int* array1;
+      cudaMalloc(&((void*) array1), length * sizeof(int));
+      care::device_ptr<int> device_array1 = array1;
+
+      CARE_GPU_KERNEL {
+         device_array1[5] = 5;
+      } CARE_GPU_KERNEL_END
+
+      cudaFree(array1);
+
+      // move data to device (i
+      int length = 100;
+      care::host_device_ptr<int> array2;
+      ALLOCATE_PTR(length, array2);
+      care::device_ptr<int> device_array2 = array2.data(chai::GPU);
+
+      // In this case, it is completely unnecessary to extract the device pointer since
+      // care::host_device_ptr could be used directly, but this gives the general idea.
+      CARE_GPU_KERNEL {
+         device_array2[5] = 5;
+      } CARE_GPU_KERNEL_END
+
+      array2.free();
+
       return 0;
    }
