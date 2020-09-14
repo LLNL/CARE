@@ -56,7 +56,7 @@ int main(int, char**) {
    int length = 10;
    int data[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
    care::host_device_ptr<int> managedData(length);
-   care_utils::ArrayFill<int>(managedData, length, 0);
+   care::ArrayFill<int>(managedData, length, 0);
 
    care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data, managedData);
 

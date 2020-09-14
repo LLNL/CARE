@@ -236,7 +236,7 @@ namespace care {
    template <typename T>
    void SortFuser<T>::sort() {
       assemble();
-      care_utils::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
+      care::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
       // scatter answer back into original arrays by subtracting off the range
       // multipliers
       FUSIBLE_LOOPS_START
@@ -261,12 +261,12 @@ namespace care {
       assemble();
       host_device_ptr<T> concatenated_out;
       if (!isSorted) {
-         care_utils::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
+         care::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
       }
       
       // do the unique of the concatenated sort result
       int outLen;
-      care_utils::uniqArray(RAJAExec{}, m_concatenated_result, m_total_length, concatenated_out, outLen);
+      care::uniqArray(RAJAExec{}, m_concatenated_result, m_total_length, concatenated_out, outLen);
       
       /// determine new offsets by looking for boundaries in max_range
       host_device_ptr<int> out_offsets(m_num_arrays+1, "out_offsets");

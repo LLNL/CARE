@@ -1389,7 +1389,7 @@ void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size
    host_device_ptr<int> searches{smaller+1};
    host_device_ptr<int> matched{smaller+1};
    CARE_STREAM_LOOP(i, 0, smaller+1) {
-      searches[i] = i != smaller ? care_utils::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
+      searches[i] = i != smaller ? care::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 

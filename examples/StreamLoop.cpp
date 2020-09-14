@@ -67,7 +67,7 @@ int main(int, char**) {
    care::host_device_ptr<const int> data3 = data2; // Read only to prevent unnecessary transfers
 
    // Use a CARE algorithm to fine the max element
-   int max2 = care_utils::ArrayMax(data3, size2, std::numeric_limits<int>::lowest());
+   int max2 = care::ArrayMax(data3, size2, std::numeric_limits<int>::lowest());
 
    // This code illustrates how to check if something ran on the host or the device.
    // In practice it is not necessary. It really just shows that this example compiles
