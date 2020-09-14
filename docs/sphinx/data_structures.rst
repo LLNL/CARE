@@ -143,7 +143,7 @@ Some sample code is provided below for proper use of care::device_ptr.
 
       cudaFree(array1);
 
-      // move data to device (i
+      // move data to device
       int length = 100;
       care::host_device_ptr<int> array2;
       ALLOCATE_PTR(length, array2);
@@ -156,6 +156,160 @@ Some sample code is provided below for proper use of care::device_ptr.
       } CARE_GPU_KERNEL_END
 
       array2.free();
+
+      return 0;
+   }
+
+care::local_ptr
+---------------
+
+This type is a lightweight wrapper for a raw host or device array. It can be used outside of the loop macros in raw host or device code, and it can be implicitly constructed from care::host_device_ptr. The main use case is for arguments to a __host__ __device__ function where the function could be accessed on both the host and the device.
+
+Some sample code is provided below for proper use of care::local_ptr.
+
+.. code-block:: c++
+
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
+
+   template <typename T>
+   void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
+      ptr = care::host_device_ptr<T>(length, name.c_str());
+   }
+
+   #define ALLOCATE_PTR(LENGTH, PTR) allocatePtr(LENGTH, PTR, __FILE__ ":" std::to_string(__LINE__) ":" #PTR);
+
+   #include "care/care.h"
+
+   template <typename T>
+   CARE_HOST_DEVICE inline void increment(care::local_ptr<T> ptr, int length) {
+      for (int i = 0; i < length; ++i) {
+         ++ptr[i];
+      }
+   }
+
+   int main(int argc, char* argv[]) {
+      // Set up
+      int length = 100;
+      care::host_device_ptr<int> myArray;
+      ALLOCATE_PTR(length, myArray);
+
+      // Access on the device
+      CARE_GPU_KERNEL {
+         increment(myArray, length);
+      } CARE_GPU_KERNEL_END
+
+      // Access on the host
+      CARE_HOST_KERNEL {
+         increment(myArray, length);
+      } CARE_HOST_KERNEL_END
+
+      // Clean up
+      myArray.free();
+
+      return 0;
+   }
+
+care::array
+-----------
+
+This data structure is similar to std::array, but it can be accessed on the device. The main caveat is that it is read-only on the device since there would be no way to bring back changes made on the device to the host data. It can be constructed and modified outside of the loop macros because it is read-only on the device. In older versions of CUDA (before version 10), a compiler bug prevented fixed size arrays from being captured in lambdas correctly, so this data structure was the only workaround for that problem.
+
+Some sample code is provided below for proper use of care::array.
+
+.. code-block:: c++
+
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
+
+   template <typename T>
+   void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
+      ptr = care::host_device_ptr<T>(length, name.c_str());
+   }
+
+   #define ALLOCATE_PTR(LENGTH, PTR) allocatePtr(LENGTH, PTR, __FILE__ ":" std::to_string(__LINE__) ":" #PTR);
+
+   #include "care/care.h"
+
+   int main(int argc, char* argv[]) {
+      // Set up
+      int length = 100;
+      care::host_device_ptr<int> x, y, z;
+      ALLOCATE_PTR(length, x);
+      ALLOCATE_PTR(length, y);
+      ALLOCATE_PTR(length, z);
+
+      care::array<double, 3> translate{{0.5, 1.0, -1.0}};
+
+      // Read on the device
+      CARE_STREAM_LOOP(i, 0, length) {
+         x[i] += translate[0];
+         y[i] += translate[1];
+         z[i] += translate[2];
+      } CARE_STREAM_LOOP_END
+
+      // Clean up
+      z.free();
+      y.free();
+      x.free();
+
+      return 0;
+   }
+
+care::managed_ptr
+-----------------
+
+This type is an alias for chai::managed_ptr, which is used to provide a portable pattern for polymorphism on the host and the device. care::make_managed is also provided as a facade for chai::make_managed.
+
+Some sample code is provided below for proper use of care::managed_ptr.
+
+.. code-block:: c++
+
+   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
+
+   template <typename T>
+   void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
+      ptr = care::host_device_ptr<T>(length, name.c_str());
+   }
+
+   #define ALLOCATE_PTR(LENGTH, PTR) allocatePtr(LENGTH, PTR, __FILE__ ":" std::to_string(__LINE__) ":" #PTR);
+
+   #include "care/care.h"
+
+   class BaseClass {
+      public:
+         CARE_HOST_DEVICE BaseClass() {}
+         CARE_HOST_DEVICE virtual ~BaseClass() {}
+         CARE_HOST_DEVICE virtual int getData(int index) = 0;
+         CARE_HOST_DEVICE virtual void setData(int index, int value) = 0;
+   };
+
+   class DerivedClass {
+      public:
+         CARE_HOST_DEVICE DerivedClass(int* data) : BaseClass(), m_data(data) {}
+         CARE_HOST_DEVICE virtual ~DerivedClass() {}
+         CARE_HOST_DEVICE virtual int getData(int index) override { return m_data[index]; }
+         CARE_HOST_DEVICE virtual void setData(int index, int value) override { m_data[index] = value; }
+
+      private:
+         int* m_data
+   };
+
+   int main(int argc, char* argv[]) {
+      // Set up
+      int length = 100;
+      care::host_device_ptr<int> myArray;
+      ALLOCATE_PTR(length, myArray);
+
+      care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
+
+      // Access on the device
+      CARE_STREAM_LOOP(i, 0, length) {
+         int temp = base->getData(i);
+         // Do something with temp
+      } CARE_STREAM_LOOP_END
+
+      // Clean up
+      base.free();
+      myArray.free();
 
       return 0;
    }
