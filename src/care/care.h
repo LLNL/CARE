@@ -258,9 +258,6 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 #endif // CARE_GPUCC
 
 #include "care/scan.h"
-
-#define ROUND(val) lround(val)
-
 #include "care/PointerTypes.h"
 
 // Priority phase value for the default loop fuser
