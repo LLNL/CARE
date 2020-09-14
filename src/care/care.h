@@ -259,11 +259,7 @@ typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeSt
 
 #include "care/scan.h"
 
-#ifdef RAJA_GPU_ACTIVE
 #define ROUND(val) lround(val)
-#else
-#define ROUND(val) C99_round(val)
-#endif
 
 #include "care/PointerTypes.h"
 
