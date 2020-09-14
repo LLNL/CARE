@@ -19,6 +19,7 @@ set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
     array.h
     array_utils.h
+    array_utils.inl
     CHAICallback.h
     CHAIDataGetter.h
     CUDAWatchpoint.h
