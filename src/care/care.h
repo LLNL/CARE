@@ -29,28 +29,6 @@
    #include <omp.h>
 #endif
 
-#if defined __CUDACC__ && defined GPU_ACTIVE
-
-// Our NVCC build is NVCC wrapping gcc
-#if CHAI_GPU_SIM_MODE
-#define RAJA_COMPILER_GNU
-#else
-#define RAJA_COMPILER_GNU
-#define RAJA_USE_CUDA
-#endif
-
-#else // defined __CUDACC__ and defined GPU_ACTIVE
-
-// These currently only do things like set macros that RAJA users can use for cross platform
-// alignment and things like that. We don't use them. Not setting this produces scary
-// build messages.
-#if defined(__INTEL_COMPILER)
-#define RAJA_COMPILER_INTEL
-#define RAJA_COMPILER_ICC
-#elif defined(_WIN32)
-#define RAJA_COMPILER_MSVC
-#endif
-
 #define CARE_STRINGIFY(x) CARE_DO_STRINGIFY(x)
 #define CARE_DO_STRINGIFY(x) #x
 #ifdef _WIN32
@@ -58,8 +36,6 @@
 #else
 #define CARE_PRAGMA(x) _Pragma(CARE_STRINGIFY(x))
 #endif
-
-#endif // defined __CUDACC__ and defined GPU_ACTIVE
 
 // take a look at RAJA/RAJA.hpp for more platform options
 #include "RAJA/RAJA.hpp"
