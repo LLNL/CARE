@@ -17,17 +17,6 @@
 #include "care/CUDAWatchpoint.h"
 #include "care/FOREACHMACRO.h"
 #include "care/Setup.h"
-
-
-// take a look at RAJA/RAJA.hpp for more platform options
-#include "RAJA/RAJA.hpp"
-
-
-
-
-
-typedef RAJA::TypedIndexSet<RAJA::RangeSegment, RAJA::ListSegment, RAJA::RangeStrideSegment> CAREIndexSet ;
-
 #include "care/policies.h"
 #include "care/forall.h"
 #include "care/DefaultMacros.h"
