@@ -25,15 +25,9 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#if defined(_OPENMP) && defined(RAJA_USE_OPENMP)
+#if defined(_OPENMP)
    #include <omp.h>
 #endif
-
-// Std library headers
-#include <cstdio>
-#include <string>
-#include <set>
-
 
 #if defined __CUDACC__ && defined GPU_ACTIVE
 
@@ -67,10 +61,6 @@
 
 #endif // defined __CUDACC__ and defined GPU_ACTIVE
 
-#define RAJA_USE_DOUBLE
-#define RAJA_PLATFORM_X86_SSE
-#define RAJA_USE_BARE_PTR
-
 // take a look at RAJA/RAJA.hpp for more platform options
 #include "RAJA/RAJA.hpp"
 
@@ -100,7 +90,7 @@ using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
 #endif // __CUDACC__
 #endif // CHAI_GPU_SIM_MDOE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // CARE_GPUCC
+#elif defined(_OPENMP) // CARE_GPUCC
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
 
@@ -171,8 +161,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #endif // CHAI_GPU_SIM_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_USE_OPENMP) // CARE_GPUCC and GPU_ACTIVE
-
+#elif defined(_OPENMP) // CARE_GPUCC and GPU_ACTIVE
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
 template<class T>
