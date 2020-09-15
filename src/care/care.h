@@ -31,8 +31,5 @@
 #include "care/forall.h"
 #include "care/scan.h"
 
-// Priority phase value for the default loop fuser
-const double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
-
 #endif // !defined(_CARE_CARE_H_)
 
