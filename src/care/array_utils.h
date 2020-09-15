@@ -217,7 +217,7 @@ inline void IntersectArrays(Exec,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches);
 
-#ifdef CARE_GPU_ACTIVE
+#if defined(CARE_GPUCC)
 
 template <typename T>
 inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
@@ -236,7 +236,7 @@ inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len, int
 template <typename T>
 inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len);
 
-#endif // CARE_GPU_ACTIVE
+#endif // defined(CARE_GPUCC)
 
 #if CARE_HAVE_LLNL_GLOBALID
 
