@@ -25,6 +25,10 @@
 #include "hipcub/hipcub.hpp"
 #endif
 
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
+
 #define CARE_MAX(a,b) a > b ? a : b
 #define CARE_MIN(a,b) a < b ? a : b
 

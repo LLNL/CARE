@@ -14,6 +14,10 @@
 // Other library headers
 #include "chai/ManagedArray.hpp"
 
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
+
 /* class for getting a raw pointer from CHAI based on exec policy */
 template <typename T, typename Exec>
 class CHAIDataGetter {

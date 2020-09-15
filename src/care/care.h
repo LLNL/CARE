@@ -11,19 +11,14 @@
 // CARE config header
 #include "care/config.h"
 
-
 // Other CARE headers
+#include "care/atomic.h"
 #include "care/CHAICallback.h"
 #include "care/CUDAWatchpoint.h"
 #include "care/FOREACHMACRO.h"
 #include "care/Setup.h"
 
 // Other library headers
-
-#if CARE_HAVE_LLNL_GLOBALID
-#include "LLNL_GlobalID.h"
-#endif // CARE_HAVE_LLNL_GLOBALID
-
 #if defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
    #include <omp.h>
 #endif
@@ -38,7 +33,6 @@
 
 // take a look at RAJA/RAJA.hpp for more platform options
 #include "RAJA/RAJA.hpp"
-#include "care/atomic.h"
 
 
 // RAJADeviceExec is the device execution policy
