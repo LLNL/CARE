@@ -23,17 +23,8 @@
    #include <omp.h>
 #endif
 
-#define CARE_STRINGIFY(x) CARE_DO_STRINGIFY(x)
-#define CARE_DO_STRINGIFY(x) #x
-#ifdef _WIN32
-#define CARE_PRAGMA(x) __pragma(x)
-#else
-#define CARE_PRAGMA(x) _Pragma(CARE_STRINGIFY(x))
-#endif
-
 // take a look at RAJA/RAJA.hpp for more platform options
 #include "RAJA/RAJA.hpp"
-
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.
