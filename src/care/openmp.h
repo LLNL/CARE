@@ -1,7 +1,7 @@
 #ifndef CARE_OPENMP_H
 #define CARE_OPENMP_H
 
-#include "care/config.hpp"
+#include "care/config.h"
 #include "RAJA/RAJA.hpp"
 
 // Other library headers
