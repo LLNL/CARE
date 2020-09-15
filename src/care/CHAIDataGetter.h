@@ -11,6 +11,9 @@
 // CARE config header
 #include "care/config.h"
 
+// Other library headers
+#include "chai/ManagedArray.hpp"
+
 /* class for getting a raw pointer from CHAI based on exec policy */
 template <typename T, typename Exec>
 class CHAIDataGetter {

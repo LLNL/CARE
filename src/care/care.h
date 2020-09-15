@@ -19,7 +19,6 @@
 #include "care/Setup.h"
 
 // Other library headers
-#include "chai/ManagedArray.hpp"
 
 #if CARE_HAVE_LLNL_GLOBALID
 #include "LLNL_GlobalID.h"
@@ -39,15 +38,8 @@
 
 // take a look at RAJA/RAJA.hpp for more platform options
 #include "RAJA/RAJA.hpp"
+#include "care/atomic.h"
 
-using RAJAAtomic = RAJA::auto_atomic;
-
-#define ATOMIC_ADD(ref, inc) RAJA::atomicAdd<RAJAAtomic>(&(ref), inc)
-#define ATOMIC_MIN(ref, val) RAJA::atomicMin<RAJAAtomic>(&(ref), val)
-#define ATOMIC_MAX(ref, val) RAJA::atomicMax<RAJAAtomic>(&(ref), val)
-#define ATOMIC_OR(ref, val)  RAJA::atomicOr<RAJAAtomic>(&(ref), val)
-#define ATOMIC_AND(ref, val) RAJA::atomicAnd<RAJAAtomic>(&(ref), val)
-#define ATOMIC_XOR(ref, val) RAJA::atomicXor<RAJAAtomic>(&(ref), val)
 
 // RAJADeviceExec is the device execution policy
 // on this platform, irrespective of whether GPU_ACTIVE is set.

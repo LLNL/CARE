@@ -20,6 +20,7 @@ set(care_headers
     array.h
     array_utils.h
     array_utils.inl
+    atomic.h
     CHAICallback.h
     CHAIDataGetter.h
     CUDAWatchpoint.h
