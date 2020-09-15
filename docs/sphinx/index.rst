@@ -47,4 +47,5 @@ Indices and tables
 
    install
    tutorial
+   infrastructure
    data_structures
