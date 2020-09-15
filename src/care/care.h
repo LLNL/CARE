@@ -12,11 +12,6 @@
 #include "care/config.h"
 
 // ******** Whether RAJA HAS DETECTED GPU ACTIVE ****
-#ifdef CARE_GPUCC
-#ifdef GPU_ACTIVE
-#define RAJA_GPU_ACTIVE
-#endif
-#endif
 
 // Other CARE headers
 #include "care/CHAICallback.h"

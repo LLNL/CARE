@@ -573,7 +573,7 @@ inline int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size
    return newLength;
 }
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPU_ACTIVE
 
 template <typename T, typename Exec>
 inline void sortArray(Exec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy)
@@ -689,7 +689,7 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
    }
 }
 
-#endif // RAJA_GPU_ACTIVE
+#endif // CARE_GPU_ACTIVE
 
 /************************************************************************
  * Function  : sortArray

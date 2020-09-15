@@ -32,6 +32,10 @@
 #define CARE_GLOBAL
 #endif // defined(CARE_GPUCC)
 
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+#define CARE_GPU_ACTIVE
+#endif
+
 // set various aliases
 #if defined(__CUDACC__)
 

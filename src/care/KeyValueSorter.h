@@ -17,7 +17,7 @@
 #include "care/array_utils.h"
 
 // Other library headers
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPU_ACTIVE
 #ifdef __CUDACC__
 #include "cub/cub.cuh"
 #undef CUB_NS_POSTFIX
@@ -54,7 +54,7 @@ template <typename T, typename Exec>
 using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
 
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPU_ACTIVE
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -624,7 +624,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       }
 };
 
-#endif // RAJA_GPU_ACTIVE
+#endif // CARE_GPU_ACTIVE
 
 
 
@@ -1334,7 +1334,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
 };
 
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPU_ACTIVE
 template <typename T>
 void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size1,
                               KeyValueSorter<T> sorter2, int size2,
