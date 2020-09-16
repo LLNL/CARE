@@ -5,8 +5,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CARE_ARRAY_UTILS_H_
-#define _CARE_ARRAY_UTILS_H_
+#ifndef CARE_ALGORITHM_H
+#define CARE_ALGORITHM_H
 
 // CARE config header
 #include "care/config.h"
@@ -247,7 +247,7 @@ int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr
 
 } // end namespace care
 
-#include "care/array_utils.inl"
+#include "care/algorithm.inl"
 
-#endif // !defined(_CARE_ARRAY_UTILS_H_)
+#endif // !defined(CARE_ALGORITHM_H)
 

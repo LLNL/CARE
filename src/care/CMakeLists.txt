@@ -17,9 +17,9 @@ configure_file(
 
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
+    algorithm.h
+    algorithm.inl
     array.h
-    array_utils.h
-    array_utils.inl
     atomic.h
     CHAICallback.h
     CHAIDataGetter.h

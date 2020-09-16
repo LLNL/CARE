@@ -14,7 +14,7 @@
 // Other CARE headers
 #include "care/care.h"
 #include "care/LoopFuser.h"
-#include "care/array_utils.h"
+#include "care/algorithm.h"
 
 // Other library headers
 #ifdef CARE_GPUCC

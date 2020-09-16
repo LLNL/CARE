@@ -3,7 +3,7 @@
 #include "care/host_ptr.h"
 #include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
-#include "care/array_utils.h"
+#include "care/algorithm.h"
 
 namespace care {
    template <typename T>

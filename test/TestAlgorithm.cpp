@@ -17,11 +17,11 @@
 
 // care headers
 #include "care/array.h"
-#include "care/array_utils.h"
+#include "care/algorithm.h"
 #include "care/care.h"
 
 // Array Fill Tests
-TEST(array_utils, fill_empty)
+TEST(algorithm, fill_empty)
 {
    care::host_ptr<int> a = nullptr;
  
@@ -29,7 +29,7 @@ TEST(array_utils, fill_empty)
    EXPECT_EQ(a, nullptr);
 }
 
-TEST(array_utils, fill_one)
+TEST(algorithm, fill_one)
 {
    int tempa[1] = {1};
    care::host_ptr<int> a(tempa);
@@ -38,7 +38,7 @@ TEST(array_utils, fill_one)
    EXPECT_EQ(a[0], -12);
 }
 
-TEST(array_utils, fill_three)
+TEST(algorithm, fill_three)
 {
    int tempa[3] = {1, 2, 3};
    care::host_ptr<int> a(tempa);
@@ -52,7 +52,7 @@ TEST(array_utils, fill_three)
 
 // NOTE: if an array is not sorted, the checkSorted function will print out an error message.
 // When you run the unit tests, please ignore the spurious print statements.
-TEST(array_utils, checkSorted) {
+TEST(algorithm, checkSorted) {
   const int sorted[7]    = {-1, 2, 3, 4, 5, 6, 23};
   const int notsorted[7] = {-1, 2, 1, 3, 4, 5, 6};
   const int sorteddup[7] = {-1, 0, 0, 0, 2, 3, 4};
@@ -86,7 +86,7 @@ TEST(array_utils, checkSorted) {
   ASSERT_FALSE(result);
 }
 
-TEST(array_utils, binarysearch) {
+TEST(algorithm, binarysearch) {
    int* nil = nullptr;
    int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
    int  b[7] = {0, 1, 1, 1, 1, 1, 6};       // sorted with duplicates
@@ -135,7 +135,7 @@ TEST(array_utils, binarysearch) {
    EXPECT_EQ(result, -1);
 }
 
-TEST(array_utils, intersectarrays) {
+TEST(algorithm, intersectarrays) {
    int tempa[3] = {1, 2, 5};
    int tempb[5] = {2, 3, 4, 5, 6};
    int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
@@ -197,12 +197,12 @@ TEST(array_utils, intersectarrays) {
    TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
    static void gpu_test_##X##Y()
 
-GPU_TEST(array_utils, fill_empty) {
+GPU_TEST(algorithm, fill_empty) {
    care::host_device_ptr<int> a;
    care::ArrayFill<int>(a, 0, -12); // hopefully nothing explodes
 }
 
-GPU_TEST(array_utils, fill_one)
+GPU_TEST(algorithm, fill_one)
 {
    int tempb[1] = {1};
    // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
@@ -214,7 +214,7 @@ GPU_TEST(array_utils, fill_one)
    EXPECT_EQ(b.pick(0), -12);
 }
 
-GPU_TEST(array_utils, fill_three) {
+GPU_TEST(algorithm, fill_three) {
    int tempb[3] = {1, 2, 3};
    // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
    // disabled for host_device pointer with cuda active?
@@ -226,7 +226,7 @@ GPU_TEST(array_utils, fill_three) {
    EXPECT_EQ(b.pick(2), -12);
 }
 
-GPU_TEST(array_utils, min_empty)
+GPU_TEST(algorithm, min_empty)
 {
   care::host_device_ptr<int> a;
   // this works even when the start index is greater than length.
@@ -235,7 +235,7 @@ GPU_TEST(array_utils, min_empty)
   EXPECT_EQ(result, initVal);
 }
 
-GPU_TEST(array_utils, min_innerloop)
+GPU_TEST(algorithm, min_innerloop)
 {
   // this tests the local_ptr version of min
   int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -278,7 +278,7 @@ GPU_TEST(array_utils, min_innerloop)
 }
 
 
-GPU_TEST(array_utils, min_seven)
+GPU_TEST(algorithm, min_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   care::host_device_ptr<int> a(temp, 7, "minseven");
@@ -297,7 +297,7 @@ GPU_TEST(array_utils, min_seven)
   EXPECT_EQ(result, -1);
 }
 
-GPU_TEST(array_utils, max_empty)
+GPU_TEST(algorithm, max_empty)
 {
   care::host_device_ptr<int> a;
   // ArrayMin has a value for start index but ArrayMax does not. TODO: use slicing or pointer arithmatic instead.
@@ -306,7 +306,7 @@ GPU_TEST(array_utils, max_empty)
   EXPECT_EQ(result, initVal);
 }
 
-GPU_TEST(array_utils, max_seven)
+GPU_TEST(algorithm, max_seven)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   care::host_device_ptr<int> a(temp, 7, "maxseven");
@@ -326,7 +326,7 @@ GPU_TEST(array_utils, max_seven)
   EXPECT_EQ(result, 99);
 }
 
-GPU_TEST(array_utils, max_innerloop)
+GPU_TEST(algorithm, max_innerloop)
 {
   // test the local_ptr version of max
   int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -362,7 +362,7 @@ GPU_TEST(array_utils, max_innerloop)
   ASSERT_TRUE((bool) passed);
 }
 
-GPU_TEST(array_utils, min_max_notfound)
+GPU_TEST(algorithm, min_max_notfound)
 {
   // some minmax tests for empty arrays
   care::host_device_ptr<int> nill;
@@ -394,7 +394,7 @@ GPU_TEST(array_utils, min_max_notfound)
   EXPECT_EQ(result, false);
 }
 
-GPU_TEST(array_utils, min_max_general)
+GPU_TEST(algorithm, min_max_general)
 { 
   double min[1] = {-1};
   double max[1] = {-1};
@@ -423,7 +423,7 @@ GPU_TEST(array_utils, min_max_general)
   EXPECT_EQ(max[0], 2);
 }
 
-GPU_TEST(array_utils, min_max_innerloop)
+GPU_TEST(algorithm, min_max_innerloop)
 {
   // tests for the local_ptr version of minmax
   int vals1[1] = {2};
@@ -462,7 +462,7 @@ GPU_TEST(array_utils, min_max_innerloop)
   ASSERT_TRUE((bool)passed);
 }
 
-GPU_TEST(array_utils, minloc_empty)
+GPU_TEST(algorithm, minloc_empty)
 { 
   care::host_device_ptr<int> a;
   int loc = 10;
@@ -472,7 +472,7 @@ GPU_TEST(array_utils, minloc_empty)
   EXPECT_EQ(loc, -1); // empty array, not found
 }
 
-GPU_TEST(array_utils, minloc_seven)
+GPU_TEST(algorithm, minloc_seven)
 {
   int loc = -10;
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -490,7 +490,7 @@ GPU_TEST(array_utils, minloc_seven)
   EXPECT_EQ(loc, -1);
 }
 
-GPU_TEST(array_utils, maxloc_empty)
+GPU_TEST(algorithm, maxloc_empty)
 {
   care::host_device_ptr<int> a;
   int loc = 7;
@@ -500,7 +500,7 @@ GPU_TEST(array_utils, maxloc_empty)
   EXPECT_EQ(loc, -1); // empty, not found
 }
 
-GPU_TEST(array_utils, maxloc_seven)
+GPU_TEST(algorithm, maxloc_seven)
 {
   int loc = -1;
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
@@ -524,7 +524,7 @@ GPU_TEST(array_utils, maxloc_seven)
   EXPECT_EQ(loc, -1);
 }
 
-GPU_TEST(array_utils, arrayfind)
+GPU_TEST(algorithm, arrayfind)
 { 
   int loc = 99;
   int temp1[1] = {10};
@@ -559,7 +559,7 @@ GPU_TEST(array_utils, arrayfind)
   EXPECT_EQ(loc, 2);
 }
 
-GPU_TEST(array_utils, findabovethreshold)
+GPU_TEST(algorithm, findabovethreshold)
 {
   int result = -1;
   int threshIdx[1] = {0};
@@ -595,7 +595,7 @@ GPU_TEST(array_utils, findabovethreshold)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-GPU_TEST(array_utils, minindexsubset)
+GPU_TEST(algorithm, minindexsubset)
 { 
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -626,7 +626,7 @@ GPU_TEST(array_utils, minindexsubset)
   EXPECT_EQ(result, 3);  
 }
 
-GPU_TEST(array_utils, minindexsubsetabovethresh)
+GPU_TEST(algorithm, minindexsubsetabovethresh)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -688,7 +688,7 @@ GPU_TEST(array_utils, minindexsubsetabovethresh)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-GPU_TEST(array_utils, maxindexsubset)
+GPU_TEST(algorithm, maxindexsubset)
 {
   int temp[7] = {2, 1, 1, 8, 3, 5, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -718,7 +718,7 @@ GPU_TEST(array_utils, maxindexsubset)
   EXPECT_EQ(result, 2);
 }
 
-GPU_TEST(array_utils, maxindexsubsetabovethresh)
+GPU_TEST(algorithm, maxindexsubsetabovethresh)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int rev[7] = {6, 5, 4, 3, 2, 1, 0};
@@ -779,7 +779,7 @@ GPU_TEST(array_utils, maxindexsubsetabovethresh)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-GPU_TEST(array_utils, pickperformfindmax)
+GPU_TEST(algorithm, pickperformfindmax)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int masktemp[7] = {0, 0, 0, 1, 0, 0, 0};
@@ -847,7 +847,7 @@ GPU_TEST(array_utils, pickperformfindmax)
   EXPECT_EQ(threshIdx[0], -1);
 }
 
-GPU_TEST(array_utils, pickperformfindmin)
+GPU_TEST(algorithm, pickperformfindmin)
 {
   int temp[7] = {2, 1, 1, 8, 5, 3, 7};
   int masktemp[7] = {0, 1, 1, 0, 0, 0, 0};
@@ -911,7 +911,7 @@ GPU_TEST(array_utils, pickperformfindmin)
   EXPECT_EQ(threshIdx[0], 0);
 }
 
-GPU_TEST(array_utils, arraycount)
+GPU_TEST(algorithm, arraycount)
 {
   int temp[7] = {0, 1, 0, 3, 4, 0, 6};
   care::host_device_ptr<int> a(temp, 7, "arrseven");
@@ -935,7 +935,7 @@ GPU_TEST(array_utils, arraycount)
   EXPECT_EQ(result, 0);
 }
 
-GPU_TEST(array_utils, arraysum)
+GPU_TEST(algorithm, arraysum)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -970,7 +970,7 @@ GPU_TEST(array_utils, arraysum)
   EXPECT_EQ(result, -5);
 }
 
-GPU_TEST(array_utils, arraysumsubset)
+GPU_TEST(algorithm, arraysumsubset)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -1011,7 +1011,7 @@ GPU_TEST(array_utils, arraysumsubset)
   EXPECT_EQ(result, -5);
 }
 
-GPU_TEST(array_utils, arraysummaskedsubset)
+GPU_TEST(algorithm, arraysummaskedsubset)
 { 
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   int temp1[1] = {99};
@@ -1047,7 +1047,7 @@ GPU_TEST(array_utils, arraysummaskedsubset)
   EXPECT_EQ(result, 0);
 }
 
-GPU_TEST(array_utils, findindexgt)
+GPU_TEST(algorithm, findindexgt)
 {
   int temp7[7] = {0, 1, 0, 3, 4, 0, 6};
   care::host_device_ptr<int> a(temp7, 7, "arrseven");
@@ -1066,7 +1066,7 @@ GPU_TEST(array_utils, findindexgt)
   EXPECT_EQ(result, -1);
 }
 
-GPU_TEST(array_utils, findindexmax)
+GPU_TEST(algorithm, findindexmax)
 {
   int temp7[7] = {0, 1, 0, 3, 99, 0, 6};
   int temp3[3] = {9, 10, -2};
@@ -1093,7 +1093,7 @@ GPU_TEST(array_utils, findindexmax)
 
 // duplicating and copying arrays
 // NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
-GPU_TEST(array_utils, dup_and_copy) {
+GPU_TEST(algorithm, dup_and_copy) {
   const int temp7[7] = {9, 10, -2, 67, 9, 45, -314};
   int zeros1[7] = {0};
   int zeros2[7] = {0};
@@ -1164,7 +1164,7 @@ GPU_TEST(array_utils, dup_and_copy) {
   ASSERT_TRUE((bool) passed3);
 }
 
-GPU_TEST(array_utils, intersectarrays) {
+GPU_TEST(algorithm, intersectarrays) {
    int tempa[3] = {1, 2, 5};
    int tempb[5] = {2, 3, 4, 5, 6};
    int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
@@ -1223,7 +1223,7 @@ GPU_TEST(array_utils, intersectarrays) {
    d.freeDeviceMemory();
 }
 
-GPU_TEST(array_utils, binarsearchhostdev) {
+GPU_TEST(algorithm, binarsearchhostdev) {
    int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
    care::host_device_ptr<int> aptr(a, 7, "asorted");
 
@@ -1235,7 +1235,7 @@ GPU_TEST(array_utils, binarsearchhostdev) {
 
 // test insertion sort and also sortLocal (which currently uses InsertionSort),
 // and then unique the result
-GPU_TEST(array_utils, localsortunique) {
+GPU_TEST(algorithm, localsortunique) {
    // set up arrays
    int a[4] = {4, 0, 2, 0}; // note that 0 is duplicate, will be eliminated in uniq operation
    int b[4] = {4, 0, 2, 0};

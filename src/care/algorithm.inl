@@ -1,5 +1,5 @@
-#ifndef _CARE_ARRAY_UTILS_INL_
-#define _CARE_ARRAY_UTILS_INL_
+#ifndef CARE_ALGORITHM_INL
+#define CARE_ALGORITHM_INL
 
 namespace care {
 
@@ -416,7 +416,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
-         // Note: fix for last test in TEST(array_utils, binarysearch). This algorithm has failed to pick up the upper
+         // Note: fix for last test in TEST(algorithm, binarysearch). This algorithm has failed to pick up the upper
          // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
          while ((khi < start + mapSize) && (map[khi] == num)) {
             ++khi;
@@ -1702,4 +1702,4 @@ int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
 
 } // namespace care
 
-#endif // _CARE_ARRAY_UTILS_INL_
+#endif // CARE_ALGORITHM_INL
