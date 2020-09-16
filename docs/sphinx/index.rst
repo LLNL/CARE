@@ -48,3 +48,4 @@ Indices and tables
    tutorial
    infrastructure
    data_structures
+   loop_fuser
