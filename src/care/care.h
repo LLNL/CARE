@@ -5,13 +5,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CARE_CARE_H_
-#define _CARE_CARE_H_
+#ifndef CARE_CARE_H
+#define CARE_CARE_H
 
 // CARE config header
 #include "care/config.h"
-
-// ******** Whether RAJA HAS DETECTED GPU ACTIVE ****
 
 // Other CARE headers
 #include "care/CHAICallback.h"
@@ -26,5 +24,5 @@
 #include "care/forall.h"
 #include "care/scan.h"
 
-#endif // !defined(_CARE_CARE_H_)
+#endif // !defined(CARE_CARE_H)
 
