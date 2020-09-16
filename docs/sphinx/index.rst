@@ -41,7 +41,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
 .. toctree::
    :maxdepth: 2
 
@@ -49,3 +48,4 @@ Indices and tables
    tutorial
    infrastructure
    data_structures
+   loop_fuser
