@@ -14,7 +14,7 @@
 
 // CARE library header
 #include "care/care.h"
-#include "care/array_utils.h"
+#include "care/algorithm.h"
 
 // Std library headers
 #include <algorithm>
