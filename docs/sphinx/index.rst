@@ -41,7 +41,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
 .. toctree::
    :maxdepth: 2
 
