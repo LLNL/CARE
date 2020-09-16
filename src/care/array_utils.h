@@ -25,6 +25,10 @@
 #include "hipcub/hipcub.hpp"
 #endif
 
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
+
 #define CARE_MAX(a,b) a > b ? a : b
 #define CARE_MIN(a,b) a < b ? a : b
 
@@ -213,7 +217,7 @@ inline void IntersectArrays(Exec,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches);
 
-#ifdef RAJA_GPU_ACTIVE
+#if defined(CARE_GPUCC)
 
 template <typename T>
 inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
@@ -232,7 +236,7 @@ inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len, int
 template <typename T>
 inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len);
 
-#endif // RAJA_GPU_ACTIVE
+#endif // defined(CARE_GPUCC)
 
 #if CARE_HAVE_LLNL_GLOBALID
 

@@ -30,6 +30,14 @@
 #define CARE_DLL_API
 #endif // defined(_WIN32) && !defined(CARESTATICLIB)
 
+#define CARE_STRINGIFY(x) CARE_DO_STRINGIFY(x)
+#define CARE_DO_STRINGIFY(x) #x
+#ifdef _WIN32
+#define CARE_PRAGMA(x) __pragma(x)
+#else
+#define CARE_PRAGMA(x) _Pragma(CARE_STRINGIFY(x))
+#endif
+
 // gpu macros that need to be defined everywhere
 #include "care/GPUMacros.h"
 

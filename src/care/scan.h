@@ -18,6 +18,9 @@
 #include "chai/ManagedArray.hpp"
 #include "RAJA/RAJA.hpp"
 
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
 
 // exclusive scan functionality
 template <typename T, typename Exec, typename Fn>
