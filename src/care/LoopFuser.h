@@ -26,6 +26,9 @@
 #define FUSIBLE_DEVICE CARE_HOST
 #endif
 
+// Priority phase value for the default loop fuser
+constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
+
 namespace care {
    ///////////////////////////////////////////////////////////////////////////
    /// @author Ben Liu, Peter Robinson, Alan Dayton

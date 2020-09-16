@@ -14,6 +14,11 @@
 // Other CARE headers
 #include "care/host_device_ptr.h"
 
+// Other library headers
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
+
 // Include this file into a source file that is being compiled and linked
 // into your executable. You must explicitly instantiate the TV_ttf_display_type
 // template function for every type used in your executable.

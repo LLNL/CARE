@@ -20,6 +20,7 @@ set(care_headers
     array.h
     array_utils.h
     array_utils.inl
+    atomic.h
     CHAICallback.h
     CHAIDataGetter.h
     CUDAWatchpoint.h
@@ -36,6 +37,7 @@ set(care_headers
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h
+    openmp.h
     SortFuser.h
     numeric.h
     PointerTypes.h
