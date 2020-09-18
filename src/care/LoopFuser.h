@@ -26,6 +26,9 @@
 #define FUSIBLE_DEVICE CARE_HOST
 #endif
 
+// Priority phase value for the default loop fuser
+constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
+
 namespace care {
    ///////////////////////////////////////////////////////////////////////////
    /// @author Ben Liu, Peter Robinson, Alan Dayton
@@ -217,12 +220,12 @@ inline void * get_launcher_wrapper_ptr(bool get_if_null)
    static care::device_wrapper_ptr ptr = nullptr;
    if (ptr == nullptr && get_if_null) {
       care::device_wrapper_ptr* pinned_buf;
-      care_gpuErrchk(gpuHostAlloc(&pinned_buf, sizeof(care::device_wrapper_ptr), cudaHostAllocDefault));
+      care::gpuHostAlloc((void **)&pinned_buf, sizeof(care::device_wrapper_ptr), gpuHostAllocDefault);
       gpuStream_t stream = 0;
       void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
       void* args[] = { &pinned_buf };
-      care_gpuErrchk(gpuLaunchKernel(func, 1, 1, args, 0, stream));
-      care_gpuErrchk(gpuStreamSynchronize(stream));
+      care::gpuLaunchKernel(func, 1, 1, args, 0, stream);
+      care::gpuStreamSynchronize(stream);
       ptr = *pinned_buf;
    }
 
@@ -942,6 +945,13 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          if (m_lambda_reserved <= 100*(lambda_size + conditional_size) + m_lambda_size) {
 #ifdef FUSER_VERBOSE
             printf("hit lambda_reserved flushActions\n");
+#endif
+            flushActions();
+         }
+         // if we are approaching the 2^31-1 limit proactively flush
+         if (m_action_offsets[m_action_count-1] > 2000000000) {
+#ifdef FUSER_VERBOSE
+            printf("hit m_action_offsets flushActions\n");
 #endif
             flushActions();
          }

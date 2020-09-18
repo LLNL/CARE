@@ -58,18 +58,18 @@ target_include_directories(TestArray
 blt_add_test( NAME TestArray
               COMMAND TestArray )
 
-blt_add_executable( NAME TestArrayUtils
-                    SOURCES TestArrayUtils.cpp
+blt_add_executable( NAME TestAlgorithm
+                    SOURCES TestAlgorithm.cpp
                     DEPENDS_ON ${care_test_dependencies} )
 
-target_include_directories(TestArrayUtils
+target_include_directories(TestAlgorithm
                            PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
-target_include_directories(TestArrayUtils
+target_include_directories(TestAlgorithm
                            PRIVATE ${PROJECT_BINARY_DIR}/include)
 
-blt_add_test( NAME TestArrayUtils
-              COMMAND TestArrayUtils )
+blt_add_test( NAME TestAlgorithm
+              COMMAND TestAlgorithm )
 
 blt_add_executable( NAME TestKeyValueSorter
                     SOURCES TestKeyValueSorter.cpp
@@ -84,18 +84,20 @@ target_include_directories(TestKeyValueSorter
 blt_add_test( NAME TestKeyValueSorter
               COMMAND TestKeyValueSorter )
 
-blt_add_executable( NAME TestManagedPtr
-                    SOURCES TestManagedPtr.cpp
-                    DEPENDS_ON ${care_test_dependencies} )
+if (CARE_ENABLE_MANAGED_PTR)
+   blt_add_executable( NAME TestManagedPtr
+                       SOURCES TestManagedPtr.cpp
+                       DEPENDS_ON ${care_test_dependencies} )
 
-target_include_directories(TestManagedPtr
-                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+   target_include_directories(TestManagedPtr
+                              PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
-target_include_directories(TestManagedPtr
-                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+   target_include_directories(TestManagedPtr
+                              PRIVATE ${PROJECT_BINARY_DIR}/include)
 
-blt_add_test( NAME TestManagedPtr
-              COMMAND TestManagedPtr )
+   blt_add_test( NAME TestManagedPtr
+                 COMMAND TestManagedPtr )
+endif()
 
 blt_add_executable( NAME TestNumeric
                     SOURCES TestNumeric.cpp

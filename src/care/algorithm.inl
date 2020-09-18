@@ -1,204 +1,7 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
-//
-// SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+#ifndef CARE_ALGORITHM_INL
+#define CARE_ALGORITHM_INL
 
-#ifndef _CARE_ARRAY_UTILS_H_
-#define _CARE_ARRAY_UTILS_H_
-
-// CARE config header
-#include "care/config.h"
-
-// Other CARE headers
-#include "care/care.h"
-
-// Other library headers
-#ifdef __CUDACC__
-#include "cub/cub.cuh"
-#undef CUB_NS_POSTFIX
-#undef CUB_NS_PREFIX
-#endif
-
-#ifdef __HIPCC__
-#include "hipcub/hipcub.hpp"
-#endif
-
-#define CARE_MAX(a,b) a > b ? a : b
-#define CARE_MIN(a,b) a < b ? a : b
-
-namespace care_utils {
-template <typename T, typename Exec=RAJAExec>
-void ArrayFill(care::host_device_ptr<T> arr, int n, T val) ;
-
-template <typename T>
-void ArrayFill(care::host_ptr<T> arr, int n, T val) ;
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMin(care::host_device_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
-
-template <typename T>
-CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
-
-template <typename T>
-CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal);
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal);
-
-template <typename T>
-CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<const T> arr, int n, T initVal);
-
-template <typename T>
-CARE_HOST_DEVICE inline T ArrayMax(care::local_ptr<T> arr, int n, T initVal);
-
-template <typename T>
-T ArrayMax(care::host_ptr<const T> arr, int n, T initVal);
-
-template <typename T>
-T ArrayMax(care::host_ptr<T> arr, int n, T initVal);
-
-template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
-int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
-
-template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
-int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> mask, int n, double *outMin, double *outMax);
-
-template <typename T>
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const T> arr, care::local_ptr<int const> mask, int n, double *outMin, double *outMax);
-
-template <typename T>
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<T> arr, care::local_ptr<int> mask, int n, double *outMin, double *outMax);
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc);
-
-template <typename T, typename Exec=RAJAExec>
-T ArrayMaxLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc);
-
-template <typename T>
-int ArrayFind(care::host_device_ptr<const T> arr, const int len, const T val, const int start = 0) ;
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMinAboveThresholds(care::host_device_ptr<const T> arr, int n,
-                                care::host_device_ptr<double const> thresholds,
-                                double cutoff,
-                                int * thresholdIndex);
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMinSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset);
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset,
-                                      care::host_device_ptr<double const> thresholds, double cutoff,
-                                      int * thresholdIndex);
-
-template<typename T, typename Exec=RAJAExec>
-int PickAndPerformFindMinIndex(care::host_device_ptr<const T> arr,
-                               care::host_device_ptr<int const> mask,
-                               care::host_device_ptr<int const> subset, int n,
-                               care::host_device_ptr<double const> thresholds,
-                               double cutoff,
-                               int *thresholdIndex);
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMaxAboveThresholds(care::host_device_ptr<const T> arr, int n,
-                                care::host_device_ptr<double const> thresholds,
-                                double cutoff,
-                                int * thresholdIndex);
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMaxSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset);
-
-template<typename T, typename Exec=RAJAExec>
-int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset,
-                                      care::host_device_ptr<double const> thresholds, double cutoff,
-                                      int * thresholdIndex);
-
-template<typename T, typename Exec=RAJAExec>
-int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
-                               care::host_device_ptr<int const> mask,
-                               care::host_device_ptr<int const> subset, int n,
-                               care::host_device_ptr<double const> thresholds,
-                               double cutoff,
-                               int *thresholdIndex);
-
-/* returns count of occurence of val in array */
-template <typename T, typename Exec=RAJAExec>
-int ArrayCount(care::host_device_ptr<const T> arr, int length, T val);
-
-template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
-T ArraySum(care::host_device_ptr<const T> arr, int n, T initVal);
-
-template <typename T, typename ReduceType=T, typename Exec=RAJAExec>
-T ArraySumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int n, T initVal);
-
-template<typename T, typename Exec=RAJAExec>
-T SumArrayOrArraySubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const>  subset, int n);
-
-template <typename T, typename ReduceType=T, typename Exec=RAJAExec>
-T ArrayMaskedSumSubset(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, care::host_device_ptr<int const> subset, int n, T initVal);
-
-template <typename T, typename ReduceType=T, typename Exec=RAJAExec>
-T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, T initVal);
-
-template <typename T, typename Exec=RAJAExec>
-int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit);
-
-template <typename T, typename Exec=RAJAExec >
-care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len);
-
-template <typename T>
-void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from, int n,
-               int start1=0, int start2=0);
-
-template <typename T, typename Exec>
-void ArrayCopy(Exec,
-               care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-               int n, int start1=0, int start2=0);
-
-template <typename T>
-void ArrayCopy(RAJA::seq_exec,
-               care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-               int n, int start1=0, int start2=0);
-
-
-template <typename T, typename Exec=RAJAExec >
-int FindIndexMax(care::host_device_ptr<const T> arr, int n);
-
-
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
-
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
-
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+namespace care {
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Ben Liu, Peter Robinson, Alan Dayton
@@ -253,16 +56,10 @@ CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
 }
 
 template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates)
-{
-   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
-}
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>&& array, const int len,
-                                  const char* name, const char* argname,
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array,
+                                  const int len,
+                                  const char* name,
+                                  const char* argname,
                                   const bool allowDuplicates)
 {
    return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
@@ -271,36 +68,16 @@ CARE_HOST_DEVICE bool checkSorted(const chai::managed_ptr<const T>&& array, cons
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
-                                  const char* name, const char* argname,
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array,
+                                  const int len,
+                                  const char* name,
+                                  const char* argname,
                                   const bool allowDuplicates)
 {
    return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates);
 }
 
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
-                             const int mapSize, const mapType num,
-                             bool returnUpperBound = false) ;
-
-template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
-                                  const int mapSize, const mapType num,
-                                  bool returnUpperBound = false) ;
-
-template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
-                                  const int mapSize, const mapType num,
-                                  bool returnUpperBound = false) ;
-
-template <typename ArrayType, typename Exec>
-inline void IntersectArrays(Exec,
-                            care::host_device_ptr<const ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<const ArrayType> arr2, int size2, int start2,
-                            care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
-                            int *numMatches);
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
@@ -429,8 +206,6 @@ inline void IntersectArrays(RAJAExec exec,
 }
 
 #endif
-
-
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
@@ -577,7 +352,6 @@ inline void IntersectArrays(RAJA::seq_exec exec,
                    matches1, matches2, numMatches);
 }
 
-
 /************************************************************************
  * Function  : BinarySearch
  * Author(s) : Brad Wallin, Peter Robinson
@@ -642,7 +416,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
-         // Note: fix for last test in TEST(array_utils, binarysearch). This algorithm has failed to pick up the upper
+         // Note: fix for last test in TEST(algorithm, binarysearch). This algorithm has failed to pick up the upper
          // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
          while ((khi < start + mapSize) && (map[khi] == num)) {
             ++khi;
@@ -660,6 +434,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const T *map, const int start,
          return -1;
       }
    }
+
    if (map[--k] == num) {
       return k ;
    }
@@ -683,7 +458,6 @@ CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapTy
 {
    return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
 }
-
 
 #ifdef RAJA_PARALLEL_ACTIVE
 /************************************************************************
@@ -799,7 +573,8 @@ inline int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size
    return newLength;
 }
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPUCC
+
 template <typename T, typename Exec>
 inline void sortArray(Exec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy)
 {
@@ -811,19 +586,6 @@ inline void sortArray(Exec, care::host_device_ptr<T> &Array, size_t len)
 {
    printf("%s:%s","sortArray(Exec, care::host_device_ptr, len)", "unspecialized version should not be called");
 }
-
-template <typename T>
-inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
-
-/************************************************************************
- * Function  : sortArray
- * Author(s) : Peter Robinson
- * Purpose   : GPU version of sortArray. Defaults to thrust::sort, but
- *             specialized to cub::DeviceRadix sort for data types that
- *             cub supports.
-  ************************************************************************/
-template <typename T>
-inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy) ;
 
 template <>
 inline void sortArray(RAJAExec, care::host_device_ptr<int> & Array, size_t len, int start, bool noCopy) {
@@ -848,10 +610,6 @@ inline void sortArray(RAJAExec, care::host_device_ptr<globalID> & Array, size_t 
 }
 
 #endif // CARE_HAVE_LLNL_GLOBALID
-
-// This must be explicitly specialized for NVCC to link to the correct version.
-template <typename T>
-inline void sortArray(RAJAExec, care::host_device_ptr<T> &Array, size_t len);
 
 template <>
 inline void sortArray(RAJAExec, care::host_device_ptr<int> & Array, size_t len) {
@@ -912,6 +670,7 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #endif   
    }
+
    // cleanup
    if (noCopy) {
       if (len > 0) {
@@ -929,7 +688,8 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
       tmpManaged.free();
    }
 }
-#endif // RAJA_GPU_ACTIVE
+
+#endif // CARE_GPUCC
 
 /************************************************************************
  * Function  : sortArray
@@ -1165,7 +925,6 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
 
 #endif
 
-
 /************************************************************************
  * Function  : ArrayFill
  * Author(s) : Peter Robinson
@@ -1386,9 +1145,6 @@ inline int ArrayMinMax(care::host_device_ptr<T> arr, care::host_device_ptr<int> 
 
 #if CARE_HAVE_LLNL_GLOBALID
 
-template <typename Exec=RAJAExec>
-int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);
-
 template <typename Exec>
 inline int ArrayMinMax(care::host_device_ptr<const globalID> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax) {
    return ArrayMinMax<globalID, GIDTYPE, Exec>(arr, mask, n, outMin, outMax);
@@ -1434,6 +1190,7 @@ CARE_HOST_DEVICE inline int ArrayMinMax(care::local_ptr<const T> arr, care::loca
          result = true;
       }
    }
+
    if (result) {
       *outMin = (double) min;
       *outMax = (double) max;
@@ -1681,7 +1438,6 @@ inline T PickAndPerformSum(care::host_device_ptr<const T> arr, care::host_device
       return SumArrayOrArraySubset<T, Exec>(arr, subset, n);
    }
 }
-
 
 //******************************************************************************
 // Return the index of the minimum value of an array.
@@ -1944,7 +1700,6 @@ int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
    return maxIndex;
 }
 
-} // end namespace care_utils
+} // namespace care
 
-#endif // !defined(_CARE_ARRAY_UTILS_H_)
-
+#endif // CARE_ALGORITHM_INL

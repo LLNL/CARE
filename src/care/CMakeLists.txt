@@ -17,8 +17,10 @@ configure_file(
 
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
+    algorithm.h
+    algorithm.inl
     array.h
-    array_utils.h
+    atomic.h
     CHAICallback.h
     CHAIDataGetter.h
     CUDAWatchpoint.h
@@ -35,6 +37,7 @@ set(care_headers
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h
+    openmp.h
     SortFuser.h
     numeric.h
     PointerTypes.h

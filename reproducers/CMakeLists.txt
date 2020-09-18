@@ -13,16 +13,18 @@ if (ENABLE_CUDA)
 endif()
 
 if (ENABLE_HIP)
-  list(APPEND care_depends hip)
+   list(APPEND care_depends hip)
 endif ()
 
 if (ENABLE_OPENMP)
    list(APPEND care_depends openmp)
 endif()
 
-blt_add_executable(NAME ReproducerManagedPtr
-                   SOURCES ReproducerManagedPtr.cpp
-                   DEPENDS_ON ${care_depends})
+if (CARE_ENABLE_MANAGED_PTR)
+   blt_add_executable(NAME ReproducerManagedPtr
+                      SOURCES ReproducerManagedPtr.cpp
+                      DEPENDS_ON ${care_depends})
 
-target_include_directories(ReproducerManagedPtr PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(ReproducerManagedPtr PRIVATE ${PROJECT_BINARY_DIR}/include)
+   target_include_directories(ReproducerManagedPtr PRIVATE ${PROJECT_SOURCE_DIR}/src)
+   target_include_directories(ReproducerManagedPtr PRIVATE ${PROJECT_BINARY_DIR}/include)
+endif ()

@@ -14,10 +14,10 @@
 // Other CARE headers
 #include "care/care.h"
 #include "care/LoopFuser.h"
-#include "care/array_utils.h"
+#include "care/algorithm.h"
 
 // Other library headers
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPUCC
 #ifdef __CUDACC__
 #include "cub/cub.cuh"
 #undef CUB_NS_POSTFIX
@@ -54,7 +54,7 @@ template <typename T, typename Exec>
 using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
 
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPUCC
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -624,7 +624,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       }
 };
 
-#endif // RAJA_GPU_ACTIVE
+#endif // CARE_GPUCC
 
 
 
@@ -1334,7 +1334,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
 };
 
 
-#ifdef RAJA_GPU_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
 void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size1,
                               KeyValueSorter<T> sorter2, int size2,
@@ -1389,7 +1389,7 @@ void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size
    host_device_ptr<int> searches{smaller+1};
    host_device_ptr<int> matched{smaller+1};
    CARE_STREAM_LOOP(i, 0, smaller+1) {
-      searches[i] = i != smaller ? care_utils::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
+      searches[i] = i != smaller ? care::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
