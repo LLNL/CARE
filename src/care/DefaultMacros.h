@@ -11,6 +11,11 @@
 // CARE config header
 #include "care/config.h"
 
+// for OMP CARE loops, apparantly only used in compatibility mode
+#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#include "care/openmp.h"
+#endif
+
 // Other CARE headers
 #include "care/forall.h"
 #include "care/policies.h"
