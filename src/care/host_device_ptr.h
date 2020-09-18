@@ -208,6 +208,13 @@ namespace care {
 #endif
       { return MA::operator[](i); }
 
+#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+     template<typename Idx>
+     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
+        return MA::operator[](i);
+     }
+#endif
+
 #ifndef CARE_LEGACY_COMPATIBILITY_MODE
 #ifdef CARE_ERROR_ON_HOSTDEV_USAGE_OUTSIDE_OF_RAJA_LOOP
       // The whole point of this wrapper is to make the non-const decorated operator[] invalid. 
