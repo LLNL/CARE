@@ -223,6 +223,8 @@ class KeyValueSorter<T, RAJADeviceExec> {
          setFromArray(len, arr);
       }
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       ///
@@ -243,6 +245,8 @@ class KeyValueSorter<T, RAJADeviceExec> {
       : KeyValueSorter<T, RAJADeviceExec>(len, host_device_ptr<const T>(arr))
       {
       }
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
@@ -778,6 +782,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          setFromArray(len, arr);
       }
 
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+      
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       ///
@@ -799,6 +805,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       : KeyValueSorter<T, RAJA::seq_exec>(len, host_device_ptr<const T>(arr))
       {
       }
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
