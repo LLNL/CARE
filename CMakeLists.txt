@@ -24,9 +24,11 @@ option(ENABLE_HIP "Build HIP support" OFF)
 #       Fix those issues so that these options are actually configurable.
 option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space (used for scans)" ON)
-# Option to diable implicit conversion between host_device_ptr and raw arrays. 
-# The same value used here should be used when building CHAI
+# Option to disable implicit conversion between host_device_ptr and raw arrays in CARE.
 option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
+# CHAI must also be configured with the same settings for implicit conversions.
+set(ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
+option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 
 # Extra components
