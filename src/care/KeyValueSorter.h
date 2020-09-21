@@ -783,7 +783,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       }
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-      
+
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       ///
