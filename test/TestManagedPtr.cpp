@@ -13,9 +13,8 @@
 #include "gtest/gtest.h"
 
 // care headers
-#include "care/care.h"
+#include "care/algorithm.h"
 #include "care/host_device_ptr.h"
-#include "care/KeyValueSorter.h"
 #include "care/PointerTypes.h"
 
 /////////////////////////////////////////////////////////////////////////

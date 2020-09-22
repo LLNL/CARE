@@ -13,8 +13,8 @@
 
 // Other CARE headers
 #include "care/CHAICallback.h"
+#include "care/DefaultMacros.h"
 #include "care/ExecutionSpace.h"
-#include "care/single_access_ptr.h"
 #include "care/util.h"
 
 // Other library headers

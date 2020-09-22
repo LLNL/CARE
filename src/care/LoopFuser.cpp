@@ -13,9 +13,10 @@
 #if CARE_ENABLE_LOOP_FUSER
 
 // Other CARE headers
-#include "care/care.h"
-#include "care/util.h"
+#include "care/DefaultMacros.h"
 #include "care/LoopFuser.h"
+#include "care/scan.h"
+#include "care/Setup.h"
 
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();

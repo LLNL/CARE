@@ -23,6 +23,7 @@
 
 // other library headers
 #include "chai/ArrayManager.hpp"
+#include "RAJA/RAJA.hpp"
 
 namespace care {
    template <typename T>

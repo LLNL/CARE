@@ -18,6 +18,7 @@
 
 // Other CARE headers
 #include "care/forall.h"
+#include "care/FOREACHMACRO.h"
 #include "care/policies.h"
 
 // This makes sure the lambdas get decorated with the right __host__ and or

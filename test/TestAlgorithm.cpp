@@ -9,16 +9,11 @@
 
 #include "care/config.h"
 
-// std library headers
-#include <array>
-
 // other library headers
 #include "gtest/gtest.h"
 
 // care headers
-#include "care/array.h"
 #include "care/algorithm.h"
-#include "care/care.h"
 
 // Array Fill Tests
 TEST(algorithm, fill_empty)

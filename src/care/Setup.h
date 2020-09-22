@@ -16,7 +16,6 @@
 // Other library headers
 #include "chai/ExecutionSpaces.hpp"
 #include "chai/ArrayManager.hpp"
-#include "chai/PointerRecord.hpp"
 #include "umpire/Umpire.hpp"
 
 #ifdef UMPIRE_ENABLE_MPI
@@ -24,9 +23,7 @@
 #endif
 
 // Std library headers
-#include <stdio.h>
 #include <string>
-#include <vector>
 
 namespace care {
 #ifdef UMPIRE_ENABLE_MPI

@@ -5,8 +5,8 @@
 
 #include "gtest/gtest.h"
 
+#include "care/Setup.h"
 #include "care/SortFuser.h"
-#include "care/care.h"
 
 using namespace care;
 

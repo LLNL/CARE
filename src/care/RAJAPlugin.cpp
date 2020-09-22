@@ -8,7 +8,6 @@
 // CARE headers
 #include "care/CHAICallback.h"
 #include "care/RAJAPlugin.h"
-#include "care/Setup.h"
 #include "care/util.h"
 
 // Other library headers

@@ -1,6 +1,10 @@
 #ifndef CARE_ALGORITHM_INL
 #define CARE_ALGORITHM_INL
 
+#include "care/CHAIDataGetter.h"
+#include "care/DefaultMacros.h"
+#include "care/scan.h"
+
 namespace care {
 
 ///////////////////////////////////////////////////////////////////////////
