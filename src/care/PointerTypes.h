@@ -30,9 +30,6 @@
 #include "chai/managed_ptr.hpp"
 #endif // defined(CARE_ENABLE_MANAGED_PTR)
 
-// Std library headers
-//#include <cstring>
-
 #define CHAI_DUMMY_TYPE unsigned char
 #define CHAI_DUMMY_TYPE_CONST unsigned char const
 #define CHAI_DUMMY_PTR_TYPE unsigned char *
