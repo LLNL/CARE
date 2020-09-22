@@ -14,7 +14,6 @@
 
 // care headers
 #include "care/array.h"
-#include "care/care.h"
 #include "care/KeyValueSorter.h"
 
 /////////////////////////////////////////////////////////////////////////

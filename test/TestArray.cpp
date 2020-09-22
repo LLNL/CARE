@@ -20,7 +20,8 @@
 
 // care headers
 #include "care/array.h"
-#include "care/care.h"
+#include "care/DefaultMacros.h"
+#include "care/policies.h"
 
 TEST(array, constructor)
 {

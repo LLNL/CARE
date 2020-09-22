@@ -20,8 +20,6 @@
 #include "gtest/gtest.h"
 
 #include "care/LoopFuser.h"
-#include "care/care.h"
-#include "care/util.h"
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \

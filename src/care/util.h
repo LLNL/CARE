@@ -9,11 +9,15 @@
 #define _CARE_UTIL_H_
 
 // CARE headers
-#include "care/care.h"
+#include "care/config.h"
+#include "care/policies.h"
 
 // Other library headers
 #if defined(__CUDACC__)
 #include "cuda.h"
+#if defined(CARE_DEBUG)
+#include "care/CUDAWatchpoint.h"
+#endif
 #endif
 
 // Std library headers

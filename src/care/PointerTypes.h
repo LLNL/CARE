@@ -22,18 +22,13 @@
 #include "care/host_ptr.h"
 #include "care/local_host_device_ptr.h"
 #include "care/local_ptr.h"
-#include "care/Setup.h"
 
 // CHAI headers
 #include "chai/config.hpp"
-#include "chai/ManagedArray.hpp"
 
 #if defined(CARE_ENABLE_MANAGED_PTR)
 #include "chai/managed_ptr.hpp"
 #endif // defined(CARE_ENABLE_MANAGED_PTR)
-
-// Std library headers
-#include <cstring>
 
 #define CHAI_DUMMY_TYPE unsigned char
 #define CHAI_DUMMY_TYPE_CONST unsigned char const

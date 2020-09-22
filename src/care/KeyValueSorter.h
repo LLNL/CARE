@@ -12,7 +12,6 @@
 #include "care/config.h"
 
 // Other CARE headers
-#include "care/care.h"
 #include "care/LoopFuser.h"
 #include "care/algorithm.h"
 

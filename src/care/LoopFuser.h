@@ -13,10 +13,13 @@
 #if CARE_ENABLE_LOOP_FUSER
 
 // Other CARE headers
-#include "care/care.h"
-#include "care/util.h"
+#include "care/DefaultMacros.h"
+#include "care/host_device_ptr.h"
+#include "care/host_ptr.h"
+#include "care/scan.h"
 
 // Std library headers
+#include <cstdint>
 #include <iostream>
 #include <vector>
 

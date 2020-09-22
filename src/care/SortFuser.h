@@ -1,5 +1,6 @@
+#ifndef CARE_SORT_FUSER_H
+#define CARE_SORT_FUSER_H
 
-#include "care/care.h"
 #include "care/host_ptr.h"
 #include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
@@ -314,6 +315,6 @@ namespace care {
       out_offsets.free();
       
    }
-
-
 }
+
+#endif // CARE_SORT_FUSER_H

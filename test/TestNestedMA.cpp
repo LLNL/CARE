@@ -15,7 +15,8 @@
 #include "gtest/gtest.h"
 
 // care headers
-#include "care/care.h"
+#include "care/DefaultMacros.h"
+#include "care/host_device_ptr.h"
 
 #if defined(CARE_GPUCC) && GTEST_HAS_DEATH_TEST
 // This asserts a crash on the GPU, but does not mark gtest as passing.

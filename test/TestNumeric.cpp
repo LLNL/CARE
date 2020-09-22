@@ -16,8 +16,6 @@
 #include "gtest/gtest.h"
 
 // care headers
-#include "care/care.h"
-#include "care/host_device_ptr.h"
 #include "care/numeric.h"
 
 TEST(numeric, iota)

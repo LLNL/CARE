@@ -14,9 +14,9 @@
 #endif
 #include "gtest/gtest.h"
 
+#include "care/Setup.h"
+#include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
-#include "care/care.h"
-#include "care/policies.h"
 
 #if CARE_ENABLE_LOOP_FUSER
 /* CUDA profiling macros */

@@ -10,7 +10,10 @@
 #define GPU_ACTIVE
 #include "gtest/gtest.h"
 
-#include "care/care.h"
+#include "care/DefaultMacros.h"
+#include "care/host_device_ptr.h"
+#include "care/scan.h"
+#include "care/Setup.h"
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \

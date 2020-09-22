@@ -12,7 +12,10 @@
 #include "care/config.h"
 
 // Other CARE headers
-#include "care/care.h"
+#include "care/host_device_ptr.h"
+#include "care/host_ptr.h"
+#include "care/local_ptr.h"
+#include "care/policies.h"
 
 // Other library headers
 #ifdef __CUDACC__

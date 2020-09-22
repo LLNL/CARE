@@ -10,6 +10,7 @@
 
 // CARE config header
 #include "care/config.h"
+#include "care/DefaultMacros.h"
 
 // Other Care headers
 #include "care/CHAIDataGetter.h"
