@@ -24,7 +24,7 @@
 #include "care/local_ptr.h"
 
 #if defined(CARE_ENABLE_MANAGED_PTR)
-#include "care/managed_ptr.hpp"
+#include "care/managed_ptr.h"
 #endif // defined(CARE_ENABLE_MANAGED_PTR)
 
 #define CHAI_DUMMY_TYPE unsigned char
