@@ -37,6 +37,7 @@ set(care_headers
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h
+    managed_ptr.h
     openmp.h
     SortFuser.h
     numeric.h
