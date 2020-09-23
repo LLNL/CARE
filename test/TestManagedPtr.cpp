@@ -250,7 +250,7 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
    // DerivedClass on the device. It is aware of host_device_ptr types, so it gives
    // the host pointer in data to the host instance and the device pointer in data to
    // the device instance.
-   care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
+   care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(chai::unpack(data));
 
    // Now if data is changed on the host or the device and we want the changes to be
    // reflected in the other execution space, we need to set a callback that triggers
