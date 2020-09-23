@@ -15,7 +15,7 @@
 #include "chai/ArrayManager.hpp"
 #include "umpire/Allocator.hpp"
 #include "umpire/ResourceManager.hpp"
-#include "umpire/strategy/DynamicPoolList.hpp"
+#include "umpire/strategy/QuickPool.hpp"
 
 
 namespace care {
@@ -33,10 +33,10 @@ namespace care {
       auto allocator = rm.getAllocator(resource);
 
       auto pooled_allocator =
-         rm.makeAllocator<umpire::strategy::DynamicPoolList>(poolname,
-                                                             allocator,
-                                                             initial_size, /* default = 512Mb*/
-                                                             min_block_size /* default = 1Mb */);
+         rm.makeAllocator<umpire::strategy::QuickPool>(poolname,
+                                                       allocator,
+                                                       initial_size, /* default = 512Mb*/
+                                                       min_block_size /* default = 1Mb */);
 
       chai::ArrayManager * am = chai::ArrayManager::getInstance();
       am->setAllocator(space, pooled_allocator);
