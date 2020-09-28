@@ -1,0 +1,768 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs: []
+  view: true
+  compilers:
+  - compiler:
+      spec: clang@10.0.0
+      paths:
+        cc: /usr/tce/bin/clang-10.0.0
+        cxx: /usr/tce/bin/clang++-10.0.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@10.0.1
+      paths:
+        cc: /usr/tce/bin/clang-10.0.1
+        cxx: /usr/tce/bin/clang++-10.0.1
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@3.9.0
+      paths:
+        cc: /usr/tce/bin/clang-3.9.0
+        cxx: /usr/tce/bin/clang++-3.9.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@3.9.1
+      paths:
+        cc: /usr/tce/bin/clang-3.9.1
+        cxx: /usr/tce/bin/clang++-3.9.1
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@4.0.0
+      paths:
+        cc: /usr/tce/bin/clang-4.0.0
+        cxx: /usr/tce/bin/clang++-4.0.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@6.0.0
+      paths:
+        cc: /usr/tce/bin/clang
+        cxx: /usr/tce/bin/clang++
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@7.0.1
+      paths:
+        cc: /usr/tce/bin/clang-7.0.1
+        cxx: /usr/tce/bin/clang++-7.0.1
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@7.1.0
+      paths:
+        cc: /usr/tce/bin/clang-7.1.0
+        cxx: /usr/tce/bin/clang++-7.1.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@8.0.0
+      paths:
+        cc: /usr/tce/bin/clang-8.0.0
+        cxx: /usr/tce/bin/clang++-8.0.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@8.0.1
+      paths:
+        cc: /usr/tce/bin/clang-8.0.1
+        cxx: /usr/tce/bin/clang++-8.0.1
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: clang@9.0.0
+      paths:
+        cc: /usr/tce/bin/clang-9.0.0
+        cxx: /usr/tce/bin/clang++-9.0.0
+        f77:
+        fc:
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@4.8.5
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@4.9.3
+      paths:
+        cc: /usr/tce/bin/gcc
+        cxx: /usr/tce/bin/g++
+        f77: /usr/tce/bin/gfortran
+        fc: /usr/tce/bin/gfortran
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@8.3.1
+      paths:
+        cc: /usr/tce/packages/gcc/gcc-8.3.1/bin/gcc
+        cxx: /usr/tce/packages/gcc/gcc-8.3.1/bin/g++
+        f77: /usr/tce/packages/gcc/gcc-8.3.1/bin/gfortran
+        fc: /usr/tce/packages/gcc/gcc-8.3.1/bin/gfortran
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@14.0.3
+      paths:
+        cc: /usr/tce/bin/icc-14.0.3
+        cxx: /usr/tce/bin/icpc-14.0.3
+        f77: /usr/tce/bin/ifort-14.0.3
+        fc: /usr/tce/bin/ifort-14.0.3
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@15.0.6
+      paths:
+        cc: /usr/tce/bin/icc-15.0.6
+        cxx: /usr/tce/bin/icpc-15.0.6
+        f77: /usr/tce/bin/ifort-15.0.6
+        fc: /usr/tce/bin/ifort-15.0.6
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@16.0.2
+      paths:
+        cc: /usr/tce/bin/icc-16.0.2
+        cxx: /usr/tce/bin/icpc-16.0.2
+        f77: /usr/tce/bin/ifort-16.0.2
+        fc: /usr/tce/bin/ifort-16.0.2
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@16.0.3
+      paths:
+        cc: /usr/tce/bin/icc-16.0.3
+        cxx: /usr/tce/bin/icpc-16.0.3
+        f77: /usr/tce/bin/ifort-16.0.3
+        fc: /usr/tce/bin/ifort-16.0.3
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@16.0.4
+      paths:
+        cc: /usr/tce/bin/icc-16.0.4
+        cxx: /usr/tce/bin/icpc-16.0.4
+        f77: /usr/tce/bin/ifort-16.0.4
+        fc: /usr/tce/bin/ifort-16.0.4
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@17.0.0
+      paths:
+        cc: /usr/tce/bin/icc-17.0.0
+        cxx: /usr/tce/bin/icpc-17.0.0
+        f77: /usr/tce/bin/ifort-17.0.0
+        fc: /usr/tce/bin/ifort-17.0.0
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@17.0.2
+      paths:
+        cc: /usr/tce/bin/icc-17.0.2
+        cxx: /usr/tce/bin/icpc-17.0.2
+        f77: /usr/tce/bin/ifort-17.0.2
+        fc: /usr/tce/bin/ifort-17.0.2
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@18.0.0
+      paths:
+        cc: /usr/tce/bin/icc-18.0.0
+        cxx: /usr/tce/bin/icpc-18.0.0
+        f77: /usr/tce/bin/ifort-18.0.0
+        fc: /usr/tce/bin/ifort-18.0.0
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@18.0.1
+      paths:
+        cc: /usr/tce/bin/icc-18.0.1
+        cxx: /usr/tce/bin/icpc-18.0.1
+        f77: /usr/tce/bin/ifort-18.0.1
+        fc: /usr/tce/bin/ifort-18.0.1
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@18.0.2
+      paths:
+        cc: /usr/tce/bin/icc-18.0.2
+        cxx: /usr/tce/bin/icpc-18.0.2
+        f77: /usr/tce/bin/ifort-18.0.2
+        fc: /usr/tce/bin/ifort-18.0.2
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@19.0.0.117
+      paths:
+        cc: /usr/tce/bin/icc-19.0.0
+        cxx: /usr/tce/bin/icpc-19.0.0
+        f77: /usr/tce/bin/ifort-19.0.0
+        fc: /usr/tce/bin/ifort-19.0.0
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@19.0.3.199
+      paths:
+        cc: /usr/tce/bin/icc-19.0.3
+        cxx: /usr/tce/bin/icpc-19.0.3
+        f77: /usr/tce/bin/ifort-19.0.3
+        fc: /usr/tce/bin/ifort-19.0.3
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@19.0.4.227
+      paths:
+        cc: /usr/tce/bin/icc
+        cxx: /usr/tce/bin/icpc
+        f77: /usr/tce/bin/ifort
+        fc: /usr/tce/bin/ifort
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@19.1.0.166
+      paths:
+        cc: /usr/tce/bin/icc-19.1.0
+        cxx: /usr/tce/bin/icpc-19.1.0
+        f77: /usr/tce/bin/ifort-19.1.0
+        fc: /usr/tce/bin/ifort-19.1.0
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@19.1.2.254
+      paths:
+        cc: /usr/tce/bin/icc-19.1.2
+        cxx: /usr/tce/bin/icpc-19.1.2
+        f77: /usr/tce/bin/ifort-19.1.2
+        fc: /usr/tce/bin/ifort-19.1.2
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@16.3
+      paths:
+        cc: /usr/tce/bin/pgcc-16.3
+        cxx: /usr/tce/bin/pgc++-16.3
+        f77: /usr/tce/bin/pgfortran-16.3
+        fc: /usr/tce/bin/pgfortran-16.3
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@16.7
+      paths:
+        cc: /usr/tce/bin/pgcc-16.7
+        cxx: /usr/tce/bin/pgc++-16.7
+        f77: /usr/tce/bin/pgf77-16.7
+        fc: /usr/tce/bin/pgf90-16.7
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@16.9
+      paths:
+        cc: /usr/tce/bin/pgcc-16.9
+        cxx: /usr/tce/bin/pgc++-16.9
+        f77: /usr/tce/bin/pgf77-16.9
+        fc: /usr/tce/bin/pgf90-16.9
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@17.10
+      paths:
+        cc: /usr/tce/bin/pgcc-17.10
+        cxx: /usr/tce/bin/pgc++-17.10
+        f77: /usr/tce/bin/pgf77-17.10
+        fc: /usr/tce/bin/pgf90-17.10
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@18.1
+      paths:
+        cc: /usr/tce/bin/pgcc-18.1
+        cxx: /usr/tce/bin/pgc++-18.1
+        f77: /usr/tce/bin/pgf77-18.1
+        fc: /usr/tce/bin/pgf90-18.1
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@18.5
+      paths:
+        cc: /usr/tce/bin/pgcc-18.5
+        cxx: /usr/tce/bin/pgc++-18.5
+        f77: /usr/tce/bin/pgf77-18.5
+        fc: /usr/tce/bin/pgf90-18.5
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@19.1
+      paths:
+        cc: /usr/tce/bin/pgcc-19.1
+        cxx: /usr/tce/bin/pgc++-19.1
+        f77: /usr/tce/bin/pgfortran-19.1
+        fc: /usr/tce/bin/pgf90-19.1
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@19.4
+      paths:
+        cc: /usr/tce/bin/pgcc-19.4
+        cxx: /usr/tce/bin/pgc++-19.4
+        f77: /usr/tce/bin/pgfortran-19.4
+        fc: /usr/tce/bin/pgf90-19.4
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@19.7
+      paths:
+        cc: /usr/tce/bin/pgcc-19.7
+        cxx: /usr/tce/bin/pgc++-19.7
+        f77: /usr/tce/bin/pgfortran-19.7
+        fc: /usr/tce/bin/pgf90-19.7
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: pgi@20.1
+      paths:
+        cc: /usr/tce/bin/pgcc-20.1
+        cxx: /usr/tce/bin/pgc++-20.1
+        f77: /usr/tce/bin/pgfortran-20.1
+        fc: /usr/tce/bin/pgf90-20.1
+      flags: {}
+      operating_system: rhel7
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  packages:
+    autoconf:
+      externals:
+      - spec: autoconf@2.69
+        prefix: /usr
+      buildable: false
+    automake:
+      externals:
+      - spec: automake@1.13.4
+        prefix: /usr
+      buildable: false
+    bash:
+      externals:
+      - spec: bash@4.2.46
+        prefix: /usr
+      buildable: false
+    bison:
+      externals:
+      - spec: bison@3.0.4
+        prefix: /usr
+      buildable: false
+    cmake:
+      externals:
+      - spec: cmake@3.14.5
+        prefix: /usr/tce
+      - spec: cmake@2.8.12.2
+        prefix: /usr
+      buildable: false
+    findutils:
+      externals:
+      - spec: findutils@4.5.11
+        prefix: /usr
+      buildable: false
+    flex:
+      externals:
+      - spec: flex@2.5.37+lex
+        prefix: /usr
+      buildable: false
+    gcc:
+      externals:
+      - spec: gcc@4.9.3 languages=c,c++,fortran
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/gcc
+            cxx: /usr/tce/bin/g++
+            fortran: /usr/tce/bin/gfortran
+      - spec: gcc@4.8.5 languages=c,c++,fortran
+        prefix: /usr
+        extra_attributes:
+          compilers:
+            c: /usr/bin/x86_64-redhat-linux-gcc
+            cxx: /usr/bin/x86_64-redhat-linux-g++
+            fortran: /usr/bin/gfortran
+      buildable: false
+    git:
+      externals:
+      - spec: git@1.8.3.1+tcltk
+        prefix: /usr
+      - spec: git@2.8.3+tcltk
+        prefix: /usr/tce
+      - spec: git@2.8.4+tcltk
+        prefix: /usr/gapps/bdivport/toss_3_x86_64_ib
+      buildable: false
+    git-lfs:
+      externals:
+      - spec: git-lfs@2.9.2
+        prefix: /usr/tce
+      buildable: false
+    gmake:
+      externals:
+      - spec: gmake@3.82
+        prefix: /usr
+      - spec: gmake@4.2.1
+        prefix: /usr/tce/packages/make/make-4.2.1
+      buildable: false
+    go:
+      externals:
+      - spec: go@1.13.14
+        prefix: /usr
+      buildable: false
+    gpgme:
+      externals:
+      - spec: gpgme@1.3.2
+        prefix: /usr
+      buildable: false
+    intel:
+      externals:
+      - spec: intel@19.0.4.227
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/icc
+            cxx: /usr/tce/bin/icpc
+            fortran: /usr/tce/bin/ifort
+      buildable: false
+    openjdk:
+      externals:
+      - spec: openjdk@1.8.0_262-b10
+        prefix: /usr
+      buildable: false
+    libtool:
+      externals:
+      - spec: libtool@2.4.2
+        prefix: /usr
+      buildable: false
+    llvm:
+      externals:
+      - spec: llvm@3.9.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-3.9.0
+            cxx: /usr/tce/bin/clang++-3.9.0
+      - spec: llvm@3.9.1+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-3.9.1
+            cxx: /usr/tce/bin/clang++-3.9.1
+      - spec: llvm@4.0.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-4.0.0
+            cxx: /usr/tce/bin/clang++-4.0.0
+      - spec: llvm@6.0.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-archer++
+            cxx: /usr/tce/bin/clang++-6.0.0
+      - spec: llvm@7.0.1+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-7.0.1
+            cxx: /usr/tce/bin/clang++-7.0.1
+      - spec: llvm@7.1.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-7.1.0
+            cxx: /usr/tce/bin/clang++-7.1.0
+      - spec: llvm@8.0.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-8.0.0
+            cxx: /usr/tce/bin/clang++-8.0.0
+      - spec: llvm@8.0.1+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-8.0.1-archer
+            cxx: /usr/tce/bin/clang++-8.0.1-archer
+      - spec: llvm@9.0.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-9.0.0
+            cxx: /usr/tce/bin/clang++-9.0.0
+      - spec: llvm@10.0.0+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-10.0.0
+            cxx: /usr/tce/bin/clang++-10.0.0
+      - spec: llvm@10.0.1+clang~lld~lldb
+        prefix: /usr/tce
+        extra_attributes:
+          compilers:
+            c: /usr/tce/bin/clang-10.0.1
+            cxx: /usr/tce/bin/clang++-10.0.1
+      buildable: false
+    lustre:
+      externals:
+      - spec: lustre@2.12.5_5.llnl
+        prefix: /usr
+      buildable: false
+    m4:
+      externals:
+      - spec: m4@1.4.16
+        prefix: /usr
+      buildable: false
+    maven:
+      externals:
+      - spec: maven@3.0.5
+        prefix: /usr
+      buildable: false
+    mvapich2:
+      externals:
+      - spec: mvapich2@2.3.1%gcc@8.3.1~cuda~debug~regcache~wrapperrpath ch3_rank_bits=32
+          file_systems=lustre,nfs,ufs process_managers=slurm
+        prefix: /usr/tce/packages/mvapich2/mvapich2-2.3-gcc-8.3.1
+      buildable: false
+    ncurses:
+      externals:
+      - spec: ncurses@5.9.20130511+termlib
+        prefix: /usr
+      buildable: false
+    opengl:
+      externals:
+      - spec: opengl@1.4
+        prefix: /usr
+      buildable: false
+    openssl:
+      externals:
+      - spec: openssl@1.0.2k-fips
+        prefix: /usr
+      buildable: false
+    perl:
+      externals:
+      - spec: perl@5.26.1~cpanm~shared~threads
+        prefix: /usr/gapps/bdivport/toss_3_x86_64_ib
+      - spec: perl@5.16.3+cpanm+shared+threads
+        prefix: /usr
+      buildable: false
+    pkg-config:
+      externals:
+      - spec: pkg-config@0.27.1
+        prefix: /usr
+      buildable: false
+    python:
+      externals:
+      - spec: python@2.7.10+bz2~ctypes~dbm~lzma+nis~pyexpat+readline~sqlite3~ssl~tix~tkinter~uuid+zlib
+        prefix: /usr/gapps/wf/releases/ale3dpy
+      - spec: python@2.7.16+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr/tce
+      - spec: python@3.7.2+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr/tce
+      - spec: python@2.7.5+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr
+      - spec: python@3.4.10+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl~tix~tkinter+uuid+zlib
+        prefix: /usr
+      - spec: python@3.6.8+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl~tix~tkinter+uuid+zlib
+        prefix: /usr
+      - spec: python@2.6+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr/gapps/bdiv/toss_3_x86_64_ib/intel-16-mvapich2-2.2/python/2.6
+      - spec: python@2.7.11+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr/gapps/bdiv/toss_3_x86_64_ib/intel-19-mvapich2-2.3/python/2.7
+      buildable: false
+    ruby:
+      externals:
+      - spec: ruby@2.0.0
+        prefix: /usr
+      buildable: false
+    texinfo:
+      externals:
+      - spec: texinfo@5.1
+        prefix: /usr
+      buildable: false
