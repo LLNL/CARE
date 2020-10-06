@@ -96,16 +96,16 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array,
  *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 #ifdef RAJA_PARALLEL_ACTIVE
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJAExec,
-                            care::host_device_ptr<const ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<const ArrayType> arr2, int size2, int start2,
+                            care::host_device_ptr<const T> arr1, int size1, int start1,
+                            care::host_device_ptr<const T> arr2, int size2, int start2,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches) {
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller <= 0 || start1 >= size1 || start2 >= size2) {
+   if (smaller <= 0) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;
@@ -126,16 +126,16 @@ inline void IntersectArrays(RAJAExec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for these checks by default.
-      care::host_device_ptr<const ArrayType> slice1(arr1.slice(start1));
-      care::host_device_ptr<const ArrayType> slice2(arr2.slice(start2));
+      care::host_device_ptr<const T> slice1(arr1.slice(start1));
+      care::host_device_ptr<const T> slice2(arr2.slice(start2));
 
-      checkSorted<ArrayType>(slice1, size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(slice2, size2, funcname, "arr2") ;
+      checkSorted<T>(slice1, size1, funcname, "arr1") ;
+      checkSorted<T>(slice2, size2, funcname, "arr2") ;
    }
 
    care::host_device_ptr<int> smallerMatches, largerMatches;
    int larger, smallStart, largeStart;
-   care::host_device_ptr<const ArrayType> smallerArray, largerArray;
+   care::host_device_ptr<const T> smallerArray, largerArray;
 
    if (smaller == size1) {
       smallerArray = arr1;
@@ -161,7 +161,7 @@ inline void IntersectArrays(RAJAExec,
    care::host_device_ptr<int> matched(smaller + 1, "IntersectArrays matched");
 
    CARE_STREAM_LOOP(i, 0, smaller + 1) {
-      searches[i] = i != smaller ? BinarySearch<ArrayType>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
+      searches[i] = i != smaller ? BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i + smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
@@ -196,15 +196,15 @@ inline void IntersectArrays(RAJAExec,
    }
 }
 
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJAExec exec,
-                            care::host_device_ptr<ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<ArrayType> arr2, int size2, int start2,
+                            care::host_device_ptr<T> arr1, int size1, int start1,
+                            care::host_device_ptr<T> arr2, int size2, int start2,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches) {
-   IntersectArrays<ArrayType>(exec,
-                              care::host_device_ptr<const ArrayType>(arr1), size1, start1,
-                              care::host_device_ptr<const ArrayType>(arr2), size2, start2,
+   IntersectArrays<T>(exec,
+                              care::host_device_ptr<const T>(arr1), size1, start1,
+                              care::host_device_ptr<const T>(arr2), size2, start2,
                               matches1, matches2,
                               numMatches);
 }
@@ -225,16 +225,16 @@ inline void IntersectArrays(RAJAExec exec,
  * Note      : The raw pointers contained in matches1 and matches2
  *             should be deallocated by the caller using free.
  ************************************************************************/
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJA::seq_exec,
-                            care::host_ptr<const ArrayType> arr1, int size1, int start1,
-                            care::host_ptr<const ArrayType> arr2, int size2, int start2,
+                            care::host_ptr<const T> arr1, int size1, int start1,
+                            care::host_ptr<const T> arr2, int size2, int start2,
                             care::host_ptr<int> &matches1, care::host_ptr<int> &matches2,
                             int *numMatches) {
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller <= 0 || start1 >= size1 || start2 >= size2) {
+   if (smaller <= 0) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;
@@ -255,15 +255,15 @@ inline void IntersectArrays(RAJA::seq_exec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for this check by default
-      checkSorted<ArrayType>(&arr1[start1], size1, funcname, "arr1") ;
-      checkSorted<ArrayType>(&arr2[start2], size2, funcname, "arr2") ;
+      checkSorted<T>(&arr1[start1], size1, funcname, "arr1") ;
+      checkSorted<T>(&arr2[start2], size2, funcname, "arr2") ;
    }
 
    int i, j;
    i = j = 0 ;
 
    /* the host arrays */
-   const ArrayType * A1, *A2;
+   const T * A1, *A2;
    int * m1 = matches1;
    int * m2 = matches2;
 
@@ -301,15 +301,15 @@ inline void IntersectArrays(RAJA::seq_exec,
    }
 }
 
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJA::seq_exec exec,
-                            care::host_ptr<ArrayType> arr1, int size1, int start1,
-                            care::host_ptr<ArrayType> arr2, int size2, int start2,
+                            care::host_ptr<T> arr1, int size1, int start1,
+                            care::host_ptr<T> arr2, int size2, int start2,
                             care::host_ptr<int> &matches1, care::host_ptr<int> &matches2,
                             int *numMatches) {
-   IntersectArrays<ArrayType>(exec,
-                              care::host_ptr<const ArrayType>(arr1), size1, start1,
-                              care::host_ptr<const ArrayType>(arr2), size2, start2,
+   IntersectArrays<T>(exec,
+                              care::host_ptr<const T>(arr1), size1, start1,
+                              care::host_ptr<const T>(arr2), size2, start2,
                               matches1, matches2, numMatches);
 }
 
@@ -325,17 +325,17 @@ inline void IntersectArrays(RAJA::seq_exec exec,
  * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
  *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJA::seq_exec exec,
-                            care::host_device_ptr<const ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<const ArrayType> arr2, int size2, int start2,
+                            care::host_device_ptr<const T> arr1, int size1, int start1,
+                            care::host_device_ptr<const T> arr2, int size2, int start2,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches) {
    care::host_ptr<int> matches1_tmp, matches2_tmp;
 
-   IntersectArrays<ArrayType>(exec,
-                              care::host_ptr<const ArrayType>(arr1), size1, start1,
-                              care::host_ptr<const ArrayType>(arr2), size2, start2,
+   IntersectArrays<T>(exec,
+                              care::host_ptr<const T>(arr1), size1, start1,
+                              care::host_ptr<const T>(arr2), size2, start2,
                               matches1_tmp, matches2_tmp, numMatches);
 
    matches1 = care::host_device_ptr<int>((int *) matches1_tmp, *numMatches, "IntersectArrays matches1");
@@ -344,15 +344,15 @@ inline void IntersectArrays(RAJA::seq_exec exec,
    return;
 }
 
-template <typename ArrayType>
+template <typename T>
 inline void IntersectArrays(RAJA::seq_exec exec,
-                            care::host_device_ptr<ArrayType> arr1, int size1, int start1,
-                            care::host_device_ptr<ArrayType> arr2, int size2, int start2,
+                            care::host_device_ptr<T> arr1, int size1, int start1,
+                            care::host_device_ptr<T> arr2, int size2, int start2,
                             care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                             int *numMatches) {
    IntersectArrays(exec,
-                   care::host_device_ptr<const ArrayType>(arr1), size1, start1,
-                   care::host_device_ptr<const ArrayType>(arr2), size2, start2,
+                   care::host_device_ptr<const T>(arr1), size1, start1,
+                   care::host_device_ptr<const T>(arr2), size2, start2,
                    matches1, matches2, numMatches);
 }
 
