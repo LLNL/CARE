@@ -213,11 +213,12 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, con
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 
-inline void IntersectArrays(Exec, //!< execution policy [input]
-                            care::host_device_ptr<const ArrayType> arr1, //!< first array to intersect [input]
+template <typename T, typename ExecutionPolicy>
+inline void IntersectArrays(ExecutionPolicy, //!< execution policy [input]
+                            care::host_device_ptr<const T> arr1, //!< first array to intersect [input]
                             int size1, //!< size of segment to intersect in arr1 [input]
                             int start1, //!< starting offset of segment in arr1 [input]
-                            care::host_device_ptr<const ArrayType> arr2, //!< second array to intersect [input]
+                            care::host_device_ptr<const T> arr2, //!< second array to intersect [input]
                             int size2, //!< size of segment to intersect in arr2 [input]
                             int start2, //!< starting offset of segment in arr2 [input]
                             care::host_device_ptr<int> &matches1, //!< indices of matches in arr1 (0 corresponds to start1) [output]
