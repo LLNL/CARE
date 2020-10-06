@@ -105,7 +105,7 @@ inline void IntersectArrays(RAJAExec,
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller <= 0 || start1 >= size1 || start2 >= size2) {
+   if (smaller <= 0) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;
@@ -234,7 +234,7 @@ inline void IntersectArrays(RAJA::seq_exec,
    *numMatches = 0 ;
    int smaller = (size1 < size2) ? size1 : size2 ;
 
-   if (smaller <= 0 || start1 >= size1 || start2 >= size2) {
+   if (smaller <= 0) {
       matches1 = nullptr ;
       matches2 = nullptr ;
       return ;

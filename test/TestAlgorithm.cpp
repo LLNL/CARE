@@ -160,7 +160,7 @@ TEST(algorithm, intersectarrays) {
 
    // introduce non-zero starting locations. In this case, matches are given as offsets from those starting locations
    // and not the zero position of the arrays.
-   care::IntersectArrays<int>(RAJA::seq_exec(), c, 7, 3, b, 5, 1, matches1, matches2, numMatches);
+   care::IntersectArrays<int>(RAJA::seq_exec(), c, 4, 3, b, 4, 1, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 2); 
    EXPECT_EQ(matches1[0], 0);
    EXPECT_EQ(matches1[1], 1);
@@ -174,10 +174,6 @@ TEST(algorithm, intersectarrays) {
    EXPECT_EQ(matches1[1], 2);
    EXPECT_EQ(matches2[0], 0);
    EXPECT_EQ(matches2[1], 3); 
-
-   // offset one past the end
-   care::IntersectArrays<int>(RAJA::seq_exec(), a, 3, 0, b, 5, 98, matches1, matches2, numMatches);
-   EXPECT_EQ(numMatches[0], 0);
 
    // no matches
    care::IntersectArrays<int>(RAJA::seq_exec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
@@ -1188,7 +1184,7 @@ GPU_TEST(algorithm, intersectarrays) {
 
    // introduce non-zero starting locations. In this case, matches are given as offsets from those starting locations
    // and not the zero position of the arrays.
-   care::IntersectArrays<int>(RAJAExec(), c, 7, 3, b, 5, 1, matches1, matches2, numMatches);
+   care::IntersectArrays<int>(RAJAExec(), c, 4, 3, b, 4, 1, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 2);
    EXPECT_EQ(matches1.pick(0), 0);
    EXPECT_EQ(matches1.pick(1), 1);
@@ -1202,10 +1198,6 @@ GPU_TEST(algorithm, intersectarrays) {
    EXPECT_EQ(matches1.pick(1), 2);
    EXPECT_EQ(matches2.pick(0), 0);
    EXPECT_EQ(matches2.pick(1), 3);
-
-   // offset one past the end
-   care::IntersectArrays<int>(RAJAExec(), a, 3, 0, b, 5, 98, matches1, matches2, numMatches);
-   EXPECT_EQ(numMatches[0], 0);
 
    // no matches
    care::IntersectArrays<int>(RAJAExec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
