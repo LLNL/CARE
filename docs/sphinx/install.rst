@@ -22,4 +22,4 @@ CMake Options
 
 ``-DCARE_LOOP_VVERBOSE_ENABLED=ON|OFF`` Controls whether or not the contents of all host_device_ptr's can be dumped after every RAJA loop.
 
-``-DCARE_HAVE_LOOP_FUSER=ON|OFF`` Controls whether or not the loop fusion (CUDA kernel fusion) capability is turned on.
+``-DCARE_ENABLE_LOOP_FUSER=ON|OFF`` Controls whether or not the loop fusion (CUDA kernel fusion) capability is turned on.
