@@ -473,7 +473,7 @@ CARE_HOST_DEVICE inline int BinarySearch(const care::host_device_ptr<const mapTy
 template <typename T>
 inline void uniqArray(RAJAExec, care::host_device_ptr<T>  Array, size_t len, care::host_device_ptr<T> & outArray, int & outLen, bool noCopy=false) {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
-   ArrayFill<int, RAJAExec>(uniq, len+1, 0);
+   fill_n(uniq, len+1, 0);
    CARE_STREAM_LOOP(i, 0, len) {
       uniq[i] = (int) ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) ;
    } CARE_STREAM_LOOP_END
@@ -930,22 +930,20 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
 #endif
 
 /************************************************************************
- * Function  : ArrayFill
+ * Function  : fill_n
  * Author(s) : Peter Robinson
  * Purpose   : Fills a ManagedArray with the value given.
  * ************************************************************************/
-template <typename T, typename Exec>
-inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
+template <typename T>
+inline void fill_n(care::host_device_ptr<T> arr, int n, T val) {
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
    } CARE_STREAM_LOOP_END
 }
 
 template <typename T>
-void ArrayFill(care::host_ptr<T> arr, int n, T val)  {
-   for (int i = 0; i < n; ++i) {
-      arr[i] = val;
-   }
+inline void fill_n(care::host_ptr<T> arr, int n, T val)  {
+   std::fill_n(arr.data(), n, val);
 }
 
 /************************************************************************

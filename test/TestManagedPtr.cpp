@@ -141,7 +141,7 @@ TEST(ManagedPtr, SplitHostDevicePointer)
    // Set up data
    int length = 10;
    care::host_device_ptr<int> data(length);
-   care::ArrayFill<int>(data, length, 0);
+   care::fill_n(data, length, 0);
 
    // This will construct an instance of DerivedClass on the host and an instance of
    // DerivedClass on the device. It is aware of host_device_ptr types, so it gives
@@ -244,7 +244,7 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
    // Set up data
    int length = 10;
    care::host_device_ptr<int> data(length);
-   care::ArrayFill<int>(data, length, 0);
+   care::fill_n(data, length, 0);
 
    // This will construct an instance of DerivedClass on the host and an instance of
    // DerivedClass on the device. It is aware of host_device_ptr types, so it gives

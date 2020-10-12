@@ -20,7 +20,7 @@ TEST(algorithm, fill_empty)
 {
    care::host_ptr<int> a = nullptr;
  
-   care::ArrayFill<int>(a, 0, -12);
+   care::fill_n(a, 0, -12);
    EXPECT_EQ(a, nullptr);
 }
 
@@ -29,7 +29,7 @@ TEST(algorithm, fill_one)
    int tempa[1] = {1};
    care::host_ptr<int> a(tempa);
 
-   care::ArrayFill<int>(a, 1, -12);
+   care::fill_n(a, 1, -12);
    EXPECT_EQ(a[0], -12);
 }
 
@@ -38,7 +38,7 @@ TEST(algorithm, fill_three)
    int tempa[3] = {1, 2, 3};
    care::host_ptr<int> a(tempa);
 
-   care::ArrayFill<int>(a, 3, -12);
+   care::fill_n(a, 3, -12);
 
    EXPECT_EQ(a[0], -12);
    EXPECT_EQ(a[1], -12);
@@ -190,7 +190,7 @@ TEST(algorithm, intersectarrays) {
 
 GPU_TEST(algorithm, fill_empty) {
    care::host_device_ptr<int> a;
-   care::ArrayFill<int>(a, 0, -12); // hopefully nothing explodes
+   care::fill_n(a, 0, -12); // hopefully nothing explodes
 }
 
 GPU_TEST(algorithm, fill_one)
@@ -200,7 +200,7 @@ GPU_TEST(algorithm, fill_one)
    // disabled for host_device pointer with cuda active?
    care::host_device_ptr<int> b(tempb, 1, "fillhostdev");
 
-   care::ArrayFill<int>(b, 1, -12);
+   care::fill_n(b, 1, -12);
 
    EXPECT_EQ(b.pick(0), -12);
 }
@@ -211,7 +211,7 @@ GPU_TEST(algorithm, fill_three) {
    // disabled for host_device pointer with cuda active?
    care::host_device_ptr<int> b(tempb, 3, "fillhostdev3");
 
-   care::ArrayFill<int>(b, 3, -12);
+   care::fill_n(b, 3, -12);
    EXPECT_EQ(b.pick(0), -12);
    EXPECT_EQ(b.pick(1), -12);
    EXPECT_EQ(b.pick(2), -12);
