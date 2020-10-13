@@ -54,7 +54,7 @@ GPU_TEST(nestedMA, gpu_init0)
    CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      fill_n<int>(nestedMA[i], M, 0) ;
+      fill_n(nestedMA[i], M, 0) ;
    } CARE_SEQUENTIAL_REF_LOOP_END
 
    CARE_SEQUENTIAL_LOOP(i, 0, N) {
@@ -82,7 +82,7 @@ GPU_TEST(nestedMA, gpu_init)
    CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      fill_n<int>(nestedMA[i], M, 0) ;
+      fill_n(nestedMA[i], M, 0) ;
    } CARE_SEQUENTIAL_REF_LOOP_END
 
    CARE_STREAM_LOOP(i, 0, N) {
