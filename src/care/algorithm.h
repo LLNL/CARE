@@ -36,11 +36,11 @@
 #define CARE_MIN(a,b) a < b ? a : b
 
 namespace care {
-template <typename T, typename Exec=RAJAExec>
-void ArrayFill(care::host_device_ptr<T> arr, int n, T val) ;
+template <typename T>
+void fill_n(care::host_device_ptr<T> arr, int n, T val) ;
 
 template <typename T>
-void ArrayFill(care::host_ptr<T> arr, int n, T val) ;
+void fill_n(care::host_ptr<T> arr, int n, T val) ;
 
 template <typename T, typename Exec=RAJAExec>
 T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);

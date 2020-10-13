@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 
 // care headers
+#include "care/algorithm.h"
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
 
@@ -36,13 +37,6 @@ void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
    *ptr = care::host_device_ptr<T>(size, name);
 }
 
-template <typename T>
-inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
-   CARE_STREAM_LOOP(i, 0, n) {
-      arr[i] = val;
-   } CARE_STREAM_LOOP_END
-}
-
 // This initialization pattern works fine
 GPU_TEST(nestedMA, gpu_init0)
 {
@@ -60,7 +54,7 @@ GPU_TEST(nestedMA, gpu_init0)
    CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      ArrayFill<int>(nestedMA[i], M, 0) ;
+      fill_n(nestedMA[i], M, 0) ;
    } CARE_SEQUENTIAL_REF_LOOP_END
 
    CARE_SEQUENTIAL_LOOP(i, 0, N) {
@@ -88,7 +82,7 @@ GPU_TEST(nestedMA, gpu_init)
    CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      ArrayFill<int>(nestedMA[i], M, 0) ;
+      fill_n(nestedMA[i], M, 0) ;
    } CARE_SEQUENTIAL_REF_LOOP_END
 
    CARE_STREAM_LOOP(i, 0, N) {
