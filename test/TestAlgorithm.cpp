@@ -15,34 +15,49 @@
 // care headers
 #include "care/algorithm.h"
 
-// Array Fill Tests
+// fill_n Tests
 TEST(algorithm, fill_empty)
 {
-   care::host_ptr<int> a = nullptr;
- 
-   care::fill_n(a, 0, -12);
+   int size = 0;
+   care::host_device_ptr<int> a = nullptr;
+   care::fill_n(a, size, -12);
    EXPECT_EQ(a, nullptr);
 }
 
 TEST(algorithm, fill_one)
 {
-   int tempa[1] = {1};
-   care::host_ptr<int> a(tempa);
+   int size = 1;
+   care::host_device_ptr<int> a(size, "a");
 
-   care::fill_n(a, 1, -12);
-   EXPECT_EQ(a[0], -12);
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      a[i] = i;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::fill_n(a, size, -12);
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      EXPECT_EQ(a[i], -12);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   a.free();
 }
 
 TEST(algorithm, fill_three)
 {
-   int tempa[3] = {1, 2, 3};
-   care::host_ptr<int> a(tempa);
+   int size = 3;
+   care::host_device_ptr<int> a(size, "a");
 
-   care::fill_n(a, 3, -12);
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      a[i] = i;
+   } CARE_SEQUENTIAL_LOOP_END
 
-   EXPECT_EQ(a[0], -12);
-   EXPECT_EQ(a[1], -12);
-   EXPECT_EQ(a[2], -12);
+   care::fill_n(a, size, 7);
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      EXPECT_EQ(a[i], 7);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   a.free();
 }
 
 // NOTE: if an array is not sorted, the checkSorted function will print out an error message.
