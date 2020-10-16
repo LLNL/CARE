@@ -21,6 +21,7 @@
 #endif
 
 // Std library headers
+#include <cstring>
 #include <iostream>
 #include <type_traits>
 
@@ -102,10 +103,10 @@ namespace care {
       os << "[CARE] Size: " << size << std::endl;
 
       // Write out elements
-      const int maxDigits = strlen(std::to_string(size).c_str());
+      const int maxDigits = std::strlen(std::to_string(size).c_str());
 
       for (size_t i = 0; i < size; ++i) {
-         const int digits = strlen(std::to_string(i).c_str());
+         const int digits = std::strlen(std::to_string(i).c_str());
          const int numSpaces = maxDigits - digits;
 
          // Write out index
