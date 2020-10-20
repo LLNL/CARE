@@ -7,7 +7,9 @@
 
 // CARE headers
 #include "care/CHAICallback.h"
+#ifndef CARE_DISABLE_RAJAPLUGIN
 #include "care/RAJAPlugin.h"
+#endif
 
 // Other library headers
 #include "chai/ArrayManager.hpp"
@@ -293,9 +295,11 @@ namespace care {
                      }
                   }
 
+#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_data > 0) {
                      RAJAPlugin::removeActivePointer(m_record);
                   }
+#endif
 
                   s_names.erase(m_record);
                   getPrintCallbackMap().erase(m_record);
@@ -304,6 +308,7 @@ namespace care {
                case chai::ACTION_MOVE:
                   if (s_log_moves == (int) space ||
                       s_log_moves == (int) chai::ExecutionSpace::NUM_EXECUTION_SPACES) {
+#ifndef CARE_DISABLE_RAJAPLUGIN
                      if (s_diff_friendly) {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Moved %lu bytes to space %i at %s:%i\n",
@@ -319,10 +324,12 @@ namespace care {
                                 RAJAPlugin::getCurrentLoopFileName().c_str(),
                                 RAJAPlugin::getCurrentLoopLineNumber());
                      }
+#endif
                   }
 
                   break;
                case chai::ACTION_CAPTURED:
+#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_captures == (int) space ||
                       s_log_captures == (int) chai::ExecutionSpace::NUM_EXECUTION_SPACES) {
                      if (s_diff_friendly) {
@@ -341,11 +348,10 @@ namespace care {
                                 RAJAPlugin::getCurrentLoopLineNumber());
                      }
                   }
-
                   if (s_log_data > 0) {
                      RAJAPlugin::addActivePointer(m_record);
                   }
-
+#endif
                   break;
                case chai::ACTION_FOUND_ABANDONED:
                   if (s_log_abandoned == (int) space ||
@@ -390,19 +396,21 @@ namespace care {
             // Just update or remove the stored data without logging anything
             switch(action) {
                case chai::ACTION_FREE:
+#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_data > 0) {
                      RAJAPlugin::removeActivePointer(m_record);
                   }
-
+#endif
                   s_names.erase(m_record);
                   getPrintCallbackMap().erase(m_record);
 
                   break;
                case chai::ACTION_CAPTURED:
+#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_data > 0) {
                      RAJAPlugin::addActivePointer(m_record);
                   }
-
+#endif
                   break;
                default:
                   break;

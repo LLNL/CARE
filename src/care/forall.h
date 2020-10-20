@@ -71,15 +71,17 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
+#ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
-
+#endif
 #if CARE_ENABLE_GPU_SIMULATION_MODE
          RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
 #else
          RAJA::forall<ExecutionPolicy>(RAJA::RangeSegment(start, end), body);
 #endif
-
+#ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+#endif
       }
    }
 
