@@ -295,11 +295,11 @@ namespace care {
                      }
                   }
 
-                  if (s_log_data > 0) {
 #ifndef CARE_DISABLE_RAJAPLUGIN
+                  if (s_log_data > 0) {
                      RAJAPlugin::removeActivePointer(m_record);
-#endif
                   }
+#endif
 
                   s_names.erase(m_record);
                   getPrintCallbackMap().erase(m_record);
@@ -329,9 +329,9 @@ namespace care {
 
                   break;
                case chai::ACTION_CAPTURED:
+#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_captures == (int) space ||
                       s_log_captures == (int) chai::ExecutionSpace::NUM_EXECUTION_SPACES) {
-#ifndef CARE_DISABLE_RAJAPLUGIN
                      if (s_diff_friendly) {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Captured %lu bytes to space %i at %s:%i\n",
@@ -347,9 +347,7 @@ namespace care {
                                 RAJAPlugin::getCurrentLoopFileName().c_str(),
                                 RAJAPlugin::getCurrentLoopLineNumber());
                      }
-#endif
                   }
-#ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_data > 0) {
                      RAJAPlugin::addActivePointer(m_record);
                   }
@@ -403,7 +401,6 @@ namespace care {
                      RAJAPlugin::removeActivePointer(m_record);
                   }
 #endif
-
                   s_names.erase(m_record);
                   getPrintCallbackMap().erase(m_record);
 
