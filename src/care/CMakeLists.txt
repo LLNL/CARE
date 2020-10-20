@@ -75,7 +75,7 @@ if (ENABLE_CUDA)
       list(APPEND care_depends nvtoolsext)
    endif()
 
-   list(APPEND care_depends cuda)
+   list(APPEND care_depends cub cuda)
 endif()
 
 if (ENABLE_OPENMP)

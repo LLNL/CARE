@@ -206,7 +206,7 @@ if (NVTOOLSEXT_DIR)
                                    LIBRARIES  ${NVTOOLSEXT_LIBRARY}
                                    )
 
-           set(CARE_HAVE_NVTOOLSEXT "0" CACHE STRING "")
+           set(CARE_HAVE_NVTOOLSEXT "1" CACHE STRING "")
        else()
            message(FATAL_ERROR "CARE: Unable to find NVTOOLSEXT with given path: ${NVTOOLSEXT_DIR}")
        endif()

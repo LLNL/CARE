@@ -33,7 +33,7 @@ CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver 
    activeObserver = observer;
 }
 
-LoopFuser::LoopFuser() : FusedActions(),
+CARE_DLL_API LoopFuser::LoopFuser() : FusedActions(),
    m_delay_pack(false),
    m_call_as_packed(true),
    m_max_action_length(0),
@@ -58,7 +58,7 @@ LoopFuser::LoopFuser() : FusedActions(),
       reserve_lambda_buffer(256*10*1024);
 }
 
-LoopFuser * LoopFuser::getInstance() {
+CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
    static LoopFuser * instance = nullptr;
    if (instance == nullptr) {
       instance = defaultObserver->getFusedActions<LoopFuser>(CARE_DEFAULT_PHASE);
@@ -66,7 +66,7 @@ LoopFuser * LoopFuser::getInstance() {
    return instance;
 }
 
-LoopFuser::~LoopFuser() {
+CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
 #if defined(CARE_GPUCC)

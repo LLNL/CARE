@@ -69,6 +69,7 @@ namespace care {
    }
 }
 
+#ifndef CARE_DISABLE_RAJAPLUGIN
 #if defined(_WIN32) && !defined(CARESTATICLIB)
 #ifdef CARE_EXPORTS
 
@@ -83,6 +84,7 @@ namespace RAJA
 	}
 }  // namespace RAJA
 
+#endif
 #endif
 #endif
 
