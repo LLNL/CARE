@@ -934,16 +934,11 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
  * Author(s) : Peter Robinson
  * Purpose   : Fills a ManagedArray with the value given.
  * ************************************************************************/
-template <typename T>
-inline void fill_n(care::host_device_ptr<T> arr, int n, T val) {
+template <class T, class Size, class U>
+void fill_n(care::host_device_ptr<T> arr, Size n, const U& val) {
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
    } CARE_STREAM_LOOP_END
-}
-
-template <typename T>
-inline void fill_n(care::host_ptr<T> arr, int n, T val)  {
-   std::fill_n(arr.data(), n, val);
 }
 
 /************************************************************************
