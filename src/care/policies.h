@@ -19,6 +19,18 @@ namespace care {
    struct raja_fusible_seq {};
    struct raja_chai_everywhere {};
    struct gpu_simulation {};
+
+   enum class Policy {
+      none = -1,
+      sequential,
+      openmp,
+      gpu,
+      parallel,
+      raja_fusible,
+      raja_fusible_seq,
+      raja_chai_everywhere,
+      gpu_simulation
+   };
 } // namespace care
 
 

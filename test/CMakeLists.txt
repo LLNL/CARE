@@ -19,6 +19,19 @@ if (ENABLE_OPENMP)
    set (care_test_dependencies ${care_test_dependencies} openmp)
 endif()
 
+blt_add_executable( NAME TestForall
+                    SOURCES TestForall.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestForall
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestForall
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestForall
+              COMMAND TestForall )
+
 blt_add_executable( NAME TestLoopFuser
                     SOURCES LoopFuserTest.cxx
                     DEPENDS_ON ${care_test_dependencies} )
