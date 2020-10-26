@@ -13,10 +13,10 @@
 #define HAVE_FUSER_TEST CARE_ENABLE_LOOP_FUSER
 #if HAVE_FUSER_TEST
 // always have DEBUG on to force the packer to be on for CPU builds.
-#ifdef DEBUG
-#undef DEBUG
-#define DEBUG 1
+#ifdef CARE_DEBUG
+#undef CARE_DEBUG
 #endif
+#define CARE_DEBUG 1
 #include "gtest/gtest.h"
 
 #include "care/LoopFuser.h"
