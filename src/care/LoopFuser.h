@@ -18,6 +18,8 @@
 #include "care/host_ptr.h"
 #include "care/scan.h"
 
+#include "umpire/Allocator.hpp"
+
 // Std library headers
 #include <cstdint>
 #include <iostream>
@@ -612,7 +614,55 @@ public:
 };
 
 
+using action_xargs = RAJA::xargs<>;
+using conditonal_xargs = RAJA::xargs<>;
+using index_type = int;
+using forall_policy = RAJAExec;
+using allocator = umpire::Allocator;
 
+// TODO - explore varying policy block exection based off of register binning types 
+#if defined CARE_GPUCC && defined GPU_ACTIVE
+const int CUDA_WORKGROUP_BLOCK_SIZE = 1024;
+using workgroup_policy = RAJA::WorkGroupPolicy <
+                           RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
+                           RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average,
+                           RAJA::constant_stride_array_of_objects >;
+#else
+using workgroup_policy = RAJA::WorkGroupPolicy <
+                           RAJA::loop_work,
+                           RAJA::ordered,
+                           RAJA::ragged_array_of_objects >;
+#endif
+ 
+using action_workpool = RAJA::WorkPool< workgroup_policy,
+                               index_type,
+                               action_xargs,
+                               allocator >;
+
+using action_workgroup = RAJA::WorkGroup< workgroup_policy,
+                                 index_type,
+                                 action_xargs,
+                                 allocator >;
+
+using action_worksite = RAJA::WorkSite< workgroup_policy,
+                               index_type, 
+                               action_xargs,
+                               allocator >;
+
+using conditional_workpool = RAJA::WorkPool< workgroup_policy,
+                               index_type,
+                               conditional_xargs,
+                               allocator >;
+
+using conditional_workgroup = RAJA::WorkGroup< workgroup_policy,
+                                 index_type,
+                                 conditional_xargs,
+                                 allocator >;
+
+using conditional_worksite = RAJA::WorkSite< workgroup_policy,
+                               index_type, 
+                               conditional_xargs,
+                               allocator >;
 
 
 // This class is meant to orchestrate fusing a bunch of loops together. The initial use case
@@ -652,7 +702,9 @@ class LoopFuser : public FusedActions {
       ///////////////////////////////////////////////////////////////////////////
       CARE_DLL_API static int non_scan_store;
       template <typename LB, typename Conditional>
-      void registerAction(int start, int end, int & start_pos, Conditional && conditional, LB && action, int scan_type = 0, int & pos_store = non_scan_store, care::host_device_ptr<int> counts_to_offsets_scanvar = nullptr);
+      void registerAction(int start, int end, int & start_pos, Conditional && conditional, 
+                          LB && action, int scan_type = 0, int & pos_store = non_scan_store,
+                          care::host_device_ptr<int> counts_to_offsets_scanvar = nullptr);
       
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -773,42 +825,27 @@ class LoopFuser : public FusedActions {
       ///
       /// Host pointer (pinned) for action offsets
       ///
-      int *m_action_offsets;
+      //int *m_action_offsets;
 
       ///
       /// Host pointer (pinned) for action starts
       ///
-      int *m_action_starts;
+      //int *m_action_starts;
 
       ///
       /// Host pointer (pinned) for action ends
       ///
-      int *m_action_ends;
+      //int *m_action_ends;
 
       ///
       /// container of condional serialized lambdas
       ///
-      SerializableDeviceLambda<bool> * m_conditionals;
+      conditional_workpool m_conditionals;
 
       ///
       /// container of action serialized lambdas
       ///
-      SerializableDeviceLambda<int> * m_actions;
-
-      ///
-      /// The amount of memory reserved for lambda serialization
-      ///
-      size_t m_lambda_reserved;
-
-      ///
-      /// The amount of memory used for lambda serialization
-      ///
-      size_t m_lambda_size;
-
-      ///
-      /// The buffer used for lambda serialization
-      ///
-      char * m_lambda_data;
+      action_workpool m_actions;
 
       ///
       /// Type of scan (0 = no scan, 1 = regular scan, 2 = counts_to_offsets scan)
@@ -938,16 +975,6 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          if (m_action_count == m_reserved) {
 #ifdef FUSER_VERBOSE
             printf("hit reserved flushActions\n");
-#endif
-            flushActions();
-         }
-         // flush if we are approaching our buffer allocation - we add some fuzz here because we do not know
-         // a priori what the next lambda size is going to be, but we need to ensure a flush so the
-         // FUSIBLE_LOOP_STREAM macro gets good information for what the next offset will be to construct
-         // its lambda.
-         if (m_lambda_reserved <= 100*(lambda_size + conditional_size) + m_lambda_size) {
-#ifdef FUSER_VERBOSE
-            printf("hit lambda_reserved flushActions\n");
 #endif
             flushActions();
          }
