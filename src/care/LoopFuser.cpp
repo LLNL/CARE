@@ -38,12 +38,11 @@ CARE_DLL_API LoopFuser::LoopFuser() : FusedActions(),
    m_call_as_packed(true),
    m_max_action_length(0),
    m_reserved(0),
-   m_action_offsets(nullptr),
-   m_action_starts(nullptr),
-   m_action_ends(nullptr),
-   m_conditionals(nullptr),
-   m_actions(nullptr),
-   m_lambda_reserved(0),
+   //m_action_offsets(nullptr),
+   //m_action_starts(nullptr),
+   //m_action_ends(nullptr),
+   m_conditionals(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED)),
+   m_actions(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED)),
    m_lambda_size(0),
    m_lambda_data(nullptr),
    m_scan_pos_outputs(nullptr),
@@ -108,9 +107,9 @@ void LoopFuser::reserve(size_t size) {
    m_actions          = (SerializableDeviceLambda<int> *)(pinned_buf  + 5*sizeof(int)*size + sizeof(SerializableDeviceLambda<bool>)*size);
    m_reserved = size;
 }
-
+/*
 void LoopFuser::reserve_lambda_buffer(size_t size) {
-   /* the buffer we will slice out of for packing the lambdas */
+   // the buffer we will slice out of for packing the lambdas
    m_lambda_reserved = size;
    char * tmp;
 #if defined(CARE_GPUCC)
@@ -128,6 +127,7 @@ void LoopFuser::reserve_lambda_buffer(size_t size) {
 #endif
    m_lambda_data = tmp;
 }
+*/
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
