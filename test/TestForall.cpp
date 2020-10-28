@@ -19,7 +19,13 @@
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
 
-TEST(forall, static_policy)
+// Adapted from CHAI
+#define CPU_TEST(X, Y) \
+   static void cpu_test_##X##Y(); \
+   TEST(X, cpu_test_##Y) { cpu_test_##X##Y(); } \
+   static void cpu_test_##X##Y()
+
+CPU_TEST(forall, static_policy)
 {
    const int length = 10;
    care::host_device_ptr<int> temp(length, "temp");
@@ -35,7 +41,7 @@ TEST(forall, static_policy)
    temp.free();
 }
 
-TEST(forall, dynamic_policy)
+CPU_TEST(forall, dynamic_policy)
 {
    const int length = 10;
    care::host_device_ptr<int> temp(length, "temp");
