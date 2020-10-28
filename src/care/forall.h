@@ -378,17 +378,8 @@ namespace care {
          case Policy::parallel:
             forall(parallel{}, fileName, lineNumber, start, end, body);
             break;
-         case Policy::raja_fusible:
-            forall(raja_fusible{}, fileName, lineNumber, start, end, body);
-            break;
-         case Policy::raja_fusible_seq:
-            forall(raja_fusible_seq{}, fileName, lineNumber, start, end, body);
-            break;
          case Policy::raja_chai_everywhere:
             forall(raja_chai_everywhere{}, fileName, lineNumber, start, end, body);
-            break;
-         case Policy::gpu_simulation:
-            forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
             break;
          default:
             std::cout << "[CARE] Error: Invalid policy!" << std::endl;
