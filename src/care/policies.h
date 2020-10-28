@@ -26,10 +26,7 @@ namespace care {
       openmp,
       gpu,
       parallel,
-      raja_fusible,
-      raja_fusible_seq,
-      raja_chai_everywhere,
-      gpu_simulation
+      raja_chai_everywhere
    };
 } // namespace care
 
