@@ -19,10 +19,15 @@
 #include "care/Setup.h"
 
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
-static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
+#if defined(CARE_GPUCC)
+static FusedActionsObserver * defaultObserver = new FusedActionsObserver(allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))); 
+#else
+static FusedActionsObserver * defaultObserver = new FusedActionsObserver(allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))); 
+#endif
+
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
-CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() { 
+CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() {
    if (activeObserver == nullptr) {
       activeObserver = defaultObserver;
    }
@@ -33,18 +38,21 @@ CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver 
    activeObserver = observer;
 }
 
-CARE_DLL_API LoopFuser::LoopFuser() : FusedActions(),
+CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
+   m_allocator(a),
    m_delay_pack(false),
    m_call_as_packed(true),
    m_max_action_length(0),
    m_reserved(0),
-   //m_action_offsets(nullptr),
+   m_action_offsets(nullptr),
+   m_scan_var(nullptr),
    //m_action_starts(nullptr),
    //m_action_ends(nullptr),
-   m_conditionals(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED)),
-   m_actions(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED)),
-   m_lambda_size(0),
-   m_lambda_data(nullptr),
+   m_conditionals(a),
+   m_actions(a), 
+   //m_lambda_size(0),
+   //m_lambda_data(nullptr),
+   m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
    m_verbose(false),
@@ -54,7 +62,7 @@ CARE_DLL_API LoopFuser::LoopFuser() : FusedActions(),
       // will flush if we exceed the 10k count or if the lambda size requirements
       // are exceeded.
       reserve(10*1024);
-      reserve_lambda_buffer(256*10*1024);
+      //reserve_lambda_buffer(256*10*1024);
 }
 
 CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
@@ -74,7 +82,7 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
       free(m_action_offsets);
 #endif
    }
-
+/*
    if (m_lambda_reserved > 0) {
 #if defined(CARE_GPUCC)
       care::gpuFree(m_lambda_data);
@@ -82,6 +90,7 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
       free(m_lambda_data);
 #endif
    }
+*/
 
    if (m_pos_output_destinations) {
       free(m_pos_output_destinations);
@@ -90,21 +99,22 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
 
 void LoopFuser::reserve(size_t size) {
    static char * pinned_buf;
-   size_t totalsize = size*(sizeof(int)*5+sizeof(SerializableDeviceLambda<int>) + sizeof(SerializableDeviceLambda<bool>));
-#if defined(CARE_GPUCC)
-   care::gpuHostAlloc((void **)&pinned_buf, totalsize, gpuHostAllocDefault);
-#else
-   pinned_buf = (char*) malloc(totalsize);
-#endif
+   size_t totalsize = size*(sizeof(int)*3)+sizeof(int *);
+   pinned_buf = (char *)m_allocator.allocate(totalsize);
    m_pos_output_destinations = (care::host_ptr<int>*)malloc(size * sizeof(care::host_ptr<int>));
 
    m_action_offsets   = (int *) pinned_buf;
-   m_action_starts    = (int *)(pinned_buf  +   sizeof(int)*size);
-   m_action_ends      = (int *)(pinned_buf  + 2*sizeof(int)*size);
-   m_scan_pos_outputs = (int *)(pinned_buf  + 3*sizeof(int)*size);
-   m_scan_pos_starts  = (int *)(pinned_buf  + 4*sizeof(int)*size);
+   /*
+   m_action_starts    = (int *) (pinned_buf  +   sizeof(int)*size);
+   m_action_ends      = (int *) (pinned_buf  + 2*sizeof(int)*size);
+   */
+   m_scan_pos_outputs = (int *) (pinned_buf  + sizeof(int)*size);
+   m_scan_pos_starts  = (int *) (pinned_buf  + 2*sizeof(int)*size);
+   m_scan_var =         (int **)(pinned_buf  + 3*sizeof(int)*size);
+   /*
    m_conditionals     = (SerializableDeviceLambda<bool> *)(pinned_buf  + 5*sizeof(int)*size);
    m_actions          = (SerializableDeviceLambda<int> *)(pinned_buf  + 5*sizeof(int)*size + sizeof(SerializableDeviceLambda<bool>)*size);
+   */
    m_reserved = size;
 }
 /*
@@ -132,7 +142,7 @@ void LoopFuser::reserve_lambda_buffer(size_t size) {
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
 void LoopFuser::reset(bool async) {
-   m_lambda_size = 0;
+//   m_lambda_size = 0;
    m_action_count = 0;
    m_max_action_length = 0;
    m_prev_pos_output = nullptr;
@@ -155,10 +165,12 @@ void LoopFuser::flush_parallel_actions(bool async) {
    // Do the thing
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
-      printf("in flush_parallel_actions with %i,%i\n", m_action_count, m_max_action_length);
+      printf("in flush_parallel_actions with %i,%i\n", m_actions.num_loops(), m_max_action_length);
    }
 #endif
-   SerializableDeviceLambda<int> *actions = m_actions;
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(nullptr);
+/*
    int * offsets = m_action_offsets;
 
    int end = m_action_offsets[m_action_count-1];
@@ -184,6 +196,7 @@ void LoopFuser::flush_parallel_actions(bool async) {
 #endif
       actions[actionIndex](index, true, actionIndex, -1, -1);
    } CARE_STREAM_LOOP_END
+*/
    if (!async) {
 #ifdef FUSER_VERBOSE
       if (m_verbose) {
@@ -193,8 +206,9 @@ void LoopFuser::flush_parallel_actions(bool async) {
       care::syncIfNeeded();
    }
 }
-
-void LoopFuser::flush_order_preserving_actions(bool /*async*/) {
+/*
+void LoopFuser::flush_order_preserving_actions(bool // async
+                                               ) {
    // Do the thing
    SerializableDeviceLambda<int> *actions = m_actions;
 
@@ -220,6 +234,7 @@ void LoopFuser::flush_order_preserving_actions(bool /*async*/) {
       }
    } CARE_STREAM_LOOP_END
 }
+*/
 
 void LoopFuser::flush_parallel_scans() {
 #ifdef FUSER_VERBOSE
@@ -227,16 +242,27 @@ void LoopFuser::flush_parallel_scans() {
       printf("in flush_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
    }
 #endif
-   SerializableDeviceLambda<int> *actions = m_actions;
-   SerializableDeviceLambda<bool> *conditionals = m_conditionals;
    const int * offsets = (const int *)m_action_offsets;
    int * scan_pos_outputs = m_scan_pos_outputs;
-   int * scan_pos_starts = m_scan_pos_starts;
+//   int * scan_pos_starts = m_scan_pos_starts;
 
    int end = m_action_offsets[m_action_count-1];
    int action_count = m_action_count;
+   // store the address of the gpu data in the pinned memory where kernels expect to find it
+//   *m_scan_var = scan_var.data(chai::GPU,true);
 
+   // handle the last index by enqueuing a specialized lambda to batch with the rest.
+   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int *, int) {
+      SCANVAR[end] = false;
+   });
+
+   // the xarg input to the conditional is the bulk scan var the conditional needs to initialize 
    care::host_device_ptr<int> scan_var(end+1, "scan_var");
+   // this will fill scan_var up from the fused conditionals 
+   conditional_workgroup cw = m_conditionals.instantiate();
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), nullptr, end+1);
+
+   /*
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
    if (verbose) {
@@ -271,7 +297,7 @@ void LoopFuser::flush_parallel_scans() {
 #endif
       }
    } CARE_STREAM_LOOP_END
-   int scanvar_offset = 0;
+   */
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
       CARE_STREAM_LOOP(i, 0, end+1) {
@@ -282,6 +308,7 @@ void LoopFuser::flush_parallel_scans() {
       printf("SCAN\n");
    }
 #endif
+   int scanvar_offset = 0;
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end+1, RAJA::operators::plus<int>{}, scanvar_offset, true);
 
 #ifdef FUSER_VERBOSE
@@ -307,9 +334,12 @@ void LoopFuser::flush_parallel_scans() {
       }
 #endif
    } CARE_STREAM_LOOP_END
+   
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(scan_var.data(chai::GPU,true));
 
    // execute the loop body
-   CARE_STREAM_LOOP(i, 0, end) {
+   /*CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
          // do indices in reverse order to discover any order dependencies between loops
@@ -337,6 +367,7 @@ void LoopFuser::flush_parallel_scans() {
 #endif
       actions[actionIndex](index, true, actionIndex, pos, -1);
    } CARE_STREAM_LOOP_END
+   */
    // need to do a synchronize data so pinned memory reads are valid
    care::syncIfNeeded();
 
@@ -356,14 +387,17 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
       printf("in flush_counts_to_offsets_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
    }
 #endif
-   SerializableDeviceLambda<int> *actions = m_actions;
-   SerializableDeviceLambda<bool> *conditionals = m_conditionals;
-   const int * offsets = (const int *)m_action_offsets;
+  // const int * offsets = (const int *)m_action_offsets;
 
-   int end = m_action_offsets[m_action_count-1];
-   int action_count = m_action_count;
+  int end = m_action_offsets[m_action_count-1];
+  // int action_count = m_action_count;
 
    care::host_device_ptr<int> scan_var(end, "scan_var");
+   *m_scan_var = scan_var.data(chai::GPU, true);
+   
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(scan_var.data(chai::GPU, true));
+   /*
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
    if (verbose) {
@@ -395,9 +429,12 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
 #endif
       
    } CARE_STREAM_LOOP_END
-
+*/
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
 
+   conditional_workgroup cw = m_conditionals.instantiate();
+   conditional_worksite cws = cw.run(nullptr,nullptr, end);
+/*
    CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
       if (reverse_indices) {
@@ -421,6 +458,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
 #endif
       conditionals[actionIndex](index,true,scan_var[index]-scan_var[offset],-1,-1);
    } CARE_STREAM_LOOP_END
+   */
 
    if (!async) {
       // need to do a synchronize data so subsequent writes to this fuser's buffers do not overlap with zero copy reads.
@@ -453,7 +491,7 @@ void LoopFuser::flushActions(bool async) {
 #ifdef FUSER_VERBOSE
             printf("loop fuser flush order preserving actions\n");
 #endif
-            flush_order_preserving_actions(async);
+            //flush_order_preserving_actions(async);
          }
          else {
 #ifdef FUSER_VERBOSE
