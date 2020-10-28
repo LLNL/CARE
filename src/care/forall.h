@@ -352,9 +352,10 @@ namespace care {
    ///
    /// @author Alan Dayton
    ///
-   /// @brief Execute on the host. This specialization is needed for clang-query.
+   /// @brief Loops over the given indices and calls the loop body with each index.
+   ///        This overload takes a run time selectable policy.
    ///
-   /// @arg[in] sequential Used to choose this overload of forall
+   /// @arg[in] policy Run time policy used to select the backend to execute on.
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
