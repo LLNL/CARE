@@ -519,12 +519,12 @@ public:
    CARE_DLL_API static void setActiveObserver(FusedActionsObserver * observer);
 
 
-   FusedActionsObserver(allocator a) : FusedActions(),
+   FusedActionsObserver() : FusedActions(),
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
-                            m_recording(false),
-                            m_allocator(a) {
+                            m_recording(false)
+                            {
     }
 
    void startRecording() {
@@ -603,7 +603,14 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-         actions = new ActionsType(m_allocator);
+            // TODO - not sure we need to differentiate here, could probably get chai::PINNED all the time
+#if defined(CARE_GPUCC)
+         static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
+#else
+         static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::CPU));
+#endif
+         
+         actions = new ActionsType(a);
          if (m_recording) {
             actions->startRecording();
          } else {
@@ -660,7 +667,6 @@ public:
       double m_last_insert_priority;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
       bool m_recording;
-      allocator m_allocator;
 
 };
 
@@ -1149,7 +1155,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
-   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(DEFAULT_ALLOCATOR); \
+   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->startRecording(); \
       __fuser__->preserveOrder(false); \
@@ -1159,7 +1165,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 }
 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START { \
-   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(DEFAULT_ALLOCATOR); \
+   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->startRecording(); \
       __fuser__->preserveOrder(true); \
@@ -1192,7 +1198,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // in opt, non cuda builds, never start recording
 #define FUSIBLE_LOOPS_START \
 { \
-   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(DEFAULT_ALLOCATOR); \
+   static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions * __fuser__ : {static_cast<FusedActions *>(LoopFuser::getInstance()), static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->stopRecording(); \
       __fuser__->setScan(false); \

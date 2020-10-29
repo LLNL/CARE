@@ -19,11 +19,7 @@
 #include "care/Setup.h"
 
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
-#if defined(CARE_GPUCC)
-static FusedActionsObserver * defaultObserver = new FusedActionsObserver(allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))); 
-#else
-static FusedActionsObserver * defaultObserver = new FusedActionsObserver(allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))); 
-#endif
+static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
 
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
