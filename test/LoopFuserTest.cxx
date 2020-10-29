@@ -66,7 +66,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int *, int) { },
+                          [=] CARE_DEVICE(int, int *, int const*, int) { },
                           [=] CARE_DEVICE(int i, int *) {
       dst[pos+i] = src[i];
    });
@@ -124,7 +124,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
       __fuser__->registerAction(0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int *, int){ },
+                                [=] FUSIBLE_DEVICE(int, int *, int const*, int){ },
                                 [=] FUSIBLE_DEVICE(int i, int *) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
@@ -240,7 +240,7 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
 
 
 GPU_TEST(performanceWithPacker, allOfTheFuses) {
-   int arrSize = 128;
+   int arrSize = 1;
    int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
@@ -267,7 +267,7 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
 
 
 GPU_TEST(orderDependent, basic_test) {
-   int arrSize = 128;
+   int arrSize = 16;
    int timesteps = 5;
    care::host_device_ptr<int> A(arrSize);
    care::host_device_ptr<int> B(arrSize);

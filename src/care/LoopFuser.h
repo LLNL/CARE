@@ -667,7 +667,7 @@ public:
 
 using index_type = int;
 using action_xargs = RAJA::xargs<int * /*scan_var*/>;
-using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type * /*scan_offsets*/, index_type /*total length */>;
+using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type const * /*scan_offsets*/, index_type /*total length */>;
 
 // TODO - explore varying policy block exection based off of register binning types 
 #if defined CARE_GPUCC && defined GPU_ACTIVE
@@ -676,8 +676,16 @@ using workgroup_policy = RAJA::WorkGroupPolicy <
                            RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
                            RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average,
                            RAJA::constant_stride_array_of_objects >;
+using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
+                           RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
+                           RAJA::,
+                           RAJA::constant_stride_array_of_objects >;
 #else
 using workgroup_policy = RAJA::WorkGroupPolicy <
+                           RAJA::loop_work,
+                           RAJA::ordered,
+                           RAJA::ragged_array_of_objects >;
+using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
                            RAJA::loop_work,
                            RAJA::ordered,
                            RAJA::ragged_array_of_objects >;
@@ -693,7 +701,17 @@ using action_workgroup = RAJA::WorkGroup< workgroup_policy,
                                  action_xargs,
                                  allocator >;
 
+using action_ordered_workgroup = RAJA::WorkGroup< workgroup_ordered_policy,
+                                 index_type,
+                                 action_xargs,
+                                 allocator >;
+
 using action_worksite = RAJA::WorkSite< workgroup_policy,
+                               index_type, 
+                               action_xargs,
+                               allocator >;
+
+using action_ordered_worksite = RAJA::WorkSite< workgroup_ordered_policy,
                                index_type, 
                                action_xargs,
                                allocator >;
@@ -800,7 +818,7 @@ class LoopFuser : public FusedActions {
       /// @author Peter Robinson
       /// @brief execute all recorded actions in a sequence
       ///////////////////////////////////////////////////////////////////////////
-//      void flush_order_preserving_actions(bool async);
+      void flush_order_preserving_actions(bool async);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -1226,8 +1244,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_REGISTER_ARGS __fusible_start_index__, __fusible_end_index__
 
 // conditional xargs to pass in to lambdas
-#define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type * __fusible_scan_offsets__
-#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type *, int) { __fusible_scan_var__[INDEX] = true;}
+#define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__
+#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int) { __fusible_scan_var__[INDEX] = true;}
 // actions xargs to pass in to lambdas
 //#define FUSIBLE_ACTION_XARGS index_type * __fusible_scan_offsets__
 #define FUSIBLE_ACTION_XARGS index_type * 
@@ -1334,7 +1352,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    auto __fuser__ = FUSER; \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, INIT_POS, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, int *, int GLOBAL_END){ \
+                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, index_type const *, int GLOBAL_END){ \
                                  FUSIBLE_INDEX_ADJUST(INDEX); \
                                  SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
                               }, \
@@ -1355,7 +1373,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    int __fusible_scan_pos__ = 0; \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , int * SCANVAR_OFFSET, int ) {  \
+                              [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , index_type const * SCANVAR_OFFSET, int ) {  \
                                  FUSIBLE_INDEX_ADJUST(INDEX) ; \
                                  int __offset = __fusible_action_index__ == 0 ? 0 : SCANVAR_OFFSET[__fusible_action_index__-1]; \
                                  SCANVAR[INDEX] = FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset]; },  \

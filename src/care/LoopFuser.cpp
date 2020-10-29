@@ -206,13 +206,15 @@ void LoopFuser::flush_parallel_actions(bool async) {
       care::syncIfNeeded();
    }
 }
-/*
+
 void LoopFuser::flush_order_preserving_actions(bool // async
                                                ) {
    // Do the thing
-   SerializableDeviceLambda<int> *actions = m_actions;
+   action_workgroup aw = m_actions.instantiate();
+   action_ordered_workgroup & aow = reinterpret_cast<action_ordered_workgroup&>(aw);
+   action_ordered_worksite aws = aow.run(nullptr);
 
-   int action_count = m_action_count;
+/*   int action_count = m_action_count;
 
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
@@ -233,8 +235,9 @@ void LoopFuser::flush_order_preserving_actions(bool // async
          actions[actionIndex](i, true, actionIndex, -1, -1);
       }
    } CARE_STREAM_LOOP_END
+   */
 }
-*/
+
 
 void LoopFuser::flush_parallel_scans() {
 #ifdef FUSER_VERBOSE
@@ -252,7 +255,7 @@ void LoopFuser::flush_parallel_scans() {
 //   *m_scan_var = scan_var.data(chai::GPU,true);
 
    // handle the last index by enqueuing a specialized lambda to batch with the rest.
-   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int *, int) {
+   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int) {
       SCANVAR[end] = false;
    });
 
@@ -387,7 +390,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
       printf("in flush_counts_to_offsets_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
    }
 #endif
-  // const int * offsets = (const int *)m_action_offsets;
+  const int * offsets = (const int *)m_action_offsets;
 
   int end = m_action_offsets[m_action_count-1];
   // int action_count = m_action_count;
@@ -433,7 +436,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
 
    conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(nullptr,nullptr, end);
+   conditional_worksite cws = cw.run(scan_var, offsets, end);
 /*
    CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
@@ -491,7 +494,7 @@ void LoopFuser::flushActions(bool async) {
 #ifdef FUSER_VERBOSE
             printf("loop fuser flush order preserving actions\n");
 #endif
-            //flush_order_preserving_actions(async);
+            flush_order_preserving_actions(async);
          }
          else {
 #ifdef FUSER_VERBOSE
