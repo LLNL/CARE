@@ -169,7 +169,7 @@ void LoopFuser::flush_parallel_actions(bool async) {
    }
 #endif
    action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(nullptr);
+   action_worksite aws = aw.run(nullptr, fusible_registers{});
 /*
    int * offsets = m_action_offsets;
 
@@ -211,10 +211,10 @@ void LoopFuser::flush_order_preserving_actions(bool // async
                                                ) {
    // Do the thing
    action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(nullptr);
+   action_worksite aws = aw.run(nullptr, fusible_registers{});
    /* THIS IS NOT SAFE
    action_ordered_workgroup & aow = reinterpret_cast<action_ordered_workgroup&>(aw);
-   action_ordered_worksite aws = aow.run(nullptr);
+   action_ordered_worksite aws = aow.run(nullptr, fusible_registers{});
    */
 
 /*   int action_count = m_action_count;
@@ -258,7 +258,7 @@ void LoopFuser::flush_parallel_scans() {
 //   *m_scan_var = scan_var.data(chai::GPU,true);
 
    // handle the last index by enqueuing a specialized lambda to batch with the rest.
-   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int) {
+   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int, fusible_registers) {
       SCANVAR[end] = false;
    });
 
@@ -266,7 +266,7 @@ void LoopFuser::flush_parallel_scans() {
    care::host_device_ptr<int> scan_var(end+1, "scan_var");
    // this will fill scan_var up from the fused conditionals 
    conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), nullptr, end+1);
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, fusible_registers{});
 
    /*
 #ifdef FUSER_VERBOSE
@@ -342,7 +342,7 @@ void LoopFuser::flush_parallel_scans() {
    } CARE_STREAM_LOOP_END
    
    action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(scan_var.data(chai::GPU,true));
+   action_worksite aws = aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
 
    // execute the loop body
    /*CARE_STREAM_LOOP(i, 0, end) {
@@ -402,7 +402,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
    *m_scan_var = scan_var.data(chai::GPU, true);
    
    action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(scan_var.data(chai::GPU, true));
+   action_worksite aws = aw.run(scan_var.data(chai::GPU, true), fusible_registers{});
    /*
 #ifdef FUSER_VERBOSE
    bool verbose = m_verbose;
@@ -439,7 +439,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
 
    conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end);
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});
 /*
    CARE_STREAM_LOOP(i, 0, end) {
       int index = i;

@@ -664,20 +664,39 @@ public:
 
 };
 
+struct fusible_32_registers {
+   static const int CUDA_WORKGROUP_BLOCK_SIZE = 2048;
+};
+struct fusible_64_registers {
+   static const int CUDA_WORKGROUP_BLOCK_SIZE = 1024;
+};
+struct fusible_128_registers {
+   static const int CUDA_WORKGROUP_BLOCK_SIZE = 512;
+};
+struct fusible_256_registers {
+   static const int CUDA_WORKGROUP_BLOCK_SIZE = 256;
+};
 
+template <int REGCOUNT>
+struct fusible_registers_t {
+   static const int CUDA_WORKGROUP_BLOCK_SIZE = 2048/(REGCOUNT/32);
+};
+
+
+using fusible_registers = fusible_registers_t<64>;
 using index_type = int;
-using action_xargs = RAJA::xargs<int * /*scan_var*/>;
-using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type const * /*scan_offsets*/, index_type /*total length */>;
+using action_xargs = RAJA::xargs<int * /*scan_var*/, fusible_registers>;
+using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type const * /*scan_offsets*/, index_type /*total length */, fusible_registers>;
 
 // TODO - explore varying policy block exection based off of register binning types 
 #if defined CARE_GPUCC && defined GPU_ACTIVE
 const int CUDA_WORKGROUP_BLOCK_SIZE = 1024;
 using workgroup_policy = RAJA::WorkGroupPolicy <
-                           RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
+                           RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
                            RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average,
                            RAJA::constant_stride_array_of_objects >;
 using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
-                           RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
+                           RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
                            RAJA::ordered,
                            RAJA::constant_stride_array_of_objects >;
 #else
@@ -1244,54 +1263,11 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_REGISTER_ARGS __fusible_start_index__, __fusible_end_index__
 
 // conditional xargs to pass in to lambdas
-#define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__
-#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int) { __fusible_scan_var__[INDEX] = true;}
+#define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__, fusible_registers
+#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int, fusible_registers) { __fusible_scan_var__[INDEX] = true;}
 // actions xargs to pass in to lambdas
 //#define FUSIBLE_ACTION_XARGS index_type * __fusible_scan_offsets__
-#define FUSIBLE_ACTION_XARGS index_type * 
-
-// Loop definitions for FUSIBLE_KERNEL_DEBUGGING. Can be set in a compilation
-// unit to give named variables to the loop as a handle for printfs, debuggers, etc.
-#ifdef FUSIBLE_KERNEL_DEBUGGING
-
-#define FUSIBLE_LOOP_STREAM(INDEX, START, END) { \
-   auto __fuser__= LoopFuser::getInstance(); \
-   FUSIBLE_BOOKKEEPING(__fuser__,START,END) \
-   int __fusible_scan_pos__ = 0; \
-   __fuser->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
-                            [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
-                            [=] FUSIBLE_DEVICE(int INDEX, bool __is_fused__, int __action_index__, int __fuse_start__, int __fuse_end__) ->int{ \
-                            FUSIBLE_LOOP_PREAMBLE(INDEX) {
-
-#define FUSIBLE_LOOP_STREAM_END \
-                            } return 0;}); }
-
-#define FUSIBLE_KERNEL { \
-   int __fusible_scan_pos__ = 0; \
-   LoopFuser::getInstance()->registerAction( 0, 1, __fusible_scan_pos__, \
-                                            [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
-                                            [=] FUSIBLE_DEVICE(int, bool __is_fused__, int __action_index__, int __fuse_start__, int __fuse_end__) -> int{
-
-#define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
-   if (END > START) { \
-      LoopFuser * __this_fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
-      FUSIBLE_BOOKKEEPING(__this_fuser__, START,END) \
-      int __fusible_scan_pos__ = 0; \
-      __this_fuser__->registerAction(FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
-                                     [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
-                                     [=] FUSIBLE_DEVICE(int INDEX, bool __is_fused__, int __action_index__, int __fuse_start__, int __fuse_end__) ->int{ \
-                                     FUSIBLE_LOOP_PREAMBLE(INDEX) {
-
-#define FUSIBLE_LOOP_PHASE_END \
-                                     } return 0;}); }}
-
-#define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
-   LoopFuser * __this_fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
-   int __fusible_scan_pos__ = 0; \
-   __this_fuser__->registerAction(0, 1, __fusible_scan_pos__, \
-                                  [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; }, \
-                                  [=] FUSIBLE_DEVICE(int, bool __is_fused__, int __action_index__, int __fuse_start__, int __fuse_end__) -> int{
-#else // FUSIBLE_KERNEL_DEBUGGING
+#define FUSIBLE_ACTION_XARGS index_type *, fusible_registers 
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) { \
    auto __fuser__ = LoopFuser::getInstance(); \
@@ -1334,7 +1310,6 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                              [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS) {
 
 
-#endif
 
 #define FUSIBLE_KERNEL_END return 0;}); }
 
@@ -1352,11 +1327,11 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    auto __fuser__ = FUSER; \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, INIT_POS, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, index_type const *, int GLOBAL_END){ \
+                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, index_type const *, int GLOBAL_END, fusible_registers){ \
                                  FUSIBLE_INDEX_ADJUST(INDEX); \
                                  SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
                               }, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR){ \
+                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, fusible_registers){ \
                                  FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, SCANVAR, POS) {
 
 #define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) _FUSIBLE_LOOP_SCAN(LoopFuser::getInstance(), INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
@@ -1373,11 +1348,11 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    int __fusible_scan_pos__ = 0; \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , index_type const * SCANVAR_OFFSET, int ) {  \
+                              [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , index_type const * SCANVAR_OFFSET, int, fusible_registers ) {  \
                                  FUSIBLE_INDEX_ADJUST(INDEX) ; \
                                  int __offset = __fusible_action_index__ == 0 ? 0 : SCANVAR_OFFSET[__fusible_action_index__-1]; \
                                  SCANVAR[INDEX] = FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset]; },  \
-                              [=] FUSIBLE_DEVICE(int INDEX, int *FUSED_SCANVAR) { \
+                              [=] FUSIBLE_DEVICE(int INDEX, int *FUSED_SCANVAR, fusible_registers) { \
                                  FUSIBLE_LOOP_PREAMBLE(INDEX) {
 
 

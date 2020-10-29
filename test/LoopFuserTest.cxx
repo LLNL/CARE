@@ -69,8 +69,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int const*, int) { },
-                          [=] CARE_DEVICE(int i, int *) {
+                          [=] CARE_DEVICE(int, int *, int const*, int, fusible_registers) { },
+                          [=] CARE_DEVICE(int i, int *, fusible_registers) {
       if (i == 0) {
          printf("dst %p src %p\n", dst.data(), src.data());
       }
@@ -133,8 +133,8 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
       __fuser__->registerAction(0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int const*, int){ },
-                                [=] FUSIBLE_DEVICE(int i, int *) {
+                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, fusible_registers){ },
+                                [=] FUSIBLE_DEVICE(int i, int *, fusible_registers) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
