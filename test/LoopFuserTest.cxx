@@ -285,16 +285,18 @@ GPU_TEST(orderDependent, basic_test) {
       A[i] = 0;
       B[i] = 0;
    } CARE_STREAM_LOOP_END
-   FUSIBLE_LOOPS_PRESERVE_ORDER_START
+   // Note - this use to test PRESERVE_ORDER but that implementation was pretty flawed,
+   // prefer to use PHASES instead. 
+   FUSIBLE_LOOPS_START
    for (int t = 0; t < timesteps; ++t) {
-      FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
+      FUSIBLE_LOOP_PHASE(i, 0, arrSize, t) {
          if (t %2 == 0) {
             A[i] = (A[i] + 1)<<t;
          }
          else {
             A[i] = (A[i] + 1)>>t;
          }
-      } FUSIBLE_LOOP_STREAM_END
+      } FUSIBLE_LOOP_PHASE_END
       // do the same thing, but as separate kernels in a sequence
       CARE_STREAM_LOOP(i, 0, arrSize) {
          if (t %2 == 0) {
