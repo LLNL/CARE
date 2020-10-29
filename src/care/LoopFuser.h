@@ -678,7 +678,7 @@ using workgroup_policy = RAJA::WorkGroupPolicy <
                            RAJA::constant_stride_array_of_objects >;
 using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
                            RAJA::cuda_work_async<CUDA_WORKGROUP_BLOCK_SIZE>,
-                           RAJA::,
+                           RAJA::ordered,
                            RAJA::constant_stride_array_of_objects >;
 #else
 using workgroup_policy = RAJA::WorkGroupPolicy <

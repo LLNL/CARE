@@ -53,13 +53,16 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 GPU_TEST(TestPacker, packFixedRange) {
    LoopFuser * packer = LoopFuser::getInstance();
    packer->startRecording();
-
+  
    int arrSize = 1024;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
 
    // initialize the src and dst on the host
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
+      if (i == 0) { 
+         printf("seq: dst %p src %p\n", dst.data(chai::CPU), src.data(chai::CPU));
+      }
       src[i] = i;
       dst[i] = -1;
    } CARE_SEQUENTIAL_LOOP_END
@@ -68,6 +71,9 @@ GPU_TEST(TestPacker, packFixedRange) {
    packer->registerAction(0, arrSize, pos,
                           [=] CARE_DEVICE(int, int *, int const*, int) { },
                           [=] CARE_DEVICE(int i, int *) {
+      if (i == 0) {
+         printf("dst %p src %p\n", dst.data(), src.data());
+      }
       dst[pos+i] = src[i];
    });
 
@@ -77,6 +83,9 @@ GPU_TEST(TestPacker, packFixedRange) {
    int * host_src = src.getPointer(care::CPU, false);
 
    for (int i = 0; i < 2; ++i) {
+      if (i == 0) {
+         printf("host_dst %p host_src %p\n", host_dst, host_src);
+      }
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }

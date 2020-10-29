@@ -211,8 +211,11 @@ void LoopFuser::flush_order_preserving_actions(bool // async
                                                ) {
    // Do the thing
    action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(nullptr);
+   /* THIS IS NOT SAFE
    action_ordered_workgroup & aow = reinterpret_cast<action_ordered_workgroup&>(aw);
    action_ordered_worksite aws = aow.run(nullptr);
+   */
 
 /*   int action_count = m_action_count;
 
@@ -436,7 +439,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
 
    conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(scan_var, offsets, end);
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end);
 /*
    CARE_STREAM_LOOP(i, 0, end) {
       int index = i;
