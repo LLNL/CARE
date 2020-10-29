@@ -32,7 +32,7 @@ class CHAIDataGetter {
       static const auto ChaiPolicy = chai::CPU;
 };
 
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+#if defined(CARE_GPUCC)
 
 // Partial specialization of CHAIDataGetter for cuda_exec.
 template <typename T>
@@ -52,7 +52,7 @@ class CHAIDataGetter<T, RAJADeviceExec> {
 
 /* specialization for globalID */
 template <>
-class CHAIDataGetter<globalID, RAJACudaExec> {
+class CHAIDataGetter<globalID, RAJADeviceExec> {
    public:
       typedef GIDTYPE raw_type;
       GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
@@ -66,6 +66,6 @@ class CHAIDataGetter<globalID, RAJACudaExec> {
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#endif // CARE_GPUCC && GPU_ACTIVE
+#endif // CARE_GPUCC
 
 #endif // !defined(_CARE_CHAI_DATA_GETTER_H_)
