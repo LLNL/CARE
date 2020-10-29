@@ -347,6 +347,47 @@ namespace care {
       }
 #endif
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Loops over the given indices and calls the loop body with each index.
+   ///        This overload takes a run time selectable policy.
+   ///
+   /// @arg[in] policy Run time policy used to select the backend to execute on.
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(Policy&& policy, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+      switch (policy) {
+         case Policy::sequential:
+            forall(sequential{}, fileName, lineNumber, start, end, body);
+            break;
+         case Policy::openmp:
+            forall(openmp{}, fileName, lineNumber, start, end, body);
+            break;
+         case Policy::gpu:
+            forall(gpu{}, fileName, lineNumber, start, end, body);
+            break;
+         case Policy::parallel:
+            forall(parallel{}, fileName, lineNumber, start, end, body);
+            break;
+         case Policy::raja_chai_everywhere:
+            forall(raja_chai_everywhere{}, fileName, lineNumber, start, end, body);
+            break;
+         default:
+            std::cout << "[CARE] Error: Invalid policy!" << std::endl;
+            std::abort();
+            break;
+      }
+   }
 } // namespace care
 
 #endif // !defined(_CARE_FORALL_H_)
