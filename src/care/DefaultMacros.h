@@ -688,6 +688,37 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available, executes
+///        sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_GPU_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, care_gpu_loop_check)
+
+#define CARE_GPU_LOOP_END CARE_CHECKED_GPU_LOOP_END(care_gpu_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_PARALLEL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_parallel_loop_check)
+
+#define CARE_PARALLEL_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_parallel_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
 ///        executes on the device. If GPU is not available but OpenMP is,
 ///        executes in parallel on the host. Otherwise, executes sequentially
