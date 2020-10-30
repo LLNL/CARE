@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #define GPU_ACTIVE
+#define OPENMP_ACTIVE
 
 // CARE headers
 #include "care/DefaultMacros.h"
@@ -32,6 +33,26 @@ static void benchmark_sequential_loop(benchmark::State& state) {
 
 // Register the function as a benchmark
 BENCHMARK(benchmark_sequential_loop)->Range(1, INT_MAX);
+
+#if defined(_OPENMP)
+
+static void benchmark_openmp_loop(benchmark::State& state) {
+   const int size = state.range(0);
+   care::host_device_ptr<int> data(size, "data");
+
+   for (auto _ : state) {
+      CARE_OPENMP_LOOP(i, 0, size) {
+         data[i] = i;
+      } CARE_OPENMP_LOOP_END
+   }
+
+   data.free();
+}
+
+// Register the function as a benchmark
+BENCHMARK(benchmark_openmp_loop)->Range(1, INT_MAX);
+
+#endif
 
 #if defined(CARE_GPUCC)
 
