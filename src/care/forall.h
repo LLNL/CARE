@@ -153,7 +153,7 @@ namespace care {
 #elif defined(GPU_ACTIVE) && defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif  defined(GPU_ACTIVE) && defined(__HIPCC__)
+#elif defined(GPU_ACTIVE) && defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
 #else
@@ -229,7 +229,7 @@ namespace care {
       }
    }
 
-#if defined CARE_GPUCC && defined GPU_ACTIVE
+#if defined(CARE_GPUCC)
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
