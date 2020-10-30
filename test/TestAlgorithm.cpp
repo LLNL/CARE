@@ -203,77 +203,72 @@ TEST(algorithm, intersectarrays) {
    TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
    static void gpu_test_##X##Y()
 
-GPU_TEST(algorithm, fill_empty) {
-   care::host_device_ptr<int> a;
-   care::fill_n(a, 0, -12); // hopefully nothing explodes
-}
-
-GPU_TEST(algorithm, fill_one)
-{
-   int tempb[1] = {1};
-   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
-   // disabled for host_device pointer with cuda active?
-   care::host_device_ptr<int> b(tempb, 1, "fillhostdev");
-
-   care::fill_n(b, 1, -12);
-
-   EXPECT_EQ(b.pick(0), -12);
-}
-
-GPU_TEST(algorithm, fill_three) {
-   int tempb[3] = {1, 2, 3};
-   // if you attempt to initialize this as b(tempb) without the size, the test fails. Maybe that constructor should be
-   // disabled for host_device pointer with cuda active?
-   care::host_device_ptr<int> b(tempb, 3, "fillhostdev3");
-
-   care::fill_n(b, 3, -12);
-   EXPECT_EQ(b.pick(0), -12);
-   EXPECT_EQ(b.pick(1), -12);
-   EXPECT_EQ(b.pick(2), -12);
-}
-
 GPU_TEST(algorithm, min_empty)
 {
+  const int size = 0;
   care::host_device_ptr<int> a;
   // this works even when the start index is greater than length.
   int initVal = -1;
-  int result = care::ArrayMin<int>(a, 0, initVal, 567);
+  int result = care::ArrayMin<int>(a, size, initVal, 567);
   EXPECT_EQ(result, initVal);
+  a.free();
 }
 
 GPU_TEST(algorithm, min_innerloop)
 {
   // this tests the local_ptr version of min
-  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<int> ind0(temp0, 7, "mingpu0");
-  care::host_device_ptr<int> ind1(temp1, 7, "mingpu1");
+  const int size = 7;
+  care::host_device_ptr<int> ind0(size, "mingpu0");
+  care::host_device_ptr<int> ind1(size, "mingpu1");
+
+  CARE_GPU_KERNEL {
+     ind0[0] = 2;
+     ind0[1] = 1;
+     ind0[2] = 1;
+     ind0[3] = 8;
+     ind0[4] = 3;
+     ind0[5] = 5;
+     ind0[6] = 7;
+
+     ind1[0] = 3;
+     ind1[1] = 1;
+     ind1[2] = 9;
+     ind1[3] = 10;
+     ind1[4] = 0;
+     ind1[5] = 12;
+     ind1[6] = 12;
+  } CARE_GPU_KERNEL_END
 
   RAJAReduceMin<bool> passed{true};
+
   CARE_REDUCE_LOOP(i, 0, 1) {
      care::local_ptr<int> arr0 = ind0;
      care::local_ptr<int> arr1 = ind1;
 
      // min of entire array arr0
-     int result = care::ArrayMin<int>(arr0, 7, 99, 0);
+     int result = care::ArrayMin<int>(arr0, size, 99, 0);
+
      if (result != 1) {
         passed.min(false);
      }
 
      // min of arr0 starting at index 6
-     result = care::ArrayMin<int>(arr0, 7, 99, 6);
-     if (result != 7) {
+     result = care::ArrayMin<int>(arr0, size, 99, 6);
+
+     if (result != size) {
         passed.min(false);
      }
 
      // min of entire array arr1
-     result = care::ArrayMin<int>(arr1, 7, 99, 0);
+     result = care::ArrayMin<int>(arr1, size, 99, 0);
+
      if (result != 0) {
         passed.min(false);
      }
 
      // value min of arr1 with init val -1
-     result = care::ArrayMin<int>(arr1, 7, -1, 7);
+     result = care::ArrayMin<int>(arr1, size, -1, 7);
+
      if (result != -1) {
         passed.min(false);
      }
@@ -281,91 +276,156 @@ GPU_TEST(algorithm, min_innerloop)
   } CARE_REDUCE_LOOP_END
 
    ASSERT_TRUE((bool) passed);
+
+   ind1.free();
+   ind0.free();
 }
 
 
 GPU_TEST(algorithm, min_seven)
 {
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  care::host_device_ptr<int> a(temp, 7, "minseven");
+  const int size = 7;
+  care::host_device_ptr<int> a(size, "minseven");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+  } CARE_GPU_KERNEL_END
+
   int initVal = 99;
+
   // min of whole array
-  int result = care::ArrayMin<int>(a, 7, initVal, 0);
+  int result = care::ArrayMin<int>(a, size, initVal, 0);
   EXPECT_EQ(result, 1);
   
   // min starting at index 3
-  result = care::ArrayMin<int>(a, 7, initVal, 3);
+  result = care::ArrayMin<int>(a, size, initVal, 3);
   EXPECT_EQ(result, 3);
 
   // test init val -1
   initVal = -1;
-  result = care::ArrayMin<int>(a, 7, initVal, 0);
+  result = care::ArrayMin<int>(a, size, initVal, 0);
   EXPECT_EQ(result, -1);
+
+  a.free();
 }
 
 GPU_TEST(algorithm, max_empty)
 {
+  const int size = 0;
   care::host_device_ptr<int> a;
   // ArrayMin has a value for start index but ArrayMax does not. TODO: use slicing or pointer arithmatic instead.
-  int initVal = -1;
-  int result = care::ArrayMax<int>(a, 0, initVal);
+  const int initVal = -1;
+  const int result = care::ArrayMax<int>(a, size, initVal);
   EXPECT_EQ(result, initVal);
+  a.free();
 }
 
 GPU_TEST(algorithm, max_seven)
 {
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  care::host_device_ptr<int> a(temp, 7, "maxseven");
+  const int size = 7;
+  care::host_device_ptr<int> a(size, "maxseven");
+  care::host_device_ptr<double> b(size, "maxsevend");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     b[0] = 1.2;
+     b[1] = 3.0/2.0;
+     b[2] = 9.2;
+     b[3] = 11.0/5.0;
+     b[4] = 1/2;
+     b[5] = 97.8;
+     b[6] = -12.2;
+  } CARE_GPU_KERNEL_END
+
   int initVal = -1;
+
   // max of whole array
-  int result = care::ArrayMax<int>(a, 7, initVal);
+  int result = care::ArrayMax<int>(a, size, initVal);
   EXPECT_EQ(result, 8);
 
-  double tempd[7] = {1.2, 3.0/2.0, 9.2, 11.0/5.0, 1/2, 97.8, -12.2};
-  care::host_device_ptr<double> b(tempd, 7, "maxsevend"); 
-  double resultd = care::ArrayMax<double>(b, 7, initVal);
+  double resultd = care::ArrayMax<double>(b, size, initVal);
   EXPECT_EQ(resultd, 97.8);
 
   // test init val 99
   initVal = 99;
-  result = care::ArrayMax<int>(a, 7, initVal);
+  result = care::ArrayMax<int>(a, size, initVal);
   EXPECT_EQ(result, 99);
+
+  b.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, max_innerloop)
 {
   // test the local_ptr version of max
-  int temp0[7] = {2, 1, 1, 8, 3, 5, 7};
-  int temp1[7] = {3, 1, 9, 10, 0, 12, 12};
-  care::host_device_ptr<int> ind0(temp0, 7, "maxgpu0");
-  care::host_device_ptr<int> ind1(temp1, 7, "maxgpu1");
+
+  const int size = 7;
+  care::host_device_ptr<int> ind0(size, "maxgpu0");
+  care::host_device_ptr<int> ind1(size, "maxgpu1");
+
+  CARE_GPU_KERNEL {
+     ind0[0] = 2;
+     ind0[1] = 1;
+     ind0[2] = 1;
+     ind0[3] = 8;
+     ind0[4] = 3;
+     ind0[5] = 5;
+     ind0[6] = 7;
+
+     ind1[0] = 3;
+     ind1[1] = 1;
+     ind1[2] = 9;
+     ind1[3] = 10;
+     ind1[4] = 0;
+     ind1[5] = 12;
+     ind1[6] = 12;
+  } CARE_GPU_KERNEL_END
 
   RAJAReduceMin<bool> passed{true};
+
   CARE_REDUCE_LOOP(i, 0, 1) {
      care::local_ptr<int> arr0 = ind0;
      care::local_ptr<int> arr1 = ind1;
 
      // max of entire array arr0
-     int result = care::ArrayMax<int>(arr0, 7, -1);
+     int result = care::ArrayMax<int>(arr0, size, -1);
+
      if (result != 8) {
         passed.min(false);
      }
 
      // max of entire array arr1
-     result = care::ArrayMax<int>(arr1, 7, -1);
+     result = care::ArrayMax<int>(arr1, size, -1);
+
      if (result != 12) {
         passed.min(false);
      }
 
      // value max of arr1 with init val 99
-     result = care::ArrayMax<int>(arr1, 7, 99);
+     result = care::ArrayMax<int>(arr1, size, 99);
+
      if (result != 99) {
         passed.min(false);
      }
-
   } CARE_REDUCE_LOOP_END
 
   ASSERT_TRUE((bool) passed);
+
+  ind1.free();
+  ind0.free();
 }
 
 GPU_TEST(algorithm, min_max_notfound)
