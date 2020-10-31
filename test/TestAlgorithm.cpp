@@ -440,85 +440,150 @@ GPU_TEST(algorithm, min_max_notfound)
   EXPECT_EQ(max[0], DBL_MAX);
   EXPECT_EQ(result, false);
 
-  int offmask[4] = {0};
-  care::host_device_ptr<int> mask(offmask, 4, "offmask");
+  const int size = 4;
+  care::host_device_ptr<int> mask(size, "mask");
+
+  CARE_GPU_LOOP(i, 0, size) {
+     mask[i] = 0;
+  } CARE_GPU_LOOP_END
+
   min[0] = -1;
   max[0] = -1;
+
   result = care::ArrayMinMax<int>(nill, mask, 0, min, max);
+
   EXPECT_EQ(min[0], -DBL_MAX);
   EXPECT_EQ(max[0], DBL_MAX);
   EXPECT_EQ(result, false);
 
   // the mask is set to off for the whole array, so we should still get the DBL_MAX base case here
-  int vals[4] = {1, 2, 3, 4};
-  care::host_device_ptr<int> skippedvals(vals, 4, "skipped");
+  care::host_device_ptr<int> skippedvals(size, "skipped");
+
+  CARE_GPU_LOOP(i, 0, size) {
+     skippedvals[i] = i + 1;
+  } CARE_GPU_LOOP_END
+
   min[0] = -1;
   max[0] = -1;
+
   result = care::ArrayMinMax<int>(skippedvals, mask, 0, min, max);
+
   EXPECT_EQ(min[0], -DBL_MAX);
   EXPECT_EQ(max[0], DBL_MAX);
   EXPECT_EQ(result, false);
+
+  skippedvals.free();
+  mask.free();
+  nill.free();
 }
 
 GPU_TEST(algorithm, min_max_general)
 { 
   double min[1] = {-1};
   double max[1] = {-1};
-  int vals1[1] = {2};
-  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
-  int mask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
 
-  care::host_device_ptr<int> mask(mask7, 7, "skippedvals");
-  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
-  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
+  const int size1 = 1;
+  const int size2 = 7;
+
+  care::host_device_ptr<int> a1(size1, "minmax1");
+  care::host_device_ptr<int> a7(size2, "minmax7");
+  care::host_device_ptr<int> mask(size2, "skippedvals");
+
+  CARE_GPU_KERNEL {
+     a1[0] = 2;
+
+     a7[0] = 1;
+     a7[1] = 5;
+     a7[2] = 4;
+     a7[3] = 3;
+     a7[4] = -2;
+     a7[5] = 9;
+     a7[6] = 0;
+
+     mask[0] = 1;
+     mask[1] = 1;
+     mask[2] = 1;
+     mask[3] = 1;
+     mask[4] = 0;
+     mask[5] = 0;
+     mask[6] = 1;
+  } CARE_GPU_KERNEL_END
   
   // note that output min/max are double whereas input is int. I am not testing for casting failures because
   // I'm treating the output value as a given design decision
-  care::ArrayMinMax<int>(a7, nullptr, 7, min, max);
+  care::ArrayMinMax<int>(a7, nullptr, size2, min, max);
   EXPECT_EQ(min[0], -2);
   EXPECT_EQ(max[0], 9);
 
   // test with a mask
-  care::ArrayMinMax<int>(a7, mask, 7, min, max);
+  care::ArrayMinMax<int>(a7, mask, size2, min, max);
   EXPECT_EQ(min[0], 0);
   EXPECT_EQ(max[0], 5);
 
   // no mask, just find the min/max in the array
-  care::ArrayMinMax<int>(a1, nullptr, 1, min, max);
+  care::ArrayMinMax<int>(a1, nullptr, size1, min, max);
   EXPECT_EQ(min[0], 2);
   EXPECT_EQ(max[0], 2);
+
+  mask.free();
+  a7.free();
+  a1.free();
 }
 
 GPU_TEST(algorithm, min_max_innerloop)
 {
   // tests for the local_ptr version of minmax
-  int vals1[1] = {2};
-  int vals7[7] = {1, 5, 4, 3, -2, 9, 0};
-  int valsmask7[7] = {1, 1, 1, 1, 0, 0, 1}; // this mask would skip the existing max/min as a check
+  const int size1 = 1;
+  const int size2 = 7;
 
-  care::host_device_ptr<int> mask(valsmask7, 7, "skippedvals");
-  care::host_device_ptr<int> a1(vals1, 1, "minmax1");
-  care::host_device_ptr<int> a7(vals7, 7, "minmax7");
+  care::host_device_ptr<int> a1(size1, "minmax1");
+  care::host_device_ptr<int> a7(size2, "minmax7");
+  care::host_device_ptr<int> mask(size2, "skippedvals");
+
+  CARE_GPU_KERNEL {
+     a1[0] = 2;
+
+     a7[0] = 1;
+     a7[1] = 5;
+     a7[2] = 4;
+     a7[3] = 3;
+     a7[4] = -2;
+     a7[5] = 9;
+     a7[6] = 0;
+
+     mask[0] = 1;
+     mask[1] = 1;
+     mask[2] = 1;
+     mask[3] = 1;
+     mask[4] = 0;
+     mask[5] = 0;
+     mask[6] = 1;
+  } CARE_GPU_KERNEL_END
 
   RAJAReduceMin<bool> passed{true};
+
   CARE_REDUCE_LOOP(i, 0, 1) {
      double min[1] = {-1};
      double max[1] = {-1};
+
      care::local_ptr<int> arr1 = a1;
      care::local_ptr<int> arr7 = a7;
      care::local_ptr<int> mask7 = mask;
 
      care::ArrayMinMax<int>(arr7, nullptr, 7, min, max);
+
      if (min[0] != -2 && max[0] != 9) {
         passed.min(false);
      }
 
      care::ArrayMinMax<int>(arr7, mask7, 7, min, max);
+
      if (min[0] != 0 && max[0] != 5) {
         passed.min(false);
      }
 
      care::ArrayMinMax<int>(arr1, nullptr, 1, min, max);
+
      if (min[0] != 2 && max[0] != 2) {
         passed.min(false);
      }
@@ -526,6 +591,10 @@ GPU_TEST(algorithm, min_max_innerloop)
   } CARE_REDUCE_LOOP_END
 
   ASSERT_TRUE((bool)passed);
+
+  mask.free();
+  a7.free();
+  a1.free();
 }
 
 GPU_TEST(algorithm, minloc_empty)
@@ -536,15 +605,28 @@ GPU_TEST(algorithm, minloc_empty)
   int result = care::ArrayMinLoc<int>(a, 0, initVal, loc);
   EXPECT_EQ(result, initVal);
   EXPECT_EQ(loc, -1); // empty array, not found
+  a.free();
 }
 
 GPU_TEST(algorithm, minloc_seven)
 {
   int loc = -10;
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  care::host_device_ptr<int> a(temp, 7, "minseven");
-  int initVal = 99;
+
+  const int size = 7;
+  care::host_device_ptr<int> a(7, "minseven");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+  } CARE_GPU_KERNEL_END
+
   // min of whole array
+  int initVal = 99;
   int result = care::ArrayMinLoc<int>(a, 7, initVal, loc);
   EXPECT_EQ(result, 1);
   EXPECT_EQ(loc, 1);
@@ -554,6 +636,8 @@ GPU_TEST(algorithm, minloc_seven)
   result = care::ArrayMinLoc<int>(a, 7, initVal, loc);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(loc, -1);
+
+  a.free();
 }
 
 GPU_TEST(algorithm, maxloc_empty)
@@ -564,21 +648,41 @@ GPU_TEST(algorithm, maxloc_empty)
   int result = care::ArrayMaxLoc<int>(a, 0, initVal, loc);
   EXPECT_EQ(result, initVal);
   EXPECT_EQ(loc, -1); // empty, not found
+  a.free();
 }
 
 GPU_TEST(algorithm, maxloc_seven)
 {
   int loc = -1;
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  care::host_device_ptr<int> a(temp, 7, "maxseven");
-  int initVal = -1;
+
+  const int size = 7;
+  care::host_device_ptr<int> a(7, "minseven");
+  care::host_device_ptr<double> b(7, "maxsevend");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     b[0] = 1.2;
+     b[1] = 3.0/2.0;
+     b[2] = 9.2;
+     b[3] = 11.0/5.0;
+     b[4] = 1/2;
+     b[5] = 97.8;
+     b[6] = -12.2;
+  } CARE_GPU_KERNEL_END
+
   // max of whole array
+  int initVal = -1;
   int result = care::ArrayMaxLoc<int>(a, 7, initVal, loc);
   EXPECT_EQ(result, 8);
   EXPECT_EQ(loc, 3);
 
-  double tempd[7] = {1.2, 3.0/2.0, 9.2, 11.0/5.0, 1/2, 97.8, -12.2};
-  care::host_device_ptr<double> b(tempd, 7, "maxsevend");
   double resultd = care::ArrayMaxLoc<double>(b, 7, initVal, loc);
   EXPECT_EQ(resultd, 97.8);
   EXPECT_EQ(loc, 5);
@@ -588,15 +692,32 @@ GPU_TEST(algorithm, maxloc_seven)
   result = care::ArrayMaxLoc<int>(a, 7, initVal, loc);
   EXPECT_EQ(result, 99);
   EXPECT_EQ(loc, -1);
+
+  b.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, arrayfind)
 { 
   int loc = 99;
-  int temp1[1] = {10};
-  int temp7[7] = {2, 1, 8, 3, 5, 7, 1};
-  care::host_device_ptr<int> a1(temp1, 7, "find1");
-  care::host_device_ptr<int> a7(temp7, 7, "find7");
+
+  const int size1 = 1;
+  care::host_device_ptr<int> a1(size1, "find1");
+
+  const int size2 = 7;
+  care::host_device_ptr<int> a7(size2, "find7");
+
+  CARE_GPU_KERNEL {
+     a1[0] = 10;
+
+     a7[0] = 2;
+     a7[1] = 1;
+     a7[2] = 8;
+     a7[3] = 3;
+     a7[4] = 5;
+     a7[5] = 7;
+     a7[6] = 1;
+  } CARE_GPU_KERNEL_END
 
   // empty array
   loc = care::ArrayFind<int>(nullptr, 0, 10, 0);
@@ -623,6 +744,9 @@ GPU_TEST(algorithm, arrayfind)
 
   loc = care::ArrayFind<int>(a7, 7, 8, 0);
   EXPECT_EQ(loc, 2);
+
+  a7.free();
+  a1.free();
 }
 
 GPU_TEST(algorithm, findabovethreshold)
