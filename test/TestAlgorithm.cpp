@@ -753,10 +753,29 @@ GPU_TEST(algorithm, findabovethreshold)
 {
   int result = -1;
   int threshIdx[1] = {0};
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  double thresh[7] = {0, 0, 0, 10, 10, 10, 10}; // this must be double, cannot be int
-  care::host_device_ptr<int> a(temp, 7, "array");
-  care::host_device_ptr<double> threshold(thresh, 7, "thresh");
+
+  const int size = 7;
+  care::host_device_ptr<int> a(size, "array");
+  care::host_device_ptr<double> threshold(size, 7, "thresh");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     threshold[0] = 0;
+     threshold[1] = 0;
+     threshold[2] = 0;
+     threshold[3] = 10;
+     threshold[4] = 10;
+     threshold[5] = 10;
+     threshold[6] = 10;
+  } CARE_GPU_KERNEL_END
+
   double cutoff = -10;
   
   // null array
@@ -783,20 +802,43 @@ GPU_TEST(algorithm, findabovethreshold)
   result = care::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
+
+  threshold.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, minindexsubset)
 { 
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
-  int sub3[3] = {5, 0, 6};
-  int sub1[1] = {3};
   int result = 99;
 
-  care::host_device_ptr<int> a(temp, 7, "arrseven");
-  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
-  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
-  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+  care::host_device_ptr<int> a(7, "arrseven");
+  care::host_device_ptr<int> subset1(1, "sub1");
+  care::host_device_ptr<int> subset3(1, "sub3");
+  care::host_device_ptr<int> subsetrev(7, "rev");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     subset1[0] = 3;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
+     subsetrev[0] = 6;
+     subsetrev[1] = 5;
+     subsetrev[2] = 4;
+     subsetrev[3] = 3;
+     subsetrev[4] = 2;
+     subsetrev[5] = 1;
+     subsetrev[6] = 0;
+  } CARE_GPU_KERNEL_END
 
   // null subset
   result = care::FindIndexMinSubset<int>(a, nullptr, 0);
@@ -814,28 +856,63 @@ GPU_TEST(algorithm, minindexsubset)
   // len 1 subset
   result = care::FindIndexMinSubset<int>(a, subset1, 1);
   EXPECT_EQ(result, 3);  
+
+  subsetrev.free();
+  subset3.free();
+  subset1.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, minindexsubsetabovethresh)
 {
-  int temp[7] = {2, 1, 1, 8, 5, 3, 7};
-  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
-  int sub3[3] = {5, 0, 6};
-  int sub1[1] = {3};
+  care::host_device_ptr<int> a(7, "arrseven");
+  care::host_device_ptr<int> subset1(1, "sub1");
+  care::host_device_ptr<int> subset3(1, "sub3");
+  care::host_device_ptr<int> subsetrev(7, "rev");
+  care::host_device_ptr<double> threshold7(7, "thresh7");
+  care::host_device_ptr<double> threshold3(3, "thresh3");
+  care::host_device_ptr<double> threshold1(1, "thresh1");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     subset1[0] = 3;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
+     subsetrev[0] = 6;
+     subsetrev[1] = 5;
+     subsetrev[2] = 4;
+     subsetrev[3] = 3;
+     subsetrev[4] = 2;
+     subsetrev[5] = 1;
+     subsetrev[6] = 0;
+
+     threshold7[0] = 10;
+     threshold7[1] = 10;
+     threshold7[2] = 10;
+     threshold7[3] = 10;
+     threshold7[4] = 0;
+     threshold7[5] = 0;
+     threshold7[6] = 10;
+
+     threshold3[0] = 0;
+     threshold3[1] = 10;
+     threshold3[2] = 10;
+
+     threshold1[0] = 10;
+  } CARE_GPU_KERNEL_END
+
   int threshIdx[1] = {-1};
   int result = 99;
-
-  care::host_device_ptr<int> a(temp, 7, "arrseven");
-  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
-  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
-  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
-  double thresh7[7] = {10, 10, 10, 10, 0, 0, 10}; // this must be double, cannot be int
-  double thresh3[3] = {0, 10, 10};
-  double thresh1[1] = {10};
-  care::host_device_ptr<double> threshold7(thresh7, 7, "thresh7");
-  care::host_device_ptr<double> threshold3(thresh3, 3, "thresh3");
-  care::host_device_ptr<double> threshold1(thresh1, 1, "thresh1");
-
   double cutoff = -10;
 
   // null subset
@@ -876,20 +953,48 @@ GPU_TEST(algorithm, minindexsubsetabovethresh)
   result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
+
+  threshold1.free();
+  threshold3.free();
+  threshold7.free();
+  subsetrev.free();
+  subset3.free();
+  subset1.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, maxindexsubset)
 {
-  int temp[7] = {2, 1, 1, 8, 3, 5, 7};
-  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
-  int sub3[3] = {5, 0, 6};
-  int sub1[1] = {2};
-  int result = 99;
+  care::host_device_ptr<int> a(7, "arrseven");
+  care::host_device_ptr<int> subset1(1, "sub1");
+  care::host_device_ptr<int> subset3(1, "sub3");
+  care::host_device_ptr<int> subsetrev(7, "rev");
 
-  care::host_device_ptr<int> a(temp, 7, "arrseven");
-  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
-  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
-  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     subset1[0] = 2;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
+     subsetrev[0] = 6;
+     subsetrev[1] = 5;
+     subsetrev[2] = 4;
+     subsetrev[3] = 3;
+     subsetrev[4] = 2;
+     subsetrev[5] = 1;
+     subsetrev[6] = 0;
+  } CARE_GPU_KERNEL_END
+
+  int result = 99;
 
   // null subset
   result = care::FindIndexMaxSubset<int>(a, nullptr, 0);
@@ -906,28 +1011,63 @@ GPU_TEST(algorithm, maxindexsubset)
   // len 1 subset
   result = care::FindIndexMaxSubset<int>(a, subset1, 1);
   EXPECT_EQ(result, 2);
+
+  subsetrev.free();
+  subset3.free();
+  subset1.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, maxindexsubsetabovethresh)
 {
-  int temp[7] = {2, 1, 1, 8, 5, 3, 7};
-  int rev[7] = {6, 5, 4, 3, 2, 1, 0};
-  int sub3[3] = {5, 0, 6};
-  int sub1[1] = {2};
+  care::host_device_ptr<int> a(7, "arrseven");
+  care::host_device_ptr<int> subset1(1, "sub1");
+  care::host_device_ptr<int> subset3(1, "sub3");
+  care::host_device_ptr<int> subsetrev(7, "rev");
+  care::host_device_ptr<double> threshold7(7, "thresh7");
+  care::host_device_ptr<double> threshold3(3, "thresh3");
+  care::host_device_ptr<double> threshold1(1, "thresh1");
+
+  CARE_GPU_KERNEL {
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 3;
+     a[5] = 5;
+     a[6] = 7;
+
+     subset1[0] = 2;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
+     subsetrev[0] = 6;
+     subsetrev[1] = 5;
+     subsetrev[2] = 4;
+     subsetrev[3] = 3;
+     subsetrev[4] = 2;
+     subsetrev[5] = 1;
+     subsetrev[6] = 0;
+
+     threshold7[0] = 10;
+     threshold7[1] = 10;
+     threshold7[2] = 10;
+     threshold7[3] = 0;
+     threshold7[4] = 0;
+     threshold7[5] = 0;
+     threshold7[6] = 10;
+
+     threshold3[0] = 0;
+     threshold3[1] = 10;
+     threshold3[2] = 10;
+
+     threshold1[0] = 10;
+  } CARE_GPU_KERNEL_END
+
   int threshIdx[1] = {-1};
   int result = 99;
-
-  care::host_device_ptr<int> a(temp, 7, "arrseven");
-  care::host_device_ptr<int> subset1(sub1, 1, "sub1");
-  care::host_device_ptr<int> subset3(sub3, 1, "sub3");
-  care::host_device_ptr<int> subsetrev(rev, 7, "rev");
-  double thresh7[7] = {10, 10, 10, 0, 0, 0, 10}; // this must be double, cannot be int
-  double thresh3[3] = {0, 10, 10};
-  double thresh1[1] = {10};
-  care::host_device_ptr<double> threshold7(thresh7, 7, "thresh7");
-  care::host_device_ptr<double> threshold3(thresh3, 3, "thresh3");
-  care::host_device_ptr<double> threshold1(thresh1, 1, "thresh1");
-
   double cutoff = -10;
 
   // null subset
@@ -967,6 +1107,14 @@ GPU_TEST(algorithm, maxindexsubsetabovethresh)
   result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
+
+  threshold1.free();
+  threshold3.free();
+  threshold7.free();
+  subsetrev.free();
+  subset3.free();
+  subset1.free();
+  a.free();
 }
 
 GPU_TEST(algorithm, pickperformfindmax)
