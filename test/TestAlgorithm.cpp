@@ -930,44 +930,44 @@ GPU_TEST(algorithm, minindexsubsetabovethresh)
 
   // null subset
   double cutoff = -10;
-  int threshIdx[1] = {-1};
-  int result = care::FindIndexMinSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
+  int threshIdx = -1;
+  int result = care::FindIndexMinSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   // all elements but reverse order, no threshold
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, &threshIdx);
   // NOTE: Since we are going in reverse order, this is 2 NOT 1
   EXPECT_EQ(result, 2);
 
   // all elements in reverse order, cutoff not triggered
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 2); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 4); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 4); // this is the index in the subset
 
   // change the cutoff
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 0); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 6); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 6); // this is the index in the subset
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, &threshIdx);
   EXPECT_EQ(result, 0);
-  EXPECT_EQ(threshIdx[0], 1);
+  EXPECT_EQ(threshIdx, 1);
 
   // len 1 subset
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, 3);
-  EXPECT_EQ(threshIdx[0], 0);
+  EXPECT_EQ(threshIdx, 0);
 
   // len 1 subset not found (cutoff too high)
   cutoff = 25.67;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   threshold7.free();
   subsetrev.free();
@@ -1091,43 +1091,43 @@ GPU_TEST(algorithm, maxindexsubsetabovethresh)
 
   // null subset
   double cutoff = -10;
-  int threshIdx[1] = {-1};
-  int result = care::FindIndexMaxSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
+  int threshIdx = -1;
+  int result = care::FindIndexMaxSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   // all elements but reverse order, no threshold
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, &threshIdx);
   EXPECT_EQ(result, 3);
 
   // all elements in reverse order, cutoff not triggered
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 3); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 3); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 3); // this is the index in the subset
 
   // change the cutoff
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 6); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 0); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 0); // this is the index in the subset
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, &threshIdx);
   EXPECT_EQ(result, 6);
-  EXPECT_EQ(threshIdx[0], 2);
+  EXPECT_EQ(threshIdx, 2);
 
   // len 1 subset
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, 2);
-  EXPECT_EQ(threshIdx[0], 0);
+  EXPECT_EQ(threshIdx, 0);
 
   // len 1 subset not found (cutoff too high)
   cutoff = 25.67;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   threshold7.free();
   subsetrev.free();
@@ -1202,48 +1202,48 @@ GPU_TEST(algorithm, pickperformfindmax)
 
   // all elements in reverse order, no mask or subset
   double cutoff = -10;
-  int threshIdx[1] = {-1};
-  int result = care::PickAndPerformFindMaxIndex<int>(a, nullptr, nullptr, size7, threshold7, cutoff, threshIdx);
+  int threshIdx = -1;
+  int result = care::PickAndPerformFindMaxIndex<int>(a, nullptr, nullptr, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 3);
-  EXPECT_EQ(threshIdx[0], 3);
+  EXPECT_EQ(threshIdx, 3);
 
   // all elements in reverse order, no subset
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, nullptr, size7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, nullptr, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); // This is -1 because it is masked off
-  EXPECT_EQ(threshIdx[0], 3); // NOTE: even if a value is masked off, the threshold index still comes back
+  EXPECT_EQ(threshIdx, 3); // NOTE: even if a value is masked off, the threshold index still comes back
 
   // all elements but reverse order, no threshold
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, nullptr, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, nullptr, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); //masked off
 
   // all elements in reverse order, cutoff not triggered
   // NOTE: even though the element is masked off, threshIdx is valid!!! Just the return index is -1, not the threshIdx!!!!
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 3); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 3); // this is the index in the subset
 
   // change the cutoff
   cutoff = 5.0;
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subsetrev, size7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 6); // this is the index in the original array
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset3, size3, threshold3, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset3, size3, threshold3, cutoff, &threshIdx);
   EXPECT_EQ(result, 0);
-  EXPECT_EQ(threshIdx[0], 1);
+  EXPECT_EQ(threshIdx, 1);
 
   // len 1 subset
   cutoff = 5.0;
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, 2);
-  EXPECT_EQ(threshIdx[0], 0);
+  EXPECT_EQ(threshIdx, 0);
 
   // len 1 subset not found (cutoff too high)
   cutoff = 25.67;
-  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset1, size1, threshold1, cutoff, threshIdx);
+  result = care::PickAndPerformFindMaxIndex<int>(a, mask, subset1, size1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   mask.free();
   threshold7.free();
@@ -1319,44 +1319,44 @@ GPU_TEST(algorithm, pickperformfindmin)
 
   // all elements in reverse order, no mask or subset
   double cutoff = -10;
-  int threshIdx[1] = {-1};
-  int result = care::PickAndPerformFindMinIndex<int>(a, nullptr, nullptr, 7, threshold7, cutoff, threshIdx);
+  int threshIdx = -1;
+  int result = care::PickAndPerformFindMinIndex<int>(a, nullptr, nullptr, 7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, 1);
-  EXPECT_EQ(threshIdx[0], 1);
+  EXPECT_EQ(threshIdx, 1);
 
   // all elements in reverse order, no subset
-  result = care::PickAndPerformFindMinIndex<int>(a, mask, nullptr, 7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, mask, nullptr, 7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); // This is -1 because it is masked off
-  EXPECT_EQ(threshIdx[0], 1); // NOTE: even if a value is masked off, the threshold index still comes back
+  EXPECT_EQ(threshIdx, 1); // NOTE: even if a value is masked off, the threshold index still comes back
 
   // all elements but reverse order, no threshold
-  result = care::PickAndPerformFindMinIndex<int>(a, mask, subsetrev, 7, nullptr, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, mask, subsetrev, 7, nullptr, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); //masked off
 
   // all elements in reverse order, cutoff not triggered
   // NOTE: even though the element is masked off, threshIdx is valid!!! Just the return index is -1, not the threshIdx!!!!
-  result = care::PickAndPerformFindMinIndex<int>(a, mask, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, mask, subsetrev, 7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], 4); // this is the index in the subset
+  EXPECT_EQ(threshIdx, 4); // this is the index in the subset
 
   // change the cutoff
   // CURRENTLY TEST GIVES DIFFERENT RESULTS WHEN COMPILED RELEASE VS DEBUG!!!
   cutoff = 5.0;
-  result = care::PickAndPerformFindMinIndex<int>(a, nullptr, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, nullptr, subsetrev, 7, threshold7, cutoff, &threshIdx);
   EXPECT_EQ(result, -1); // this is the index in the original array
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::PickAndPerformFindMinIndex<int>(a, mask, subset3, 3, threshold3, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, mask, subset3, 3, threshold3, cutoff, &threshIdx);
   EXPECT_EQ(result, 0);
-  EXPECT_EQ(threshIdx[0], 1);
+  EXPECT_EQ(threshIdx, 1);
 
   // len 1 subset, masked off
   cutoff = 5.0;
-  result = care::PickAndPerformFindMinIndex<int>(a, mask, subset1, 1, threshold1, cutoff, threshIdx);
+  result = care::PickAndPerformFindMinIndex<int>(a, mask, subset1, 1, threshold1, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], 0);
+  EXPECT_EQ(threshIdx, 0);
 
   mask.free();
   threshold7.free();
