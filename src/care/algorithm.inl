@@ -1502,27 +1502,34 @@ int FindIndexMinSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @thresholdIndex   : (out) the index of the threshold array used for the min vale.
 //
 template<typename T, typename Exec>
-int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset,
-                                      care::host_device_ptr<double const> thresholds, double cutoff,
+int FindIndexMinSubsetAboveThresholds(care::host_device_ptr<const T> arr,
+                                      care::host_device_ptr<int const> subset,
+                                      int lenset,
+                                      care::host_device_ptr<double const> thresholds,
+                                      double cutoff,
                                       int * thresholdIndex)
 {
-   int  ndx = -1 ;
+   int ndx = -1 ;
+
    if (thresholds) {
       RAJAReduceMinLoc<T> min { std::numeric_limits<T>::max(), -1 };
       RAJAReduceMinLoc<T> thresholdmin { std::numeric_limits<T>::max(), -1 };
+
       CARE_REDUCE_LOOP(i, 0, lenset) {
-         int curr = subset[i] ;
          if (thresholds[i] > cutoff) { // if threshold were sized as arr, this would be thresholds[curr]
+            const int curr = subset[i] ;
             min.minloc(arr[curr], curr);
             thresholdmin.minloc(arr[curr], i);
          }
       } CARE_REDUCE_LOOP_END
+
       *thresholdIndex = thresholdmin.getLoc();
       ndx = min.getLoc();
    }
    else {
       ndx = FindIndexMinSubset<T, Exec>(arr, subset, lenset);
    }
+
    return ndx ;
 }
 
@@ -1550,19 +1557,21 @@ int PickAndPerformFindMinIndex(care::host_device_ptr<const T> arr,
 {
    int minIndex;
    if (subset) {
-      minIndex =  FindIndexMinSubsetAboveThresholds<T, Exec>(arr, subset, n,
-                                                             thresholds, cutoff,
-                                                             thresholdIndex);
+      minIndex = FindIndexMinSubsetAboveThresholds<T, Exec>(arr, subset, n,
+                                                            thresholds, cutoff,
+                                                            thresholdIndex);
    }
    else {
-      minIndex =   FindIndexMinAboveThresholds<T, Exec>(arr, n, thresholds, cutoff,
-                                                        thresholdIndex);
+      minIndex = FindIndexMinAboveThresholds<T, Exec>(arr, n, thresholds, cutoff,
+                                                      thresholdIndex);
    }
+
    if (mask && n > 0) {
       if (minIndex >= 0 && mask.pick(minIndex) == 1) {
          minIndex = -1;
       }
    }
+
    return minIndex;
 }
 
@@ -1581,13 +1590,16 @@ int FindIndexMaxAboveThresholds(care::host_device_ptr<const T> arr, int n,
                                 int * thresholdIndex)
 {
    int ndx = -1;
+
    if (thresholds) {
       RAJAReduceMaxLoc<T> max { std::numeric_limits<T>::lowest(), ndx };
+
       CARE_REDUCE_LOOP(i, 0, n) {
          if (thresholds[i] > cutoff) {
             max.maxloc(arr[i], i);
          }
       } CARE_REDUCE_LOOP_END
+
       ndx = max.getLoc();
       *thresholdIndex = ndx;
    }
@@ -1631,29 +1643,34 @@ int FindIndexMaxSubset(care::host_device_ptr<const T> arr, care::host_device_ptr
 // @thresholdIndex   : (out) the index of the threshold array used for the max vale.
 //
 template<typename T, typename Exec>
-int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> subset, int lenset,
-                                      care::host_device_ptr<double const> thresholds, double cutoff,
+int FindIndexMaxSubsetAboveThresholds(care::host_device_ptr<const T> arr,
+                                      care::host_device_ptr<int const> subset,
+                                      int lenset,
+                                      care::host_device_ptr<double const> thresholds,
+                                      double cutoff,
                                       int * thresholdIndex)
 {
-   int  ndx = -1 ;
-   ndx = -1;
+   int ndx = -1;
+
    if (thresholds) {
       RAJAReduceMaxLoc<T> max { std::numeric_limits<T>::lowest(), -1 };
       RAJAReduceMaxLoc<T> thresholdmax { std::numeric_limits<T>::lowest(), -1 };
-      CARE_REDUCE_LOOP(i, 0, lenset) {
-         int curr = subset[i] ;
 
+      CARE_REDUCE_LOOP(i, 0, lenset) {
          if (thresholds[i] > cutoff) {
+            const int curr = subset[i] ;
             max.maxloc(arr[curr], curr);
             thresholdmax.maxloc(arr[curr], i);
          }
       } CARE_REDUCE_LOOP_END
+
       *thresholdIndex = thresholdmax.getLoc();
       ndx = max.getLoc();
    }
    else {
       ndx = FindIndexMaxSubset<T, Exec>(arr, subset, lenset);
    }
+
    return ndx ;
 }
 
@@ -1681,19 +1698,21 @@ int PickAndPerformFindMaxIndex(care::host_device_ptr<const T> arr,
 {
    int maxIndex;
    if (subset) {
-      maxIndex =  FindIndexMaxSubsetAboveThresholds<T, Exec>(arr, subset, n,
-                                                             thresholds, cutoff,
-                                                             thresholdIndex);
+      maxIndex = FindIndexMaxSubsetAboveThresholds<T, Exec>(arr, subset, n,
+                                                            thresholds, cutoff,
+                                                            thresholdIndex);
    }
    else {
-      maxIndex =   FindIndexMaxAboveThresholds<T, Exec>(arr, n, thresholds, cutoff,
-                                                        thresholdIndex);
+      maxIndex = FindIndexMaxAboveThresholds<T, Exec>(arr, n, thresholds, cutoff,
+                                                      thresholdIndex);
    }
+
    if (mask && n > 0) {
       if (maxIndex >= 0 && mask.pick(maxIndex) == 1) {
          maxIndex = -1;
       }
    }
+
    return maxIndex;
 }
 
