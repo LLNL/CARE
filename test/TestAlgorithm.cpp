@@ -1623,25 +1623,38 @@ GPU_TEST(algorithm, findindexmax)
 // duplicating and copying arrays
 // NOTE: no test for when to and from are the same array or aliased. I'm assuming that is not allowed.
 GPU_TEST(algorithm, dup_and_copy) {
-  const int temp7[7] = {9, 10, -2, 67, 9, 45, -314};
-  int zeros1[7] = {0};
-  int zeros2[7] = {0};
-  int zeros3[7] = {0};
-
-  care::host_device_ptr<int> to1(zeros1, 7, "zeros1");
-  care::host_device_ptr<int> to2(zeros2, 7, "zeros2");
-  care::host_device_ptr<int> to3(zeros3, 7, "zeros3");
-  care::host_device_ptr<const int> from(temp7, 7, "from7");
+  care::host_device_ptr<int> to1(7, "zeros1");
+  care::host_device_ptr<int> to2(7, "zeros2");
+  care::host_device_ptr<int> to3(7, "zeros3");
+  care::host_device_ptr<int> from(7, "from7");
   care::host_device_ptr<int> nil = nullptr;
+
+  CARE_GPU_KERNEL {
+     from[0] = 9;
+     from[1] = 10;
+     from[2] = -2;
+     from[3] = 67;
+     from[4] = 9;
+     from[5] = 45;
+     from[6] = -314;
+  } CARE_GPU_KERNEL_END
+
+  CARE_GPU_LOOP(i, 0, 7) {
+     to1[i] = 0;
+     to2[i] = 0;
+     to3[i] = 0;
+  } CARE_GPU_LOOP_END
 
   // duplicate and check that elements are the same
   care::host_device_ptr<int> dup = care::ArrayDup<int>(from, 7);
   RAJAReduceMin<bool> passeddup{true};
+
   CARE_REDUCE_LOOP(i, 0, 7) {
     if (dup[i] != from[i]) {
       passeddup.min(false);
     }
   } CARE_REDUCE_LOOP_END
+
   ASSERT_TRUE((bool) passeddup);
 
   // duplicating nullptr should give nullptr
@@ -1651,11 +1664,13 @@ GPU_TEST(algorithm, dup_and_copy) {
   // copy and check that elements are the same
   care::ArrayCopy<int>(to1, from, 7);
   RAJAReduceMin<bool> passed1{true};
+
   CARE_REDUCE_LOOP(i, 0, 7) {
     if (to1[i] != from[i]) {
       passed1.min(false);
     }
   } CARE_REDUCE_LOOP_END
+
   ASSERT_TRUE((bool) passed1);
 
   // copy 2 elements, testing different starting points
@@ -1666,13 +1681,16 @@ GPU_TEST(algorithm, dup_and_copy) {
     if (to2[0] != 0 || to2[1] != 0 || to2[2] != 0 || to2[5] != 0 || to2[6] != 0) {
       passed2.min(false);
     }
+
     if (to2[3] != 9) {
       passed2.min(false);
     }
+
     if (to2[4] != 45) {
       passed2.min(false);
     }
   } CARE_REDUCE_LOOP_END
+
   ASSERT_TRUE((bool) passed2);
 
   // copy 2 elements, testing different starting points
@@ -1683,25 +1701,61 @@ GPU_TEST(algorithm, dup_and_copy) {
     if (to3[0] != 0 || to3[1] != 0 || to3[2] != 0 || to3[3] != 0 || to3[6] != 0) {
       passed3.min(false);
     }
+
     if (to3[4] != 67) {
       passed3.min(false);
     }
+
     if (to3[5] != 9) {
       passed3.min(false);
     }
   } CARE_REDUCE_LOOP_END
+
   ASSERT_TRUE((bool) passed3);
+  dupnil.free();
+  dup.free();
+  nil.free();
+  from.free();
+  to3.free();
+  to2.free();
+  to1.free();
 }
 
 GPU_TEST(algorithm, intersectarrays) {
-   int tempa[3] = {1, 2, 5};
-   int tempb[5] = {2, 3, 4, 5, 6};
-   int tempc[7] = {-1, 0, 2, 3, 6, 120, 360};
-   int tempd[9] = {1001, 1002, 2003, 3004, 4005, 5006, 6007, 7008, 8009};
-   care::host_device_ptr<int> a(tempa, 3, "a");
-   care::host_device_ptr<int> b(tempb, 5, "b");
-   care::host_device_ptr<int> c(tempc, 7, "c");
-   care::host_device_ptr<int> d(tempd, 9, "d");
+   care::host_device_ptr<int> a(3, "a");
+   care::host_device_ptr<int> b(5, "b");
+   care::host_device_ptr<int> c(7, "c");
+   care::host_device_ptr<int> d(9, "d");
+
+  CARE_GPU_KERNEL {
+     a[0] = 1;
+     a[1] = 2;
+     a[2] = 5;
+
+     b[0] = 2;
+     b[1] = 3;
+     b[2] = 4;
+     b[3] = 5;
+     b[4] = 6;
+
+     c[0] = -1;
+     c[1] = 0;
+     c[2] = 2;
+     c[3] = 3;
+     c[4] = 6;
+     c[5] = 120;
+     c[6] = 360;
+
+     d[0] = 1001;
+     d[1] = 1002;
+     d[2] = 2003;
+     d[3] = 3004;
+     d[4] = 4005;
+     d[5] = 5006;
+     d[6] = 6007;
+     d[7] = 7008;
+     d[8] = 8009;
+  } CARE_GPU_KERNEL_END
 
    care::host_device_ptr<int> matches1, matches2;
    int numMatches[1] = {77};
@@ -1709,6 +1763,9 @@ GPU_TEST(algorithm, intersectarrays) {
    // nil test
    care::IntersectArrays<int>(RAJAExec(), c, 7, 0, nullptr, 0, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
+
+   matches2.free();
+   matches1.free();
 
    // intersect c and b
    care::IntersectArrays<int>(RAJAExec(), c, 7, 0, b, 5, 0, matches1, matches2, numMatches);
@@ -1720,6 +1777,9 @@ GPU_TEST(algorithm, intersectarrays) {
    EXPECT_EQ(matches2.pick(1), 1);
    EXPECT_EQ(matches2.pick(2), 4);
 
+   matches2.free();
+   matches1.free();
+
    // introduce non-zero starting locations. In this case, matches are given as offsets from those starting locations
    // and not the zero position of the arrays.
    care::IntersectArrays<int>(RAJAExec(), c, 4, 3, b, 4, 1, matches1, matches2, numMatches);
@@ -1729,6 +1789,9 @@ GPU_TEST(algorithm, intersectarrays) {
    EXPECT_EQ(matches2.pick(0), 0);
    EXPECT_EQ(matches2.pick(1), 3);
 
+   matches2.free();
+   matches1.free();
+
    // intersect a and b
    care::IntersectArrays<int>(RAJAExec(), a, 3, 0, b, 5, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 2);
@@ -1737,35 +1800,59 @@ GPU_TEST(algorithm, intersectarrays) {
    EXPECT_EQ(matches2.pick(0), 0);
    EXPECT_EQ(matches2.pick(1), 3);
 
+   matches2.free();
+   matches1.free();
+
    // no matches
    care::IntersectArrays<int>(RAJAExec(), a, 3, 0, d, 9, 0, matches1, matches2, numMatches);
    EXPECT_EQ(numMatches[0], 0);
 
-   // clean up device memory
-   a.freeDeviceMemory();
-   b.freeDeviceMemory();
-   c.freeDeviceMemory();
-   d.freeDeviceMemory();
+   matches2.free();
+   matches1.free();
+
+   d.free();
+   c.free();
+   b.free();
+   a.free();
 }
 
 GPU_TEST(algorithm, binarsearchhostdev) {
-   int  a[7] = {-9, 0, 3, 7, 77, 500, 999}; // sorted no duplicates
-   care::host_device_ptr<int> aptr(a, 7, "asorted");
+   care::host_device_ptr<int> aptr(7, "asorted");
 
-   int result = 0;
-   
-   result = care::BinarySearch<int>(aptr, 0, 7, 77, false);
+   CARE_GPU_KERNEL {
+      aptr[0] = -9;
+      aptr[1] = 0;
+      aptr[2] = 3;
+      aptr[3] = 7;
+      aptr[4] = 77;
+      aptr[5] = 500;
+      aptr[6] = 999;
+   } CARE_GPU_KERNEL_END
+
+   const int result = care::BinarySearch<int>(aptr, 0, 7, 77, false);
    EXPECT_EQ(result, 4);
+
+   aptr.free();
 }
 
 // test insertion sort and also sortLocal (which currently uses InsertionSort),
 // and then unique the result
 GPU_TEST(algorithm, localsortunique) {
    // set up arrays
-   int a[4] = {4, 0, 2, 0}; // note that 0 is duplicate, will be eliminated in uniq operation
-   int b[4] = {4, 0, 2, 0};
-   care::host_device_ptr<int> aptr(a, 4, "unsorta");
-   care::host_device_ptr<int> bptr(b, 4, "unsortb");
+   care::host_device_ptr<int> aptr(4, "unsorta");
+   care::host_device_ptr<int> bptr(4, "unsortb");
+
+   CARE_GPU_KERNEL {
+      aptr[0] = 4;
+      aptr[1] = 0;
+      aptr[2] = 2;
+      aptr[3] = 0;
+
+      bptr[0] = 4;
+      bptr[1] = 0;
+      bptr[2] = 2;
+      bptr[3] = 0;
+   } CARE_GPU_KERNEL_END
  
    // sort on local ptrs  
    CARE_STREAM_LOOP(i, 0, 1) {
@@ -1791,6 +1878,7 @@ GPU_TEST(algorithm, localsortunique) {
    // perform unique. Should eliminate the extra 0, give a length
    // of one less (for the deleted duplicate number)
    RAJAReduceMin<int> newlen{4};
+
    CARE_REDUCE_LOOP(i, 0, 1) {
      int len = 4;
      care::local_ptr<int> aloc = aptr;
@@ -1802,6 +1890,9 @@ GPU_TEST(algorithm, localsortunique) {
    EXPECT_EQ(aptr.pick(0), 0);
    EXPECT_EQ(aptr.pick(1), 2);
    EXPECT_EQ(aptr.pick(2), 4);
+
+   bptr.free();
+   aptr.free();
 }
 
 #endif // CARE_GPUCC
