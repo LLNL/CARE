@@ -22,6 +22,7 @@ TEST(algorithm, fill_empty)
    care::host_device_ptr<int> a = nullptr;
    care::fill_n(a, size, -12);
    EXPECT_EQ(a, nullptr);
+   a.free();
 }
 
 TEST(algorithm, fill_one)
@@ -207,10 +208,12 @@ GPU_TEST(algorithm, min_empty)
 {
   const int size = 0;
   care::host_device_ptr<int> a;
+
   // this works even when the start index is greater than length.
-  int initVal = -1;
-  int result = care::ArrayMin<int>(a, size, initVal, 567);
+  const int initVal = -1;
+  const int result = care::ArrayMin<int>(a, size, initVal, 567);
   EXPECT_EQ(result, initVal);
+
   a.free();
 }
 
@@ -319,10 +322,12 @@ GPU_TEST(algorithm, max_empty)
 {
   const int size = 0;
   care::host_device_ptr<int> a;
+
   // ArrayMin has a value for start index but ArrayMax does not. TODO: use slicing or pointer arithmatic instead.
   const int initVal = -1;
   const int result = care::ArrayMax<int>(a, size, initVal);
   EXPECT_EQ(result, initVal);
+
   a.free();
 }
 
@@ -430,46 +435,48 @@ GPU_TEST(algorithm, max_innerloop)
 
 GPU_TEST(algorithm, min_max_notfound)
 {
+  double min = -1;
+  double max = -1;
+
   // some minmax tests for empty arrays
+  const int size1 = 0;
   care::host_device_ptr<int> nill;
-  double min[1] = {-1};
-  double max[1] = {-1};
  
-  int result = care::ArrayMinMax<int>(nill, nill, 0, min, max);
-  EXPECT_EQ(min[0], -DBL_MAX);
-  EXPECT_EQ(max[0], DBL_MAX);
+  int result = care::ArrayMinMax<int>(nill, nill, size1, &min, &max);
+  EXPECT_EQ(min, -DBL_MAX);
+  EXPECT_EQ(max,  DBL_MAX);
   EXPECT_EQ(result, false);
 
-  const int size = 4;
-  care::host_device_ptr<int> mask(size, "mask");
+  const int size2 = 4;
+  care::host_device_ptr<int> mask(size2, "mask");
 
-  CARE_GPU_LOOP(i, 0, size) {
+  CARE_GPU_LOOP(i, 0, size2) {
      mask[i] = 0;
   } CARE_GPU_LOOP_END
 
-  min[0] = -1;
-  max[0] = -1;
+  min = -1;
+  max = -1;
 
-  result = care::ArrayMinMax<int>(nill, mask, 0, min, max);
+  result = care::ArrayMinMax<int>(nill, mask, size1, &min, &max);
 
-  EXPECT_EQ(min[0], -DBL_MAX);
-  EXPECT_EQ(max[0], DBL_MAX);
+  EXPECT_EQ(min, -DBL_MAX);
+  EXPECT_EQ(max,  DBL_MAX);
   EXPECT_EQ(result, false);
 
   // the mask is set to off for the whole array, so we should still get the DBL_MAX base case here
-  care::host_device_ptr<int> skippedvals(size, "skipped");
+  care::host_device_ptr<int> skippedvals(size2, "skipped");
 
-  CARE_GPU_LOOP(i, 0, size) {
+  CARE_GPU_LOOP(i, 0, size2) {
      skippedvals[i] = i + 1;
   } CARE_GPU_LOOP_END
 
-  min[0] = -1;
-  max[0] = -1;
+  min = -1;
+  max = -1;
 
-  result = care::ArrayMinMax<int>(skippedvals, mask, 0, min, max);
+  result = care::ArrayMinMax<int>(skippedvals, mask, size2, &min, &max);
 
-  EXPECT_EQ(min[0], -DBL_MAX);
-  EXPECT_EQ(max[0], DBL_MAX);
+  EXPECT_EQ(min, -DBL_MAX);
+  EXPECT_EQ(max,  DBL_MAX);
   EXPECT_EQ(result, false);
 
   skippedvals.free();
@@ -479,8 +486,8 @@ GPU_TEST(algorithm, min_max_notfound)
 
 GPU_TEST(algorithm, min_max_general)
 { 
-  double min[1] = {-1};
-  double max[1] = {-1};
+  double min = -1;
+  double max = -1;
 
   const int size1 = 1;
   const int size2 = 7;
@@ -511,19 +518,19 @@ GPU_TEST(algorithm, min_max_general)
   
   // note that output min/max are double whereas input is int. I am not testing for casting failures because
   // I'm treating the output value as a given design decision
-  care::ArrayMinMax<int>(a7, nullptr, size2, min, max);
-  EXPECT_EQ(min[0], -2);
-  EXPECT_EQ(max[0], 9);
+  care::ArrayMinMax<int>(a7, nullptr, size2, &min, &max);
+  EXPECT_EQ(min, -2);
+  EXPECT_EQ(max,  9);
 
   // test with a mask
-  care::ArrayMinMax<int>(a7, mask, size2, min, max);
-  EXPECT_EQ(min[0], 0);
-  EXPECT_EQ(max[0], 5);
+  care::ArrayMinMax<int>(a7, mask, size2, &min, &max);
+  EXPECT_EQ(min, 0);
+  EXPECT_EQ(max, 5);
 
   // no mask, just find the min/max in the array
-  care::ArrayMinMax<int>(a1, nullptr, size1, min, max);
-  EXPECT_EQ(min[0], 2);
-  EXPECT_EQ(max[0], 2);
+  care::ArrayMinMax<int>(a1, nullptr, size1, &min, &max);
+  EXPECT_EQ(min, 2);
+  EXPECT_EQ(max, 2);
 
   mask.free();
   a7.free();
@@ -563,28 +570,28 @@ GPU_TEST(algorithm, min_max_innerloop)
   RAJAReduceMin<bool> passed{true};
 
   CARE_REDUCE_LOOP(i, 0, 1) {
-     double min[1] = {-1};
-     double max[1] = {-1};
+     double min = -1;
+     double max = -1;
 
      care::local_ptr<int> arr1 = a1;
      care::local_ptr<int> arr7 = a7;
      care::local_ptr<int> mask7 = mask;
 
-     care::ArrayMinMax<int>(arr7, nullptr, 7, min, max);
+     care::ArrayMinMax<int>(arr7, nullptr, size2, &min, &max);
 
-     if (min[0] != -2 && max[0] != 9) {
+     if (min != -2 && max != 9) {
         passed.min(false);
      }
 
-     care::ArrayMinMax<int>(arr7, mask7, 7, min, max);
+     care::ArrayMinMax<int>(arr7, mask7, size2, &min, &max);
 
-     if (min[0] != 0 && max[0] != 5) {
+     if (min != 0 && max != 5) {
         passed.min(false);
      }
 
-     care::ArrayMinMax<int>(arr1, nullptr, 1, min, max);
+     care::ArrayMinMax<int>(arr1, nullptr, size1, &min, &max);
 
-     if (min[0] != 2 && max[0] != 2) {
+     if (min != 2 && max != 2) {
         passed.min(false);
      }
 
@@ -599,21 +606,24 @@ GPU_TEST(algorithm, min_max_innerloop)
 
 GPU_TEST(algorithm, minloc_empty)
 { 
+  const int size = 0;
   care::host_device_ptr<int> a;
-  int loc = 10;
-  int initVal = -1;
-  int result = care::ArrayMinLoc<int>(a, 0, initVal, loc);
+  const int loc = 10;
+  const int initVal = -1;
+
+  const int result = care::ArrayMinLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, initVal);
   EXPECT_EQ(loc, -1); // empty array, not found
+
   a.free();
 }
 
 GPU_TEST(algorithm, minloc_seven)
 {
-  int loc = -10;
+  const int loc = -10;
 
   const int size = 7;
-  care::host_device_ptr<int> a(7, "minseven");
+  care::host_device_ptr<int> a(size, "minseven");
 
   CARE_GPU_KERNEL {
      a[0] = 2;
@@ -627,13 +637,13 @@ GPU_TEST(algorithm, minloc_seven)
 
   // min of whole array
   int initVal = 99;
-  int result = care::ArrayMinLoc<int>(a, 7, initVal, loc);
+  int result = care::ArrayMinLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, 1);
   EXPECT_EQ(loc, 1);
 
   // test init val -1
   initVal = -1;
-  result = care::ArrayMinLoc<int>(a, 7, initVal, loc);
+  result = care::ArrayMinLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(loc, -1);
 
@@ -642,22 +652,23 @@ GPU_TEST(algorithm, minloc_seven)
 
 GPU_TEST(algorithm, maxloc_empty)
 {
+  const int size = 0;
   care::host_device_ptr<int> a;
+
   int loc = 7;
-  int initVal = -1;
-  int result = care::ArrayMaxLoc<int>(a, 0, initVal, loc);
+  const int initVal = -1;
+  const int result = care::ArrayMaxLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, initVal);
   EXPECT_EQ(loc, -1); // empty, not found
+
   a.free();
 }
 
 GPU_TEST(algorithm, maxloc_seven)
 {
-  int loc = -1;
-
   const int size = 7;
-  care::host_device_ptr<int> a(7, "minseven");
-  care::host_device_ptr<double> b(7, "maxsevend");
+  care::host_device_ptr<int> a(size, "minseven");
+  care::host_device_ptr<double> b(size, "maxsevend");
 
   CARE_GPU_KERNEL {
      a[0] = 2;
@@ -678,18 +689,19 @@ GPU_TEST(algorithm, maxloc_seven)
   } CARE_GPU_KERNEL_END
 
   // max of whole array
+  int loc = -1;
   int initVal = -1;
-  int result = care::ArrayMaxLoc<int>(a, 7, initVal, loc);
+  int result = care::ArrayMaxLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, 8);
   EXPECT_EQ(loc, 3);
 
-  double resultd = care::ArrayMaxLoc<double>(b, 7, initVal, loc);
+  const double resultd = care::ArrayMaxLoc<double>(b, size, initVal, loc);
   EXPECT_EQ(resultd, 97.8);
   EXPECT_EQ(loc, 5);
 
   // test init val 99
   initVal = 99;
-  result = care::ArrayMaxLoc<int>(a, 7, initVal, loc);
+  result = care::ArrayMaxLoc<int>(a, size, initVal, loc);
   EXPECT_EQ(result, 99);
   EXPECT_EQ(loc, -1);
 
@@ -723,26 +735,26 @@ GPU_TEST(algorithm, arrayfind)
   loc = care::ArrayFind<int>(nullptr, 0, 10, 0);
   EXPECT_EQ(loc, -1);
 
-  loc = care::ArrayFind<int>(a1, 1, 10, 0);
+  loc = care::ArrayFind<int>(a1, size1, 10, 0);
   EXPECT_EQ(loc, 0);
 
   // not present
-  loc = care::ArrayFind<int>(a1, 1, 77, 0);
+  loc = care::ArrayFind<int>(a1, size1, 77, 0);
   EXPECT_EQ(loc, -1);
  
   // start location past the end of the array 
   loc = 4;
-  loc = care::ArrayFind<int>(a1, 1, 77, 99);
+  loc = care::ArrayFind<int>(a1, size1, 77, 99);
   EXPECT_EQ(loc, -1);
 
-  loc = care::ArrayFind<int>(a7, 7, 1, 0);
+  loc = care::ArrayFind<int>(a7, size2, 1, 0);
   EXPECT_EQ(loc, 1);
 
   // start search at index 3
-  loc = care::ArrayFind<int>(a7, 7, 1, 3);
+  loc = care::ArrayFind<int>(a7, size2, 1, 3);
   EXPECT_EQ(loc, 6);
 
-  loc = care::ArrayFind<int>(a7, 7, 8, 0);
+  loc = care::ArrayFind<int>(a7, size2, 8, 0);
   EXPECT_EQ(loc, 2);
 
   a7.free();
@@ -751,12 +763,9 @@ GPU_TEST(algorithm, arrayfind)
 
 GPU_TEST(algorithm, findabovethreshold)
 {
-  int result = -1;
-  int threshIdx[1] = {0};
-
   const int size = 7;
   care::host_device_ptr<int> a(size, "array");
-  care::host_device_ptr<double> threshold(size, 7, "thresh");
+  care::host_device_ptr<double> threshold(size, "thresh");
 
   CARE_GPU_KERNEL {
      a[0] = 2;
@@ -776,32 +785,32 @@ GPU_TEST(algorithm, findabovethreshold)
      threshold[6] = 10;
   } CARE_GPU_KERNEL_END
 
-  double cutoff = -10;
-  
   // null array
-  result = care::FindIndexMinAboveThresholds<int>(nullptr, 0, threshold, cutoff, threshIdx);
+  double cutoff = -10;
+  int threshIdx = 0;
+  int result = care::FindIndexMinAboveThresholds<int>(nullptr, 0, threshold, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
 
   // null threshold
-  result = care::FindIndexMinAboveThresholds<int>(a, 7, nullptr, cutoff, threshIdx);
+  result = care::FindIndexMinAboveThresholds<int>(a, size, nullptr, cutoff, &threshIdx);
   EXPECT_EQ(result, 1);
 
   // threshold always triggers
-  result = care::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  result = care::FindIndexMinAboveThresholds<int>(a, size, threshold, cutoff, &threshIdx);
   EXPECT_EQ(result, 1);
-  EXPECT_EQ(threshIdx[0], 1);
+  EXPECT_EQ(threshIdx, 1);
 
   // set threshold higher to alter result
   cutoff = 5;
-  result = care::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  result = care::FindIndexMinAboveThresholds<int>(a, size, threshold, cutoff, &threshIdx);
   EXPECT_EQ(result, 4);
-  EXPECT_EQ(threshIdx[0], 4);
+  EXPECT_EQ(threshIdx, 4);
 
   // threshold never triggers
   cutoff = 999;
-  result = care::FindIndexMinAboveThresholds<int>(a, 7, threshold, cutoff, threshIdx);
+  result = care::FindIndexMinAboveThresholds<int>(a, size, threshold, cutoff, &threshIdx);
   EXPECT_EQ(result, -1);
-  EXPECT_EQ(threshIdx[0], -1);
+  EXPECT_EQ(threshIdx, -1);
 
   threshold.free();
   a.free();
@@ -809,14 +818,23 @@ GPU_TEST(algorithm, findabovethreshold)
 
 GPU_TEST(algorithm, minindexsubset)
 { 
-  int result = 99;
+  const int size1 = 1;
+  care::host_device_ptr<int> subset1(size1, "sub1");
 
-  care::host_device_ptr<int> a(7, "arrseven");
-  care::host_device_ptr<int> subset1(1, "sub1");
-  care::host_device_ptr<int> subset3(1, "sub3");
-  care::host_device_ptr<int> subsetrev(7, "rev");
+  const int size3 = 3;
+  care::host_device_ptr<int> subset3(size3, "sub3");
+
+  const int size7 = 7;
+  care::host_device_ptr<int> a(size7, "arrseven");
+  care::host_device_ptr<int> subsetrev(size7, "rev");
 
   CARE_GPU_KERNEL {
+     subset1[0] = 3;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
      a[0] = 2;
      a[1] = 1;
      a[2] = 1;
@@ -824,12 +842,6 @@ GPU_TEST(algorithm, minindexsubset)
      a[4] = 3;
      a[5] = 5;
      a[6] = 7;
-
-     subset1[0] = 3;
-
-     subset3[0] = 5;
-     subset3[1] = 0;
-     subset3[2] = 6;
 
      subsetrev[0] = 6;
      subsetrev[1] = 5;
@@ -841,52 +853,64 @@ GPU_TEST(algorithm, minindexsubset)
   } CARE_GPU_KERNEL_END
 
   // null subset
-  result = care::FindIndexMinSubset<int>(a, nullptr, 0);
+  int result = care::FindIndexMinSubset<int>(a, nullptr, 0);
   EXPECT_EQ(result, -1);
   
   // all elements but reverse order
-  result = care::FindIndexMinSubset<int>(a, subsetrev, 7);
+  result = care::FindIndexMinSubset<int>(a, subsetrev, size7);
   // NOTE: Since we are going in reverse order, this is 2 NOT 1
   EXPECT_EQ(result, 2);
 
   // len 3 subset
-  result = care::FindIndexMinSubset<int>(a, subset3, 3);
+  result = care::FindIndexMinSubset<int>(a, subset3, size3);
   EXPECT_EQ(result, 0);
 
   // len 1 subset
-  result = care::FindIndexMinSubset<int>(a, subset1, 1);
+  result = care::FindIndexMinSubset<int>(a, subset1, size1);
   EXPECT_EQ(result, 3);  
 
   subsetrev.free();
+  a.free();
   subset3.free();
   subset1.free();
-  a.free();
 }
 
 GPU_TEST(algorithm, minindexsubsetabovethresh)
 {
-  care::host_device_ptr<int> a(7, "arrseven");
-  care::host_device_ptr<int> subset1(1, "sub1");
-  care::host_device_ptr<int> subset3(1, "sub3");
-  care::host_device_ptr<int> subsetrev(7, "rev");
-  care::host_device_ptr<double> threshold7(7, "thresh7");
-  care::host_device_ptr<double> threshold3(3, "thresh3");
-  care::host_device_ptr<double> threshold1(1, "thresh1");
+  const int size1 = 1;
+  care::host_device_ptr<int> subset1(size1, "sub1");
+  care::host_device_ptr<double> threshold1(size1, "thresh1");
+
+  const int size3 = 3;
+  care::host_device_ptr<int> subset3(size3, "sub3");
+  care::host_device_ptr<double> threshold3(size3, "thresh3");
+
+  const int size7 = 7;
+  care::host_device_ptr<int> a(size7, "arrseven");
+  care::host_device_ptr<int> subsetrev(size7, "rev");
+  care::host_device_ptr<double> threshold7(size7, "thresh7");
+
 
   CARE_GPU_KERNEL {
-     a[0] = 2;
-     a[1] = 1;
-     a[2] = 1;
-     a[3] = 8;
-     a[4] = 3;
-     a[5] = 5;
-     a[6] = 7;
-
      subset1[0] = 3;
+
+     threshold1[0] = 10;
 
      subset3[0] = 5;
      subset3[1] = 0;
      subset3[2] = 6;
+
+     threshold3[0] = 0;
+     threshold3[1] = 10;
+     threshold3[2] = 10;
+
+     a[0] = 2;
+     a[1] = 1;
+     a[2] = 1;
+     a[3] = 8;
+     a[4] = 5;
+     a[5] = 3;
+     a[6] = 7;
 
      subsetrev[0] = 6;
      subsetrev[1] = 5;
@@ -903,74 +927,77 @@ GPU_TEST(algorithm, minindexsubsetabovethresh)
      threshold7[4] = 0;
      threshold7[5] = 0;
      threshold7[6] = 10;
-
-     threshold3[0] = 0;
-     threshold3[1] = 10;
-     threshold3[2] = 10;
-
-     threshold1[0] = 10;
   } CARE_GPU_KERNEL_END
 
-  int threshIdx[1] = {-1};
-  int result = 99;
-  double cutoff = -10;
-
   // null subset
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
+  double cutoff = -10;
+  int threshIdx[1] = {-1};
+  int result = care::FindIndexMinSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
 
   // all elements but reverse order, no threshold
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, nullptr, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, threshIdx);
   // NOTE: Since we are going in reverse order, this is 2 NOT 1
   EXPECT_EQ(result, 2);
 
   // all elements in reverse order, cutoff not triggered
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, 2); // this is the index in the original array
   EXPECT_EQ(threshIdx[0], 4); // this is the index in the subset
 
   // change the cutoff
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, 0); // this is the index in the original array
   EXPECT_EQ(threshIdx[0], 6); // this is the index in the subset
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset3, 3, threshold3, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, threshIdx);
   EXPECT_EQ(result, 0);
   EXPECT_EQ(threshIdx[0], 1);
 
   // len 1 subset
   cutoff = 5.0;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, 3);
   EXPECT_EQ(threshIdx[0], 0);
 
   // len 1 subset not found (cutoff too high)
   cutoff = 25.67;
-  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMinSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
 
-  threshold1.free();
-  threshold3.free();
   threshold7.free();
   subsetrev.free();
-  subset3.free();
-  subset1.free();
   a.free();
+  threshold3.free();
+  subset3.free();
+  threshold1.free();
+  subset1.free();
 }
 
 GPU_TEST(algorithm, maxindexsubset)
 {
-  care::host_device_ptr<int> a(7, "arrseven");
-  care::host_device_ptr<int> subset1(1, "sub1");
-  care::host_device_ptr<int> subset3(1, "sub3");
-  care::host_device_ptr<int> subsetrev(7, "rev");
+  const int size1 = 1;
+  care::host_device_ptr<int> subset1(size1, "sub1");
+
+  const int size3 = 3;
+  care::host_device_ptr<int> subset3(size3, "sub3");
+
+  const int size7 = 7;
+  care::host_device_ptr<int> a(size7, "arrseven");
+  care::host_device_ptr<int> subsetrev(size7, "rev");
 
   CARE_GPU_KERNEL {
+     subset1[0] = 2;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
      a[0] = 2;
      a[1] = 1;
      a[2] = 1;
@@ -978,12 +1005,6 @@ GPU_TEST(algorithm, maxindexsubset)
      a[4] = 3;
      a[5] = 5;
      a[6] = 7;
-
-     subset1[0] = 2;
-
-     subset3[0] = 5;
-     subset3[1] = 0;
-     subset3[2] = 6;
 
      subsetrev[0] = 6;
      subsetrev[1] = 5;
@@ -994,41 +1015,56 @@ GPU_TEST(algorithm, maxindexsubset)
      subsetrev[6] = 0;
   } CARE_GPU_KERNEL_END
 
-  int result = 99;
-
   // null subset
-  result = care::FindIndexMaxSubset<int>(a, nullptr, 0);
+  int result = care::FindIndexMaxSubset<int>(a, nullptr, 0);
   EXPECT_EQ(result, -1);
 
   // all elements but reverse order
-  result = care::FindIndexMaxSubset<int>(a, subsetrev, 7);
+  result = care::FindIndexMaxSubset<int>(a, subsetrev, size7);
   EXPECT_EQ(result, 3);
 
   // len 3 subset
-  result = care::FindIndexMaxSubset<int>(a, subset3, 3);
+  result = care::FindIndexMaxSubset<int>(a, subset3, size3);
   EXPECT_EQ(result, 6);
 
   // len 1 subset
-  result = care::FindIndexMaxSubset<int>(a, subset1, 1);
+  result = care::FindIndexMaxSubset<int>(a, subset1, size1);
   EXPECT_EQ(result, 2);
 
   subsetrev.free();
+  a.free();
   subset3.free();
   subset1.free();
-  a.free();
 }
 
 GPU_TEST(algorithm, maxindexsubsetabovethresh)
 {
-  care::host_device_ptr<int> a(7, "arrseven");
-  care::host_device_ptr<int> subset1(1, "sub1");
-  care::host_device_ptr<int> subset3(1, "sub3");
-  care::host_device_ptr<int> subsetrev(7, "rev");
-  care::host_device_ptr<double> threshold7(7, "thresh7");
-  care::host_device_ptr<double> threshold3(3, "thresh3");
-  care::host_device_ptr<double> threshold1(1, "thresh1");
+  const int size1 = 1;
+  care::host_device_ptr<int> subset1(size1, "sub1");
+  care::host_device_ptr<double> threshold1(size1, "thresh1");
+
+  const int size3 = 3;
+  care::host_device_ptr<int> subset3(size3, "sub3");
+  care::host_device_ptr<double> threshold3(size3, "thresh3");
+
+  const int size7 = 7;
+  care::host_device_ptr<int> a(size7, "arrseven");
+  care::host_device_ptr<int> subsetrev(size7, "rev");
+  care::host_device_ptr<double> threshold7(size7, "thresh7");
 
   CARE_GPU_KERNEL {
+     subset1[0] = 2;
+
+     threshold1[0] = 10;
+
+     subset3[0] = 5;
+     subset3[1] = 0;
+     subset3[2] = 6;
+
+     threshold3[0] = 0;
+     threshold3[1] = 10;
+     threshold3[2] = 10;
+
      a[0] = 2;
      a[1] = 1;
      a[2] = 1;
@@ -1036,12 +1072,6 @@ GPU_TEST(algorithm, maxindexsubsetabovethresh)
      a[4] = 3;
      a[5] = 5;
      a[6] = 7;
-
-     subset1[0] = 2;
-
-     subset3[0] = 5;
-     subset3[1] = 0;
-     subset3[2] = 6;
 
      subsetrev[0] = 6;
      subsetrev[1] = 5;
@@ -1058,63 +1088,55 @@ GPU_TEST(algorithm, maxindexsubsetabovethresh)
      threshold7[4] = 0;
      threshold7[5] = 0;
      threshold7[6] = 10;
-
-     threshold3[0] = 0;
-     threshold3[1] = 10;
-     threshold3[2] = 10;
-
-     threshold1[0] = 10;
   } CARE_GPU_KERNEL_END
 
-  int threshIdx[1] = {-1};
-  int result = 99;
-  double cutoff = -10;
-
   // null subset
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
+  double cutoff = -10;
+  int threshIdx[1] = {-1};
+  int result = care::FindIndexMaxSubsetAboveThresholds<int>(a, nullptr, 0, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
 
   // all elements but reverse order, no threshold
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, 7, nullptr, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, nullptr, cutoff, threshIdx);
   EXPECT_EQ(result, 3);
 
   // all elements in reverse order, cutoff not triggered
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, 3); // this is the index in the original array
   EXPECT_EQ(threshIdx[0], 3); // this is the index in the subset
 
   // change the cutoff
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, 7, threshold7, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subsetrev, size7, threshold7, cutoff, threshIdx);
   EXPECT_EQ(result, 6); // this is the index in the original array
   EXPECT_EQ(threshIdx[0], 0); // this is the index in the subset
 
   // len 3 subset
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset3, 3, threshold3, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset3, size3, threshold3, cutoff, threshIdx);
   EXPECT_EQ(result, 6);
   EXPECT_EQ(threshIdx[0], 2);
 
   // len 1 subset
   cutoff = 5.0;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, 2);
   EXPECT_EQ(threshIdx[0], 0);
 
   // len 1 subset not found (cutoff too high)
   cutoff = 25.67;
-  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, 1, threshold1, cutoff, threshIdx);
+  result = care::FindIndexMaxSubsetAboveThresholds<int>(a, subset1, size1, threshold1, cutoff, threshIdx);
   EXPECT_EQ(result, -1);
   EXPECT_EQ(threshIdx[0], -1);
 
-  threshold1.free();
-  threshold3.free();
   threshold7.free();
   subsetrev.free();
-  subset3.free();
-  subset1.free();
   a.free();
+  threshold3.free();
+  subset3.free();
+  threshold1.free();
+  subset1.free();
 }
 
 GPU_TEST(algorithm, pickperformfindmax)
