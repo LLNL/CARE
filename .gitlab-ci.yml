@@ -1,0 +1,20 @@
+######################################################################################
+# Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+######################################################################################
+
+variables:
+   GIT_SUBMODULE_STRATEGY: normal
+
+stages:
+   - build
+
+cuda:
+   stage: build
+   tags:
+      - shell
+      - lassen
+   script:
+      - lalloc 1 -W 30 .gitlab/ci/helper.sh
