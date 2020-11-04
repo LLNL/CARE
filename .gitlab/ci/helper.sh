@@ -7,8 +7,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ######################################################################################
 
-mkdir build
-cd build
+mkdir build-cuda
+cd build-cuda
 cmake -C ../configs/lc/blueos/nvcc10.1.243_clang8.0.1.cmake ../
 make -j
-rm -rf build
+rm -rf build-cuda

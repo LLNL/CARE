@@ -11,7 +11,7 @@ variables:
 stages:
    - build
 
-gpu:
+cuda:
    stage: build
    tags:
       - shell
