@@ -412,9 +412,7 @@ public:
    ///        a flush call.
    ///////////////////////////////////////////////////////////////////////////
    virtual void startRecording() {
-#ifndef CARE_FUSIBLE_LOOPS_DISABLE
       m_recording = true; warnIfNotFlushed();
-#endif
    }
 
    ///////////////////////////////////////////////////////////////////////////
@@ -813,9 +811,7 @@ class LoopFuser : public FusedActions {
       ///        a flush call.
       ///////////////////////////////////////////////////////////////////////////
       void startRecording() {
-#ifndef CARE_FUSIBLE_LOOPS_DISABLE
          m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
-#endif
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1006,7 +1002,7 @@ class LoopFuser : public FusedActions {
 ///                     when scan support is added.
 ///////////////////////////////////////////////////////////////////////////
 template <typename LB, typename Conditional>
-void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional && conditional, LB && action, int scan_type, int &pos_store, care::host_device_ptr<int> /*counts_to_offsets_scanvar*/) {
+void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional && conditional, LB && action, int scan_type, int &pos_store, care::host_device_ptr<int> counts_to_offsets_scanvar) {
    if (end > start) {
       /* switch to scan mode if we encounter a scan before we flush */
       if (scan_type == 1) {
@@ -1056,9 +1052,8 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 
 #ifdef FUSER_VERBOSE
          if (m_verbose) {
-            printf("Registered action %i with start %i and end %i and offset %i\n",
-                   m_action_count, m_action_starts[m_action_count], m_action_ends[m_action_count],
-                   m_action_offsets[m_action_count]);
+            printf("Registered action %i with and offset %i\n",
+                   m_action_count, m_action_offsets[m_action_count]);
          }
 #endif
          m_max_action_length = std::max(m_max_action_length, end-start);
@@ -1100,30 +1095,24 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #ifdef FUSER_VERBOSE
          printf("calling as packed\n");
 #endif
+         int length = end - start;
          switch(scan_type) {
             case 0:
-            /*
 #if defined CARE_GPUCC && defined GPU_ACTIVE
-               care::forall(care::raja_fusible {}, 0, end-start, false, -1, action);
+               care::forall(care::raja_fusible {}, 0, length, action, fusible_registers{});
 #else
-               care::forall(care::raja_fusible_seq {}, 0, end-start, false, -1, action);
+               care::forall(care::raja_fusible_seq {}, 0, length, action, fusible_registers{});
 #endif
-*/
                break;
             case 1:
-            /*
-               index_type * device_scanoffsets = m_scan
-               SCAN_LOOP(i, start, end, pos, start_pos, conditional(i, device_scanvar, device_scanoffsets)) {
-                  action(i, false, 0, pos, -1);
-               } SCAN_LOOP_END(end-start, pos, pos_store)
-            */
+               SCAN_LOOP_FUSIBLE_LAUNCH_NOW(i, 0, length, pos, start_pos, conditional, fusible_registers{}) {
+                  action(i, SCANVARNAME(pos).data(), fusible_registers{} );
+               } SCAN_LOOP_END(length, pos, pos_store)
                break;
             case 2:
-            /*
-               SCAN_COUNTS_TO_OFFSETS_LOOP(i, start,end,counts_to_offsets_scanvar) {
-                  action(i, false, 0, -1, -1);
-               } SCAN_COUNTS_TO_OFFSETS_LOOP_END(i, end-start,counts_to_offsets_scanvar)
-            */
+               SCAN_COUNTS_TO_OFFSETS_LOOP(i, 0, length, counts_to_offsets_scanvar) {
+                  action(i, nullptr, fusible_registers{});
+               } SCAN_COUNTS_TO_OFFSETS_LOOP_END(i, length, counts_to_offsets_scanvar)
                break;
             default:
                printf("care::LoopFuser::encountered unhandled scan type\n");
@@ -1151,13 +1140,18 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #ifndef CARE_DEBUG
 #define CARE_DEBUG
 #endif
+#if defined(CARE_FUSIBLE_LOOPS_DISABLE)
+#define START_RECORDING(FUSER)
+#else
+#define START_RECORDING(FUSER) FUSER->startRecording()
+#endif
 #if defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(__phase_observer)}) { \
-      __fuser__->startRecording(); \
+      START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(false); \
       __fuser__->setScan(false); \
    } \
@@ -1167,7 +1161,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(__phase_observer)}) { \
-      __fuser__->startRecording(); \
+      START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(true); \
       __fuser__->setScan(false); \
    } \
@@ -1349,22 +1343,29 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION)
 
+
+// note - FUSED_SCANVAR will be nullptr if m_call_as_packed is set in registerAction, as there will be no need for an intermediate
+// FUSED_SCANVAR, so we won't need to write to it in the action or store into it in the conditional
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR)  { \
    auto __fuser__ = LoopFuser::getInstance(); \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    int __fusible_scan_pos__ = 0; \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
                               [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , index_type const * SCANVAR_OFFSET, int, fusible_registers ) {  \
-                                 FUSIBLE_INDEX_ADJUST(INDEX) ; \
-                                 int __offset = __fusible_action_index__ == 0 ? 0 : SCANVAR_OFFSET[__fusible_action_index__-1]; \
-                                 SCANVAR[INDEX] = FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset]; },  \
+                                 if (FUSED_SCANVAR != nullptr) { \
+                                    FUSIBLE_INDEX_ADJUST(INDEX) ; \
+                                    int __offset = __fusible_action_index__ == 0 ? 0 : SCANVAR_OFFSET[__fusible_action_index__-1]; \
+                                    SCANVAR[INDEX] = FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset]; \
+                                 } \
+                              },  \
                               [=] FUSIBLE_DEVICE(int INDEX, int *FUSED_SCANVAR, fusible_registers) { \
                                  FUSIBLE_LOOP_PREAMBLE(INDEX) {
 
-
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(INDEX, LENGTH, SCANVAR)  \
                                  } \
-                                 FUSED_SCANVAR[__fusible_global_index__] = SCANVAR[INDEX]; \
+                                 if (FUSED_SCANVAR != nullptr) { \
+                                    FUSED_SCANVAR[__fusible_global_index__] = SCANVAR[INDEX]; \
+                                 } \
                                  }, \
                               2, __fusible_scan_pos__ , SCANVAR); }
 #else /* CARE_ENABLE_LOOP_FUSER */

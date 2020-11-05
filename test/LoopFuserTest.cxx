@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+
 #include "care/config.h"
 
 #if CARE_ENABLE_LOOP_FUSER
@@ -19,7 +20,13 @@
 #define CARE_DEBUG 1
 #include "gtest/gtest.h"
 
+// define if we want to test running loops as we encounter them
+//#define CARE_FUSIBLE_LOOPS_DISABLE
+// define if we want to turn on verbosity
+//#define FUSER_VERBOSE
+
 #include "care/LoopFuser.h"
+
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
@@ -684,11 +691,13 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
             B[i] = (B[i] + 1)>>t;
          }
       } CARE_STREAM_LOOP_END
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
+#endif
       /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
        * won't update them, so we need to mark A and C as touched on the device
        * so we get fresh data after the flush */

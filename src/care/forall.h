@@ -210,8 +210,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   void forall(raja_fusible_seq, int start, int end, bool fused, int action, LB body) {
+   template <typename LB, typename FUSIBLE_REGISTERS>
+   void forall(raja_fusible_seq, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers) {
       const int length = end - start;
 
       if (length != 0) {
@@ -221,8 +221,8 @@ namespace care {
          /* trigger the chai copy constructors in captured variables */
          LB my_body = body;
 
-         for (int i = start; i < end; ++i) {
-            my_body(i,fused,action,start,end);
+         for (int i = 0; i < length; ++i) {
+            my_body(i,nullptr,fusible_registers);
          }
 
          threadRM->setExecutionSpace(chai::NONE);
@@ -245,13 +245,13 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   __global__ void forall_fusible_kernel(LB body, int start, int end, bool fused, int action) {
+   template <typename LB, typename FUSIBLE_REGISTERS>
+   __global__ void forall_fusible_kernel(LB body, int start, int end, FUSIBLE_REGISTERS fusible_registers) {
       int i = blockDim.x * blockIdx.x + threadIdx.x;
       int length =  end - start;
 
       if (i < length) {
-         body(i+start, fused, action, start, end);
+         body(i, nullptr, fusible_registers);
       }
    }
 
@@ -270,8 +270,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   void forall(raja_fusible, int start, int end, bool fused, int action, LB body) {
+   template <typename LB, typename FUSIBLE_REGISTERS>
+   void forall(raja_fusible, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers) {
       const int length = end - start;
 
       if (length != 0) {
@@ -282,13 +282,13 @@ namespace care {
          /* trigger the chai copy constructors in captured variables */
          LB my_body = body;
 
-         for (int i = start; i < end; ++i) {
-            my_body(i,fused,action,start,end);
+         for (int i = 0; i < length; ; ++i) {
+            my_body(i,nullptr , fusible_registers);
          }
 #else
          size_t blockSize = CARE_CUDA_BLOCK_SIZE;
-         size_t gridSize = (end - start) / blockSize + 1;
-         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fused, action);
+         size_t gridSize = length / blockSize + 1;
+         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fusible_registers);
 
 #if FORCE_SYNC
          care_gpuErrchk(gpuDeviceSynchronize());
