@@ -638,27 +638,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential RAJA loop. The P indicates
-///        that pointers are used in the loop (and thus it is unsafe to run
-///        on the device).
-///
-///        STREAM is an alias to PARALLEL that indicates not much work is taking place.
-///        The P indicates it is not safe to run on the device (yet).
-///
-/// @note The P is used to indicate to uncrustify that pointers can be used
-///       in this loop.
-///
-/// @arg[in] INDEX The index variable
-/// @arg[in] START_INDEX The starting index (inclusive)
-/// @arg[in] END_INDEX The ending index (exclusive)
-///
-////////////////////////////////////////////////////////////////////////////////
-#define CARE_STREAM_P_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_p_loop_check)
-
-#define CARE_STREAM_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_stream_p_loop_check)
-
-////////////////////////////////////////////////////////////////////////////////
-///
 /// @brief Macros that start and end an OpenMP RAJA loop. If OpenMP is not
 ///        available, executes sequentially on the host.
 ///
