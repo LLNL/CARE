@@ -945,14 +945,14 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          // a priori what the next lambda size is going to be, but we need to ensure a flush so the
          // FUSIBLE_LOOP_STREAM macro gets good information for what the next offset will be to construct
          // its lambda.
-         if (m_lambda_reserved <= 100*(lambda_size + conditional_size) + m_lambda_size) {
+         else if (m_lambda_reserved <= 100*(lambda_size + conditional_size) + m_lambda_size) {
 #ifdef FUSER_VERBOSE
             printf("hit lambda_reserved flushActions\n");
 #endif
             flushActions();
          }
          // if we are approaching the 2^31-1 limit proactively flush
-         if (m_action_offsets[m_action_count-1] > 2000000000) {
+         else if (m_action_offsets[m_action_count-1] > 2000000000) {
 #ifdef FUSER_VERBOSE
             printf("hit m_action_offsets flushActions\n");
 #endif
