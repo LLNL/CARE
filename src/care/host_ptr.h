@@ -146,6 +146,104 @@ namespace care {
       private:
          T * m_ptr; //!< Raw host pointer
    };
+
+   /// Comparison operators
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Equals comparison.
+   ///
+   /// @param[in] lhs The first host_ptr to compare
+   /// @param[in] rhs The second host_ptr to compare
+   ///
+   template <typename T, typename U>
+   bool operator==(const host_ptr<T>& lhs, const host_ptr<U>& rhs) noexcept {
+      return lhs.cdata() == rhs.cdata();
+   }
+
+   template <typename T, typename U>
+   bool operator==(const host_ptr<T>& lhs, const U* rhs) noexcept {
+      return lhs.cdata() == rhs;
+   }
+
+   template <typename T, typename U>
+   bool operator==(const T* lhs, const host_ptr<U>& rhs) noexcept {
+      return lhs == rhs.cdata();
+   }
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Not equals comparison.
+   ///
+   /// @param[in] lhs The first host_ptr to compare
+   /// @param[in] rhs The second host_ptr to compare
+   ///
+   template <typename T, typename U>
+   bool operator!=(const host_ptr<T>& lhs, const host_ptr<U>& rhs) noexcept {
+      return lhs.cdata() != rhs.cdata();
+   }
+
+   template <typename T, typename U>
+   bool operator!=(const host_ptr<T>& lhs, const U* rhs) noexcept {
+      return lhs.cdata() != rhs;
+   }
+
+   template <typename T, typename U>
+   bool operator!=(const T* lhs, const host_ptr<U>& rhs) noexcept {
+      return lhs != rhs.cdata();
+   }
+
+   /// Comparison operators with nullptr
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Equals comparison with nullptr.
+   ///
+   /// @param[in] lhs The host_ptr to compare to nullptr
+   ///
+   template <typename T>
+   bool operator==(const host_ptr<T>& lhs, std::nullptr_t) noexcept {
+      return lhs.cdata() == nullptr;
+   }
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Equals comparison with nullptr.
+   ///
+   /// @param[in] rhs The host_ptr to compare to nullptr
+   ///
+   template <typename T>
+   bool operator==(std::nullptr_t, const host_ptr<T>& rhs) noexcept {
+      return nullptr == rhs.cdata();
+   }
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Not equals comparison with nullptr.
+   ///
+   /// @param[in] lhs The host_ptr to compare to nullptr
+   ///
+   template <typename T>
+   bool operator!=(const host_ptr<T>& lhs, std::nullptr_t) noexcept {
+      return lhs.cdata() != nullptr;
+   }
+
+   ///
+   /// @author Alan Dayton
+   ///
+   /// Not equals comparison with nullptr.
+   ///
+   /// @param[in] rhs The host_ptr to compare to nullptr
+   ///
+   template <typename T>
+   bool operator!=(std::nullptr_t, const host_ptr<T>& rhs) noexcept {
+      return nullptr != rhs.cdata();
+   }
 } // namespace care
 
 #endif // !defined(_CARE_HOST_PTR_H_)

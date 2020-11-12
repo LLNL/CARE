@@ -346,7 +346,7 @@ void LoopFuser::flush_parallel_scans() {
       int scan_pos_offset = actionIndex == 0 ? 0 : scan_pos_outputs[actionIndex-1];
       int pos = scan_pos_outputs[actionIndex];
       pos -= scan_pos_offset;
-      *(m_pos_output_destinations[actionIndex]) += pos;
+      *(m_pos_output_destinations[actionIndex].data()) += pos;
    } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();
 }
