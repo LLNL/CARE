@@ -255,8 +255,8 @@ inline void IntersectArrays(RAJA::seq_exec,
       const char* funcname = "IntersectArrays" ;
 
       // allowDuplicates is false for this check by default
-      checkSorted<T>(&arr1[start1], size1, funcname, "arr1") ;
-      checkSorted<T>(&arr2[start2], size2, funcname, "arr2") ;
+      checkSorted<T>(arr1.cdata() + start1, size1, funcname, "arr1") ;
+      checkSorted<T>(arr2.cdata() + start2, size2, funcname, "arr2") ;
    }
 
    int i, j;
@@ -264,12 +264,12 @@ inline void IntersectArrays(RAJA::seq_exec,
 
    /* the host arrays */
    const T * A1, *A2;
-   int * m1 = matches1;
-   int * m2 = matches2;
+   int * m1 = matches1.data();
+   int * m2 = matches2.data();
 
-   A1 = arr1;
+   A1 = arr1.cdata();
    A1 += start1;
-   A2 = arr2;
+   A2 = arr2.cdata();
    A2 += start2;
 
    while (i < size1 && j < size2) {
@@ -290,14 +290,14 @@ inline void IntersectArrays(RAJA::seq_exec,
 
    /* change the size of the array */
    if (*numMatches == 0) {
-      std::free((int*) matches1);
-      std::free((int*) matches2);
+      std::free(matches1.data());
+      std::free(matches2.data());
       matches1 = nullptr;
       matches2 = nullptr;
    }
    else {
-      matches1 = (int*) std::realloc((int*) matches1, *numMatches * sizeof(int));
-      matches2 = (int*) std::realloc((int*) matches2, *numMatches * sizeof(int));
+      matches1 = (int*) std::realloc(matches1.data(), *numMatches * sizeof(int));
+      matches2 = (int*) std::realloc(matches2.data(), *numMatches * sizeof(int));
    }
 }
 
@@ -308,9 +308,9 @@ inline void IntersectArrays(RAJA::seq_exec exec,
                             care::host_ptr<int> &matches1, care::host_ptr<int> &matches2,
                             int *numMatches) {
    IntersectArrays<T>(exec,
-                              care::host_ptr<const T>(arr1), size1, start1,
-                              care::host_ptr<const T>(arr2), size2, start2,
-                              matches1, matches2, numMatches);
+                      care::host_ptr<const T>(arr1), size1, start1,
+                      care::host_ptr<const T>(arr2), size2, start2,
+                      matches1, matches2, numMatches);
 }
 
 /************************************************************************
@@ -334,12 +334,12 @@ inline void IntersectArrays(RAJA::seq_exec exec,
    care::host_ptr<int> matches1_tmp, matches2_tmp;
 
    IntersectArrays<T>(exec,
-                              care::host_ptr<const T>(arr1), size1, start1,
-                              care::host_ptr<const T>(arr2), size2, start2,
-                              matches1_tmp, matches2_tmp, numMatches);
+                      care::host_ptr<const T>(arr1), size1, start1,
+                      care::host_ptr<const T>(arr2), size2, start2,
+                      matches1_tmp, matches2_tmp, numMatches);
 
-   matches1 = care::host_device_ptr<int>((int *) matches1_tmp, *numMatches, "IntersectArrays matches1");
-   matches2 = care::host_device_ptr<int>((int *) matches2_tmp, *numMatches, "IntersectArrays matches2");
+   matches1 = care::host_device_ptr<int>(matches1_tmp.data(), *numMatches, "IntersectArrays matches1");
+   matches2 = care::host_device_ptr<int>(matches2_tmp.data(), *numMatches, "IntersectArrays matches2");
 
    return;
 }
@@ -1077,7 +1077,7 @@ int ArrayFind(care::host_device_ptr<const T> arr, const int len, const T val, co
  * ************************************************************************/
 template <typename T>
 inline T ArrayMax(care::host_ptr<const T> arr, int n, T initVal)  {
-   return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>((const T *) arr, n, "ArrayMaxTmp"), n, initVal);
+   return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal);
 }
 
 template <typename T>
