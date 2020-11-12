@@ -136,6 +136,13 @@ namespace care {
          ///
          T* data() const { return m_ptr; }
 
+         ///
+         /// @author Alan Dayton
+         ///
+         /// Get the underlying data array. In the future, this may replace operator T*()
+         ///
+         const T* cdata() const { return m_ptr; }
+
       private:
          T * m_ptr; //!< Raw host pointer
    };

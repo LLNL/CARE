@@ -120,6 +120,14 @@ namespace care {
          /// Convert to a raw pointer
          ///
          CARE_HOST_DEVICE T* data() const { return m_ptr; }
+
+         ///
+         /// @author Alan Dayton
+         ///
+         /// Convert to a raw pointer
+         ///
+         CARE_HOST_DEVICE const T* cdata() const { return m_ptr; }
+
       private:
          T * m_ptr; //!< Raw pointer
    };
