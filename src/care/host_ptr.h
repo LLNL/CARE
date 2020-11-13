@@ -96,16 +96,14 @@ namespace care {
          ///
          inline T & operator[](int index) const { return m_ptr[index]; }
 
-// We will allow this implicit conversion since it is safe for host-only pointers. We could re-consider
-// this in the future, however, but it may require many code changes for users.
-//#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
          ///
          /// @author Peter Robinson
          ///
          /// Convert to a raw pointer
          ///
          operator T*() const { return m_ptr; }
-//#endif
+#endif
 
          ///
          /// @author Peter Robinson
