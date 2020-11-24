@@ -64,7 +64,7 @@ namespace care {
          s_active_pointers_in_loop.clear();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
-         CUDAWatchpoint::setOrCheckWatchpoint<int>();
+         GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 #endif // !defined(CHAI_DISABLE_RM)
@@ -208,7 +208,7 @@ namespace care {
          s_active_pointers_in_loop.clear();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
-         CUDAWatchpoint::setOrCheckWatchpoint<int>();
+         GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 

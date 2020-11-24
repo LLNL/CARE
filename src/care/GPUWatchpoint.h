@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_CUDA_WATCHPOINT_H_
-#define _CARE_CUDA_WATCHPOINT_H_
+#define _CARE_GPU_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
 #if defined(CARE_GPUCC)
@@ -34,7 +34,7 @@ inline void watchpoint_gpuAssert(care_watchpoint_err_t code, const char *file, i
    }
 }
 
-class CUDAWatchpoint {
+class GPUWatchpoint {
    public:
       template <typename T>
       static void setOrCheckWatchpoint(T * deviceAddress = nullptr) {
@@ -45,12 +45,12 @@ class CUDAWatchpoint {
             if (wp) {
                T currentVal;
 #if defined(__CUDACC__)
-               watchpoint_gpuAssert(cudaMemcpy(&currentVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+               watchpoint_gpuAssert(cudaMemcpy(&currentVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "GPUWatchpoint", __LINE__, true);
 #elif defined(__HIPCC__)
-               watchpoint_gpuAssert(hipMemcpy(&currentVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+               watchpoint_gpuAssert(hipMemcpy(&currentVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "GPUWatchpoint", __LINE__, true);
 #endif               
                if (currentVal != oldVal) {
-                  printf("[CARE] CUDA Watchpoint %p change detected!\n", wp);
+                  printf("[CARE] GPU Watchpoint %p change detected!\n", wp);
                   oldVal = currentVal;
                }
             }
@@ -59,9 +59,9 @@ class CUDAWatchpoint {
          else {
             wp = deviceAddress;
 #if defined(__CUDACC__)
-            watchpoint_gpuAssert(cudaMemcpy(&oldVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+            watchpoint_gpuAssert(cudaMemcpy(&oldVal, (void *) wp, sizeof(T), cudaMemcpyDeviceToHost), "GPUWatchpoint", __LINE__, true);
 #elif defined(__HIPCC__)
-            watchpoint_gpuAssert(hipMemcpy(&oldVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "CUDAWatchpoint", __LINE__, true);
+            watchpoint_gpuAssert(hipMemcpy(&oldVal, (void *) wp, sizeof(T),  hipMemcpyDeviceToHost), "GPUWatchpoint", __LINE__, true);
 #endif         
          }
       }
@@ -70,4 +70,4 @@ class CUDAWatchpoint {
 #endif //CARE_GPUCC
 #endif //CARE_DEBUG
 
-#endif // !defined(_CARE_CUDA_WATCHPOINT_H_)
+#endif // !defined(_CARE_GPU_WATCHPOINT_H_)

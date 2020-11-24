@@ -13,7 +13,7 @@
 
 // Other CARE headers
 #include "care/CHAICallback.h"
-#include "care/CUDAWatchpoint.h"
+#include "care/GPUWatchpoint.h"
 #include "care/DefaultMacros.h"
 #include "care/FOREACHMACRO.h"
 #include "care/PointerTypes.h"
