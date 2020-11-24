@@ -15,6 +15,9 @@
 // Other library headers
 #if defined(__CUDACC__)
 #include "cuda.h"
+#endif
+
+#if defined(CARE_GPUCC)
 #if defined(CARE_DEBUG)
 #include "care/CUDAWatchpoint.h"
 #endif
