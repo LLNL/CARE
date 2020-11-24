@@ -19,7 +19,7 @@
 
 #if defined(CARE_GPUCC)
 #if defined(CARE_DEBUG)
-#include "care/CUDAWatchpoint.h"
+#include "care/GPUWatchpoint.h"
 #endif
 #endif
 
@@ -168,7 +168,7 @@ namespace care {
          }
       }
 #if defined(CARE_DEBUG)
-      CUDAWatchpoint::setOrCheckWatchpoint<int>();
+      GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif
    }
 
@@ -198,7 +198,7 @@ namespace care {
          }
       }
 #if defined(CARE_DEBUG)
-      CUDAWatchpoint::setOrCheckWatchpoint<int>();
+      GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif
    }
 

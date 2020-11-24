@@ -23,7 +23,7 @@ set(care_headers
     atomic.h
     CHAICallback.h
     CHAIDataGetter.h
-    CUDAWatchpoint.h
+    GPUWatchpoint.h
     Debug.h
     DefaultMacros.h
     device_ptr.h
