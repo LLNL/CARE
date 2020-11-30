@@ -126,6 +126,17 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          if (EXPR) { \
             const int SCANINDX = SCANVARNAME(SCANINDX)++;
 
+// CPU version of scan idiom. Designed to look like we're doing a scan, but
+// does the CPU efficient all in one pass idiom. variant that is compatible with the fusible scan conditional lambda
+#define SCAN_LOOP_P_FUSIBLE(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
+   { \
+      int SCANVARNAME(SCANINDX) = SCANINDX_OFFSET; \
+      CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDX, START, END, scan_loop_check, SCANVARNAME(SCANINDX)) { \
+         int __scan_loop_p_expr;  \
+         EXPR_LAMBDA(INDX, &__scan_loop_p_expr, &__scan_loop_p_expr, -1, FUSIBLE_REGISTER); \
+         if (__scan_loop_p_expr) { \
+            const int SCANINDX = SCANVARNAME(SCANINDX)++;
+
 #define SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(scan_loop_check) \
    SCANLENGTH = SCANVARNAME(SCANINDX); \
@@ -138,11 +149,12 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
 
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
 // scan var is an managed array of ints
-using ScanVar = chai::ManagedArray<int>;
+
+#define ScanVar chai::ManagedArray<int>
 
 #if CARE_HAVE_LLNL_GLOBALID
 
-using ScanVarGID = chai::ManagedArray<GIDTYPE>;
+#define ScanVarGID chai::ManagedArray<GIDTYPE>
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
@@ -312,6 +324,9 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 // does the CPU efficient all in one pass idiom
 #define SCAN_LOOP(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)  \
    SCAN_LOOP_P(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)
+
+#define SCAN_LOOP_FUSIBLE_LAUNCH_NOW(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
+   SCAN_LOOP_P_FUSIBLE(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER)
 
 #define SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) \
    SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH)

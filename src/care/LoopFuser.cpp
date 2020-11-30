@@ -166,6 +166,8 @@ void LoopFuser::flush_parallel_actions(bool async) {
 #endif
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(nullptr, fusible_registers{});
+   // this resets m_conditionals, which we will never need to run
+   m_conditionals.clear();
 /*
    int * offsets = m_action_offsets;
 
@@ -208,6 +210,9 @@ void LoopFuser::flush_order_preserving_actions(bool // async
    // Do the thing
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(nullptr, fusible_registers{});
+   // this resets m_conditionals, don't run them.
+   m_conditionals.clear();
+
    /* THIS IS NOT SAFE
    action_ordered_workgroup & aow = reinterpret_cast<action_ordered_workgroup&>(aw);
    action_ordered_worksite aws = aow.run(nullptr, fusible_registers{});
@@ -324,17 +329,25 @@ void LoopFuser::flush_parallel_scans() {
 #endif
    // grab the outputs for the individual scans
    CARE_STREAM_LOOP(i, 0, m_action_count) {
+      /*
 #ifdef FUSER_VERBOSE
       if (verbose) {
-         printf("offsets[%i] = %i\n", i, offsets[i]);
+      */
+      printf("offsets[%i] = %i\n", i, offsets[i]);
+         /*
       }
 #endif
+      */
       scan_pos_outputs[i] = scan_var[offsets[i]];
+      /*
 #ifdef FUSER_VERBOSE
       if (verbose) {
+         */
          printf("scan_pos_outputs[%i] = %i\n", i, scan_pos_outputs[i]);
+         /*
       }
 #endif
+      */
    } CARE_STREAM_LOOP_END
    
    action_workgroup aw = m_actions.instantiate();

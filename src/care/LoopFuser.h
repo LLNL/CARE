@@ -687,14 +687,13 @@ struct fusible_registers_t {
 };
 
 
-using fusible_registers = fusible_registers_t<64>;
+using fusible_registers = fusible_registers_t<256>;
 using index_type = int;
 using action_xargs = RAJA::xargs<int * /*scan_var*/, fusible_registers>;
 using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type const * /*scan_offsets*/, index_type /*total length */, fusible_registers>;
 
 // TODO - explore varying policy block exection based off of register binning types 
 #if defined CARE_GPUCC && defined GPU_ACTIVE
-const int CUDA_WORKGROUP_BLOCK_SIZE = 1024;
 using workgroup_policy = RAJA::WorkGroupPolicy <
                            RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
                            RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average,
@@ -1022,11 +1021,15 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          m_is_scan = false;
       }
       if (m_delay_pack) {
-#ifdef FUSER_VERBOSE
+/*#ifdef FUSER_VERBOSE
          if (m_verbose) {
+*/
             printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
+/*            
          }
+         
 #endif
+         */
 /*
 #if defined CARE_GPUCC && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
@@ -1092,9 +1095,9 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          }
       }
       if (m_call_as_packed) {
-#ifdef FUSER_VERBOSE
+//#ifdef FUSER_VERBOSE
          printf("calling as packed\n");
-#endif
+//#endif
          int length = end - start;
          switch(scan_type) {
             case 0:
@@ -1105,9 +1108,25 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #endif
                break;
             case 1:
-               SCAN_LOOP_FUSIBLE_LAUNCH_NOW(i, 0, length, pos, start_pos, conditional, fusible_registers{}) {
-                  action(i, SCANVARNAME(pos).data(), fusible_registers{} );
-               } SCAN_LOOP_END(length, pos, pos_store)
+               {
+#if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
+                  auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
+                     conditional(i, scanvar, nullptr, global_end, fusible_registers{});
+                     return scanvar[i];
+                  };
+                  SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,SCANVARNAME(pos).data(),length)) {
+                     action(i, SCANVARNAME(pos).data(), fusible_registers{} );
+                  } SCAN_LOOP_END(length, pos, pos_store)
+#else
+                  auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
+                     conditional(i, scanvar, scanvar, global_end, fusible_registers{});
+                     return *scanvar;
+                  };
+                  SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,&SCANVARNAME(pos),length)) {
+                     action(i, &SCANVARNAME(pos)-i, fusible_registers{} );
+                  } SCAN_LOOP_END(length, pos, pos_store)
+#endif
+               }
                break;
             case 2:
                SCAN_COUNTS_TO_OFFSETS_LOOP(i, 0, length, counts_to_offsets_scanvar) {
@@ -1171,8 +1190,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // Execute, then stop recording
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
-      __fuser__->stopRecording(); \
       __fuser__->flushActions(ASYNC); \
+      __fuser__->stopRecording(); \
    } \
    FusedActionsObserver::setActiveObserver(nullptr); \
 }
@@ -1216,14 +1235,15 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
    auto __fusible_offset__ = FUSER->getOffset(); \
    auto __fusible_action_index__ = FUSER->actionCount(); \
-   auto __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
-   auto __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
+   care::device_ptr<index_type> __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
+   care::device_ptr<index_type> __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    auto __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
    __fusible_offset__ = __fusible_offset__; \
    __fusible_action_index__ = __fusible_action_index__ ; \
    __fusible_scan_pos_starts__ = __fusible_scan_pos_starts__ ;  \
    __fusible_scan_pos_outputs__ = __fusible_scan_pos_outputs__ ; 
+   
 
 // adjusts the index by adding the loop start index and subtracting off the
 // loop fuser offset to bring the loop
@@ -1247,14 +1267,14 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // also initializes POS to an appropriate value, searching for the pos start
 // for this actions group of scans (actions scare a scan if their output is the same reference)
 #define FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, GLOBAL_SCAN_VAR, POS) \
-   FUSIBLE_INDEX_ADJUST(INDEX) ; \
+   FUSIBLE_INDEX_ADJUST(INDEX) ;  \
    int __startIndex = __fusible_action_index__; \
    while (__fusible_scan_pos_starts__[__startIndex] == -999) { \
       --__startIndex; \
    } \
-   int __scan_pos_start = __fusible_scan_pos_starts__[__startIndex]; \
-   int __scan_pos_offset = __startIndex == 0 ? 0 : __fusible_scan_pos_outputs__[__startIndex-1]; \
-   int POS = GLOBAL_SCAN_VAR[__fusible_global_index__]  + __scan_pos_start - __scan_pos_offset; \
+   const int __scan_pos_start = __fusible_scan_pos_starts__[__startIndex]; \
+   const int __scan_pos_offset = __startIndex == 0 ? 0 : __fusible_scan_pos_outputs__[__startIndex-1]; \
+   const int POS = GLOBAL_SCAN_VAR[__fusible_global_index__]  + __scan_pos_start - __scan_pos_offset; \
    if (INDEX < __fusible_end_index__ && (BOOL_EXPR))  \
    
 
@@ -1327,9 +1347,13 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    auto __fuser__ = FUSER; \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, INIT_POS, \
-                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, index_type const *, int GLOBAL_END, fusible_registers){ \
+                              [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, index_type const * HACK_FLAG, int GLOBAL_END, fusible_registers){ \
                                  FUSIBLE_INDEX_ADJUST(INDEX); \
-                                 SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
+                                 if (HACK_FLAG) { \
+                                    *SCANVAR = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
+                                 } else { \
+                                    SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
+                                 } \
                               }, \
                               [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, fusible_registers){ \
                                  FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, SCANVAR, POS) {
