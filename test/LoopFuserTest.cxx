@@ -212,12 +212,14 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
 
    // pack should  not have happened yet so
    // host data should not be updated yet
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE 
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
    for (int i = 0; i < arrSize; ++i) {
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }
+#endif
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, dst[i] should now be i
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize/2) {
@@ -349,16 +351,13 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    int b_pos = 0;
    int ab_pos = 0;
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, a_pos, A[i] == 1) {
-      printf("A[i] = %i, pos = %i\n", A[i], pos);
       A_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, a_pos)
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, b_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
-      printf("B_scan[pos] = %i, pos = %i\n", B_scan[pos], pos);
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, b_pos)
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, ab_pos, (A[i] == 1) || (B[i] ==1)) {
       AB_scan[pos] = 1;
-      printf("AB_scan[pos] = %i, pos = %i\n", AB_scan[pos], pos);
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
 
    FUSIBLE_LOOPS_STOP

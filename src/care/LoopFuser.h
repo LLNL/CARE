@@ -1019,15 +1019,11 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          m_is_scan = false;
       }
       if (m_delay_pack) {
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
          if (m_verbose) {
-*/
             printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
-/*            
          }
-         
 #endif
-         */
 /*
 #if defined CARE_GPUCC && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
@@ -1093,9 +1089,9 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          }
       }
       if (m_call_as_packed) {
-//#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
          printf("calling as packed\n");
-//#endif
+#endif
          int length = end - start;
          switch(scan_type) {
             case 0:
@@ -1110,7 +1106,6 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      conditional(i, scanvar, nullptr, global_end, fusible_registers{});
-                     printf("wrapper returning scanvar[i] = %i\n", scanvar[i]);
                      return scanvar[i];
                   };
                   SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,SCANVARNAME(pos).data(),length)) {
@@ -1270,8 +1265,6 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    } \
    const int __scan_pos_start = __fusible_scan_pos_starts__[__startIndex]; \
    const int __scan_pos_offset = __startIndex == 0 ? 0 : __fusible_scan_pos_outputs__[__startIndex-1]; \
-   printf("GLOBAL_SCAN_VAR[%i] = %i, __scan_pos_start %i, __scan_pos_offset %i\n", __fusible_global_index__, \
-           GLOBAL_SCAN_VAR[__fusible_global_index__], __scan_pos_start, __scan_pos_offset); \
    const int POS = GLOBAL_SCAN_VAR[__fusible_global_index__]  + __scan_pos_start - __scan_pos_offset; \
    if (INDEX < __fusible_end_index__ && (BOOL_EXPR))  \
    
@@ -1350,9 +1343,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                  if (HACK_FLAG) { \
                                     *SCANVAR = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
                                  } else { \
-                                    printf("conditional i %i: __fusible_global_index__ %i: GLOBAL_END is %i\n", INDEX, __fusible_global_index__,  GLOBAL_END); \
                                     SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
-                                    printf("SCANVAR[%i]= %i\n",  __fusible_global_index__,  SCANVAR[__fusible_global_index__]); \
                                  } \
                               }, \
                               [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, fusible_registers){ \
