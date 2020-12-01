@@ -69,6 +69,12 @@ CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
    return instance;
 }
 
+void LoopFuser::startRecording() {
+   m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
+}
+
+void LoopFuser::stopRecording() { m_delay_pack = false; m_call_as_packed = true; }
+
 CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {

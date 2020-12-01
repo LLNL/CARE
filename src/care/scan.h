@@ -165,7 +165,14 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
       CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END+1, scan_loop_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
       } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_init_check) \
+      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX,0,END-START+1,scan_loop_init_check) { \
+         printf("before exclusive scan: SCANVAR[%i] = %i\n", INDX, SCANVAR[INDX]); \
+      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_loop_init_check) \
+      printf("SCANVAR_OFFSET %i\n", SCANVAR_OFFSET); \
       exclusive_scan<int, RAJAExec>(SCANVAR, nullptr, END-START+1, RAJA::operators::plus<int>{}, SCANVAR_OFFSET, true); \
+      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX,0,END-START+1,scan_loop_init_check) { \
+         printf("after exclusive scan: SCANVAR[%i] = %i\n", INDX, SCANVAR[INDX]); \
+      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_loop_init_check) \
    } else { \
       CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_init_check) { \
          SCANVAR[INDX] = SCANVAR_OFFSET; \
@@ -220,7 +227,7 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          if (INDX == SCANVARENDNAME(SCANINDX) -1) { \
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
-         if (EXPR) { \
+         if (SCANVARNAME(SCANINDX)[INDX]!= SCANVARNAME(SCANINDX)[INDX+1]) { \
             const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)];
 
 #define SCAN_LOOP_FUSIBLE_LAUNCH_NOW(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
@@ -257,7 +264,7 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          if (INDX == SCANVARENDNAME(SCANINDX)-1) { \
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
-         if (EXPR) { \
+         if (SCANVARNAME(SCANINDX)[INDX]!= SCANVARNAME(SCANINDX)[INDX+1]) { \
             const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]);
 
 #define SCAN_LOOP_GID_END(END, SCANINDX, SCANLENGTH) } \

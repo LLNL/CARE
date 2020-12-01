@@ -809,9 +809,7 @@ class LoopFuser : public FusedActions {
       ///        be gathered up until flushed either by filling up our buffer or via
       ///        a flush call.
       ///////////////////////////////////////////////////////////////////////////
-      void startRecording() {
-         m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
-      }
+      void startRecording();
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -820,7 +818,7 @@ class LoopFuser : public FusedActions {
       ///        be gathered up until flushed either by filling up our buffer or via
       ///        a flush call.
       ///////////////////////////////////////////////////////////////////////////
-      void stopRecording() { m_delay_pack = false; m_call_as_packed = true; }
+      void stopRecording();
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -1112,6 +1110,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      conditional(i, scanvar, nullptr, global_end, fusible_registers{});
+                     printf("wrapper returning scanvar[i] = %i\n", scanvar[i]);
                      return scanvar[i];
                   };
                   SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,SCANVARNAME(pos).data(),length)) {
@@ -1156,15 +1155,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #else
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
 #endif
-#ifndef CARE_DEBUG
-#define CARE_DEBUG
-#endif
 #if defined(CARE_FUSIBLE_LOOPS_DISABLE)
 #define START_RECORDING(FUSER)
 #else
 #define START_RECORDING(FUSER) FUSER->startRecording()
 #endif
-#if defined(CARE_DEBUG) || defined(CARE_GPUCC)
+#if defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
@@ -1206,7 +1202,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // frees
 #define FUSIBLE_FREE(A) LoopFuser::getInstance()->registerFree(A);
 
-#else // defined(CARE_DEBUG) || defined(CARE_GPUCC)
+#else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 // in opt, non cuda builds, never start recording
 #define FUSIBLE_LOOPS_START \
@@ -1274,6 +1270,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    } \
    const int __scan_pos_start = __fusible_scan_pos_starts__[__startIndex]; \
    const int __scan_pos_offset = __startIndex == 0 ? 0 : __fusible_scan_pos_outputs__[__startIndex-1]; \
+   printf("GLOBAL_SCAN_VAR[%i] = %i, __scan_pos_start %i, __scan_pos_offset %i\n", __fusible_global_index__, \
+           GLOBAL_SCAN_VAR[__fusible_global_index__], __scan_pos_start, __scan_pos_offset); \
    const int POS = GLOBAL_SCAN_VAR[__fusible_global_index__]  + __scan_pos_start - __scan_pos_offset; \
    if (INDEX < __fusible_end_index__ && (BOOL_EXPR))  \
    
@@ -1352,7 +1350,9 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                                  if (HACK_FLAG) { \
                                     *SCANVAR = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
                                  } else { \
+                                    printf("conditional i %i: __fusible_global_index__ %i: GLOBAL_END is %i\n", INDEX, __fusible_global_index__,  GLOBAL_END); \
                                     SCANVAR[__fusible_global_index__] = (int) (__fusible_global_index__ != GLOBAL_END && (BOOL_EXPR)); \
+                                    printf("SCANVAR[%i]= %i\n",  __fusible_global_index__,  SCANVAR[__fusible_global_index__]); \
                                  } \
                               }, \
                               [=] FUSIBLE_DEVICE(int INDEX, int * SCANVAR, fusible_registers){ \

@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 
 // define if we want to test running loops as we encounter them
-//#define CARE_FUSIBLE_LOOPS_DISABLE
+#define CARE_FUSIBLE_LOOPS_DISABLE
 // define if we want to turn on verbosity
 //#define FUSER_VERBOSE
 
@@ -349,13 +349,16 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    int b_pos = 0;
    int ab_pos = 0;
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, a_pos, A[i] == 1) {
+      printf("A[i] = %i, pos = %i\n", A[i], pos);
       A_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, a_pos)
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, b_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
+      printf("B_scan[pos] = %i, pos = %i\n", B_scan[pos], pos);
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, b_pos)
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, ab_pos, (A[i] == 1) || (B[i] ==1)) {
       AB_scan[pos] = 1;
+      printf("AB_scan[pos] = %i, pos = %i\n", AB_scan[pos], pos);
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
 
    FUSIBLE_LOOPS_STOP
