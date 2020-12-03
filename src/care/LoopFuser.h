@@ -436,7 +436,7 @@ public:
    ///////////////////////////////////////////////////////////////////////////
    /// @brief execute all actions as a fused action
    ///////////////////////////////////////////////////////////////////////////
-   virtual void flushActions(bool async) = 0;
+   virtual void flushActions(bool async, const char * file, int lineNumber) = 0;
 
    ///////////////////////////////////////////////////////////////////////////
    /// @brief execute all actions as a fused action
@@ -574,7 +574,7 @@ public:
    }
 
 
-   inline void flushActions(bool async) {
+   inline void flushActions(bool async, const char * filename, int lineno) {
 #ifdef FUSER_VERBOSE
       printf("Observer flushActions()\n");
 #endif
@@ -587,7 +587,7 @@ public:
 #ifdef FUSER_VERBOSE
             printf("Observer::flushActions priority:%g ptr:%p\n",priority_action.first, actions);
 #endif
-            actions->flushActions(async);
+            actions->flushActions(async, filename, lineno);
          }
       }
       for (auto & array: m_to_be_freed) {
@@ -824,30 +824,30 @@ class LoopFuser : public FusedActions {
       /// @author Peter Robinson
       /// @brief execute all recorded actions
       ///////////////////////////////////////////////////////////////////////////
-      CARE_DLL_API void flushActions(bool async=false );
+      CARE_DLL_API void flushActions(bool async=false , const char * filename = "\0", int lineNumber=-1);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_actions(bool async);
+      void flush_parallel_actions(bool async, const char * filename, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded actions in a sequence
       ///////////////////////////////////////////////////////////////////////////
-      void flush_order_preserving_actions(bool async);
+      void flush_order_preserving_actions(bool async, const char * filename, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded scans and actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_scans();
+      void flush_parallel_scans(const char * filename, int lineNumber);
       
       /// @author Peter Robinson
       /// @brief execute all recorded counts_to_offsets scans and actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_counts_to_offsets_scans(bool async);
+      void flush_parallel_counts_to_offsets_scans(bool async, const char * filename, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -896,6 +896,7 @@ class LoopFuser : public FusedActions {
       ///
       allocator m_allocator;
 
+      //TODO: drop m_delay_pack and call_as_packed and just use m_recording
       ///
       /// whether to delay execution until a flush is called.
       ///
@@ -1019,11 +1020,14 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          m_is_scan = false;
       }
       if (m_delay_pack) {
-#ifdef FUSER_VERBOSE
+/*#ifdef FUSER_VERBOSE
          if (m_verbose) {
-            printf("Registering action %i with start %i and end %i\n", m_action_count, start, end);
+*/
+            printf("Registering action %i type %i with start %i and end %i\n", m_action_count, scan_type, start, end);
+/*
          }
 #endif
+         */
 /*
 #if defined CARE_GPUCC && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
@@ -1143,7 +1147,12 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
 void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
-   m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+   if (m_recording) { 
+      m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+   }
+   else {
+      array.free();
+   }
 }
 #if defined(CARE_GPUCC)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
@@ -1181,7 +1190,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // Execute, then stop recording
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
    for ( FusedActions *__fuser__ : {static_cast<FusedActions *> (LoopFuser::getInstance()),static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
-      __fuser__->flushActions(ASYNC); \
+      __fuser__->flushActions(ASYNC, __FILE__, __LINE__); \
       __fuser__->stopRecording(); \
    } \
    FusedActionsObserver::setActiveObserver(nullptr); \
@@ -1219,16 +1228,18 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #endif // defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
-
+#define FUSIBLE_KERNEL_BOOKKEEPING(FUSER) \
+   auto __fusible_offset__ = FUSER->getOffset(); \
+   auto __fusible_start_index__ = 0; 
    //auto __fusible_scan_var__ = FUSER->getScanVar(); 
    //auto __fusible_scan_offsets__ = FUSER->getScanOffsets(); 
 // initializes index start, end and offset variables for boilerplate reduction
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
-   auto __fusible_offset__ = FUSER->getOffset(); \
+   FUSIBLE_KERNEL_BOOKKEEPING(FUSER) ; \
    auto __fusible_action_index__ = FUSER->actionCount(); \
    care::device_ptr<index_type> __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
    care::device_ptr<index_type> __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
-   auto __fusible_start_index__ = START; \
+   __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
    __fusible_offset__ = __fusible_offset__; \
    __fusible_action_index__ = __fusible_action_index__ ; \
@@ -1240,7 +1251,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // loop fuser offset to bring the loop
 // from the fuser global index space back into its own index space.
 // NOTE: no adjustment necessary with 2D launch
- #define FUSIBLE_INDEX_ADJUST(INDEX) int __fusible_global_index__ = __fusible_offset__+ INDEX; \
+ #define FUSIBLE_INDEX_ADJUST(INDEX) \
+    int __fusible_global_index__ = __fusible_offset__+ INDEX; \
     INDEX += __fusible_start_index__;  \
     __fusible_global_index__ = __fusible_global_index__; // quiet compiler where unused
 // NOTE: adjustment necessary with 1D launch
@@ -1257,6 +1269,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // as well as ensuring we only execute where are scan was true
 // also initializes POS to an appropriate value, searching for the pos start
 // for this actions group of scans (actions scare a scan if their output is the same reference)
+// TODO: drop the use of BOOL_EXPR in favor of inspacting the scan var values
 #define FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, GLOBAL_SCAN_VAR, POS) \
    FUSIBLE_INDEX_ADJUST(INDEX) ;  \
    int __startIndex = __fusible_action_index__; \
@@ -1275,7 +1288,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 // conditional xargs to pass in to lambdas
 #define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__, fusible_registers
-#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int, fusible_registers) { __fusible_scan_var__[INDEX] = true;}
+#define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int, fusible_registers) { FUSIBLE_INDEX_ADJUST(INDEX);  __fusible_scan_var__[__fusible_global_index__] = true; }
 // actions xargs to pass in to lambdas
 //#define FUSIBLE_ACTION_XARGS index_type * __fusible_scan_offsets__
 #define FUSIBLE_ACTION_XARGS index_type *, fusible_registers 
@@ -1293,10 +1306,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
                               } }); }
 
 #define FUSIBLE_KERNEL { \
+   auto __fuser__ = LoopFuser::getInstance(); \
+   FUSIBLE_KERNEL_BOOKKEEPING(__fuser__) ; \
    int __fusible_scan_pos__ = 0; \
-   LoopFuser::getInstance()->registerAction(0, 1, __fusible_scan_pos__, \
-                                            FUSIBLE_ALWAYS_TRUE(__i__), \
-                                            [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS)->int {
+   __fuser__->registerAction(0, 1, __fusible_scan_pos__, \
+                             FUSIBLE_ALWAYS_TRUE(__i__), \
+                             [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS)->int {
 
 #define FUSIBLE_LOOP_PHASE(INDEX, START, END, PRIORITY) { \
    if (END > START) { \
