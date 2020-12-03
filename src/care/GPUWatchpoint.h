@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CARE_CUDA_WATCHPOINT_H_
+#ifndef _CARE_GPU_WATCHPOINT_H_
 #define _CARE_GPU_WATCHPOINT_H_
 
 #ifdef CARE_DEBUG
