@@ -76,10 +76,10 @@ CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
 }
 
 void LoopFuser::startRecording() {
-   m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
+   m_recording = true; m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
 }
 
-void LoopFuser::stopRecording() { m_delay_pack = false; m_call_as_packed = true; }
+void LoopFuser::stopRecording() { m_recording = false; m_delay_pack = false; m_call_as_packed = true; }
 
 CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
@@ -174,14 +174,11 @@ void LoopFuser::warnIfNotFlushed() {
 
 void LoopFuser::flush_parallel_actions(bool async, const char * filename, int lineNumber) {
    // Do the thing
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
    if (m_verbose) {
-      */
       printf("in flush_parallel_actions at %s:%i with %i,%i\n", filename, lineNumber, m_actions.num_loops(), m_max_action_length);
-      /*
    }
 #endif
-   */
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(nullptr, fusible_registers{});
    // this resets m_conditionals, which we will never need to run
@@ -264,14 +261,11 @@ void LoopFuser::flush_order_preserving_actions(bool // async,
 
 
 void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
    if (m_verbose) {
-      */
       printf("in flush_parallel_scans at %s:%i with %i,%i\n", filename, lineNumber, m_action_count, m_max_action_length);
-      /*
    }
 #endif
-   */
    const int * offsets = (const int *)m_action_offsets;
    int * scan_pos_outputs = m_scan_pos_outputs;
 //   int * scan_pos_starts = m_scan_pos_starts;
@@ -328,53 +322,41 @@ void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
       }
    } CARE_STREAM_LOOP_END
    */
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
    if (m_verbose) {
-      */
       CARE_STREAM_LOOP(i, 0, end+1) {
          if (scan_var[i] == 1) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
       } CARE_STREAM_LOOP_END
       printf("SCAN\n");
-      /*
    }
 #endif
-   */
    int scanvar_offset = 0;
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end+1, RAJA::operators::plus<int>{}, scanvar_offset, true);
 
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
    if (m_verbose) {
-*/
       CARE_STREAM_LOOP(i, 1, end+1) {
          if (scan_var[i-1] != scan_var[i]) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
       } CARE_STREAM_LOOP_END
-//   }
-//#endif
+   }
+#endif
    // grab the outputs for the individual scans
    CARE_STREAM_LOOP(i, 0, m_action_count) {
-      /*
 #ifdef FUSER_VERBOSE
       if (verbose) {
-      */
       printf("offsets[%i] = %i\n", i, offsets[i]);
-         /*
       }
 #endif
-      */
       scan_pos_outputs[i] = scan_var[offsets[i]];
-      /*
 #ifdef FUSER_VERBOSE
       if (verbose) {
-         */
          printf("scan_pos_outputs[%i] = %i\n", i, scan_pos_outputs[i]);
-         /*
       }
 #endif
-      */
    } CARE_STREAM_LOOP_END
    
    action_workgroup aw = m_actions.instantiate();
@@ -424,15 +406,11 @@ void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
    scan_var.free();
 }
 void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * filename, int lineNumber) {
-   /*(
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
-      */
       printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", filename,lineNumber, m_action_count, m_max_action_length);
-      /*
    }
 #endif
-   */
   const int * offsets = (const int *)m_action_offsets;
 
   int end = m_action_offsets[m_action_count-1];
@@ -476,18 +454,26 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
       
    } CARE_STREAM_LOOP_END
 */
-   CARE_STREAM_LOOP(i, 0, end+1) {
-      if (scan_var[i] == 1) {
-         printf("scan_var[%i] = %i\n", i, scan_var[i]);
-      }
-   } CARE_STREAM_LOOP_END
-   printf("SCAN TO OFFSETS\n");
+#ifdef FUSER_VERBOSE
+   if (m_verbose) {
+      CARE_STREAM_LOOP(i, 0, end+1) {
+         if (scan_var[i] == 1) {
+            printf("scan_var[%i] = %i\n", i, scan_var[i]);
+         }
+      } CARE_STREAM_LOOP_END
+      printf("SCAN TO OFFSETS\n");
+   }
+#endif
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
-   CARE_STREAM_LOOP(i, 1, end+1) {
-      if (scan_var[i-1] != scan_var[i]) {
-         printf("scan_var[%i] = %i\n", i, scan_var[i]);
-      }
-   } CARE_STREAM_LOOP_END
+#ifdef FUSER_VERBOSE
+   if (m_verbose) {
+      CARE_STREAM_LOOP(i, 1, end+1) {
+         if (scan_var[i-1] != scan_var[i]) {
+            printf("scan_var[%i] = %i\n", i, scan_var[i]);
+         }
+      } CARE_STREAM_LOOP_END
+   }
+#endif
 
    conditional_workgroup cw = m_conditionals.instantiate();
    conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});

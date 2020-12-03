@@ -1020,14 +1020,11 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          m_is_scan = false;
       }
       if (m_delay_pack) {
-/*#ifdef FUSER_VERBOSE
+#ifdef FUSER_VERBOSE
          if (m_verbose) {
-*/
             printf("Registering action %i type %i with start %i and end %i\n", m_action_count, scan_type, start, end);
-/*
          }
 #endif
-         */
 /*
 #if defined CARE_GPUCC && defined GPU_ACTIVE
          size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
