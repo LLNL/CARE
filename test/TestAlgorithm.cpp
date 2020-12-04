@@ -7,13 +7,16 @@
 
 #define GPU_ACTIVE
 
+// CARE config header
 #include "care/config.h"
 
-// other library headers
+// CARE headers
+#include "care/algorithm.h"
+
+// Other library headers
 #include "gtest/gtest.h"
 
-// care headers
-#include "care/algorithm.h"
+
 
 // fill_n Tests
 TEST(algorithm, fill_empty)
