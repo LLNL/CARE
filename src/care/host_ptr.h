@@ -130,16 +130,25 @@ namespace care {
          ///
          /// @author Danny Taller
          ///
-         /// Get the underlying data array. In the future, this may replace operator T*()
+         /// Get the underlying data array.
          ///
          T* data() const { return m_ptr; }
 
          ///
          /// @author Alan Dayton
          ///
-         /// Get the underlying data array. In the future, this may replace operator T*()
+         /// Get the underlying data array.
          ///
          const T* cdata() const { return m_ptr; }
+
+         ///
+         /// @author Alan Dayton
+         ///
+         /// Returns true if the contained pointer is not nullptr, false otherwise.
+         ///
+         inline explicit operator bool() const noexcept {
+            return m_ptr != nullptr;
+         }
 
       private:
          T * m_ptr; //!< Raw host pointer

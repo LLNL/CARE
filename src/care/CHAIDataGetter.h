@@ -66,6 +66,6 @@ class CHAIDataGetter<globalID, RAJADeviceExec> {
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#endif // CARE_GPUCC
+#endif // defined(CARE_GPUCC)
 
 #endif // !defined(_CARE_CHAI_DATA_GETTER_H_)
