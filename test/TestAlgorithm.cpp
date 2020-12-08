@@ -1698,7 +1698,7 @@ GPU_TEST(algorithm, dup_and_copy) {
   EXPECT_EQ(dupnil, nullptr);
 
   // copy and check that elements are the same
-  care::ArrayCopy<int>(to1, from, size);
+  care::copy_n(from, size, to1);
   RAJAReduceMin<bool> passed1{true};
 
   CARE_REDUCE_LOOP(i, 0, size) {
@@ -1710,7 +1710,7 @@ GPU_TEST(algorithm, dup_and_copy) {
   ASSERT_TRUE((bool) passed1);
 
   // copy 2 elements, testing different starting points
-  care::ArrayCopy<int>(to2, from, 2, 3, 4);
+  care::copy_n(from.slice(4), 2, to2.slice(3));
   RAJAReduceMin<bool> passed2{true};
 
   CARE_REDUCE_LOOP(i, 0, 1) {
@@ -1730,7 +1730,7 @@ GPU_TEST(algorithm, dup_and_copy) {
   ASSERT_TRUE((bool) passed2);
 
   // copy 2 elements, testing different starting points
-  care::ArrayCopy<int>(to3, from, 2, 4, 3);
+  care::copy_n(from.slice(3), 2, to3.slice(4));
   RAJAReduceMin<bool> passed3{true};
 
   CARE_REDUCE_LOOP(i, 0, 1) {

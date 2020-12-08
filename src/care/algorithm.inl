@@ -509,7 +509,7 @@ inline int uniqArray(RAJAExec exec, care::host_device_ptr<T> & Array, size_t len
       Array = tmp;
    }
    else {
-      ArrayCopy<T>(Array, tmp, newLen);
+      copy_n(tmp, newLen, Array);
       tmp.free();
    }
    return newLen;
@@ -570,7 +570,7 @@ inline int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size
          Array = tmp;
       }
       else {
-         ArrayCopy<T>(RAJA::seq_exec {}, Array, tmp, newLength);
+         std::copy_n(tmp.cdata(), newLength, Array.data());
          tmp.free();
       }
    }
@@ -680,14 +680,17 @@ inline void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int sta
       if (len > 0) {
          Array.free();
       }
+
       Array = result;
    }
    else {
-      ArrayCopy<T>(Array, result, len, start, 0);
+      copy_n(result, len, Array.slice(start));
+
       if (len > 0) {
          result.free();
       }
    }
+
    if (len > 0) {
       tmpManaged.free();
    }
@@ -768,7 +771,7 @@ inline void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, const i
       arr = tmp;
    }
    else {
-      ArrayCopy<T>(exec, arr, tmp, numKept);
+      copy_n(tmp, numKept, arr);
       tmp.free();
    }
 }
@@ -918,11 +921,13 @@ inline void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array, care::h
 {
    if (length > 0) {
       care::host_device_ptr<T> array_copy(length, "ExpandArrayInPlace array_copy");
-      ArrayCopy<double>(array_copy, array, length);
+      copy_n(array, length, array_copy);
+
       CARE_STREAM_LOOP(i, 0, length) {
          int nL = indexSet[i] ;
          array[nL] = array_copy[i] ;
       } CARE_STREAM_LOOP_END
+
       array_copy.free();
    }
 }
@@ -1334,47 +1339,34 @@ inline int FindIndexMax(care::host_device_ptr<const T> arr, int n) {
    return maxLoc.getLoc();
 }
 
-
 /************************************************************************
- * Function  : ArrayCopy
- * Author(s) : Peter Robinson
+ * Function  : copy_n
+ * Author(s) : Alan Dayton after Peter Robinson
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T>
-inline void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-                      int n, int start1, int start2) {
-   ArrayCopy(RAJAExec {}, into, from, n, start1, start2);
-}
+template<class T, class Size, class U>
+void copy_n(care::host_device_ptr<const T> src, Size count,
+            care::host_device_ptr<U> dest) {
+   static_assert(std::is_convertible<T, U>::value,
+                 "Source type must be convertible to destination type!");
 
-/************************************************************************
- * Function  : ArrayCopy
- * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another. from and to
- *             should not have the same or overlapping memory addresses.
- * ************************************************************************/
-template<typename T, typename Exec>
-inline void ArrayCopy(Exec,
-                      care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-                      int n, int start1, int start2) {
-   CARE_STREAM_LOOP(i, 0, n) {
-      into[i+start1] = from[i+start2];
+   CARE_STREAM_LOOP(i, 0, count) {
+      dest[i] = src[i];
    } CARE_STREAM_LOOP_END
 }
 
 /************************************************************************
- * Function  : ArrayCopy
- * Author(s) : Peter Robinson
- * Purpose   : Copies from one ManagedArray into another. from and to
- *             should not have the same or overlapping memory addresses.
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies from one ManagedArray into another. This non-const
+ *             overload converts to the const overload to prevent
+ *             unnecessary data motion.
  * ************************************************************************/
-template<typename T>
-inline void ArrayCopy(RAJA::seq_exec,
-                      care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-                      int n, int start1, int start2) {
-   CARE_SEQUENTIAL_LOOP(i, 0, n) {
-      into[i+start1] = from[i+start2];
-   } CARE_SEQUENTIAL_LOOP_END
+template<class T, class Size, class U>
+inline void copy_n(care::host_device_ptr<T> src, Size count,
+                   care::host_device_ptr<U> dest) {
+   copy_n(care::host_device_ptr<const T>(src), count, dest);
 }
 
 /************************************************************************

@@ -419,7 +419,23 @@ namespace care {
       CARE_HOST void move(ExecutionSpace space) {
          MA::move(chai::ExecutionSpace((int) space));
       }
+
+      CARE_HOST_DEVICE host_device_ptr<T> slice(size_t begin, size_t elems=(size_t)-1) const {
+         return MA::slice(begin, elems);
+      }
+
+      template <class U, class V>
+      friend CARE_HOST_DEVICE host_device_ptr<U> reinterpret_pointer_cast(const host_device_ptr<V>& other) noexcept;
    }; // class host_device_ptr
+
+   template <class T, class U>
+   CARE_HOST_DEVICE host_device_ptr<T> reinterpret_pointer_cast(const host_device_ptr<U>& other) noexcept {
+#if !defined(CHAI_DISABLE_RM)
+      return chai::ManagedArray<T>(other.m_pointer_record, other.m_pointer_record->m_last_space);
+#else
+      return chai::ManagedArray<T>(other.m_pointer_record, chai::CPU);
+#endif
+   }
 
    /////////////////////////////////////////////////////////////////////////////////
    /// @author Danny Taller
