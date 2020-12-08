@@ -164,6 +164,8 @@ void LoopFuser::reset(bool async) {
    if (!async) {
       care::syncIfNeeded();
    }
+   m_conditionals.reserve(m_reserved, 256*m_reserved);
+   m_actions.reserve(m_reserved, 256*m_reserved);
 }
 
 void LoopFuser::warnIfNotFlushed() {
@@ -176,7 +178,7 @@ void LoopFuser::flush_parallel_actions(bool async, const char * filename, int li
    // Do the thing
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
-      printf("in flush_parallel_actions at %s:%i with %i,%i\n", filename, lineNumber, m_actions.num_loops(), m_max_action_length);
+      printf("in flush_parallel_actions at %s:%i with %zu, %i\n", filename, lineNumber, m_actions.num_loops(), m_max_action_length);
    }
 #endif
    action_workgroup aw = m_actions.instantiate();

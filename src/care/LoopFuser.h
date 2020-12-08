@@ -1022,7 +1022,7 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
       if (m_delay_pack) {
 #ifdef FUSER_VERBOSE
          if (m_verbose) {
-            printf("Registering action %i type %i with start %i and end %i\n", m_action_count, scan_type, start, end);
+            printf("%p: Registering action %i type %i with start %i and end %i\n", this, m_action_count, scan_type, start, end);
          }
 #endif
 /*
@@ -1234,8 +1234,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
    FUSIBLE_KERNEL_BOOKKEEPING(FUSER) ; \
    auto __fusible_action_index__ = FUSER->actionCount(); \
-   care::device_ptr<index_type> __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
-   care::device_ptr<index_type> __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
+   index_type * __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
+   index_type *__fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
    __fusible_offset__ = __fusible_offset__; \
@@ -1261,6 +1261,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    FUSIBLE_INDEX_ADJUST(INDEX) ; \
    if (INDEX < __fusible_end_index__)
 
+
 // adjusts the index and then ensures the loop is only executed if the
 // resulting index is within the index range of the loop,
 // as well as ensuring we only execute where are scan was true
@@ -1276,7 +1277,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    const int __scan_pos_start = __fusible_scan_pos_starts__[__startIndex]; \
    const int __scan_pos_offset = __startIndex == 0 ? 0 : __fusible_scan_pos_outputs__[__startIndex-1]; \
    const int POS = GLOBAL_SCAN_VAR[__fusible_global_index__]  + __scan_pos_start - __scan_pos_offset; \
-   if (INDEX < __fusible_end_index__ && (BOOL_EXPR))  \
+   if (INDEX < __fusible_end_index__ && (BOOL_EXPR))
    
 
 // first couple of arguments to registerAction are defined in above macros, so
