@@ -1,24 +1,24 @@
 [submodule "blt"]
 	path = blt
-	url = ../blt
+	url = https://github.com/LLNL/blt
 	ignore = all
 [submodule "tpl/camp"]
 	path = tpl/camp
-	url = ../camp
+	url = https://github.com/LLNL/camp
 	ignore = all
 [submodule "tpl/umpire"]
 	path = tpl/umpire
-	url = ../umpire
+	url = https://github.com/LLNL/umpire
 	ignore = all
 [submodule "tpl/chai"]
 	path = tpl/chai
-	url = ../chai
+	url = https://github.com/LLNL/chai
 	ignore = all
 [submodule "tpl/raja"]
 	path = tpl/raja
-	url = ../raja
+	url = https://github.com/LLNL/raja
 	ignore = all
 [submodule "tpl/cub"]
 	path = tpl/cub
-	url = ../../NVlabs/cub
+	url = https://github.com/NVlabs/cub
 	ignore = all
