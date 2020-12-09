@@ -1293,7 +1293,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) { \
    auto __fuser__ = LoopFuser::getInstance(); \
-   int __fusible_scan_pos__ = 0; \
+   static int __fusible_scan_pos__ ; \
+   __fusible_scan_pos__ = 0; \
    FUSIBLE_BOOKKEEPING(__fuser__,START,END); \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
                               FUSIBLE_ALWAYS_TRUE(INDEX), \
@@ -1306,7 +1307,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_KERNEL { \
    auto __fuser__ = LoopFuser::getInstance(); \
    FUSIBLE_KERNEL_BOOKKEEPING(__fuser__) ; \
-   int __fusible_scan_pos__ = 0; \
+   static int __fusible_scan_pos__ ; \
+   __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                              FUSIBLE_ALWAYS_TRUE(__i__), \
                              [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS)->int {
@@ -1315,7 +1317,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    if (END > START) { \
       LoopFuser * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
-      int __fusible_scan_pos__ = 0; \
+      static int __fusible_scan_pos__; \
+      __fusible_scan_pos__ = 0; \
       __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
                                  FUSIBLE_ALWAYS_TRUE(INDEX), \
                                  [=] FUSIBLE_DEVICE(int INDEX, FUSIBLE_ACTION_XARGS) { \
@@ -1328,7 +1331,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) { \
    LoopFuser * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser>(PRIORITY); \
-   int __fusible_scan_pos__ = 0; \
+   static int __fusible_scan_pos__ ; \
+   __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(0, 1, __fusible_scan_pos__, \
                              FUSIBLE_ALWAYS_TRUE(__i__), \
                              [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS) {
@@ -1377,7 +1381,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR)  { \
    auto __fuser__ = LoopFuser::getInstance(); \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END); \
-   int __fusible_scan_pos__ = 0; \
+   static int __fusible_scan_pos__; \
+   __fusible_scan_pos__ = 0; \
    __fuser__->registerAction( FUSIBLE_REGISTER_ARGS, __fusible_scan_pos__, \
                               [=] FUSIBLE_DEVICE(int INDEX, int  *FUSED_SCANVAR , index_type const * SCANVAR_OFFSET, int, fusible_registers ) {  \
                                  if (FUSED_SCANVAR != nullptr) { \
