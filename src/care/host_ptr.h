@@ -169,16 +169,6 @@ namespace care {
       return lhs.cdata() == rhs.cdata();
    }
 
-   template <typename T, typename U>
-   bool operator==(const host_ptr<T>& lhs, const U* rhs) noexcept {
-      return lhs.cdata() == rhs;
-   }
-
-   template <typename T, typename U>
-   bool operator==(const T* lhs, const host_ptr<U>& rhs) noexcept {
-      return lhs == rhs.cdata();
-   }
-
    ///
    /// @author Alan Dayton
    ///
@@ -190,16 +180,6 @@ namespace care {
    template <typename T, typename U>
    bool operator!=(const host_ptr<T>& lhs, const host_ptr<U>& rhs) noexcept {
       return lhs.cdata() != rhs.cdata();
-   }
-
-   template <typename T, typename U>
-   bool operator!=(const host_ptr<T>& lhs, const U* rhs) noexcept {
-      return lhs.cdata() != rhs;
-   }
-
-   template <typename T, typename U>
-   bool operator!=(const T* lhs, const host_ptr<U>& rhs) noexcept {
-      return lhs != rhs.cdata();
    }
 
    /// Comparison operators with nullptr

@@ -923,11 +923,11 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          }
          else {
             // if we encounter a different output, remember it
-            if (m_prev_pos_output != &pos_store) {
+            if (m_prev_pos_output.cdata() != &pos_store) {
                m_prev_pos_output = &pos_store;
             }
             // if we haven't enountered a different output yet, mark this index for continuation
-            else if (m_prev_pos_output == &pos_store) {
+            else if (m_prev_pos_output.cdata() == &pos_store) {
                // mark the start for continuation
                m_scan_pos_starts[m_action_count] = -999;
             }
