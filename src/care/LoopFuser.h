@@ -763,6 +763,8 @@ using conditional_worksite = RAJA::WorkSite< workgroup_policy,
 // flushActions() will then orchestrate the scan operation to fuse all of your scans into a single one.
 class LoopFuser : public FusedActions {
    public:
+      CARE_DLL_API static bool verbose;
+      CARE_DLL_API static bool very_verbose;
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief The default constructor. Intentionally am not keeping this private
@@ -1025,27 +1027,10 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             printf("%p: Registering action %i type %i with start %i and end %i\n", this, m_action_count, scan_type, start, end);
          }
 #endif
-/*
-#if defined CARE_GPUCC && defined GPU_ACTIVE
-         size_t lambda_size = care::aligned_sizeof<LB, sizeof(care::device_wrapper_ptr)>::value;
-         size_t conditional_size = care::aligned_sizeof<Conditional, sizeof(care::device_wrapper_ptr)>::value;
-#else
-         size_t lambda_size = sizeof(LB);
-         size_t conditional_size = sizeof(Conditional);
-#endif
-*/
          m_actions.enqueue(RAJA::RangeSegment(start,end), action);
          m_conditionals.enqueue(RAJA::RangeSegment(start,end), conditional);
 
-/*         m_actions[m_action_count] = SerializableDeviceLambda<int> { action, &m_lambda_data[m_lambda_size]};
-         m_lambda_size += lambda_size;
-         m_conditionals[m_action_count] = SerializableDeviceLambda<bool> { conditional, &m_lambda_data[m_lambda_size]};
-         m_lambda_size += conditional_size;
-*/
          m_action_offsets[m_action_count] = m_action_count == 0 ? end-start : m_action_offsets[m_action_count-1] + end -start;
-/*         m_action_starts[m_action_count] = start;
-         m_action_ends[m_action_count] = end;
-*/
          m_scan_pos_starts[m_action_count] = start_pos;
 
 #ifdef FUSER_VERBOSE
@@ -1104,7 +1089,11 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
                break;
             case 1:
                {
+                  m_scan_pos_starts[m_action_count] = start_pos;
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
+                  if (verbose) {
+                     printf("calling GPU_ACTIVE scan with start_pos %i\n");
+                  }
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      conditional(i, scanvar, nullptr, global_end, fusible_registers{});
                      return scanvar[i];
@@ -1113,6 +1102,9 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
                      action(i, SCANVARNAME(pos).data(), fusible_registers{} );
                   } SCAN_LOOP_END(length, pos, pos_store)
 #else
+                  if (verbose) {
+                     printf("calling not GPU_ACTIVE scan\n");
+                  }
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      conditional(i, scanvar, scanvar, global_end, fusible_registers{});
                      return *scanvar;
