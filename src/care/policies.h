@@ -78,7 +78,6 @@ using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::seq_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
-#define thrustExec thrust::seq
 #define RAJA_PARALLEL_ACTIVE
 
 #elif defined(__CUDACC__) // CHAI_GPU_SIM_MODE
@@ -98,7 +97,6 @@ using RAJAReduceSum = RAJA::ReduceSum<RAJACudaReduce, T> ;
 using RAJACudaExec = RAJADeviceExec ;
 using RAJAExec = RAJADeviceExec ;
 
-#define thrustExec thrust::device
 #define RAJA_PARALLEL_ACTIVE
 
 #else // CHAI_GPU_SIM_MODE
@@ -119,12 +117,11 @@ using RAJAReduceSum = RAJA::ReduceSum<RAJAHipReduce, T> ;
 using RAJAHipExec = RAJADeviceExec ;
 using RAJAExec = RAJADeviceExec ;
 
-#define thrustExec thrust::device
 #define RAJA_PARALLEL_ACTIVE
 
 #endif // CHAI_GPU_SIM_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC and GPU_ACTIVE
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) && defined(OPENMP_ACTIVE) // CARE_GPUCC and GPU_ACTIVE
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
 template<class T>
@@ -136,7 +133,6 @@ using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::omp_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::omp_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
-#define thrustExec thrust::host
 #define RAJA_PARALLEL_ACTIVE
 
 #else // CARE_GPUCC and GPU_ACTIVE
@@ -152,7 +148,6 @@ using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::seq_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJA::seq_exec ;
-#define thrustExec thrust::seq
 
 #endif // CARE_GPUCC
 
