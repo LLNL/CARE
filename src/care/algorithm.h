@@ -1,10 +1,3 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
-//
-// SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef CARE_ALGORITHM_H
 #define CARE_ALGORITHM_H
 
@@ -22,11 +15,6 @@
 #include "care/DefaultMacros.h"
 #include "care/scan.h"
 
-// Other library headers
-#ifdef __CUDACC__
-#include "cub/cub.cuh"
-#undef CUB_NS_POSTFIX
-#undef CUB_NS_PREFIX
 #endif
 
 #ifdef __HIPCC__
@@ -57,6 +45,98 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
       if (allowDuplicates) {
          for (int k = 1 ; k < len ; ++k) {
             failed = array[k] < array[last];
+
+            if (failed) {
+               break;
+            }
+            else {
+               last = k;
+            }
+         }
+      }
+      else {
+         for (int k = 1 ; k < len ; ++k) {
+            failed = array[k] <= array[last];
+
+            if (failed) {
+               break;
+            }
+            else {
+               last = k;
+            }
+         }
+      }
+
+      if (failed) {
+         printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+         return false;
+      }
+   }
+
+   return true;
+}
+
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array,
+                                  const int len,
+                                  const char* name,
+                                  const char* argname,
+                                  const bool allowDuplicates)
+{
+   return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
+}
+
+#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+template <typename T>
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array,
+                                  const int len,
+                                  const char* name,
+                                  const char* argname,
+                                  const bool allowDuplicates)
+{
+   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates);
+}
+
+#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
+
+/************************************************************************
+ * Function  : IntersectArrays<A,RAJAExec>
+ * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
+ * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
+ *             routine returns the number of matching elements, and
+ *             two arrays of indices: the indices in the first array
+ *             at which intersection occurs, and the corresponding set
+ *             of indices in the second array.
+ *             This is the parallel overload of this method.
+ * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
+ *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
+ ************************************************************************/
+#ifdef RAJA_PARALLEL_ACTIVE
+template <typename T>
+void IntersectArrays(RAJAExec,
+                     care::host_device_ptr<const T> arr1, int size1, int start1,
+                     care::host_device_ptr<const T> arr2, int size2, int start2,
+                     care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
+                     int *numMatches) {
+   *numMatches = 0 ;
+   int smaller = (size1 < size2) ? size1 : size2 ;
+
+   if (smaller <= 0) {
+      matches1 = nullptr ;
+      matches2 = nullptr ;
+      return ;
+   }
+   else {
+      matches1.alloc(smaller);
+      matches2.alloc(smaller);
+   }
+
+   /* This algorithm assumes that the nodelists are sorted and unique */
+#ifdef CARE_DEBUG
+   bool checkIsSorted = true ;
+#else
+   bool checkIsSorted = false;
 
             if (failed) {
                break;
@@ -416,6 +496,111 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *             index corresponding to the earliest entry that is greater
  *             than num.
  ************************************************************************/
+
+template <typename T>
+CARE_HOST_DEVICE int BinarySearch(const T *map, const int start,
+                                  const int mapSize, const T num,
+                                  bool returnUpperBound)
+{
+   int klo = start ;
+   int khi = start + mapSize;
+   int k = ((khi+klo) >> 1) + 1 ;
+
+   if ((map == nullptr) || (mapSize == 0)) {
+      return -1 ;
+   }
+#ifdef CARE_DEBUG
+   const bool allowDuplicates = true;
+   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates) ;
+#endif
+
+   while (khi-klo > 1) {
+      k = (khi+klo) >> 1 ;
+      if (map[k] == num) {
+         if (returnUpperBound) {
+            khi = k+1;
+            klo = k;
+            continue;
+         }
+         else {
+            return k ;
+         }
+      }
+      else if (map[k] > num) {
+         khi = k ;
+      }
+      else {
+         klo = k ;
+      }
+   }
+   if (returnUpperBound) {
+      k = klo;
+      // the lower option bounds num
+      if (map[k] > num) {
+         return k;
+      }
+      // the upper option is within the range of the map index set
+      if (khi < start + mapSize) {
+         // Note: fix for last test in TEST(algorithm, binarysearch). This algorithm has failed to pick up the upper
+         // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
+         while ((khi < start + mapSize) && (map[khi] == num)) {
+            ++khi;
+         }
+
+         // the upper option bounds num
+         if ((khi < start + mapSize) && (map[khi] > num)) {
+            return khi;
+         }
+         // neither the upper or lower option bound num
+         return -1;
+      }
+      else {
+         // the lower option does not bound num, and the upper option is out of bounds
+         return -1;
+      }
+   }
+
+   if (map[--k] == num) {
+      return k ;
+   }
+   else {
+      return -1 ;
+   }
+}
+template<typename mapType>
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+                                  const int mapSize, const mapType num,
+                                  bool returnUpperBound)
+{
+   return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
+}
+
+/************************************************************************
+ * Function  : BinarySearch
+ * Author(s) : Brad Wallin, Peter Robinson
+ * Purpose   : Every good code has to have one.  Searches a sorted array,
+ *             or a sorted subarray, for a particular value.  This used to
+ *             be in NodesGlobalToLocal.  The algorithm was taken from
+ *             Numerical Recipes in C, Second Edition.
+ *
+ *             Important Note: mapSize is the length of the region you
+ *             are searching.  For example, if you have an array that has
+ *             100 entries in it, and you want to search from index 5 to
+ *             40, then you would set start=5, and mapSize=(40-5)=35.
+ *             In other words, mapSize is NOT the original length of the
+ *             array and it is also NOT the ending index for your search.
+ *
+ *             If returnUpperBound is set to true, this will return the
+ *             index corresponding to the earliest entry that is greater
+ *             than num.
+ ************************************************************************/
+template<typename mapType>
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
+                                  const int mapSize, const mapType num,
+                                  bool returnUpperBound)
+{
+   return BinarySearch<const mapType>(map.data(), start, mapSize, num, returnUpperBound);
+}
 
 template <typename T>
 CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
@@ -911,6 +1096,15 @@ CARE_HOST_DEVICE CARE_INLINE void uniqLocal(care::local_ptr<T> array, int& len)
    }
 }
 
+/************************************************************************
+* Function  : CompressArray<T>
+* Author(s) : Peter Robinson
+* Purpose   : Removes items at indices defined in removed from arr.
+*             Sequential Version of CompressArray
+*             Requires both arr and removed to be sorted.
+*             Note that it's a error if any index in removed is
+*             not found (beyond the end of arr).
+**************************************************************************/
 template <typename T>
 CARE_INLINE void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> array,
                                     care::host_device_ptr<int const> indexSet, int length)
@@ -1010,6 +1204,20 @@ CARE_INLINE T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex)
 {
    return ArrayMin<T>((care::host_ptr<const T>)arr, n, initVal, startIndex);
 }
+/************************************************************************
+ * Function  : ArrayMaxLoc
+ * Author(s) : Peter Robinson
+ * Purpose   : Returns the maximum value in a ManagedArray
+ * ************************************************************************/
+template <typename T, typename Exec>
+T ArrayMaxLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc)  {
+   RAJAReduceMaxLoc<T> max { initVal, -1 };
+   CARE_REDUCE_LOOP(k, 0, n) {
+      max.maxloc(arr[k], k);
+   } CARE_REDUCE_LOOP_END
+   loc = max.getLoc();
+   return (T)max;
+}
 
 /************************************************************************
  * Function  : ArrayMinLoc
@@ -1041,6 +1249,10 @@ CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int
    } CARE_REDUCE_LOOP_END
    return (T)max;
 }
+template <typename T, typename Exec>
+T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal);;
+}
 
 template <typename T, typename Exec>
 CARE_INLINE T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)
@@ -1057,7 +1269,17 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T i
    }
    return max;
 }
+template <typename T>
+CARE_HOST_DEVICE T ArrayMax(care::local_ptr<T> arr, int n, T initVal)  {
+   return ArrayMax<T>((care::local_ptr<const T>)arr, n, initVal);
+}
 
+/************************************************************************
+ * Function  : ArrayFind
+ * Author(s) : Rob Neely, Alan Dayton
+ * Purpose   : Returns the index of the first element in the the array
+ *             that equals the value, or -1 if no match is found.
+ ************************************************************************/
 template <typename T>
 CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal, int startIndex)
 {
