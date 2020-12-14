@@ -38,18 +38,11 @@ CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver 
 
 CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
    m_allocator(a),
-   m_delay_pack(false),
-   m_call_as_packed(true),
    m_max_action_length(0),
    m_reserved(0),
    m_action_offsets(nullptr),
-   m_scan_var(nullptr),
-   //m_action_starts(nullptr),
-   //m_action_ends(nullptr),
    m_conditionals(a),
    m_actions(a), 
-   //m_lambda_size(0),
-   //m_lambda_data(nullptr),
    m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
@@ -78,10 +71,10 @@ CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
 }
 
 void LoopFuser::startRecording() {
-   m_recording = true; m_delay_pack = true; m_call_as_packed = false; warnIfNotFlushed();
+   m_recording = true;  warnIfNotFlushed();
 }
 
-void LoopFuser::stopRecording() { m_recording = false; m_delay_pack = false; m_call_as_packed = true; }
+void LoopFuser::stopRecording() { m_recording = false;  }
 
 CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
@@ -107,11 +100,10 @@ void LoopFuser::reserve(size_t size) {
    m_action_offsets   = (int *) pinned_buf;
    m_scan_pos_outputs = (int *) (pinned_buf  + sizeof(int)*size);
    m_scan_pos_starts  = (int *) (pinned_buf  + 2*sizeof(int)*size);
-   m_scan_var =         (int **)(pinned_buf  + 3*sizeof(int)*size);
    m_reserved = size;
-
-   m_conditionals.reserve(10*1024,256*10*1024);
-   m_actions.reserve(10*1024,256*10*1024);
+   int const bytes_per_lambda = 256;
+   m_conditionals.reserve(size,bytes_per_lambda*size);
+   m_actions.reserve(size,bytes_per_lambda*size);
 }
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
@@ -256,7 +248,6 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
    int end = m_action_offsets[m_action_count-1];
 
    care::host_device_ptr<int> scan_var(end, "scan_var");
-   *m_scan_var = scan_var.data(chai::GPU, true);
    
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(scan_var.data(chai::GPU, true), fusible_registers{});

@@ -181,220 +181,8 @@ namespace care {
          return -1 ;
       }
    }
-   /* Thanks to Jason Burmark for the aligned_sizeof and device_wrapper_ptr types. Copied with permission. */
-   template < typename T, size_t align>
-   struct aligned_sizeof {
-      static const size_t value = sizeof(T) + ((sizeof(T) % align != 0) ? (align - (sizeof(T) % align)) : 0);
-   };
-   using device_wrapper_ptr = const volatile void*(*)(const volatile void*);
 } // namespace care
 
-// templated launcher that provides a device method that knows how to deserialize the lambda LB and call it
-template <typename ReturnType, typename LB>
-FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int action_index, int start, int end);
-
-template <typename ReturnType, typename LB>
-FUSIBLE_DEVICE ReturnType launcher(char * lambda_buf, int i, bool is_fused, int action_index, int start, int end) {
-   using lambda_type = typename std::decay<LB>::type;
-   LB lambda = *reinterpret_cast<lambda_type *> (lambda_buf);
-   return lambda(i, is_fused, action_index, start, end);
-}
-
-#ifdef CARE_GPUCC
-
-// cuda global function that writes the device wrapper function pointer
-// for the template type to the pointer provided.
-template<typename ReturnType, typename LB>
-__global__ void write_launcher_ptr(care::device_wrapper_ptr* out)
-{
-   using lambda_type = typename std::decay<LB>::type;
-   auto p = &launcher<ReturnType, lambda_type>;
-   *out = (care::device_wrapper_ptr) p;
-}
-
-#endif
-
-// Function that gets and caches the device wrapper function pointer
-// for the templated type. A pointer to a device function can only be taken
-// in device code, so this launches a kernel to get the pointer. It then holds
-// onto the pointer so a kernel doesn't have to be launched to get the
-// function pointer the next time.
-template<typename ReturnType, typename kernel_type>
-inline void * get_launcher_wrapper_ptr(bool get_if_null)
-{
-#if defined CARE_GPUCC && defined GPU_ACTIVE
-   static_assert(alignof(kernel_type) <= sizeof(care::device_wrapper_ptr),
-                 "kernel_type has excessive alignment requirements");
-   static care::device_wrapper_ptr ptr = nullptr;
-   if (ptr == nullptr && get_if_null) {
-      care::device_wrapper_ptr* pinned_buf;
-      care::gpuHostAlloc((void **)&pinned_buf, sizeof(care::device_wrapper_ptr), gpuHostAllocDefault);
-      gpuStream_t stream = 0;
-      void* func = (void*)&write_launcher_ptr<ReturnType, kernel_type>;
-      void* args[] = { &pinned_buf };
-      care::gpuLaunchKernel(func, 1, 1, args, 0, stream);
-      care::gpuStreamSynchronize(stream);
-      ptr = *pinned_buf;
-   }
-
-   return (void *)ptr;
-#else
-
-   using lambda_type = typename std::decay<kernel_type>::type;
-   static void * ptr = nullptr;
-   if (ptr == nullptr && get_if_null) {
-      ptr =(void *)&launcher<ReturnType, lambda_type> ;
-   }
-   return ptr;
-#endif
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// This class provides a wrapper to a lambda that allows containerization
-/// of a group of lambdas that have the same // return type (templated as
-/// ReturnType) Current limitation is that the lambda we are serializing must
-/// match the call signature of the operator() of this class. In practice
-/// this is not a big deal, as we are generally dealing with RAJA idioms,
-/// which take the index of loop as a single argument.
-///
-/// This inherits from care::CARECopyable so that the host_device_ptr<char>
-/// containing the serialized lambda gets deep copied along for the ride.
-///////////////////////////////////////////////////////////////////////////
-template <typename ReturnType>
-class SerializableDeviceLambda {
-   public:
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Default constructor
-      /// @return a SerializableDeviceLambda instance
-      ///////////////////////////////////////////////////////////////////////////
-      SerializableDeviceLambda() = default;
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Default constructor
-      /// @param[in] lambda: The lambda to serialize.
-      /// @param[in] buf: The buffer to serialize the lambda into.
-      /// @return a SerializableDeviceLambda instance, which will be serialized
-      ///         into buf
-      ///////////////////////////////////////////////////////////////////////////
-      template <typename LB>
-      SerializableDeviceLambda(LB && lambda,  char * buf) {
-         using lambda_type = typename std::decay<LB>::type;
-         m_launcher = (ReturnType (*)(char *, int, bool, int, int, int))get_launcher_wrapper_ptr<ReturnType, lambda_type>(true);
-         //size_t size = sizeof(LB);
-         m_lambda = buf;
-         /* we make a copy of the lambda to trigger chai copy constructors that are required by captured variables in the lambda*/
-         void * ptr = (void *) m_lambda;
-         chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
-         /* use placement new to get good performance on the serialization */
-         new (ptr) lambda_type(lambda);
-         chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief constructor from nullptr_t to support the DeviceCopyable interface
-      ///////////////////////////////////////////////////////////////////////////
-      SerializableDeviceLambda(std::nullptr_t) :  m_lambda{nullptr}, m_launcher{} {}
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief shallowCopy to support the DeviceCopyable interface
-      ///////////////////////////////////////////////////////////////////////////
-      void shallowCopy(const SerializableDeviceLambda<ReturnType> & other) {
-         m_lambda = other.m_lambda;
-         m_launcher = other.m_launcher;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief copy constructor
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE
-      SerializableDeviceLambda<ReturnType>(const SerializableDeviceLambda<ReturnType> &other)  :
-      m_lambda(other.m_lambda), m_launcher(other.m_launcher) {
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief assignment operator
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE
-      SerializableDeviceLambda<ReturnType> & operator=(const SerializableDeviceLambda & other) {
-         m_lambda = other.m_lambda;
-         m_launcher = other.m_launcher;
-         return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief operator() wraps the lambda call
-      /// @param[in] i - The loop index the lambda will be called at - should be between (start-end]
-      /// @param[in] isFused - Whether this lambda is being called in a fused context
-      /// @param[in] actionIndex - Which action this lambda is
-      /// @param[in] start - The start index this loop is called with
-      /// @param[in] end - The end index this loop is called with
-      ///////////////////////////////////////////////////////////////////////////
-      FUSIBLE_DEVICE ReturnType operator()(int i, bool isFused, int actionIndex, int start, int end) {
-         return m_launcher(m_lambda, i, isFused, actionIndex, start, end);
-      }
-
-   protected:
-      ///
-      /// Our lambda buffer
-      ///
-      char * m_lambda;
-      ///
-      /// Our launcher method
-      ///
-      ReturnType (*m_launcher)(char *, int, bool, int, int, int);
-};
-/*struct memory_manager_allocator
-{
-  using value_type = char;
-
-  memory_manager_allocator() = default;
-
-  template < typename U >
-  constexpr memory_manager_allocator(memory_manager_allocator<U> const&) noexcept
-  { }
-
-  //[[nodiscard]]
-  value_type* allocate(size_t num)
-  {
-    if (num > std::numeric_limits<size_t>::max() / sizeof(value_type)) {
-      throw std::bad_alloc();
-    }
-
-    value_type *ptr = umpire::
-
-    if (!ptr) {
-      throw std::bad_alloc();
-    }
-
-    return ptr;
-  }
-
-  void deallocate(value_type* ptr, size_t) noexcept
-  {
-    value_type* ptrc = static_cast<value_type*>(ptr);
-    memoryManager::deallocate(ptrc);
-  }
-};
-
-template <typename T, typename U, typename Resource>
-bool operator==(memory_manager_allocator<T> const&, memory_manager_allocator<U> const&)
-{
-  return true;
-}
-
-template <typename T, typename U, typename Resource>
-bool operator!=(memory_manager_allocator<T> const& lhs, memory_manager_allocator<U> const& rhs)
-{
-  return !(lhs == rhs);
-}
-*/
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson
@@ -668,18 +456,6 @@ public:
 
 };
 
-struct fusible_32_registers {
-   static const int CUDA_WORKGROUP_BLOCK_SIZE = 2048;
-};
-struct fusible_64_registers {
-   static const int CUDA_WORKGROUP_BLOCK_SIZE = 1024;
-};
-struct fusible_128_registers {
-   static const int CUDA_WORKGROUP_BLOCK_SIZE = 512;
-};
-struct fusible_256_registers {
-   static const int CUDA_WORKGROUP_BLOCK_SIZE = 256;
-};
 
 template <int REGCOUNT>
 struct fusible_registers_t {
@@ -898,15 +674,6 @@ class LoopFuser : public FusedActions {
       ///
       allocator m_allocator;
 
-      //TODO: drop m_delay_pack and call_as_packed and just use m_recording
-      ///
-      /// whether to delay execution until a flush is called.
-      ///
-      bool m_delay_pack;
-      ///
-      /// whether to execute a lambda when a register is called.
-      ///
-      bool m_call_as_packed;
       ///
       /// the max length of an action's index set
       ///
@@ -921,21 +688,6 @@ class LoopFuser : public FusedActions {
       /// Host pointer (pinned) for action offsets
       ///
       index_type *m_action_offsets;
-
-      ///
-      /// variable for intermediate scan results
-      ///
-      int ** m_scan_var; 
-
-      ///
-      /// Host pointer (pinned) for action starts
-      ///
-      //int *m_action_starts;
-
-      ///
-      /// Host pointer (pinned) for action ends
-      ///
-      //int *m_action_ends;
 
       ///
       /// conditional workpool, used for initializing m_scanvar
@@ -1003,7 +755,8 @@ class LoopFuser : public FusedActions {
 ///////////////////////////////////////////////////////////////////////////
 template <typename LB, typename Conditional>
 void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional && conditional, LB && action, int scan_type, int &pos_store, care::host_device_ptr<int> counts_to_offsets_scanvar) {
-   if (end > start) {
+   int length = end - start;
+   if (length) {
       /* switch to scan mode if we encounter a scan before we flush */
       if (scan_type == 1) {
          m_is_scan = true;
@@ -1021,16 +774,16 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
          }
          m_is_scan = false;
       }
-      if (m_delay_pack) {
+      if (m_recording) {
 #ifdef FUSER_VERBOSE
          if (m_verbose) {
             printf("%p: Registering action %i type %i with start %i and end %i\n", this, m_action_count, scan_type, start, end);
          }
 #endif
-         m_actions.enqueue(RAJA::RangeSegment(start,end), action);
-         m_conditionals.enqueue(RAJA::RangeSegment(start,end), conditional);
+         m_actions.enqueue(RAJA::RangeSegment(0,length), action);
+         m_conditionals.enqueue(RAJA::RangeSegment(0,length), conditional);
 
-         m_action_offsets[m_action_count] = m_action_count == 0 ? end-start : m_action_offsets[m_action_count-1] + end -start;
+         m_action_offsets[m_action_count] = m_action_count == 0 ? length : m_action_offsets[m_action_count-1] + length;
          m_scan_pos_starts[m_action_count] = start_pos;
 
 #ifdef FUSER_VERBOSE
@@ -1074,11 +827,10 @@ void LoopFuser::registerAction(int start, int end, int &start_pos, Conditional &
             flushActions();
          }
       }
-      if (m_call_as_packed) {
+      else {
 #ifdef FUSER_VERBOSE
          printf("calling as packed\n");
 #endif
-         int length = end - start;
          switch(scan_type) {
             case 0:
 #if defined CARE_GPUCC && defined GPU_ACTIVE
@@ -1219,9 +971,8 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 #define FUSIBLE_KERNEL_BOOKKEEPING(FUSER) \
    auto __fusible_offset__ = FUSER->getOffset(); \
-   auto __fusible_start_index__ = 0; 
-   //auto __fusible_scan_var__ = FUSER->getScanVar(); 
-   //auto __fusible_scan_offsets__ = FUSER->getScanOffsets(); 
+   auto __fusible_start_index__ = 0;
+
 // initializes index start, end and offset variables for boilerplate reduction
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
    FUSIBLE_KERNEL_BOOKKEEPING(FUSER) ; \
@@ -1230,10 +981,12 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    index_type *__fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
+   auto __fusible_verbose__ = LoopFuser::verbose; \
    __fusible_offset__ = __fusible_offset__; \
    __fusible_action_index__ = __fusible_action_index__ ; \
    __fusible_scan_pos_starts__ = __fusible_scan_pos_starts__ ;  \
-   __fusible_scan_pos_outputs__ = __fusible_scan_pos_outputs__ ; 
+   __fusible_scan_pos_outputs__ = __fusible_scan_pos_outputs__ ; \
+   __fusible_verbose__ = __fusible_verbose__ ;
    
 
 // adjusts the index by adding the loop start index and subtracting off the
@@ -1250,6 +1003,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // adjusts the index and then ensures the loop is only executed if the
 // resulting index is within the index range of the loop
 #define FUSIBLE_LOOP_PREAMBLE(INDEX) \
+   auto __fusible_original_index = INDEX ; \
    FUSIBLE_INDEX_ADJUST(INDEX) ; \
    if (INDEX < __fusible_end_index__)
 
