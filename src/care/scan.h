@@ -126,16 +126,6 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          if (EXPR) { \
             const int SCANINDX = SCANVARNAME(SCANINDX)++;
 
-// CPU version of scan idiom. Designed to look like we're doing a scan, but
-// does the CPU efficient all in one pass idiom. variant that is compatible with the fusible scan conditional lambda
-#define SCAN_LOOP_P_FUSIBLE(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
-   { \
-      int SCANVARNAME(SCANINDX) = SCANINDX_OFFSET; \
-      CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDX, START, END, scan_loop_check, SCANVARNAME(SCANINDX)) { \
-         int __scan_loop_p_expr;  \
-         EXPR_LAMBDA(INDX, &__scan_loop_p_expr, &__scan_loop_p_expr, -1, FUSIBLE_REGISTER); \
-         if (__scan_loop_p_expr) { \
-            const int SCANINDX = SCANVARNAME(SCANINDX)++;
 
 #define SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(scan_loop_check) \
@@ -164,21 +154,6 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
       int const SCANVARENDNAME(SCANVAR) = END; \
       CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END+1, scan_loop_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
-      } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_init_check) \
-      exclusive_scan<int, RAJAExec>(SCANVAR, nullptr, END-START+1, RAJA::operators::plus<int>{}, SCANVAR_OFFSET, true); \
-   } else { \
-      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_init_check) { \
-         SCANVAR[INDX] = SCANVAR_OFFSET; \
-         SCANVARLENGTH[0] = SCANVAR_OFFSET; \
-      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_loop_init_check) \
-   }
-
-// initialize field to be scanned with the fusible conditional lambda given, then perform the scan in place
-#define SCAN_LOOP_INIT_FUSIBLE(INDX, START, END, SCANVAR, SCANVARLENGTH, SCANVAR_OFFSET, EXPR_LAMBDA, EXPR_REGISTERS) \
-   if (END - START > 0) { \
-      int const SCANVARENDNAME(SCANVAR) = END; \
-      CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END+1, scan_loop_init_check) { \
-         EXPR_LAMBDA(INDX, SCANVAR.data(), nullptr, SCANVARENDNAME(SCANVAR), EXPR_REGISTERS); \
       } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_init_check) \
       exclusive_scan<int, RAJAExec>(SCANVAR, nullptr, END-START+1, RAJA::operators::plus<int>{}, SCANVAR_OFFSET, true); \
    } else { \
@@ -222,20 +197,6 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          } \
          const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]; \
          if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
-             
-#define SCAN_LOOP_FUSIBLE_LAUNCH_NOW(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
-   { \
-      int const SCANVARSTARTNAME(SCANINDX) = START; \
-      ScanVar SCANVARNAME(SCANINDX)(END-START+1); \
-      ScanVar SCANVARLENGTHNAME(SCANINDX)(1, chai::PINNED); \
-      SCAN_LOOP_INIT_FUSIBLE(INDX, SCANVARSTARTNAME(SCANINDX), END, SCANVARNAME(SCANINDX), SCANVARLENGTHNAME(SCANINDX), SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER); \
-      int const SCANVARENDNAME(SCANINDX) = END; \
-      CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END, scan_loop_check) { \
-         if (INDX == SCANVARENDNAME(SCANINDX) -1) { \
-            SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
-         } \
-         if (true) { \
-            const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)];
 
 #define SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_check) \
@@ -257,8 +218,8 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
          if (INDX == SCANVARENDNAME(SCANINDX)-1) { \
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
-         if (SCANVARNAME(SCANINDX)[INDX]!= SCANVARNAME(SCANINDX)[INDX+1]) { \
-            const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]);
+         const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]); \
+         if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
 
 #define SCAN_LOOP_GID_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_gid_check) \
@@ -324,9 +285,6 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
 // does the CPU efficient all in one pass idiom
 #define SCAN_LOOP(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)  \
    SCAN_LOOP_P(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)
-
-#define SCAN_LOOP_FUSIBLE_LAUNCH_NOW(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER) \
-   SCAN_LOOP_P_FUSIBLE(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR_LAMBDA, FUSIBLE_REGISTER)
 
 #define SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) \
    SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH)

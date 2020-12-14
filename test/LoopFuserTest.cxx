@@ -67,9 +67,6 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    // initialize the src and dst on the host
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      if (i == 0) { 
-         printf("seq: dst %p src %p\n", dst.data(chai::CPU), src.data(chai::CPU));
-      }
       src[i] = i;
       dst[i] = -1;
    } CARE_SEQUENTIAL_LOOP_END
@@ -78,9 +75,6 @@ GPU_TEST(TestPacker, packFixedRange) {
    packer->registerAction(0, arrSize, pos,
                           [=] CARE_DEVICE(int, int *, int const*, int, fusible_registers) { },
                           [=] CARE_DEVICE(int i, int *, fusible_registers) {
-      if (i == 0) {
-         printf("dst %p src %p\n", dst.data(), src.data());
-      }
       dst[pos+i] = src[i];
    });
 
@@ -90,9 +84,6 @@ GPU_TEST(TestPacker, packFixedRange) {
    int * host_src = src.getPointer(care::CPU, false);
 
    for (int i = 0; i < 2; ++i) {
-      if (i == 0) {
-         printf("host_dst %p host_src %p\n", host_dst, host_src);
-      }
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }
@@ -258,7 +249,7 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
 
 
 GPU_TEST(performanceWithPacker, allOfTheFuses) {
-   int arrSize = 1;
+   int arrSize = 128;
    int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
@@ -285,7 +276,7 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
 
 
 GPU_TEST(orderDependent, basic_test) {
-   int arrSize = 16;
+   int arrSize = 128;
    int timesteps = 5;
    care::host_device_ptr<int> A(arrSize);
    care::host_device_ptr<int> B(arrSize);

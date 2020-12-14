@@ -309,8 +309,7 @@ public:
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
-                            m_recording(false)
-                            {
+                            m_recording(false) {
     }
 
    void startRecording() {
@@ -389,7 +388,6 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-            // TODO - not sure we need to differentiate here, could probably get chai::PINNED all the time
 #if defined(CARE_GPUCC)
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
 #else
