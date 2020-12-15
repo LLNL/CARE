@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef CARE_ALGORITHM_H
 #define CARE_ALGORITHM_H
 
@@ -13,6 +20,21 @@
 #include "care/CHAIDataGetter.h"
 #include "care/DefaultMacros.h"
 #include "care/scan.h"
+
+// Other library headers
+#ifdef __CUDACC__
+#include "cub/cub.cuh"
+#undef CUB_NS_POSTFIX
+#undef CUB_NS_PREFIX
+#endif
+
+#ifdef __HIPCC__
+#include "hipcub/hipcub.hpp"
+#endif
+
+#define CARE_MAX(a,b) a > b ? a : b
+#define CARE_MIN(a,b) a < b ? a : b
+
 
 namespace care {
 

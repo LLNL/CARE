@@ -11,22 +11,8 @@
 // CARE config header
 #include "care/config.h"
 
-// Other CARE headers
-#include "care/LoopFuser.h"
 #include "care/algorithm_decl.h"
-
-// Other library headers
-#ifdef CARE_GPUCC
-#ifdef __CUDACC__
-#include "cub/cub.cuh"
-#undef CUB_NS_POSTFIX
-#undef CUB_NS_PREFIX
-#endif
-
-#ifdef __HIPCC__
-#include "hipcub/hipcub.hpp"
-#endif
-#endif
+#include "care/CHAIDataGetter.h"
 
 namespace care {
 

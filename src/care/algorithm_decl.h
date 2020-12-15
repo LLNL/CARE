@@ -17,23 +17,9 @@
 #include "care/local_ptr.h"
 #include "care/policies.h"
 
-// Other library headers
-#ifdef __CUDACC__
-#include "cub/cub.cuh"
-#undef CUB_NS_POSTFIX
-#undef CUB_NS_PREFIX
-#endif
-
-#ifdef __HIPCC__
-#include "hipcub/hipcub.hpp"
-#endif
-
 #if CARE_HAVE_LLNL_GLOBALID
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
-
-#define CARE_MAX(a,b) a > b ? a : b
-#define CARE_MIN(a,b) a < b ? a : b
 
 namespace care {
 template <class T, class Size, class U>
