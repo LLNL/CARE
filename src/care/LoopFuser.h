@@ -10,14 +10,16 @@
 // CARE config header
 #include "care/config.h"
 
-// Priority phase value for the default loop fuser
-constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
-
 // Other CARE headers
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
 #include "care/host_ptr.h"
 #include "care/scan.h"
+
+#include <cfloat>
+
+// Priority phase value for the default loop fuser
+constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 
 #if CARE_ENABLE_LOOP_FUSER
 
