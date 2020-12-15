@@ -72,9 +72,55 @@ using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec=RAJADeviceExec>
 void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                               host_device_ptr<ValueT> & values,
-                               const size_t start, const size_t len,
-                               const bool noCopy=false) ;
+                        host_device_ptr<ValueT> & values,
+                        const size_t start, const size_t len,
+                        const bool noCopy=false) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to copy
+/// @param[in] arr - input array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
+                                const size_t len, const T* arr) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
+                                       const size_t len, const host_device_ptr<const T>& arr) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// Remove duplicate values from old key/value arrays.
+/// Old key/value arrays should already be sorted by value.
+/// New key/value arrays should be allocated to the old size.
+/// @param[out] newKeys New key array with duplicates removed
+/// @param[out] newValues New value array with duplicates removed
+/// @param[in] oldKeys Old key array (key-value pairs sorted by value)
+/// @param[in] oldValues Old value array (sorted)
+/// @param[in] oldLen Length of old key/value array and initial length for new
+/// @return Length of new key/value arrays
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
+                                   host_device_ptr<T>& newValues,
+                                   const host_device_ptr<const size_t>& oldKeys,
+                                   const host_device_ptr<const T>& oldValues,
+                                   const size_t oldLen);
 
 ///////////////////////////////////////////////////////////////////////////
 /// GPU partial specialization of KeyValueSorter
@@ -84,6 +130,7 @@ void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 template <typename T>
 class KeyValueSorter<T, RAJADeviceExec> {
    public:
+
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief Default constructor
@@ -121,7 +168,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       , m_keys(len, "m_keys")
       , m_values(len, "m_values")
       {
-         setFromArray(len, arr);
+         setKeyValueArraysFromArray(m_keys, m_values, len, arr);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -139,7 +186,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       , m_keys(len, "m_keys")
       , m_values(len, "m_values")
       {
-         setFromArray(len, arr);
+         setKeyValueArraysFromManagedArray(m_keys, m_values, len, arr);
       }
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
@@ -245,44 +292,6 @@ class KeyValueSorter<T, RAJADeviceExec> {
          }
 
          return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc)
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const T* arr) {
-         host_device_ptr<size_t> keys = m_keys;
-         host_device_ptr<T> values = m_values;
-
-         CARE_SEQUENTIAL_LOOP(i, 0, len) {
-            keys[i] = i;
-            values[i] = arr[i];
-         } CARE_SEQUENTIAL_LOOP_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc).
-      /// This method must be public because device lambda functions cannot be in
-      /// private or protected functions. They cannot be in constructors, either.
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
-         host_device_ptr<size_t> keys = m_keys;
-         host_device_ptr<T> values = m_values;
-
-         FUSIBLE_LOOP_STREAM(i, 0, len) {
-            keys[i] = (size_t) i;
-            values[i] = arr[i];
-         } FUSIBLE_LOOP_STREAM_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -489,26 +498,15 @@ class KeyValueSorter<T, RAJADeviceExec> {
             host_device_ptr<size_t> newKeys{m_len, "newKeys"};
             host_device_ptr<T> newValues{m_len, "newValues"};
 
-
-            // Save values that are not duplicates and their corresponding keys
-            int newSize = 0;
-
-            const size_t len = m_len;
-            host_device_ptr<size_t const> keys = m_keys;
-            host_device_ptr<T const> values = m_values;
-
-            SCAN_LOOP(i, 0, len, idx, newSize, (i == 0) || (values[i] != values[i-1])) {
-               newKeys[idx] = keys[i];
-               newValues[idx] = values[i];
-            } SCAN_LOOP_END(len, idx, newSize)
+            int newSize = eliminateKeyValueDuplicates(newKeys, newValues,
+                                                      (host_device_ptr<const size_t>)m_keys,
+                                                      (host_device_ptr<const T>)m_values,
+                                                      m_len) ;
 
             // Free the original key value pairs
             free();
 
-            // Update space for the key value pairs without duplicates
-            newKeys.realloc(newSize);
-            newValues.realloc(newSize);
-
+            // Set to new key value pairs
             m_keys = newKeys;
             m_values = newValues;
             m_len = newSize;
@@ -684,6 +682,69 @@ inline bool cmpValsStable<float>(_kv<float> const & left, _kv<float> const & rig
 }
 
 ///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keyValues - The key value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
+                                const size_t len, const T* arr) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
+                                       const size_t len, const host_device_ptr<const T>& arr) ;
+
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// Assumes key value array sorted by values.
+/// @param[in/out] keyValues - The key value array to eliminate duplicates in
+/// @param[in/out] len - original length of key value array
+/// @return new length of array
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the keys
+/// The keys are stored in the managed array of _kv structs. To get the
+/// keys separately, they must be copied into their own array.
+/// @param[out] keys - The key array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) ;
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the values
+/// The values are stored in the managed array of _kv structs. To get the
+///    values separately, they must be copied into their own array.
+/// @param[out] values - The values array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<const _kv<T> >& keyValues, const size_t len);
+
+///////////////////////////////////////////////////////////////////////////
 /// Sequential partial specialization of KeyValueSorter
 /// The CPU implementation relies on routines that use the < operator on
 /// a key-value struct.
@@ -736,7 +797,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       , m_values(nullptr)
       , m_keyValues(len, "m_keyValues")
       {
-         setFromArray(len, arr);
+         setKeyValueArraysFromArray(m_keyValues, len, arr);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -755,7 +816,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       , m_values(nullptr)
       , m_keyValues(len, "m_keyValues")
       {
-         setFromArray(len, arr);
+         setKeyValueArraysFromManagedArray(m_keyValues, len, arr);
       }
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
@@ -865,42 +926,6 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          }
 
          return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc)
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const T* arr) {
-         host_device_ptr<_kv<T> > keyValues = m_keyValues;
-
-         CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-            keyValues[i].key = i;
-            keyValues[i].value = arr[i];
-         } CARE_SEQUENTIAL_LOOP_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc).
-      /// This method must be public because device lambda functions cannot be in
-      /// private or protected functions. They cannot be in constructors, either.
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
-         host_device_ptr<_kv<T> > keyValues = m_keyValues;
-
-         FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
-            keyValues[i].key = i;
-            keyValues[i].value = arr[i];
-         } FUSIBLE_LOOP_STREAM_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1118,63 +1143,16 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       void eliminateDuplicates() {
          if (m_len > 1) {
-            CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-            _kv<T> * rawData = getter.getRawArrayData(m_keyValues);
+            m_len = eliminateKeyValueDuplicates(m_keyValues, m_len) ;
 
-            // First do a stable sort by value (preserve the original order
-            // in the case of a tie)
-            std::sort(rawData, rawData + m_len, cmpValsStable<T>);
-            // TODO: investigate performance of std::stable_sort
-            // std::stable_sort(rawData, rawData + m_len);
-
-            // Then eliminate duplicates
-            size_t lsize = m_len - 1;  /* adjust search range */
-            size_t put = 0;
-            size_t get = 0;
-
-            while (get < lsize) {
-               if (put != get) {
-                  memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<T>));
-               }
-
-               if (rawData[get].value == rawData[get+1].value) {
-                  ++get;
-                  ++put;
-
-                  while (get < lsize && rawData[get].value == rawData[get+1].value) {
-                     ++get;
-                  }
-                  ++get;
-               }
-               else {
-                  ++get;
-                  ++put;
-               }
-            }
-
-            if (rawData[lsize].value != rawData[lsize-1].value) {
-               memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<T>));
-            }
-
-            lsize = put;
-
-            // Then sort by key to get the original ordering
-            std::sort(rawData, rawData + lsize, cmpKeys<T>);
-
-            // Reallocate memory
-            if (m_keyValues) {
-               m_keyValues.realloc(lsize);
-            }
-
+            // Free stale arrays
             if (m_keys) {
-               m_keys.realloc(lsize);
+               m_keys.free();
             }
 
             if (m_values) {
-               m_values.realloc(lsize);
+               m_values.free();
             }
-
-            m_len = lsize;
          }
       }
 
@@ -1189,13 +1167,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          if (!m_keys) {
             m_keys.alloc(m_len);
             m_keys.namePointer("m_keys");
-
-            host_device_ptr<size_t> keys = m_keys;
-            host_device_ptr<_kv<T> const> keyValues = m_keyValues;
-
-            CARE_STREAM_LOOP(i, 0, m_len) {
-               keys[i] = keyValues[i].key;
-            } CARE_STREAM_LOOP_END
+            initializeKeyArray(m_keys, (host_device_ptr<const _kv<T> >)m_keyValues, m_len);
          }
 
          return;
@@ -1212,13 +1184,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          if (!m_values) {
             m_values.alloc(m_len);
             m_values.namePointer("m_values");
-
-            host_device_ptr<T> values = m_values;
-            host_device_ptr<_kv<T> const> keyValues = m_keyValues;
-
-            CARE_STREAM_LOOP(i, 0, m_len) {
-               values[i] = keyValues[i].value;
-            } CARE_STREAM_LOOP_END
+            initializeValueArray(m_values, (host_device_ptr<const _kv<T> >)m_keyValues, m_len);
          }
 
          return;

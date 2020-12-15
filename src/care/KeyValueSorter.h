@@ -125,6 +125,76 @@ void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    }
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
+                                const size_t len, const T* arr) {
+   CARE_SEQUENTIAL_LOOP(i, 0, len) {
+      keys[i] = i;
+      values[i] = arr[i];
+   } CARE_SEQUENTIAL_LOOP_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
+                                       const size_t len, const host_device_ptr<const T>& arr) {
+   FUSIBLE_LOOP_STREAM(i, 0, len) {
+      keys[i] = (size_t) i;
+      values[i] = arr[i];
+   } FUSIBLE_LOOP_STREAM_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// Remove duplicate values from old key/value arrays.
+/// Old key/value arrays should already be sorted by value.
+/// New key/value arrays should be allocated to the old size.
+/// @param[out] newKeys New key array with duplicates removed
+/// @param[out] newValues New value array with duplicates removed
+/// @param[in] oldKeys Old key array (key-value pairs sorted by value)
+/// @param[in] oldValues Old value array (sorted)
+/// @param[in] oldLen Length of old key/value array and initial length for new
+/// @return newLen Length of new key/value arrays
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
+                                   host_device_ptr<T>& newValues,
+                                   const host_device_ptr<const size_t>& oldKeys,
+                                   const host_device_ptr<const T>& oldValues,
+                                   const size_t oldLen) {
+   // Save values that are not duplicates and their corresponding keys
+   int newSize = 0;
+
+   SCAN_LOOP(i, 0, oldLen, idx, newSize, (i == 0) || (oldValues[i] != oldValues[i-1])) {
+      newKeys[idx] = oldKeys[i];
+      newValues[idx] = oldValues[i];
+   } SCAN_LOOP_END(oldLen, idx, newSize)
+
+   // Update space for the key value pairs without duplicates
+   newKeys.realloc(newSize);
+   newValues.realloc(newSize);
+
+   return (size_t)newSize;
+}
+
 template <typename T>
 void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
                               KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
@@ -207,6 +277,145 @@ void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceE
 
 }
 #endif // defined(CARE_GPUCC)
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keyValues - The key value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
+                                const size_t len, const T* arr) {
+   CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
+      keyValues[i].key = i;
+      keyValues[i].value = arr[i];
+   } CARE_SEQUENTIAL_LOOP_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keyValues - The key value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
+                                       const size_t len, const host_device_ptr<const T>& arr) {
+   FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
+      keyValues[i].key = i;
+      keyValues[i].value = arr[i];
+   } FUSIBLE_LOOP_STREAM_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// First does a stable sort based on the values, which preserves the
+///    ordering in case of a tie. Then duplicates are removed. The final
+///    step is to unsort.
+/// @param[in/out] keyValues - The key value array to eliminate duplicates in
+/// @param[in/out] len - original length of key value array/new length of array
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len) {
+   size_t newSize = len;
+   if (len > 1) {
+      CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
+      _kv<T> * rawData = getter.getRawArrayData(keyValues);
+
+      // First do a stable sort by value (preserve the original order
+      // in the case of a tie)
+      std::sort(rawData, rawData + len, cmpValsStable<T>);
+      // TODO: investigate performance of std::stable_sort
+      // std::stable_sort(rawData, rawData + len);
+
+      // Then eliminate duplicates
+      size_t lsize = len - 1;  /* adjust search range */
+      size_t put = 0;
+      size_t get = 0;
+
+      while (get < lsize) {
+         if (put != get) {
+            memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<T>));
+         }
+
+         if (rawData[get].value == rawData[get+1].value) {
+            ++get;
+            ++put;
+
+            while (get < lsize && rawData[get].value == rawData[get+1].value) {
+               ++get;
+            }
+            ++get;
+         }
+         else {
+            ++get;
+            ++put;
+         }
+      }
+
+      if (rawData[lsize].value != rawData[lsize-1].value) {
+         memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<T>));
+      }
+
+      lsize = put;
+
+      // Then sort by key to get the original ordering
+      std::sort(rawData, rawData + lsize, cmpKeys<T>);
+
+      // Reallocate memory
+      keyValues.realloc(lsize);
+
+      newSize = lsize;
+   }
+
+   return newSize;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the keys
+/// The keys are stored in the managed array of _kv structs. To get the
+/// keys separately, they must be copied into their own array.
+/// @param[out] keys - The key array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) {
+   CARE_STREAM_LOOP(i, 0, len) {
+      keys[i] = keyValues[i].key;
+   } CARE_STREAM_LOOP_END
+
+   return;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the values
+/// The values are stored in the managed array of _kv structs. To get the
+///    values separately, they must be copied into their own array.
+/// @param[out] values - The values array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) {
+   CARE_STREAM_LOOP(i, 0, len) {
+      values[i] = keyValues[i].value;
+   } CARE_STREAM_LOOP_END
+
+   return;
+}
+
+
 
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different, 
