@@ -117,7 +117,7 @@ TEST(algorithm, binarysearch) {
    result = care::BinarySearch<int>(a, 0, 7, 77, false);
    EXPECT_EQ(result, 4);
 
-   result = care::BinarySearch<int>(aptr, 0, 7, 77, false);
+   result = care::BinarySearch<int>(aptr.cdata(), 0, 7, 77, false);
    EXPECT_EQ(result, 4);
 
    // start after the number
