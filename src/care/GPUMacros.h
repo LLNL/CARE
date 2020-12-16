@@ -50,7 +50,7 @@
 #elif defined(__HIPCC__)
 
 #define gpuStream_t hipStream_t
-#define gpuHostAllocDefault hipHostAllocDefault;
+#define gpuHostAllocDefault hipHostMallocDefault
 
 #define gpuMemcpyKind hipMemcpyKind
 #define gpuMemcpyHostToHost hipMemcpyHostToHost
