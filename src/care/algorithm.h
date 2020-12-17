@@ -159,19 +159,13 @@ int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit);
 template <typename T, typename Exec=RAJAExec >
 care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len);
 
-template <typename T>
-void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from, int n,
-               int start1=0, int start2=0);
+template <class T, class Size, class U>
+void copy_n(care::host_device_ptr<const T> src, Size count,
+            care::host_device_ptr<U> dest);
 
-template <typename T, typename Exec>
-void ArrayCopy(Exec,
-               care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-               int n, int start1=0, int start2=0);
-
-template <typename T>
-void ArrayCopy(RAJA::seq_exec,
-               care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
-               int n, int start1=0, int start2=0);
+template <class T, class Size, class U>
+void copy_n(care::host_device_ptr<T> src, Size count,
+            care::host_device_ptr<U> dest);
 
 template <typename T, typename Exec=RAJAExec >
 int FindIndexMax(care::host_device_ptr<const T> arr, int n);
