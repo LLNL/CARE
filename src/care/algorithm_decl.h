@@ -21,6 +21,9 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
+#define CARE_MAX(a,b) a > b ? a : b
+#define CARE_MIN(a,b) a < b ? a : b
+
 namespace care {
 template <class T, class Size, class U>
 void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);

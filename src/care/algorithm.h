@@ -84,11 +84,6 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
 }
 
 template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array,
-                                  const int len,
-                                  const char* name,
-                                  const char* argname,
-                                  const bool allowDuplicates)
 {
    return checkSorted<const T>(array.data(), len, name, argname, allowDuplicates);
 }
@@ -505,9 +500,6 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  ************************************************************************/
 
 template <typename T>
-CARE_HOST_DEVICE int BinarySearch(const T *map, const int start,
-                                  const int mapSize, const T num,
-                                  bool returnUpperBound)
 {
    int klo = start ;
    int khi = start + mapSize;
@@ -1103,15 +1095,6 @@ CARE_HOST_DEVICE CARE_INLINE void uniqLocal(care::local_ptr<T> array, int& len)
    }
 }
 
-/************************************************************************
-* Function  : CompressArray<T>
-* Author(s) : Peter Robinson
-* Purpose   : Removes items at indices defined in removed from arr.
-*             Sequential Version of CompressArray
-*             Requires both arr and removed to be sorted.
-*             Note that it's a error if any index in removed is
-*             not found (beyond the end of arr).
-**************************************************************************/
 template <typename T>
 CARE_INLINE void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> array,
                                     care::host_device_ptr<int const> indexSet, int length)
@@ -1211,21 +1194,20 @@ CARE_INLINE T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex)
 {
    return ArrayMin<T>((care::host_ptr<const T>)arr, n, initVal, startIndex);
 }
+
 /************************************************************************
- * Function  : ArrayMaxLoc
- * Author(s) : Peter Robinson
- * Purpose   : Returns the maximum value in a ManagedArray
  * ************************************************************************/
-template <typename T, typename Exec>
-T ArrayMaxLoc(care::host_device_ptr<const T> arr, int n, T initVal, int & loc)  {
-   RAJAReduceMaxLoc<T> max { initVal, -1 };
-   CARE_REDUCE_LOOP(k, 0, n) {
-      max.maxloc(arr[k], k);
-   } CARE_REDUCE_LOOP_END
-   loc = max.getLoc();
-   return (T)max;
+template <typename T>
+CARE_INLINE T ArrayMin(care::host_ptr<const T> arr, int n, T initVal, int startIndex)
+{
+   return ArrayMin<T, RAJA::seq_exec>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMinTmp"), n, initVal, startIndex);
 }
 
+template <typename T>
+CARE_INLINE T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex)
+{
+   return ArrayMin<T>((care::host_ptr<const T>)arr, n, initVal, startIndex);
+}
 /************************************************************************
  * Function  : ArrayMinLoc
  * Author(s) : Peter Robinson
@@ -1257,8 +1239,6 @@ CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int
    return (T)max;
 }
 template <typename T, typename Exec>
-T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal)  {
-   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal);;
 }
 
 template <typename T, typename Exec>
@@ -1275,6 +1255,16 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T i
       max = CARE_MAX(max, arr[k]);
    }
    return max;
+}
+
+template <typename T>
+CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal, int startIndex)
+{
+   return ArrayMax<T>((care::local_ptr<const T>)arr, n, initVal, startIndex);
+template <typename T>
+CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal, int startIndex)
+{
+   for (int k = startIndex; k < n; ++k) {
 }
 template <typename T>
 CARE_HOST_DEVICE T ArrayMax(care::local_ptr<T> arr, int n, T initVal)  {
