@@ -16,6 +16,7 @@
 #cmakedefine CARE_LEGACY_COMPATIBILITY_MODE
 #cmakedefine CARE_ENABLE_MANAGED_PTR
 #cmakedefine CARE_DISABLE_RAJAPLUGIN
+#cmakedefine CARE_ENABLE_INLINE
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID

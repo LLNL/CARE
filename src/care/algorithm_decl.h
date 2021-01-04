@@ -21,6 +21,9 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
+#define CARE_MAX(a,b) a > b ? a : b
+#define CARE_MIN(a,b) a < b ? a : b
+
 namespace care {
 template <class T, class Size, class U>
 void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);
@@ -37,24 +40,29 @@ CARE_HOST_DEVICE T ArrayMin(care::local_ptr<const T> arr, int endIndex, T initVa
 template <typename T>
 CARE_HOST_DEVICE T ArrayMin(care::local_ptr<T> arr, int endIndex, T initVal, int startIndex = 0);
 
-// TODO add startIndex to make consistent with ArrayMin?
+template <typename T>
+T ArrayMin(care::host_ptr<const T> arr, int n, T initVal, int startIndex = 0);
+
+template <typename T>
+T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex = 0);
+
 template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal);
+T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal);
+T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
-CARE_HOST_DEVICE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal);
+CARE_HOST_DEVICE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
-CARE_HOST_DEVICE T ArrayMax(care::local_ptr<T> arr, int n, T initVal);
+CARE_HOST_DEVICE T ArrayMax(care::local_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
-T ArrayMax(care::host_ptr<const T> arr, int n, T initVal);
+T ArrayMax(care::host_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
-T ArrayMax(care::host_ptr<T> arr, int n, T initVal);
+T ArrayMax(care::host_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T, typename ReducerType=T, typename Exec=RAJAExec>
 int ArrayMinMax(care::host_device_ptr<const T> arr, care::host_device_ptr<int const> mask, int n, double *outMin, double *outMax);

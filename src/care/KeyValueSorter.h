@@ -34,6 +34,12 @@
 #endif
 #endif
 
+#ifdef CARE_ENABLE_INLINE
+#define CARE_INLINE inline
+#else
+#define CARE_INLINE
+#endif
+
 namespace care {
 
 // TODO openMP parallel implementation
@@ -54,10 +60,11 @@ namespace care {
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec>
-void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                        host_device_ptr<ValueT> & values,
-                        const size_t start, const size_t len,
-                        const bool noCopy) {
+CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                                    host_device_ptr<ValueT> & values,
+                                    const size_t start, const size_t len,
+                                    const bool noCopy)
+{
    // Allocate space for the result
    host_device_ptr<KeyT> keyResult{len};
    host_device_ptr<ValueT> valueResult{len};
@@ -150,8 +157,10 @@ void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
-                                const size_t len, const T* arr) {
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys,
+                                            host_device_ptr<T> & values,
+                                            const size_t len, const T* arr)
+{
    CARE_SEQUENTIAL_LOOP(i, 0, len) {
       keys[i] = i;
       values[i] = arr[i];
@@ -168,8 +177,10 @@ void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
-                                       const size_t len, const host_device_ptr<const T>& arr) {
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys,
+                                                   host_device_ptr<T> & values,
+                                                   const size_t len, const host_device_ptr<const T>& arr)
+{
    FUSIBLE_LOOP_STREAM(i, 0, len) {
       keys[i] = (size_t) i;
       values[i] = arr[i];
@@ -190,11 +201,12 @@ void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_devi
 /// @return newLen Length of new key/value arrays
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
-                                   host_device_ptr<T>& newValues,
-                                   const host_device_ptr<const size_t>& oldKeys,
-                                   const host_device_ptr<const T>& oldValues,
-                                   const size_t oldLen) {
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
+                                               host_device_ptr<T>& newValues,
+                                               const host_device_ptr<const size_t>& oldKeys,
+                                               const host_device_ptr<const T>& oldValues,
+                                               const size_t oldLen)
+{
    // Save values that are not duplicates and their corresponding keys
    int newSize = 0;
 
@@ -211,12 +223,13 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
 }
 
 template <typename T>
-void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
-                              KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
-                              int & numMatches) {
- 
-   
+CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
+                                          KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
+                                          KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
+                                          host_device_ptr<int> &matches1,
+                                          host_device_ptr<int>& matches2,
+                                          int & numMatches)
+{
    int smaller = (size1 < size2) ? size1 : size2 ;
    int start1 = 0;
    int start2 = 0;
@@ -302,8 +315,9 @@ void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceE
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
-                                const size_t len, const T* arr) {
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
+                                            const size_t len, const T* arr)
+{
    CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
       keyValues[i].key = i;
       keyValues[i].value = arr[i];
@@ -319,8 +333,9 @@ void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
-                                       const size_t len, const host_device_ptr<const T>& arr) {
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
+                                                   const size_t len, const host_device_ptr<const T>& arr)
+{
    FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
       keyValues[i].key = i;
       keyValues[i].value = arr[i];
@@ -337,7 +352,8 @@ void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
 /// @param[in/out] len - original length of key value array/new length of array
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len) {
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len)
+{
    size_t newSize = len;
    if (len > 1) {
       CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
@@ -403,7 +419,9 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const s
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) {
+CARE_INLINE void initializeKeyArray(host_device_ptr<size_t>& keys,
+                                    const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+{
    CARE_STREAM_LOOP(i, 0, len) {
       keys[i] = keyValues[i].key;
    } CARE_STREAM_LOOP_END
@@ -422,7 +440,9 @@ void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<con
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) {
+CARE_INLINE void initializeValueArray(host_device_ptr<T>& values,
+                                      const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+{
    CARE_STREAM_LOOP(i, 0, len) {
       values[i] = keyValues[i].value;
    } CARE_STREAM_LOOP_END
@@ -437,11 +457,13 @@ void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<cons
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
 
 template <typename T>
-void IntersectKeyValueSorters(RAJA::seq_exec exec, 
-                              KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
-                              KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2, int & numMatches) {
-
+CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec exec, 
+                                          KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
+                                          KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
+                                          host_device_ptr<int> &matches1,
+                                          host_device_ptr<int>& matches2,
+                                          int & numMatches)
+{
    numMatches = 0 ;
    const int smaller = (size1 < size2) ? size1 : size2 ;
 
