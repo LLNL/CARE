@@ -46,7 +46,6 @@ CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
    m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
-   m_verbose(false),
    m_reverse_indices(false) {
 
       // Supports fusing up to 10k loops of average lambda size of 256 bytes
@@ -281,33 +280,33 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
 }
 
 void LoopFuser::flushActions(bool async, const char * filename, int lineNumber) {
-#ifdef FUSER_VERBOSE
-   printf("Loop fuser flushActions\n");
-#endif
+   if (verbose) {
+      printf("Loop fuser flushActions\n");
+   }
    if (m_action_count > 0) {
       if (m_is_scan) {
-#ifdef FUSER_VERBOSE
-         printf("loop fuser flush parallel scans\n");
-#endif
+         if (verbose) {
+            printf("loop fuser flush parallel scans\n");
+         }
          flush_parallel_scans(filename, lineNumber);
       }
       else if (m_is_counts_to_offsets_scan) {
-#ifdef FUSER_VERBOSE
-         printf("loop fuser flush counts to offsets scans\n");
-#endif
+         if (verbose) {
+            printf("loop fuser flush counts to offsets scans\n");
+         }
          flush_parallel_counts_to_offsets_scans(async, filename, lineNumber);
       }
       else {
          if (m_preserve_action_order) {
-#ifdef FUSER_VERBOSE
-            printf("loop fuser flush order preserving actions\n");
-#endif
+            if (verbose) {
+               printf("loop fuser flush order preserving actions\n");
+            }
             flush_order_preserving_actions(async, filename, lineNumber);
          }
          else {
-#ifdef FUSER_VERBOSE
-            printf("loop fuser flush parallel actions\n");
-#endif
+            if (verbose) {
+               printf("loop fuser flush parallel actions\n");
+            }
             flush_parallel_actions(async, filename, lineNumber);
          }
       }
