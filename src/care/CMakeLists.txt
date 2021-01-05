@@ -60,7 +60,7 @@ set(care_sources
     RAJAPlugin.cpp
     )
 
-if(NOT CARE_ENABLE_INLINE)
+if(CARE_ENABLE_EXTERN_INSTANTIATE)
    list(APPEND care_headers care_inst.h)
    list(APPEND care_sources care_inst.cpp)
 endif()

@@ -32,12 +32,6 @@
 #include "hipcub/hipcub.hpp"
 #endif
 
-#ifdef CARE_ENABLE_INLINE
-#define CARE_INLINE inline
-#else
-#define CARE_INLINE
-#endif
-
 namespace care {
 
 ///////////////////////////////////////////////////////////////////////////

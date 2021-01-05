@@ -4,8 +4,8 @@
 // CARE config header
 #include "care/config.h"
 
-#ifdef CARE_ENABLE_INLINE
-#error "CARE external instantiations may not be used with CARE_ENABLE_INLINE"
+#ifndef CARE_ENABLE_EXTERN_INSTANTIATE
+#error "CARE external instantiations may only be used with CARE_ENABLE_EXTERN_INSTANTIATE"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
