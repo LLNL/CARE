@@ -44,12 +44,6 @@
 #endif
 #endif
 
-#ifdef CARE_ENABLE_INLINE
-#define CARE_INLINE inline
-#else
-#define CARE_INLINE
-#endif
-
 namespace care {
 
 // TODO openMP parallel implementation
