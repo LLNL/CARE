@@ -18,7 +18,7 @@ configure_file(
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
     algorithm.h
-    algorithm.inl
+    algorithm_decl.h
     array.h
     atomic.h
     CHAICallback.h
@@ -34,6 +34,8 @@ set(care_headers
     host_device_ptr.h
     host_ptr.h
     KeyValueSorter.h
+    KeyValueSorter_decl.h
+    KeyValueSorter_inst.h
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h
@@ -57,6 +59,12 @@ set(care_sources
     LoopFuser.cpp
     RAJAPlugin.cpp
     )
+
+if(CARE_ENABLE_EXTERN_INSTANTIATE)
+   list(APPEND care_headers care_inst.h)
+   list(APPEND care_sources care_inst.cpp)
+endif()
+
 
 set(care_depends chai RAJA umpire camp)
 

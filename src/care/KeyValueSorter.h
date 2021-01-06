@@ -5,16 +5,23 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+// This header includes the implementations of KeyValueSorter.
+// In very large monolithic codes, including this in too many compilation
+// units can cause linking issues (particularly device link issues) due to
+// the file size. In that case, external template instantiation should be
+// used (this requires CARE_ENABLE_EXTERN_INSTANTIATE to be turned ON in the cmake
+// configuration): this file should only be included in the compilation unit containing
+// the instantiation and KeyValueSorter_decl.h (along with the extern template
+// declarations) should be included everywhere else.
+
 #ifndef _CARE_KEY_VALUE_SORTER_H_
 #define _CARE_KEY_VALUE_SORTER_H_
 
-// CARE config header
-#include "care/config.h"
+#include "care/algorithm.h"
+#include "care/KeyValueSorter_decl.h"
 
 // Other CARE headers
 #include "care/LoopFuser.h"
-#include "care/algorithm.h"
-
 // Other library headers
 #ifdef CARE_GPUCC
 #ifdef __CUDACC__
@@ -30,29 +37,7 @@
 
 namespace care {
 
-///////////////////////////////////////////////////////////////////////////
-/// @class KeyValueSorter
-/// @author Peter Robinson, Alan Dayton
-/// @brief Sorts and unsorts arrays.
-/// KeyValue Sorter is an Object Oriented take on the legacy
-///    _intSorter / _floatSorter / _gidResorter stuff.
-/// Currently we have a CUDA and a sequential partial specialization of
-///    this template class. Templating rather than inheritance is used
-///    to make this GPU friendly.
-///////////////////////////////////////////////////////////////////////////
-template <typename T, typename Exec=RAJAExec>
-class KeyValueSorter {};
-
-/// LocalKeyValueSorter should be used as the type for HOSTDEV functions
-/// to indicate that the function should only be called in a RAJA context.
-/// This will prevent the clang-check from checking for functions that
-/// should not be called outside a lambda context.
-/// Note that this does not actually enforce that the HOSTDEV function
-/// is only called from RAJA loops.
-template <typename T, typename Exec>
-using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
-
-
+// TODO openMP parallel implementation
 #ifdef CARE_GPUCC
 
 ///////////////////////////////////////////////////////////////////////////
@@ -69,11 +54,12 @@ using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
 ///                             have bugs!
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename KeyT, typename ValueT, typename Exec=RAJAExec>
-inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                               host_device_ptr<ValueT> & values,
-                               const size_t start, const size_t len,
-                               const bool noCopy=false) {
+template <typename KeyT, typename ValueT, typename Exec>
+CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                                    host_device_ptr<ValueT> & values,
+                                    const size_t start, const size_t len,
+                                    const bool noCopy)
+{
    // Allocate space for the result
    host_device_ptr<KeyT> keyResult{len};
    host_device_ptr<ValueT> valueResult{len};
@@ -157,1190 +143,88 @@ inline void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// CUDA partial specialization of KeyValueSorter
-/// The CUDA version of KeyValueSorter stores keys and values as separate
-///    arrays to be compatible with sortKeyValueArrays.
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-class KeyValueSorter<T, RAJADeviceExec> {
-   public:
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Default constructor
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>() = default;
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson, Alan Dayton
-      /// @brief Constructor
-      /// Allocates space for the given number of elements
-      /// @param[in] len - The number of elements to allocate space for
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<T, RAJADeviceExec>(const size_t len)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(len, "m_keys")
-      , m_values(len, "m_values")
-      {
-      };
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Constructor
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given raw array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The raw array to copy elements from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const T* arr)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(len, "m_keys")
-      , m_values(len, "m_values")
-      {
-         setFromArray(len, arr);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Constructor
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<const T> & arr)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(len, "m_keys")
-      , m_values(len, "m_values")
-      {
-         setFromArray(len, arr);
-      }
-
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      ///
-      /// @brief Constructor
-      ///
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      ///
-      /// @note This overload is needed to prevent ambiguity when implicit
-      ///       casts are enabled
-      ///
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      ///
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<T> & arr)
-      : KeyValueSorter<T, RAJADeviceExec>(len, host_device_ptr<const T>(arr))
-      {
-      }
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief (Shallow) Copy constructor
-      /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory. This must be a shallow copy because it is
-      ///    called upon lambda capture, and upon exiting the scope of a lambda
-      ///    capture, the copy must NOT free the underlying memory.
-      /// @param[in] other - The other KeyValueSorter to copy from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<T, RAJADeviceExec>(const KeyValueSorter<T, RAJADeviceExec> &other)
-      : m_len(other.m_len)
-      , m_ownsPointers(false)
-      , m_keys(other.m_keys)
-      , m_values(other.m_values)
-      {
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Destructor
-      /// Frees the underlying memory if this is the owner.
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJADeviceExec>()
-      {
-#ifndef CARE_DEVICE_COMPILE
-         /// Only attempt to free if we are on the CPU
-         free();
-#endif
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief (Shallow) Copy assignment operator
-      /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory.
-      /// @param[in] other - The other KeyValueSorter to copy from
-      /// @return *this
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> & other)
-      {
-         if (this != &other) {
-            free();
-
-            m_len = other.m_len;
-            m_ownsPointers = false;
-            m_keys = other.m_keys;
-            m_values = other.m_values;
-         }
-
-         return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Move assignment operator
-      /// Does a move, and therefore this may or may not own the underlying
-      ///    memory.
-      /// @param[in] other - The other KeyValueSorter to move from
-      /// @return *this
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> && other)
-      {
-         if (this != &other) {
-            free();
-
-            m_len = other.m_len;
-            m_ownsPointers = other.m_ownsPointers;
-            m_keys = other.m_keys;
-            m_values = other.m_values;
-
-            other.m_len = 0;
-            other.m_ownsPointers = false;
-            other.m_keys = nullptr;
-            other.m_values = nullptr;
-         }
-
-         return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc)
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const T* arr) {
-         host_device_ptr<size_t> keys = m_keys;
-         host_device_ptr<T> values = m_values;
-
-         CARE_SEQUENTIAL_LOOP(i, 0, len) {
-            keys[i] = i;
-            values[i] = arr[i];
-         } CARE_SEQUENTIAL_LOOP_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc).
-      /// This method must be public because device lambda functions cannot be in
-      /// private or protected functions. They cannot be in constructors, either.
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
-         host_device_ptr<size_t> keys = m_keys;
-         host_device_ptr<T> values = m_values;
-
-         FUSIBLE_LOOP_STREAM(i, 0, len) {
-            keys[i] = (size_t) i;
-            values[i] = arr[i];
-         } FUSIBLE_LOOP_STREAM_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the key at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to get the key
-      /// @return the key at the given index
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t key(const size_t index) const {
-         return m_keys[index];
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sets the key at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to set the key
-      /// @param[in] key   - The new key
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setKey(const size_t index, const size_t key) const {
-         m_keys[index] = key;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the value at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to get the value
-      /// @return the value at the given index
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE T value(const size_t index) const {
-         return m_values[index];
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sets the value at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to set the value
-      /// @param[in] value - The new value
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setValue(const size_t index, const T value) const {
-         m_values[index] = value;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the keys contained in the KeyValueSorter
-      /// @return the keys contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE host_device_ptr<size_t> & keys() {
-         return m_keys;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets a const copy of the keys contained in the KeyValueSorter
-      /// @return a const copy of the keys contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE const host_device_ptr<size_t> & keys() const {
-         return m_keys;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the values contained in the KeyValueSorter
-      /// @return the values contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE host_device_ptr<T> & values() {
-         return m_values;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets a const copy of the values contained in the KeyValueSorter
-      /// @return a const copy of the values contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE const host_device_ptr<T> & values() const {
-         return m_values;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the number of elements the KeyValueSorter is managing
-      /// @return the number of elements the KeyValueSorter is managing
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t len() const {
-         return m_len;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts "len" elements starting at "start" by value
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to sort
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void sort(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_values, m_keys, start, len, false);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts the first "len" elements by value
-      /// @param[in] len - The number of elements to sort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sort(const size_t len) {
-         sort(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts all the elements
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sort() {
-         sortKeyValueArrays(m_values, m_keys, 0, m_len, true);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts "len" elements starting at "start" by key
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to sort
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_keys, m_values, start, len, false);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts the first "len" elements by key
-      /// @param[in] len - The number of elements to sort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey(const size_t len) {
-         sortByKey(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts all the elements by key
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey() {
-         sortKeyValueArrays(m_keys, m_values, 0, m_len, true);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on "len" elements starting at "start" by value
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to sort
-      /// @return void
-      /// TODO: investigate whether radix device sort is a stable sort
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_values, m_keys, start, len, false);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on the first "len" elements by value
-      /// @param[in] len - The number of elements to sort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort(const size_t len) {
-         stableSort(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on all the elements by value
-      /// @return void
-      /// TODO: investigate whether radix device sort is a stable sort
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort() {
-         sortKeyValueArrays(m_values, m_keys, 0, m_len, true);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Jeff Keasler, Alan Dayton
-      /// @brief Eliminates duplicate values
-      /// First does a stable sort based on the values, which preserves the
-      ///    ordering in case of a tie. Then duplicates are removed. The final
-      ///    step is to unsort.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void eliminateDuplicates() {
-         if (m_len > 1) {
-            // Do a STABLE sort by value.
-            // I believe cub::DeviceRadixSort is a
-            stableSort();
-
-            // Allocate storage for the key value pairs without duplicates
-            host_device_ptr<size_t> newKeys{m_len, "newKeys"};
-            host_device_ptr<T> newValues{m_len, "newValues"};
-
-
-            // Save values that are not duplicates and their corresponding keys
-            int newSize = 0;
-
-            const size_t len = m_len;
-            host_device_ptr<size_t const> keys = m_keys;
-            host_device_ptr<T const> values = m_values;
-
-            SCAN_LOOP(i, 0, len, idx, newSize, (i == 0) || (values[i] != values[i-1])) {
-               newKeys[idx] = keys[i];
-               newValues[idx] = values[i];
-            } SCAN_LOOP_END(len, idx, newSize)
-
-            // Free the original key value pairs
-            free();
-
-            // Update space for the key value pairs without duplicates
-            newKeys.realloc(newSize);
-            newValues.realloc(newSize);
-
-            m_keys = newKeys;
-            m_values = newValues;
-            m_len = newSize;
-
-            // Restore original ordering
-            sortByKey();
-         }
-      }
-
-   private:
-      size_t m_len = 0;
-      bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
-      host_device_ptr<size_t> m_keys = nullptr;
-      host_device_ptr<T> m_values = nullptr;
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson, Alan Dayton
-      /// @brief Frees the underlying memory if this is the owner
-      /// Used by the destructor and by the assignment operators. Should be private.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      inline void free() {
-         if (m_ownsPointers) {
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
-         }
-      }
-};
-
-#endif // CARE_GPUCC
-
-
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Peter Robinson
-/// @brief Less than comparison operator for values
-/// Used as a comparator in the STL
-/// @param left  - left _kv to compare
-/// @param right - right _kv to compare
-/// @return true if left's value is less than right's value, false otherwise
-///////////////////////////////////////////////////////////////////////////
-template <typename T>
-inline bool operator <(_kv<T> const & left, _kv<T> const & right)
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys,
+                                            host_device_ptr<T> & values,
+                                            const size_t len, const T* arr)
 {
-   return left.value < right.value;
+   CARE_SEQUENTIAL_LOOP(i, 0, len) {
+      keys[i] = i;
+      values[i] = arr[i];
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// @author Peter Robinson
-/// @brief Less than comparison operator for keys
-/// Used as a comparator in the STL
-/// @param left  - left _kv to compare
-/// @param right - right _kv to compare
-/// @return true if left's key is less than right's key, false otherwise
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keys   - The key array to set to the identity
+/// @param[out] values - The value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-inline bool cmpKeys(_kv<T> const & left, _kv<T> const & right)
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys,
+                                                   host_device_ptr<T> & values,
+                                                   const size_t len, const host_device_ptr<const T>& arr)
 {
-   return left.key < right.key;
+   FUSIBLE_LOOP_STREAM(i, 0, len) {
+      keys[i] = (size_t) i;
+      values[i] = arr[i];
+   } FUSIBLE_LOOP_STREAM_END
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Less than comparison operator for values first and keys second
-/// Used as a comparator in the STL
-/// @param left  - left _kv to compare
-/// @param right - right _kv to compare
-/// @return true if left's value is less than right's value. If they are
-///    equal, returns true if left's key is less than right's key.
-///    Otherwise returns false.
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// Remove duplicate values from old key/value arrays.
+/// Old key/value arrays should already be sorted by value.
+/// New key/value arrays should be allocated to the old size.
+/// @param[out] newKeys New key array with duplicates removed
+/// @param[out] newValues New value array with duplicates removed
+/// @param[in] oldKeys Old key array (key-value pairs sorted by value)
+/// @param[in] oldValues Old value array (sorted)
+/// @param[in] oldLen Length of old key/value array and initial length for new
+/// @return newLen Length of new key/value arrays
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
-inline bool cmpValsStable(_kv<T> const & left, _kv<T> const & right)
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
+                                               host_device_ptr<T>& newValues,
+                                               const host_device_ptr<const size_t>& oldKeys,
+                                               const host_device_ptr<const T>& oldValues,
+                                               const size_t oldLen)
 {
-   if (left.value == right.value) {
-      return cmpKeys(left, right);
-   }
-   else {
-      return left < right;
-   }
+   // Save values that are not duplicates and their corresponding keys
+   int newSize = 0;
+
+   SCAN_LOOP(i, 0, oldLen, idx, newSize, (i == 0) || (oldValues[i] != oldValues[i-1])) {
+      newKeys[idx] = oldKeys[i];
+      newValues[idx] = oldValues[i];
+   } SCAN_LOOP_END(oldLen, idx, newSize)
+
+   // Update space for the key value pairs without duplicates
+   newKeys.realloc(newSize);
+   newValues.realloc(newSize);
+
+   return (size_t)newSize;
 }
 
-/// cmpValsStable<double> specialization
-template <>
-inline bool cmpValsStable<double>(_kv<double> const & left, _kv<double> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-/// cmpValsStable<float> specialization
-template <>
-inline bool cmpValsStable<float>(_kv<float> const & left, _kv<float> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// Sequential partial specialization of KeyValueSorter
-/// The CPU implementation relies on routines that use the < operator on
-/// a key-value struct.
-/// TODO make a version of this that sorts indices as in:
-/// https://stackoverflow.com/questions/3909272/sorting-two-corresponding-arrays
-/// This has the advantage of having the same underlying data layout for keys
-/// and values as the GPU version of the code, which in many instances removes
-/// the need for copying the keys and values into separate arrays after the sort.
-///////////////////////////////////////////////////////////////////////////
 template <typename T>
-class KeyValueSorter<T, RAJA::seq_exec> {
-   public:
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Default constructor
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>() = default;
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson, Alan Dayton
-      /// @brief Constructor
-      /// Allocates space for the given number of elements
-      /// @param[in] len - The number of elements to allocate space for
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<T, RAJA::seq_exec>(size_t len)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
-      {
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Constructor
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given raw array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The raw array to copy elements from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const T* arr)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
-      {
-         setFromArray(len, arr);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Constructor
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<const T> & arr)
-      : m_len(len)
-      , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
-      {
-         setFromArray(len, arr);
-      }
-
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      ///
-      /// @brief Constructor
-      ///
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      ///
-      /// @note This overload is needed to prevent ambiguity when implicit
-      ///       casts are enabled
-      ///
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      ///
-      /// @return a KeyValueSorter instance
-      ///
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<T> & arr)
-      : KeyValueSorter<T, RAJA::seq_exec>(len, host_device_ptr<const T>(arr))
-      {
-      }
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief (Shallow) Copy constructor
-      /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory. This must be a shallow copy because it is
-      ///    called upon lambda capture, and upon exiting the scope of a lambda
-      ///    capture, the copy must NOT free the underlying memory.
-      /// @param[in] other - The other KeyValueSorter to copy from
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<T, RAJA::seq_exec>(const KeyValueSorter<T, RAJA::seq_exec> &other)
-      : m_len(other.m_len)
-      , m_ownsPointers(false)
-      , m_keys(other.m_keys)
-      , m_values(other.m_values)
-      , m_keyValues(other.m_keyValues)
-      {
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Destructor
-      /// Frees the underlying memory if this is the owner.
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJA::seq_exec>()
-      {
-#ifndef CARE_DEVICE_COMPILE
-         free();
-#endif
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief (Shallow) Copy assignment operator
-      /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory.
-      /// @param[in] other - The other KeyValueSorter to copy from
-      /// @return *this
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec> & operator=(KeyValueSorter<T, RAJA::seq_exec> & other)
-      {
-         if (this != &other) {
-            free();
-
-            m_len = other.m_len;
-            m_ownsPointers = false;
-            m_keys = other.m_keys;
-            m_values = other.m_values;
-            m_keyValues = other.m_keyValues;
-         }
-
-         return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Move assignment operator
-      /// Does a move, and therefore this may or may not own the underlying
-      ///    memory.
-      /// @param[in] other - The other KeyValueSorter to move from
-      /// @return *this
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec> & operator=(KeyValueSorter<T, RAJA::seq_exec> && other)
-      {
-         if (this != &other) {
-            free();
-
-            m_len = other.m_len;
-            m_ownsPointers = other.m_ownsPointers;
-            m_keys = other.m_keys;
-            m_values = other.m_values;
-            m_keyValues = other.m_keyValues;
-
-            other.m_len = 0;
-            other.m_ownsPointers = false;
-            other.m_keys = nullptr;
-            other.m_values = nullptr;
-            other.m_keyValues = nullptr;
-         }
-
-         return *this;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc)
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const T* arr) {
-         host_device_ptr<_kv<T> > keyValues = m_keyValues;
-
-         CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-            keyValues[i].key = i;
-            keyValues[i].value = arr[i];
-         } CARE_SEQUENTIAL_LOOP_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the KeyValueSorter by copying elements from the array
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - An array to copy elements from
-      /// @return void
-      /// TODO: check if len matches m_len (may need to realloc).
-      /// This method must be public because device lambda functions cannot be in
-      /// private or protected functions. They cannot be in constructors, either.
-      ///////////////////////////////////////////////////////////////////////////
-      void setFromArray(const size_t len, const host_device_ptr<const T>& arr) {
-         host_device_ptr<_kv<T> > keyValues = m_keyValues;
-
-         FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
-            keyValues[i].key = i;
-            keyValues[i].value = arr[i];
-         } FUSIBLE_LOOP_STREAM_END
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the key at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to get the key
-      /// @return the key at the given index
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t key(const size_t index) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
-         return local_keyValues[index].key;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sets the key at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to set the key
-      /// @param[in] key   - The new key
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setKey(const size_t index, const size_t key) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
-         local_keyValues[index].key = key;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the value at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to get the value
-      /// @return the value at the given index
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE T value(const size_t index) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
-         return local_keyValues[index].value;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sets the value at the given index
-      /// @note This should only be called from within a RAJA context.
-      /// @param[in] index - The index at which to set the value
-      /// @param[in] value - The new value
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setValue(const size_t index, const T value) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
-         local_keyValues[index].value = value;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the keys contained in the KeyValueSorter
-      /// @return the keys contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      host_device_ptr<size_t> & keys() {
-         initializeKeys();
-         return m_keys;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets a const copy of the keys contained in the KeyValueSorter
-      /// @return a const copy of the keys contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      const host_device_ptr<size_t> & keys() const {
-         initializeKeys();
-         return m_keys;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the values contained in the KeyValueSorter
-      /// @return the values contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      host_device_ptr<T> & values() {
-         initializeValues();
-         return m_values;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets a const copy of the values contained in the KeyValueSorter
-      /// @return a const copy of the values contained in the KeyValueSorter
-      ///////////////////////////////////////////////////////////////////////////
-      const host_device_ptr<T> & values() const {
-         initializeValues();
-         return m_values;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Gets the number of elements the KeyValueSorter is managing
-      /// @return the number of elements the KeyValueSorter is managing
-      ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t len() const {
-         return m_len;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts "len" elements starting at "start" by value
-      /// Calls std::sort, which uses _kv::operator< to do the comparisons
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to sort
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void sort(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts the first "len" elements by value
-      /// @param[in] len - The number of elements to sort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sort(const size_t len) const {
-         sort(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts all the elements by value
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sort() const {
-         sort(m_len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts "len" elements starting at "start" by key
-      /// Calls std::sort, which uses _kv::cmpKeys to do the comparisons (this
-      ///    is an unsort when the keys stored constitute the original ordering)
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to unsort
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpKeys<T>);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts the first "len" elements by value
-      /// @param[in] len - The number of elements to unsort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey(const size_t len) const {
-         sortByKey(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief Sorts all the elements by key
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void sortByKey() const {
-         sortByKey(m_len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on "len" elements starting at "start" by value
-      /// Calls std::sort, which uses _kv::cmpValsStable to do the comparisons
-      /// @param[in] start - The index to start at
-      /// @param[in] len   - The number of elements to sort
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort(const size_t start, const size_t len) {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpValsStable<T>);
-         // TODO: investigate performance of std::stable_sort
-         //std::stable_sort(rawData, rawData + len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on the first "len" elements by value
-      /// @param[in] len - The number of elements to sort
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort(const size_t len) {
-         stableSort(0, len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Does a stable sort on all the elements by value
-      /// @return void
-      /// TODO: add bounds checking
-      ///////////////////////////////////////////////////////////////////////////
-      void stableSort() {
-         stableSort(m_len);
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Jeff Keasler, Alan Dayton
-      /// @brief Eliminates duplicate values
-      /// First does a stable sort based on the values, which preserves the
-      ///    ordering in case of a tie. Then duplicates are removed. The final
-      ///    step is to unsort.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void eliminateDuplicates() {
-         if (m_len > 1) {
-            CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-            _kv<T> * rawData = getter.getRawArrayData(m_keyValues);
-
-            // First do a stable sort by value (preserve the original order
-            // in the case of a tie)
-            std::sort(rawData, rawData + m_len, cmpValsStable<T>);
-            // TODO: investigate performance of std::stable_sort
-            // std::stable_sort(rawData, rawData + m_len);
-
-            // Then eliminate duplicates
-            size_t lsize = m_len - 1;  /* adjust search range */
-            size_t put = 0;
-            size_t get = 0;
-
-            while (get < lsize) {
-               if (put != get) {
-                  memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<T>));
-               }
-
-               if (rawData[get].value == rawData[get+1].value) {
-                  ++get;
-                  ++put;
-
-                  while (get < lsize && rawData[get].value == rawData[get+1].value) {
-                     ++get;
-                  }
-                  ++get;
-               }
-               else {
-                  ++get;
-                  ++put;
-               }
-            }
-
-            if (rawData[lsize].value != rawData[lsize-1].value) {
-               memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<T>));
-            }
-
-            lsize = put;
-
-            // Then sort by key to get the original ordering
-            std::sort(rawData, rawData + lsize, cmpKeys<T>);
-
-            // Reallocate memory
-            if (m_keyValues) {
-               m_keyValues.realloc(lsize);
-            }
-
-            if (m_keys) {
-               m_keys.realloc(lsize);
-            }
-
-            if (m_values) {
-               m_values.realloc(lsize);
-            }
-
-            m_len = lsize;
-         }
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the keys
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void initializeKeys() const {
-         if (!m_keys) {
-            m_keys.alloc(m_len);
-            m_keys.namePointer("m_keys");
-
-            host_device_ptr<size_t> keys = m_keys;
-            host_device_ptr<_kv<T> const> keyValues = m_keyValues;
-
-            CARE_STREAM_LOOP(i, 0, m_len) {
-               keys[i] = keyValues[i].key;
-            } CARE_STREAM_LOOP_END
-         }
-
-         return;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      /// @brief Initializes the values
-      /// The values are stored in the managed array of _kv structs. To get the
-      ///    values separately, they must be copied into their own array.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void initializeValues() const {
-         if (!m_values) {
-            m_values.alloc(m_len);
-            m_values.namePointer("m_values");
-
-            host_device_ptr<T> values = m_values;
-            host_device_ptr<_kv<T> const> keyValues = m_keyValues;
-
-            CARE_STREAM_LOOP(i, 0, m_len) {
-               values[i] = keyValues[i].value;
-            } CARE_STREAM_LOOP_END
-         }
-
-         return;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief whether keys allocated
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
-      /// This routine returns whether that copy is allocated.
-      /// @return whether keys are allocated
-      ///////////////////////////////////////////////////////////////////////////
-      bool keysAllocated() const {
-         return m_keys != nullptr;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief whether values allocated
-      /// The values are stored in the managed array of _kv structs. To get the
-      /// values separately, they must be copied into their own array.
-      /// This routine returns whether that copy is allocated.
-      /// @return whether values are allocated
-      ///////////////////////////////////////////////////////////////////////////
-      bool valuesAllocated() const {
-         return m_values != nullptr;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief Free the keys
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
-      /// This routine frees that copy.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeKeys() const {
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         return;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief Free the values
-      /// The values are stored in the managed array of _kv structs. To get the
-      /// values separately, they must be copied into their own array.
-      /// This routine frees that copy.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeValues() const {
-         if (m_values) {
-            m_values.free();
-         }
-
-         return;
-      }
-   private:
-      size_t m_len = 0;
-      bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
-      mutable host_device_ptr<size_t> m_keys = nullptr;
-      mutable host_device_ptr<T> m_values = nullptr;
-      host_device_ptr<_kv<T> > m_keyValues = nullptr;
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson, Alan Dayton
-      /// @brief Frees the underlying memory if this is the owner
-      /// Used by the destructor and by the assignment operators. Should be private.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      inline void free() {
-         if (m_ownsPointers) {
-            if (m_keyValues) {
-               m_keyValues.free();
-            }
-
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
-         }
-      }
-};
-
-
-#ifdef CARE_GPUCC
-template <typename T>
-void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size1,
-                              KeyValueSorter<T> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
-                              int & numMatches) {
- 
-   
+CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
+                                          KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
+                                          KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
+                                          host_device_ptr<int> &matches1,
+                                          host_device_ptr<int>& matches2,
+                                          int & numMatches)
+{
    int smaller = (size1 < size2) ? size1 : size2 ;
    int start1 = 0;
    int start2 = 0;
@@ -1392,7 +276,7 @@ void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
-   exclusive_scan<int, RAJAExec>(matched, nullptr, smaller+1, RAJA::operators::plus<int>{}, 0, true);
+   exclusive_scan<int, RAJADeviceExec>(matched, nullptr, smaller+1, RAJA::operators::plus<int>{}, 0, true);
 
    CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {
@@ -1415,18 +299,166 @@ void IntersectKeyValueSorters(RAJAExec exec, KeyValueSorter<T> sorter1, int size
    }
 
 }
-#endif
+#endif // defined(CARE_GPUCC)
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes keys and values by copying elements from the array
+/// @param[out] keyValues - The key value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
+                                            const size_t len, const T* arr)
+{
+   CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
+      keyValues[i].key = i;
+      keyValues[i].value = arr[i];
+   } CARE_SEQUENTIAL_LOOP_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu after Alan Dayton
+/// @brief Initializes the KeyValueSorter by copying elements from the array
+/// @param[out] keyValues - The key value array to set
+/// @param[in] len - The number of elements to allocate space for
+/// @param[in] arr - An array to copy elements from
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
+                                                   const size_t len, const host_device_ptr<const T>& arr)
+{
+   FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
+      keyValues[i].key = i;
+      keyValues[i].value = arr[i];
+   } FUSIBLE_LOOP_STREAM_END
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Jeff Keasler, Alan Dayton
+/// @brief Eliminates duplicate values
+/// First does a stable sort based on the values, which preserves the
+///    ordering in case of a tie. Then duplicates are removed. The final
+///    step is to unsort.
+/// @param[in/out] keyValues - The key value array to eliminate duplicates in
+/// @param[in/out] len - original length of key value array/new length of array
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len)
+{
+   size_t newSize = len;
+   if (len > 1) {
+      CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
+      _kv<T> * rawData = getter.getRawArrayData(keyValues);
+
+      // First do a stable sort by value (preserve the original order
+      // in the case of a tie)
+      std::sort(rawData, rawData + len, cmpValsStable<T>);
+      // TODO: investigate performance of std::stable_sort
+      // std::stable_sort(rawData, rawData + len);
+
+      // Then eliminate duplicates
+      size_t lsize = len - 1;  /* adjust search range */
+      size_t put = 0;
+      size_t get = 0;
+
+      while (get < lsize) {
+         if (put != get) {
+            memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<T>));
+         }
+
+         if (rawData[get].value == rawData[get+1].value) {
+            ++get;
+            ++put;
+
+            while (get < lsize && rawData[get].value == rawData[get+1].value) {
+               ++get;
+            }
+            ++get;
+         }
+         else {
+            ++get;
+            ++put;
+         }
+      }
+
+      if (rawData[lsize].value != rawData[lsize-1].value) {
+         memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<T>));
+      }
+
+      lsize = put;
+
+      // Then sort by key to get the original ordering
+      std::sort(rawData, rawData + lsize, cmpKeys<T>);
+
+      // Reallocate memory
+      keyValues.realloc(lsize);
+
+      newSize = lsize;
+   }
+
+   return newSize;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the keys
+/// The keys are stored in the managed array of _kv structs. To get the
+/// keys separately, they must be copied into their own array.
+/// @param[out] keys - The key array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+CARE_INLINE void initializeKeyArray(host_device_ptr<size_t>& keys,
+                                    const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+{
+   CARE_STREAM_LOOP(i, 0, len) {
+      keys[i] = keyValues[i].key;
+   } CARE_STREAM_LOOP_END
+
+   return;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Alan Dayton
+/// @brief Initializes the values
+/// The values are stored in the managed array of _kv structs. To get the
+///    values separately, they must be copied into their own array.
+/// @param[out] values - The values array
+/// @param[in] keyValues - The key value array
+/// @param[in/out] len - length of key value array
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename T>
+CARE_INLINE void initializeValueArray(host_device_ptr<T>& values,
+                                      const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+{
+   CARE_STREAM_LOOP(i, 0, len) {
+      values[i] = keyValues[i].value;
+   } CARE_STREAM_LOOP_END
+
+   return;
+}
+
+
 
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different, 
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
 
 template <typename T>
-void IntersectKeyValueSorters(RAJA::seq_exec exec, 
-                              KeyValueSorter<T> sorter1, int size1,
-                              KeyValueSorter<T> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2, int & numMatches) {
-
+CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec exec, 
+                                          KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
+                                          KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
+                                          host_device_ptr<int> &matches1,
+                                          host_device_ptr<int>& matches2,
+                                          int & numMatches)
+{
    numMatches = 0 ;
    const int smaller = (size1 < size2) ? size1 : size2 ;
 
@@ -1520,7 +552,7 @@ void IntersectKeyValueSorters(RAJA::seq_exec exec,
    }
 }
 
-}
+} // namespace care
 
 #endif // !defined(_CARE_KEY_VALUE_SORTER_H_)
 

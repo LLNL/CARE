@@ -31,6 +31,7 @@ set(ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "
 option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
+option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)

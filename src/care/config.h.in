@@ -16,10 +16,17 @@
 #cmakedefine CARE_LEGACY_COMPATIBILITY_MODE
 #cmakedefine CARE_ENABLE_MANAGED_PTR
 #cmakedefine CARE_DISABLE_RAJAPLUGIN
+#cmakedefine CARE_ENABLE_EXTERN_INSTANTIATE
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID
 #cmakedefine01 CARE_HAVE_NVTOOLSEXT
+
+#ifdef CARE_ENABLE_EXTERN_INSTANTIATE
+#define CARE_INLINE
+#else
+#define CARE_INLINE inline
+#endif
 
 #if defined(_WIN32) && !defined(CARESTATICLIB)
 #if defined(CARE_EXPORTS)
