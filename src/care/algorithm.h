@@ -12,7 +12,8 @@
 // In very large monolithic codes, including this in too many compilation
 // units can cause linking issues (particularly device link issues) due to
 // the file size. In that case, external template instantiation should be
-// used: this file should only be included in the compilation unit containing
+// used (this requires CARE_ENABLE_EXTERN_INSTANTIATE to be turned ON in the cmake
+// configuration): this file should only be included in the compilation unit containing
 // the instantiation and algorithm_decl.h (along with the extern template
 // declarations) should be included everywhere else.
 
