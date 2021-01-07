@@ -302,14 +302,19 @@ protected:
    CARE_DLL_API static FusedActionsObserver * activeObserver;
 public:
    CARE_DLL_API static FusedActionsObserver * getActiveObserver();
+   CARE_DLL_API static std::vector<FusedActionsObserver *> allObservers;
    CARE_DLL_API static void setActiveObserver(FusedActionsObserver * observer);
 
 
-   FusedActionsObserver() : FusedActions(),
+   FusedActionsObserver(bool registerWithAllObservers = true) : FusedActions(),
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
-                            m_recording(false) {
+                            m_recording(false) 
+    {
+       if (registerWithAllObservers) {
+          allObservers.push_back(this);
+       }
     }
 
    void startRecording() {
@@ -433,6 +438,14 @@ public:
    inline void registerFree(care::host_device_ptr<T> & array) {
       m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
    }
+
+
+   ///////////////////////////////////////////////////////////////////////////
+   /// @author Peter Robinson
+   /// @brief cleans up all FusedActions observed by FusedActionsObserver::allObservers();
+   /// @param[in] array : the array to be freed after a flushActions
+   ///////////////////////////////////////////////////////////////////////////
+   CARE_DLL_API static void cleanupAllFusedActions();
 
    protected:
       std::map<double, FusedActions *> m_fused_action_order;
@@ -962,7 +975,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // On CUDA, using care::device_ptr here causes hard, silent, stops that are still mysterious. 
 // Using a raw pointer works great, but causes style checks intended to prevent accidental
 // capture of raw pointers to fail. So we tell clang query this is a device pointer, 
-// but use the ray pointer for all code we actually want to run.
+// but use the raw pointer for all code we actually want to run.
 #ifdef CLANG_QUERY
 using care_scanpos_ptr = care::device_ptr<index_type>;
 #else

@@ -21,6 +21,8 @@
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
 CARE_DLL_API bool LoopFuser::verbose = false;
 CARE_DLL_API bool LoopFuser::very_verbose = false;
+CARE_DLL_API std::vector<FusedActionsObserver *> FusedActionsObserver::allObservers{};
+
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
 
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
@@ -34,6 +36,14 @@ CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() {
 
 CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver * observer) {
    activeObserver = observer;
+}
+
+CARE_DLL_API void FusedActionsObserver::cleanupAllFusedActions() {
+   for (FusedActionsObserver * observer : FusedActionsObserver::allObservers) {
+      observer->reset(false, __FILE__, __LINE__);
+      delete observer;
+   }
+   allObservers.clear();
 }
 
 CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
