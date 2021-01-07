@@ -58,6 +58,7 @@ set(care_sources
     CHAICallback.cpp
     LoopFuser.cpp
     RAJAPlugin.cpp
+    scan.cpp
     )
 
 if(CARE_ENABLE_EXTERN_INSTANTIATE)

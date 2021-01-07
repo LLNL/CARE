@@ -196,7 +196,7 @@ CARE_INLINE void IntersectArrays(RAJAExec,
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
-   exclusive_scan<int, RAJAExec>(matched, nullptr, smaller + 1, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJAExec{}, matched, nullptr, smaller + 1, 0, true);
 
    CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {
