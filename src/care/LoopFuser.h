@@ -224,12 +224,12 @@ public:
    ///////////////////////////////////////////////////////////////////////////
    /// @brief execute all actions as a fused action
    ///////////////////////////////////////////////////////////////////////////
-   virtual void flushActions(bool async, const char * file, int lineNumber) = 0;
+   virtual void flushActions(bool async, const char * fileName, int lineNumber) = 0;
 
    ///////////////////////////////////////////////////////////////////////////
    /// @brief execute all actions as a fused action
    ///////////////////////////////////////////////////////////////////////////
-   virtual void reset(bool async) = 0;
+   virtual void reset(bool async, const char * fileName, int lineNumber) = 0;
 
    ///////////////////////////////////////////////////////////////////////////
    /// @brief set preserveOrder mode
@@ -358,11 +358,11 @@ public:
    }
 
 
-   inline void flushActions(bool async, const char * filename, int lineno) {
+   inline void flushActions(bool async, const char * fileName, int lineNumber) {
       for (auto & priority_action : m_fused_action_order) {
          FusedActions * const & actions = priority_action.second;
          if (actions -> actionCount() > 0) {
-            actions->flushActions(async, filename, lineno);
+            actions->flushActions(async, fileName, lineNumber);
          }
       }
       for (auto & array: m_to_be_freed) {
@@ -414,7 +414,7 @@ public:
    }
 
  
-   inline void reset(bool /*async*/) {
+   inline void reset(bool /*async*/, const char * /*fileName*/, int /*lineNumber*/) {
       for (auto priority_action: m_fused_action_order) {
          delete priority_action.second;
       }
@@ -555,7 +555,7 @@ class LoopFuser : public FusedActions {
       ///////////////////////////////////////////////////////////////////////////
       CARE_DLL_API static int non_scan_store;
       template <typename LB, typename Conditional>
-      void registerAction(const char * filename, int lineno, int start, int end, int & start_pos, Conditional && conditional, 
+      void registerAction(const char * fileName, int lineNumber, int start, int end, int & start_pos, Conditional && conditional, 
                           LB && action, int scan_type = 0, int & pos_store = non_scan_store,
                           care::host_device_ptr<int> counts_to_offsets_scanvar = nullptr);
       
@@ -588,30 +588,30 @@ class LoopFuser : public FusedActions {
       /// @author Peter Robinson
       /// @brief execute all recorded actions
       ///////////////////////////////////////////////////////////////////////////
-      CARE_DLL_API void flushActions(bool async=false , const char * filename = "\0", int lineNumber=-1);
+      CARE_DLL_API void flushActions(bool async=false , const char * fileName = "\0", int lineNumber=-1);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_actions(bool async, const char * filename, int lineNumber);
+      void flush_parallel_actions(bool async, const char * fileName, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded actions in a sequence
       ///////////////////////////////////////////////////////////////////////////
-      void flush_order_preserving_actions(bool async, const char * filename, int lineNumber);
+      void flush_order_preserving_actions(bool async, const char * fileName, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief execute all recorded scans and actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_scans(const char * filename, int lineNumber);
+      void flush_parallel_scans(const char * fileName, int lineNumber);
       
       /// @author Peter Robinson
       /// @brief execute all recorded counts_to_offsets scans and actions in parallel
       ///////////////////////////////////////////////////////////////////////////
-      void flush_parallel_counts_to_offsets_scans(bool async, const char * filename, int lineNumber);
+      void flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -631,7 +631,7 @@ class LoopFuser : public FusedActions {
 
       int reserved() { return m_reserved; }
 
-      void reset(bool async);
+      void reset(bool async, const char * fileName, int lineNumber);
 
       int getOffset() {
          if (!m_preserve_action_order) {
@@ -734,7 +734,7 @@ class LoopFuser : public FusedActions {
 ///                     when scan support is added.
 ///////////////////////////////////////////////////////////////////////////
 template <typename LB, typename Conditional>
-void LoopFuser::registerAction(const char * filename, int lineno, int start, int end, int &start_pos, Conditional && conditional, LB && action, int scan_type, int &pos_store, care::host_device_ptr<int> counts_to_offsets_scanvar) {
+void LoopFuser::registerAction(const char * fileName, int lineNumber, int start, int end, int &start_pos, Conditional && conditional, LB && action, int scan_type, int &pos_store, care::host_device_ptr<int> counts_to_offsets_scanvar) {
    int length = end - start;
    if (length) {
       /* switch to scan mode if we encounter a scan before we flush */
@@ -765,7 +765,7 @@ void LoopFuser::registerAction(const char * filename, int lineno, int start, int
          m_scan_pos_starts[m_action_count] = start_pos;
 
          if (verbose) {
-            printf("Registered action %i with and offset %i\n",
+            printf("Registered action %i with offset %i\n",
                    m_action_count, m_action_offsets[m_action_count]);
          }
          m_max_action_length = std::max(m_max_action_length, end-start);
@@ -805,41 +805,33 @@ void LoopFuser::registerAction(const char * filename, int lineno, int start, int
       }
       else {
          if (verbose) {
-            printf("calling as packed %s:%i\n", filename, lineno);
+            printf("calling as packed %s:%i\n", fileName, lineNumber);
          }
          switch(scan_type) {
             case 0:
 #if defined CARE_GPUCC && defined GPU_ACTIVE
-               care::forall(care::raja_fusible {}, 0, length, action, fusible_registers{});
+               care::forall(care::raja_fusible {}, 0, length, action, fusible_registers{}, fileName, lineNumber);
 #else
-               care::forall(care::raja_fusible_seq {}, 0, length, action, fusible_registers{});
+               care::forall(care::raja_fusible_seq {}, 0, length, action, fusible_registers{}); 
 #endif
                break;
             case 1:
                {
                   m_scan_pos_starts[m_action_count] = start_pos;
-                  bool local_verbose = verbose;
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
                   if (verbose) {
                      printf("calling GPU_ACTIVE scan with start_pos %i action_count %i\n", start_pos, m_action_count);
                   }
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
-                     /*if (local_verbose) {
-                        printf("in conditional with i %i, scanvar %p, global_end %i\n", i, scanvar, global_end);
-                     }*/
                      conditional(i, scanvar, nullptr, global_end, fusible_registers{});
-                     /*if (local_verbose) {
-                        printf("returning %i\n", scanvar[i]);
-                     }
-                     */
                      return scanvar[i];
                   };
-                  SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,SCANVARNAME(pos).data(),length)) {
-                     if (local_verbose) {
-                        printf("in action with pos %i, i %i\n", pos, i);
-                     }
+                  // need to store a copy of start_pos, as start_pos and pos_store are aliased by design
+                  int start_pos_before_scan = start_pos;
+                  SCAN_LOOP(i, 0, length, pos, 0, conditional_wrapper(i,SCANVARNAME(pos).data(),length)) {
                      action(i, SCANVARNAME(pos).data(), fusible_registers{} );
                   } SCAN_LOOP_END(length, pos, pos_store)
+                  pos_store += start_pos_before_scan;
 #else
                   if (verbose) {
                      printf("calling not GPU_ACTIVE scan\n");
@@ -849,12 +841,15 @@ void LoopFuser::registerAction(const char * filename, int lineno, int start, int
                      conditional(i, scanvar, scanvar, global_end, fusible_registers{});
                      return *scanvar;
                   };
-                  SCAN_LOOP(i, 0, length, pos, start_pos, conditional_wrapper(i,&SCANVARNAME(pos),length)) {
-                     if (local_verbose) {
-                        printf("in action with pos %i, i %i\n", pos, i);
-                     }
+                  // need to store a copy of start_pos, as start_pos and pos_store are aliased by design
+                  int start_pos_before_scan = start_pos;
+                  SCAN_LOOP(i, 0, length, pos, 0, conditional_wrapper(i,&SCANVARNAME(pos),length)) {
+                     // when !(GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN), SCANVARNAME evaluates to a scalar, 
+                     // but action will look at the ith entry of an array, so we take the address and subtract
+                     // off i to land back at the scalar
                      action(i, &SCANVARNAME(pos)-i, fusible_registers{} );
                   } SCAN_LOOP_END(length, pos, pos_store)
+                  pos_store += start_pos_before_scan;
 #endif
                }
                break;
@@ -964,12 +959,22 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    auto __fusible_offset__ = FUSER->getOffset(); \
    auto __fusible_start_index__ = 0;
 
+// On CUDA, using care::device_ptr here causes hard, silent, stops that are still mysterious. 
+// Using a raw pointer works great, but causes style checks intended to prevent accidental
+// capture of raw pointers to fail. So we tell clang query this is a device pointer, 
+// but use the ray pointer for all code we actually want to run.
+#ifdef CLANG_QUERY
+using care_scanpos_ptr = care::device_ptr<index_type>;
+#else
+using care_scanpos_ptr = index_type *;
+#endif
+
 // initializes index start, end and offset variables for boilerplate reduction
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
    FUSIBLE_KERNEL_BOOKKEEPING(FUSER) ; \
    auto __fusible_action_index__ = FUSER->actionCount(); \
-   index_type * __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
-   index_type *__fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
+   care_scanpos_ptr __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
+   care_scanpos_ptr __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
    auto __fusible_verbose__ = LoopFuser::verbose; \

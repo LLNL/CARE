@@ -73,7 +73,7 @@ namespace care {
       // Synchronize
       if (s_synchronize_before) {
          if (space == chai::GPU) {
-            care::gpuDeviceSynchronize();
+            care::gpuDeviceSynchronize(fileName, lineNumber);
          }
       }
 
@@ -195,7 +195,7 @@ namespace care {
 
       if (s_synchronize_after) {
          if (space == chai::GPU) {
-            care::gpuDeviceSynchronize();
+            care::gpuDeviceSynchronize(fileName, lineNumber);
          }
       }
 #endif // defined(CARE_GPUCC)

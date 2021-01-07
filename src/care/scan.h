@@ -140,11 +140,11 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
 // scan var is an managed array of ints
 
-#define ScanVar chai::ManagedArray<int>
+using ScanVar = chai::ManagedArray<int>;
 
 #if CARE_HAVE_LLNL_GLOBALID
 
-#define ScanVarGID chai::ManagedArray<GIDTYPE>
+using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
@@ -219,7 +219,7 @@ inline void getFinalScanCount(chai::ManagedArray<T> scanvar, int length, T& scan
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
          const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]); \
-         if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
+         if (SCANINDX != globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1])) {
 
 #define SCAN_LOOP_GID_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_gid_check) \

@@ -72,7 +72,7 @@ GPU_TEST(TestPacker, packFixedRange) {
    } CARE_SEQUENTIAL_LOOP_END
 
    int pos = 0;
-   packer->registerAction(0, arrSize, pos,
+   packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
                           [=] CARE_DEVICE(int, int *, int const*, int, fusible_registers) { },
                           [=] CARE_DEVICE(int i, int *, fusible_registers) {
       dst[pos+i] = src[i];
@@ -90,7 +90,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    packer->flushActions();
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
@@ -130,7 +130,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fuser__ = LoopFuser::getInstance();
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
-      __fuser__->registerAction(0, arrSize, scan_pos,
+      __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
                                 [=] FUSIBLE_DEVICE(int, int *, int const*, int, fusible_registers){ },
                                 [=] FUSIBLE_DEVICE(int i, int *, fusible_registers) {
          i += 0 -  __fusible_offset__ ;
@@ -141,7 +141,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       });
    }
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    // pack should  not have happened yet so
    // host data should not be updated yet
@@ -199,7 +199,7 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       dst[pos+i] = src[i+pos]*2;
    } FUSIBLE_LOOP_STREAM_END
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    // pack should  not have happened yet so
    // host data should not be updated yet

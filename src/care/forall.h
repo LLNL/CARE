@@ -271,7 +271,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename FUSIBLE_REGISTERS>
-   void forall(raja_fusible, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers) {
+   void forall(raja_fusible, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers, const char *fileName, int lineNumber) {
       const int length = end - start;
 
       if (length != 0) {
@@ -291,7 +291,7 @@ namespace care {
          forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fusible_registers);
 
 #if FORCE_SYNC
-         care_gpuErrchk(gpuDeviceSynchronize());
+         care::gpuDeviceSynchronize(fileName, lineNumber);
 #endif
 #endif
 
@@ -340,7 +340,7 @@ namespace care {
 #endif
 
 #if FORCE_SYNC && defined(CARE_GPUCC)
-         care_gpuErrchk(gpuDeviceSynchronize());
+         care::gpuDeviceSynchronize(fileName, lineNumber);
 #endif
 
          threadRM->setExecutionSpace(chai::NONE);

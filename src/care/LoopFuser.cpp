@@ -107,7 +107,7 @@ void LoopFuser::reserve(size_t size) {
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
-void LoopFuser::reset(bool async) {
+void LoopFuser::reset(bool async, const char * fileName, int lineNumber) {
    m_action_count = 0;
    m_max_action_length = 0;
    m_prev_pos_output = nullptr;
@@ -116,7 +116,7 @@ void LoopFuser::reset(bool async) {
    // need to do a synchronize data so the previous fusion data doesn't accidentally
    // get reused for the next one. (Yes, this was a very fun race condition to find).
    if (!async) {
-      care::gpuDeviceSynchronize();
+      care::gpuDeviceSynchronize(fileName, lineNumber);
    }
    m_conditionals.reserve(m_reserved, 256*m_reserved);
    m_actions.reserve(m_reserved, 256*m_reserved);
@@ -128,37 +128,34 @@ void LoopFuser::warnIfNotFlushed() {
    }
 }
 
-void LoopFuser::flush_parallel_actions(bool async, const char * filename, int lineNumber) {
+void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
    // Do the thing
    if (verbose) {
-      printf("in flush_parallel_actions at %s:%i with %zu, %i\n", filename, lineNumber, m_actions.num_loops(), m_max_action_length);
+      printf("in flush_parallel_actions at %s:%i with %zu, %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length);
    }
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(nullptr, fusible_registers{});
    // this resets m_conditionals, which we will never need to run
    m_conditionals.clear();
    if (verbose) {
-      printf("done with flush_parallel_actions at %s:%i with %zu, %i, async %i\n", filename, lineNumber, m_actions.num_loops(), m_max_action_length, (int) async);
+      printf("done with flush_parallel_actions at %s:%i with %zu, %i, async %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length, (int) async);
    }
-   reset(async);
+   reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flush_order_preserving_actions(bool async
-                                               , const char * // filename
-                                               , int // lineNumber
-                                               ) {
+void LoopFuser::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
    // Do the thing
    action_workgroup aw = m_actions.instantiate();
    action_worksite aws = aw.run(nullptr, fusible_registers{});
    // this resets m_conditionals, don't run them.
    m_conditionals.clear();
-   reset(async);
+   reset(async, fileName, lineNumber);
 }
 
 
-void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
+void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
    if (verbose) {
-      printf("in flush_parallel_scans at %s:%i with %i,%i\n", filename, lineNumber, m_action_count, m_max_action_length);
+      printf("in flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
    const int * offsets = (const int *)m_action_offsets;
    int * scan_pos_outputs = m_scan_pos_outputs;
@@ -207,7 +204,7 @@ void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
    } CARE_STREAM_LOOP_END
 
    if (verbose) {
-      care::gpuDeviceSynchronize();
+      care::gpuDeviceSynchronize(fileName, lineNumber);
       CARE_SEQUENTIAL_LOOP(i,0,m_action_count) {
          printf("scan_pos_outputs[%i] = %i\n", i, scan_pos_outputs[i]);
       } CARE_SEQUENTIAL_LOOP_END
@@ -218,7 +215,7 @@ void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
    action_worksite aws = aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
 
    // need to do a synchronize data so pinned memory reads are valid
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(fileName,lineNumber);
 
    /* need to write the scan positions to the output destinations */
    /* each destination is computed */
@@ -231,16 +228,16 @@ void LoopFuser::flush_parallel_scans(const char * filename, int lineNumber) {
    scan_var.free();
 
    if (verbose) {
-      printf("done with flush_parallel_scans at %s:%i with %i,%i\n", filename, lineNumber, m_action_count, m_max_action_length);
+      printf("done with flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
    // async is true because we just synchronized
-   reset(true);
+   reset(true, fileName, lineNumber);
 }
 
 
-void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * filename, int lineNumber) {
+void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
-     printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", filename,lineNumber, m_action_count, m_max_action_length);
+     printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
    }
    const int * offsets = (const int *)m_action_offsets;
 
@@ -274,12 +271,12 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
 
    scan_var.free();
    if (verbose) {
-     printf("done with flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", filename,lineNumber, m_action_count, m_max_action_length);
+     printf("done with flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
    }
-   reset(async);
+   reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flushActions(bool async, const char * filename, int lineNumber) {
+void LoopFuser::flushActions(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
       printf("Loop fuser flushActions\n");
    }
@@ -288,26 +285,26 @@ void LoopFuser::flushActions(bool async, const char * filename, int lineNumber) 
          if (verbose) {
             printf("loop fuser flush parallel scans\n");
          }
-         flush_parallel_scans(filename, lineNumber);
+         flush_parallel_scans(fileName, lineNumber);
       }
       else if (m_is_counts_to_offsets_scan) {
          if (verbose) {
             printf("loop fuser flush counts to offsets scans\n");
          }
-         flush_parallel_counts_to_offsets_scans(async, filename, lineNumber);
+         flush_parallel_counts_to_offsets_scans(async, fileName, lineNumber);
       }
       else {
          if (m_preserve_action_order) {
             if (verbose) {
                printf("loop fuser flush order preserving actions\n");
             }
-            flush_order_preserving_actions(async, filename, lineNumber);
+            flush_order_preserving_actions(async, fileName, lineNumber);
          }
          else {
             if (verbose) {
                printf("loop fuser flush parallel actions\n");
             }
-            flush_parallel_actions(async, filename, lineNumber);
+            flush_parallel_actions(async, fileName, lineNumber);
          }
       }
    }

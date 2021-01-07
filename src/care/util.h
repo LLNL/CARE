@@ -298,7 +298,7 @@ namespace care {
 /// @arg[in] code The return code from CUDA API calls
 ///
 /////////////////////////////////////////////////////////////////////////////////
-#define care_gpuErrchk(code) { care::gpuAssert((code), __FILE__, __LINE__); }
+#define care_gpuErrchk(code, file, lineno) { care::gpuAssert((code), file, lineno); }
 
 #else
 
@@ -312,7 +312,7 @@ namespace care {
 /// @arg[in] code The return code from CUDA API calls
 ///
 /////////////////////////////////////////////////////////////////////////////////
-#define care_gpuErrchk(code) code
+#define care_gpuErrchk(code, file, lineno) code
 
 #endif
 /////////////////////////////////////////////////////////////////////////////////
@@ -322,11 +322,11 @@ namespace care {
 /// @brief Convenience function for calling cuda or hip DeviceSynchronize,
 ///        depending on the context.
 ////////////////////////////////////////////////////////////////////////////////
-CARE_HOST inline void gpuDeviceSynchronize() {
+CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber) {
 #if defined(__CUDACC__)
-   care_gpuErrchk( ::cudaDeviceSynchronize());
+   care_gpuErrchk( ::cudaDeviceSynchronize(), fileName, lineNumber);
 #elif defined(__HIPCC__)
-   care_gpuErrchk( ::hipDeviceSynchronize());
+   care_gpuErrchk( ::hipDeviceSynchronize(), fileName, lineNumber); 
 #endif
 }
 
