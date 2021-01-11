@@ -685,6 +685,11 @@ class LoopFuser : public FusedActions {
       int m_reserved;
 
       ///
+      /// How big of a buffer in pinned memory we have reserved
+      ///
+      int m_totalsize;
+
+      ///
       /// Host pointer (pinned) for action offsets
       ///
       index_type *m_action_offsets;

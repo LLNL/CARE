@@ -50,6 +50,7 @@ CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
    m_allocator(a),
    m_max_action_length(0),
    m_reserved(0),
+   m_totalsize(0),
    m_action_offsets(nullptr),
    m_conditionals(a),
    m_actions(a), 
@@ -88,7 +89,7 @@ void LoopFuser::stopRecording() { m_recording = false;  }
 CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
-      m_allocator.free(m_action_offsets);
+      m_allocator.deallocate((char *)m_action_offsets, m_totalsize);
    }
 
    if (m_pos_output_destinations) {
@@ -98,8 +99,8 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
 
 void LoopFuser::reserve(size_t size) {
    static char * pinned_buf;
-   size_t totalsize = size*(sizeof(int)*3);
-   pinned_buf = (char *)m_allocator.allocate(totalsize);
+   m_totalsize = size*(sizeof(int)*3);
+   pinned_buf = (char *)m_allocator.allocate(m_totalsize);
    m_pos_output_destinations = (care::host_ptr<int>*)malloc(size * sizeof(care::host_ptr<int>));
 
    m_action_offsets   = (int *) pinned_buf;
