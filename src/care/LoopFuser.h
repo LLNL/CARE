@@ -14,6 +14,7 @@
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
 #include "care/host_ptr.h"
+#include "care/device_ptr.h"
 #include "care/scan.h"
 
 #include <cfloat>
