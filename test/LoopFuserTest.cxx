@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 
 // define if we want to test running loops as we encounter them
-#define CARE_FUSIBLE_LOOPS_DISABLE
+//#define CARE_FUSIBLE_LOOPS_DISABLE
 // define if we want to turn on verbosity
 //#define FUSER_VERBOSE
 
