@@ -14,7 +14,6 @@
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
 #include "care/host_ptr.h"
-#include "care/device_ptr.h"
 #include "care/scan.h"
 
 #include <cfloat>
@@ -978,22 +977,22 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
    auto __fusible_offset__ = FUSER->getOffset(); \
    auto __fusible_start_index__ = 0;
 
-// On CUDA, using care::device_ptr here causes hard, silent, stops that are still mysterious. 
-// Using a raw pointer works great, but causes style checks intended to prevent accidental
-// capture of raw pointers to fail. So we tell clang query this is a device pointer, 
-// but use the raw pointer for all code we actually want to run.
-#ifdef CLANG_QUERY
-using care_scanpos_ptr = care::device_ptr<index_type>;
-#else
-using care_scanpos_ptr = index_type *;
-#endif
-
 // initializes index start, end and offset variables for boilerplate reduction
+// Note that __fusible_scan_pos_*_ are raw pointers being captured into a lambda,
+// so if you have a clang-query that looks for this pattern (in many situations this
+// can lead to dereferencing of a host pointer), you can add this to your query to 
+// get it to ignore these particular variables:
+//
+//let comment "### Set up detection of reference of raw pointer in device lambda"
+//let comment "### ignoringImplicit and no implicitCastExpr ancestor is required to prevent duplicate matches"
+//match expr(inDeviceLambda, notInImplicitCast, ignoringImplicit(declRefExpr(to(varDecl(hasType(isAnyPointer()), 
+//           unless(matchesName("__fusible_scan_pos.*__")), unless(inDeviceLambda)))))).bind("capture_of_raw_pointer_in_lambda")
+
 #define FUSIBLE_BOOKKEEPING(FUSER,START,END) \
    FUSIBLE_KERNEL_BOOKKEEPING(FUSER) ; \
    auto __fusible_action_index__ = FUSER->actionCount(); \
-   care_scanpos_ptr __fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
-   care_scanpos_ptr __fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
+   index_type *__fusible_scan_pos_starts__ = FUSER->getScanPosStarts(); \
+   index_type *__fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
    auto __fusible_verbose__ = LoopFuser::verbose; \
@@ -1026,8 +1025,8 @@ using care_scanpos_ptr = index_type *;
 // resulting index is within the index range of the loop,
 // as well as ensuring we only execute where are scan was true
 // also initializes POS to an appropriate value, searching for the pos start
-// for this actions group of scans (actions scare a scan if their output is the same reference)
-// TODO: drop the use of BOOL_EXPR in favor of inspacting the scan var values
+// for this actions group of scans (actions share a scan if their output is the same reference)
+// TODO: drop the use of BOOL_EXPR in favor of inspecting the scan var values
 #define FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, GLOBAL_SCAN_VAR, POS) \
    FUSIBLE_INDEX_ADJUST(INDEX) ;  \
    int __startIndex = __fusible_action_index__; \
@@ -1048,7 +1047,6 @@ using care_scanpos_ptr = index_type *;
 #define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__, fusible_registers
 #define FUSIBLE_ALWAYS_TRUE(INDEX) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int, fusible_registers) { FUSIBLE_INDEX_ADJUST(INDEX);  __fusible_scan_var__[__fusible_global_index__] = true; }
 // actions xargs to pass in to lambdas
-//#define FUSIBLE_ACTION_XARGS index_type * __fusible_scan_offsets__
 #define FUSIBLE_ACTION_XARGS index_type *, fusible_registers 
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) { \
