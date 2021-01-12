@@ -282,7 +282,7 @@ void LoopFuser::flush_parallel_scans() {
       printf("SCAN\n");
    }
 #endif
-   care::exclusive_scan(RAJAExec(), scan_var, nullptr, end+1, RAJA::operators::plus<int>{}, scanvar_offset, true);
+   care::exclusive_scan(RAJAExec{}, scan_var, nullptr, end+1, scanvar_offset, true);
 
 #ifdef FUSER_VERBOSE
    if (m_verbose) {
@@ -396,7 +396,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
       
    } CARE_STREAM_LOOP_END
 
-   care::exclusive_scan(RAJAExec{}, scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJAExec{}, scan_var, nullptr, end, 0, true);
 
    CARE_STREAM_LOOP(i, 0, end) {
       int index = i;

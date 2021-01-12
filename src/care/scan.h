@@ -31,15 +31,47 @@ void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedA
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 
-void exclusive_scan(RAJAExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, int val, bool inPlace);
 // typesafe wrapper for out of place scan
-void exclusive_scan(RAJAExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
+
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
+                    int size, float val, bool inPlace);
+// typesafe wrapper for out of place scan
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
+                    int size, float val);
+
+#ifdef CARE_GPUCC
+
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
+                    int size, float val, bool inPlace);
+// typesafe wrapper for out of place scan
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
+                    int size, float val);
+
+#endif // defined(CARE_GPUCC)
+
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
+                    int size, double val, bool inPlace);
+// typesafe wrapper for out of place scan
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
+                    int size, double val);
+
+#ifdef CARE_GPUCC
+
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
+                    int size, double val, bool inPlace);
+// typesafe wrapper for out of place scan
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
+                    int size, double val);
+
+#endif // defined(CARE_GPUCC)
 
 #if CARE_HAVE_LLNL_GLOBALID
 
@@ -49,15 +81,15 @@ void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<globalID> data, chai::Man
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
                     int size, globalID val);
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 
-void exclusive_scan(RAJAExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
                     int size, globalID val, bool inPlace);
 // typesafe wrapper for out of place scan
-void exclusive_scan(RAJAExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
                     int size, globalID val);
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
@@ -70,15 +102,47 @@ void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedA
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 
-void inclusive_scan(RAJAExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
-void inclusive_scan(RAJAExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
+
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
+                    int size) ;
+
+#ifdef CARE_GPUCC
+
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
+                    int size) ;
+
+#endif // defined(CARE_GPUCC)
+
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
+                    int size) ;
+
+#ifdef CARE_GPUCC
+
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
+                    int size) ;
+
+#endif // defined(CARE_GPUCC)
 
 #if CARE_HAVE_LLNL_GLOBALID
 
@@ -88,15 +152,15 @@ void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<globalID> data, chai::Man
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
                     int size) ;
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 
-void inclusive_scan(RAJAExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
-void inclusive_scan(RAJAExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
                     int size) ;
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
@@ -151,7 +215,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
       CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END+1, scan_loop_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
       } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_init_check) \
-      care::exclusive_scan<int, RAJAExec>(SCANVAR, nullptr, END-START+1, RAJA::operators::plus<int>{}, SCANVAR_OFFSET, true); \
+      care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, END-START+1, SCANVAR_OFFSET, true); \
    } else { \
       CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_init_check) { \
          SCANVAR[INDX] = SCANVAR_OFFSET; \
@@ -167,7 +231,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
       CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END+1, scan_loop_gid_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
       } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_gid_init_check) \
-      care::exclusive_scan<GIDTYPE, RAJAExec>(SCANVAR, nullptr, END-START+1, RAJA::operators::plus<GIDTYPE>{}, SCANVAR_OFFSET.Value(), true); \
+      care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, END-START+1, SCANVAR_OFFSET.Value(), true); \
    } else { \
       CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_gid_init_check) { \
          SCANVAR[INDX] = SCANVAR_OFFSET.Value(); \
@@ -271,7 +335,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 
 #define SCAN_COUNTS_TO_OFFSETS_LOOP_END(INDX, LENGTH, SCANVAR) \
       } CARE_CHECKED_PARALLEL_LOOP_END(scan_counts_to_offsets_loop_check) \
-      care::exclusive_scan<int, RAJAExec>(SCANVAR, nullptr, LENGTH, RAJA::operators::plus<int>{}, 0, true); \
+      care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, LENGTH, 0, true); \
    }
          
 
@@ -329,7 +393,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 
 #define SCAN_COUNTS_TO_OFFSETS_LOOP_END(INDX, LENGTH, SCANVAR) \
       } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_counts_to_offsets_loop_check) \
-      care::exclusive_scan<int, RAJA::seq_exec>(SCANVAR, nullptr, LENGTH, RAJA::operators::plus<int>{}, 0, true); \
+      care::exclusive_scan(RAJA::seq_exec{}, SCANVAR, nullptr, LENGTH, 0, true); \
    }
 #endif // GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN
 

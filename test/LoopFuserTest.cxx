@@ -562,7 +562,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
       }
    } CARE_STREAM_LOOP_END
    // convert to offsets
-   exclusive_scan<int, RAJAExec>(AB_scan, nullptr, arrSize*2, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJAExec{}, AB_scan, nullptr, arrSize*2, 0, true);
    int offset = AB_scan.pick(arrSize);
    CARE_STREAM_LOOP(i,arrSize,arrSize*2) {
       AB_scan[i] -= offset;

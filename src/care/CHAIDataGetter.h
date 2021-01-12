@@ -11,6 +11,8 @@
 // CARE config header
 #include "care/config.h"
 
+#include "care/policies.h"
+
 // Other library headers
 #include "chai/ManagedArray.hpp"
 
@@ -67,5 +69,23 @@ class CHAIDataGetter<globalID, RAJADeviceExec> {
 #endif // CARE_HAVE_LLNL_GLOBALID
 
 #endif // defined(CARE_GPUCC)
+
+#if CARE_HAVE_LLNL_GLOBALID
+
+/* specialization for globalID */
+template <>
+class CHAIDataGetter<globalID, RAJA::seq_exec> {
+   public:
+      typedef GIDTYPE raw_type;
+      GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
+         data.move(chai::CPU);
+         data.registerTouch(chai::CPU);
+         return (GIDTYPE*)data.getPointer(chai::CPU);
+      }
+
+      static const auto ChaiPolicy = chai::CPU;
+};
+
+#endif // CARE_HAVE_LLNL_GLOBALID
 
 #endif // !defined(_CARE_CHAI_DATA_GETTER_H_)
