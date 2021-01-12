@@ -11,23 +11,14 @@
 // the file size. In that case, external template instantiation should be
 // used (this requires CARE_ENABLE_EXTERN_INSTANTIATE to be turned ON in the cmake
 // configuration): this file should only be included in the compilation unit containing
+// the instantiation and KeyValueSorter_decl.h (along with the extern template
+// declarations) should be included everywhere else.
+
 #ifndef _CARE_KEY_VALUE_SORTER_H_
 #define _CARE_KEY_VALUE_SORTER_H_
 
 #include "care/algorithm.h"
 #include "care/KeyValueSorter_decl.h"
-// Other library headers
-#ifdef CARE_GPUCC
-#ifdef __CUDACC__
-#include "cub/cub.cuh"
-#undef CUB_NS_POSTFIX
-#undef CUB_NS_PREFIX
-#endif
-
-#ifdef __HIPCC__
-#include "hipcub/hipcub.hpp"
-#endif
-#endif
 
 // Other CARE headers
 #include "care/LoopFuser.h"
