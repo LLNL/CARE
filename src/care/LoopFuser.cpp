@@ -231,6 +231,10 @@ void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
       int pos = scan_pos_outputs[actionIndex];
       pos -= scan_pos_offset;
       *(m_pos_output_destinations[actionIndex].data()) += pos;
+      if (very_verbose) {
+         printf("actionIndex %i: scan_pos_offset %i scan_pos_output %i pos %i store %i \n",
+                 actionIndex, scan_pos_offset, scan_pos_outputs[actionIndex], pos, *(m_pos_output_destinations[actionIndex].data()));
+      }
    } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();
 
