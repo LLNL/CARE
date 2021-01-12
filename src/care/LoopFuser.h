@@ -467,7 +467,7 @@ using index_type = int;
 using action_xargs = RAJA::xargs<int * /*scan_var*/, fusible_registers>;
 using conditional_xargs = RAJA::xargs<int * /*scan_var*/, index_type const * /*scan_offsets*/, index_type /*total length */, fusible_registers>;
 
-// TODO - explore varying policy block exection based off of register binning types 
+// TODO - explore varying policy block execution based off of register binning types
 #if defined CARE_GPUCC && defined GPU_ACTIVE
 using workgroup_policy = RAJA::WorkGroupPolicy <
                            RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
@@ -979,10 +979,18 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 // initializes index start, end and offset variables for boilerplate reduction
 // Note that __fusible_scan_pos_*_ are raw pointers being captured into a lambda,
-// so if you have a clang-query that looks for this pattern (in many situations this
-// can lead to dereferencing of a host pointer), you can add this to your query to 
-// get it to ignore these particular variables:
+// In many situations this can lead to dereferencing of a host pointer, so it is desirable
+// to have a clang-query that can check for this. Below is a query that checks for raw
+// pointer captures and also ignores these particular variables. 
 //
+//let comment "### Identify device lambda contexts"
+//let b1 callExpr(hasArgument(0,hasType(asString("struct care::gpu"))))
+//let b2 callExpr(hasArgument(0,hasType(asString("struct care::parallel"))))
+//let b3 cxxMemberCallExpr(on(hasType(pointsTo(cxxRecordDecl(hasName("LoopFuser"))))))
+//let rajaDeviceContext callExpr(anyOf(b1,b2,b3))
+//let inDeviceLambda hasAncestor(lambdaExpr(hasAncestor(rajaDeviceContext)))
+//let comment "### Ignore implicit casts (to prevent duplicate matches)"
+//let notInImplicitCast unless(hasAncestor(implicitCastExpr()))
 //let comment "### Set up detection of reference of raw pointer in device lambda"
 //let comment "### ignoringImplicit and no implicitCastExpr ancestor is required to prevent duplicate matches"
 //match expr(inDeviceLambda, notInImplicitCast, ignoringImplicit(declRefExpr(to(varDecl(hasType(isAnyPointer()), 
