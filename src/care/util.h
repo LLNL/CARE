@@ -286,35 +286,6 @@ namespace care {
 
 #endif
 
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
-
-/////////////////////////////////////////////////////////////////////////////////
-///
-/// @author Peter Robinson
-///
-/// @brief Macro for checking the return code from CUDA API calls for errors. Adds
-///        the file and line number where the call occurred for improved debugging.
-///
-/// @arg[in] code The return code from CUDA API calls
-///
-/////////////////////////////////////////////////////////////////////////////////
-#define care_gpuErrchk(code, file, lineno) { care::gpuAssert((code), file, lineno); }
-
-#else
-
-/////////////////////////////////////////////////////////////////////////////////
-///
-/// @author Peter Robinson
-///
-/// @brief In a release build, this version of the macro ensures we do not add
-///        the extra overhead of error checking.
-///
-/// @arg[in] code The return code from CUDA API calls
-///
-/////////////////////////////////////////////////////////////////////////////////
-#define care_gpuErrchk(code, file, lineno) code
-
-#endif
 /////////////////////////////////////////////////////////////////////////////////
 ///
 /// @author Danny Taller
@@ -324,9 +295,9 @@ namespace care {
 ////////////////////////////////////////////////////////////////////////////////
 CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber) {
 #if defined(__CUDACC__)
-   care_gpuErrchk( ::cudaDeviceSynchronize(), fileName, lineNumber);
+   care::gpuAssert( ::cudaDeviceSynchronize(), fileName, lineNumber);
 #elif defined(__HIPCC__)
-   care_gpuErrchk( ::hipDeviceSynchronize(), fileName, lineNumber); 
+   care::gpuAssert( ::hipDeviceSynchronize(), fileName, lineNumber); 
 #endif
 }
 
@@ -409,7 +380,35 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 
 } // namespace care
 
- // defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+
+/////////////////////////////////////////////////////////////////////////////////
+///
+/// @author Peter Robinson
+///
+/// @brief Macro for checking the return code from CUDA API calls for errors. Adds
+///        the file and line number where the call occurred for improved debugging.
+///
+/// @arg[in] code The return code from CUDA API calls
+///
+/////////////////////////////////////////////////////////////////////////////////
+#define care_gpuErrchk(code) { care::gpuAssert((code), __FILE__, __LINE__); }
+
+#else
+
+/////////////////////////////////////////////////////////////////////////////////
+///
+/// @author Peter Robinson
+///
+/// @brief In a release build, this version of the macro ensures we do not add
+///        the extra overhead of error checking.
+///
+/// @arg[in] code The return code from CUDA API calls
+///
+/////////////////////////////////////////////////////////////////////////////////
+#define care_gpuErrchk(code) code
+
+#endif // defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 
