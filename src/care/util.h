@@ -13,8 +13,6 @@
 #include "care/policies.h"
 
 // Other library headers
-#include "chai/ArrayManager.hpp"
-
 #if defined(__CUDACC__)
 #include "cuda.h"
 #endif
@@ -330,7 +328,6 @@ CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber)
 #elif defined(__HIPCC__)
    care_gpuErrchk( ::hipDeviceSynchronize(), fileName, lineNumber); 
 #endif
-   chai::ArrayManager::getInstance()->setSyncedSinceLastKernel();
 }
 
 // various GPU wrappers, only needed for GPU compiles
