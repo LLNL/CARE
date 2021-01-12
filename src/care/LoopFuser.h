@@ -981,7 +981,7 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 // Note that __fusible_scan_pos_*_ are raw pointers being captured into a lambda,
 // In many situations this can lead to dereferencing of a host pointer, so it is desirable
 // to have a clang-query that can check for this. Below is a query that checks for raw
-// pointer captures and also ignores these particular variables. 
+// pointer captures and also ignores these particular variables.
 //
 //let comment "### Identify device lambda contexts"
 //let b1 callExpr(hasArgument(0,hasType(asString("struct care::gpu"))))
@@ -1031,9 +1031,9 @@ void LoopFuser::registerFree(care::host_device_ptr<T> & array) {
 
 // adjusts the index and then ensures the loop is only executed if the
 // resulting index is within the index range of the loop,
-// as well as ensuring we only execute where are scan was true
+// as well as ensuring we only execute where our scan was true
 // also initializes POS to an appropriate value, searching for the pos start
-// for this actions group of scans (actions share a scan if their output is the same reference)
+// for this action's group of scans (actions share a scan if their output is the same reference)
 // TODO: drop the use of BOOL_EXPR in favor of inspecting the scan var values
 #define FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, GLOBAL_SCAN_VAR, POS) \
    FUSIBLE_INDEX_ADJUST(INDEX) ;  \
