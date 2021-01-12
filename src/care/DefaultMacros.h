@@ -104,7 +104,7 @@
 
 
 
-#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#if CARE_LEGACY_COMPATIBILITY_MODE
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -299,7 +299,7 @@
 
 
 
-#else // defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#else // CARE_LEGACY_COMPATIBILITY_MODE
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -546,7 +546,7 @@
 #define CARE_CHECKED_EVERYWHERE_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
-#endif // defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#endif  // CARE_LEGACY_COMPATIBILITY_MODE
 
 
 

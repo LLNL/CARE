@@ -19,10 +19,15 @@
 #include "care/Setup.h"
 
 CARE_DLL_API int LoopFuser::non_scan_store = 0;
+CARE_DLL_API bool LoopFuser::verbose = false;
+CARE_DLL_API bool LoopFuser::very_verbose = false;
+CARE_DLL_API std::vector<FusedActionsObserver *> FusedActionsObserver::allObservers{};
+
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
+
 CARE_DLL_API FusedActionsObserver * FusedActionsObserver::activeObserver = nullptr;
 
-CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() { 
+CARE_DLL_API FusedActionsObserver * FusedActionsObserver::getActiveObserver() {
    if (activeObserver == nullptr) {
       activeObserver = defaultObserver;
    }
@@ -33,29 +38,38 @@ CARE_DLL_API  void FusedActionsObserver::setActiveObserver(FusedActionsObserver 
    activeObserver = observer;
 }
 
-CARE_DLL_API LoopFuser::LoopFuser() : FusedActions(),
-   m_delay_pack(false),
-   m_call_as_packed(true),
+CARE_DLL_API void FusedActionsObserver::cleanupAllFusedActions() {
+   for (FusedActionsObserver * observer : FusedActionsObserver::allObservers) {
+      observer->reset(false, __FILE__, __LINE__);
+      delete observer;
+   }
+   allObservers.clear();
+}
+
+CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
+   m_allocator(a),
    m_max_action_length(0),
    m_reserved(0),
+   m_totalsize(0),
    m_action_offsets(nullptr),
-   m_action_starts(nullptr),
-   m_action_ends(nullptr),
-   m_conditionals(nullptr),
-   m_actions(nullptr),
-   m_lambda_reserved(0),
-   m_lambda_size(0),
-   m_lambda_data(nullptr),
+   m_conditionals(a),
+   m_actions(a), 
+   m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
-   m_verbose(false),
    m_reverse_indices(false) {
 
       // Supports fusing up to 10k loops of average lambda size of 256 bytes
       // will flush if we exceed the 10k count or if the lambda size requirements
       // are exceeded.
+      // Note that while Workpools can grow their internal allocations dynamically, in many
+      // cases when CHAI is involved this enforces a more strict requirement on data persistency
+      // while loops are being fused by the application, and causes later time chai data movement
+      // checks that may be undesired. The hope here is that we've allocated enough to prevent need
+      // for growth. 
+      // TODO: pipe in num_loops as a variable to constructor / allow macro to define the reserved
+      // size. 
       reserve(10*1024);
-      reserve_lambda_buffer(256*10*1024);
 }
 
 CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
@@ -66,22 +80,16 @@ CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
    return instance;
 }
 
+void LoopFuser::startRecording() {
+   m_recording = true;  warnIfNotFlushed();
+}
+
+void LoopFuser::stopRecording() { m_recording = false;  }
+
 CARE_DLL_API LoopFuser::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
-#if defined(CARE_GPUCC)
-      care::gpuFree(m_action_offsets);
-#else
-      free(m_action_offsets);
-#endif
-   }
-
-   if (m_lambda_reserved > 0) {
-#if defined(CARE_GPUCC)
-      care::gpuFree(m_lambda_data);
-#else
-      free(m_lambda_data);
-#endif
+      m_allocator.deallocate((char *)m_action_offsets, m_totalsize);
    }
 
    if (m_pos_output_destinations) {
@@ -91,48 +99,22 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
 
 void LoopFuser::reserve(size_t size) {
    static char * pinned_buf;
-   size_t totalsize = size*(sizeof(int)*5+sizeof(SerializableDeviceLambda<int>) + sizeof(SerializableDeviceLambda<bool>));
-#if defined(CARE_GPUCC)
-   care::gpuHostAlloc((void **)&pinned_buf, totalsize, gpuHostAllocDefault);
-#else
-   pinned_buf = (char*) malloc(totalsize);
-#endif
+   m_totalsize = size*(sizeof(int)*3);
+   pinned_buf = (char *)m_allocator.allocate(m_totalsize);
    m_pos_output_destinations = (care::host_ptr<int>*)malloc(size * sizeof(care::host_ptr<int>));
 
    m_action_offsets   = (int *) pinned_buf;
-   m_action_starts    = (int *)(pinned_buf  +   sizeof(int)*size);
-   m_action_ends      = (int *)(pinned_buf  + 2*sizeof(int)*size);
-   m_scan_pos_outputs = (int *)(pinned_buf  + 3*sizeof(int)*size);
-   m_scan_pos_starts  = (int *)(pinned_buf  + 4*sizeof(int)*size);
-   m_conditionals     = (SerializableDeviceLambda<bool> *)(pinned_buf  + 5*sizeof(int)*size);
-   m_actions          = (SerializableDeviceLambda<int> *)(pinned_buf  + 5*sizeof(int)*size + sizeof(SerializableDeviceLambda<bool>)*size);
+   m_scan_pos_outputs = (int *) (pinned_buf  + sizeof(int)*size);
+   m_scan_pos_starts  = (int *) (pinned_buf  + 2*sizeof(int)*size);
    m_reserved = size;
-}
-
-void LoopFuser::reserve_lambda_buffer(size_t size) {
-   /* the buffer we will slice out of for packing the lambdas */
-   m_lambda_reserved = size;
-   char * tmp;
-#if defined(CARE_GPUCC)
-   care::gpuHostAlloc((void**)&tmp, size, gpuHostAllocDefault);
-   if (m_lambda_data) {
-      care::gpuMemcpy(tmp, m_lambda_data, size, gpuMemcpyHostToHost);
-      care::gpuFreeHost((void *)m_lambda_data);
-   }
-#else
-   tmp = (char *) malloc(size);
-   if (m_lambda_data) {
-      memcpy(tmp, m_lambda_data, size);
-      free(m_lambda_data);
-   }
-#endif
-   m_lambda_data = tmp;
+   int const bytes_per_lambda = 256;
+   m_conditionals.reserve(size,bytes_per_lambda*size);
+   m_actions.reserve(size,bytes_per_lambda*size);
 }
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
-void LoopFuser::reset(bool async) {
-   m_lambda_size = 0;
+void LoopFuser::reset(bool async, const char * fileName, int lineNumber) {
    m_action_count = 0;
    m_max_action_length = 0;
    m_prev_pos_output = nullptr;
@@ -141,8 +123,10 @@ void LoopFuser::reset(bool async) {
    // need to do a synchronize data so the previous fusion data doesn't accidentally
    // get reused for the next one. (Yes, this was a very fun race condition to find).
    if (!async) {
-      care::syncIfNeeded();
+      care::gpuDeviceSynchronize(fileName, lineNumber);
    }
+   m_conditionals.reserve(m_reserved, 256*m_reserved);
+   m_actions.reserve(m_reserved, 256*m_reserved);
 }
 
 void LoopFuser::warnIfNotFlushed() {
@@ -151,194 +135,94 @@ void LoopFuser::warnIfNotFlushed() {
    }
 }
 
-void LoopFuser::flush_parallel_actions(bool async) {
+void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
    // Do the thing
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      printf("in flush_parallel_actions with %i,%i\n", m_action_count, m_max_action_length);
+   if (verbose) {
+      printf("in flush_parallel_actions at %s:%i with %zu, %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length);
    }
-#endif
-   SerializableDeviceLambda<int> *actions = m_actions;
-   int * offsets = m_action_offsets;
-
-   int end = m_action_offsets[m_action_count-1];
-   int action_count = m_action_count;
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      printf("launching with end %i and action_count %i\n", end, action_count);
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(nullptr, fusible_registers{});
+   // this resets m_conditionals, which we will never need to run
+   m_conditionals.clear();
+   if (verbose) {
+      printf("done with flush_parallel_actions at %s:%i with %zu, %i, async %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length, (int) async);
    }
-#endif
-   bool reverse_indices = m_reverse_indices;
-   CARE_STREAM_LOOP(i, 0, end) {
-      int index = i;
-      if (reverse_indices) {
-         // do indices in reverse order to discover any order dependencies between loops
-         // and possibly therefore debug GPU race conditions in debug CPU builds of the code.
-         index = end-1-i;
-      }
-      int actionIndex = care::binarySearch<int>(offsets, 0, action_count, index, true);
-#ifdef FUSER_VERBOSE
-      if (m_verbose) {
-         printf("launching action %i with index %i\n", actionIndex, index);
-      }
-#endif
-      actions[actionIndex](index, true, actionIndex, -1, -1);
-   } CARE_STREAM_LOOP_END
-   if (!async) {
-#ifdef FUSER_VERBOSE
-      if (m_verbose) {
-         printf("syncing \n");
-      }
-#endif
-      care::syncIfNeeded();
-   }
+   reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flush_order_preserving_actions(bool /*async*/) {
+void LoopFuser::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
    // Do the thing
-   SerializableDeviceLambda<int> *actions = m_actions;
-
-   int action_count = m_action_count;
-
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      printf("in flush_order_preserving with %i,%i\n", action_count, m_max_action_length);
-   }
-#endif
-
-#ifdef FUSER_VERBOSE
-   bool verbose = m_verbose;
-#endif
-   CARE_STREAM_LOOP(i, 0, m_max_action_length) {
-      for (int actionIndex = 0; actionIndex < action_count; ++actionIndex) {
-#ifdef FUSER_VERBOSE
-         if (i == 0 && verbose) {
-            printf("calling action %i [%i:%i] at index %i\n", actionIndex, -1, -1, i);
-         }
-#endif
-         actions[actionIndex](i, true, actionIndex, -1, -1);
-      }
-   } CARE_STREAM_LOOP_END
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(nullptr, fusible_registers{});
+   // this resets m_conditionals, don't run them.
+   m_conditionals.clear();
+   reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flush_parallel_scans() {
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      printf("in flush_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
+
+void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
+   if (verbose) {
+      printf("in flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
-#endif
-   SerializableDeviceLambda<int> *actions = m_actions;
-   SerializableDeviceLambda<bool> *conditionals = m_conditionals;
    const int * offsets = (const int *)m_action_offsets;
    int * scan_pos_outputs = m_scan_pos_outputs;
-   int * scan_pos_starts = m_scan_pos_starts;
 
    int end = m_action_offsets[m_action_count-1];
    int action_count = m_action_count;
 
+   // handle the last index by enqueuing a specialized lambda to batch with the rest.
+   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int, fusible_registers) {
+      SCANVAR[end] = false;
+   });
+
+   // the xarg input to the conditional is the bulk scan var the conditional needs to initialize 
    care::host_device_ptr<int> scan_var(end+1, "scan_var");
-#ifdef FUSER_VERBOSE
-   bool verbose = m_verbose;
-   if (verbose) {
-      CARE_STREAM_LOOP(actionIndex, 0, action_count) {
-         printf("offsets[%i] = %i\n", actionIndex, offsets[actionIndex]);
-      } CARE_STREAM_LOOP_END
-   }
-#endif
-   bool reverse_indices = m_reverse_indices;
-   CARE_STREAM_LOOP(i, 0, end+1) {
-      int index = i;
-      if (reverse_indices) {
-         // do indices in reverse order to discover any order dependencies between loops
-         // and possibly therefore debug GPU race conditions in debug CPU builds of the code.
-         index = end-i;
-      }
-      if (index == end) {
-         scan_var[index] = 0;
-      }
-      else {
-         int actionIndex = care::binarySearch<int>(offsets, 0, action_count, index, true);
-#ifdef FUSER_VERY_VERBOSE
-         if (verbose) {
-            printf("launching conditional %i with index %i \n", actionIndex, index);
-         }
-#endif
-         scan_var[index] = (index != end) && conditionals[actionIndex](index, true, actionIndex, -1, -1);
-#ifdef FUSER_VERBOSE
-         if (verbose && scan_var[index] == 1) {
-            printf("conditional %i with index %i returned true \n", actionIndex, index);
-         }
-#endif
-      }
-   } CARE_STREAM_LOOP_END
-   int scanvar_offset = 0;
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      CARE_STREAM_LOOP(i, 0, end+1) {
+   // this will fill scan_var up from the fused conditionals 
+   conditional_workgroup cw = m_conditionals.instantiate();
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, fusible_registers{});
+
+   if (very_verbose) {
+      CARE_SEQUENTIAL_LOOP(i, 0, end+1) {
          if (scan_var[i] == 1) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
-      } CARE_STREAM_LOOP_END
+      } CARE_SEQUENTIAL_LOOP_END
       printf("SCAN\n");
    }
-#endif
+   int scanvar_offset = 0;
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end+1, RAJA::operators::plus<int>{}, scanvar_offset, true);
 
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      CARE_STREAM_LOOP(i, 1, end+1) {
+   if (very_verbose) {
+      CARE_SEQUENTIAL_LOOP(i, 1, end+1) {
          if (scan_var[i-1] != scan_var[i]) {
             printf("scan_var[%i] = %i\n", i, scan_var[i]);
          }
-      } CARE_STREAM_LOOP_END
+      } CARE_SEQUENTIAL_LOOP_END
    }
-#endif
-   // grab the outputs for the individual scans
-   CARE_STREAM_LOOP(i, 0, m_action_count) {
-#ifdef FUSER_VERBOSE
-      if (verbose) {
+   if (verbose) {
+      CARE_SEQUENTIAL_LOOP(i, 0, m_action_count) {
          printf("offsets[%i] = %i\n", i, offsets[i]);
-      }
-#endif
+      } CARE_SEQUENTIAL_LOOP_END
+   }
+   
+   // grab the outputs for the individual scans
+   CARE_STREAM_LOOP(i,0,m_action_count) {
       scan_pos_outputs[i] = scan_var[offsets[i]];
-#ifdef FUSER_VERBOSE
-      if (verbose) {
+   } CARE_STREAM_LOOP_END
+
+   if (verbose) {
+      care::gpuDeviceSynchronize(fileName, lineNumber);
+      CARE_SEQUENTIAL_LOOP(i,0,m_action_count) {
          printf("scan_pos_outputs[%i] = %i\n", i, scan_pos_outputs[i]);
-      }
-#endif
-   } CARE_STREAM_LOOP_END
-
+      } CARE_SEQUENTIAL_LOOP_END
+   }
+   
    // execute the loop body
-   CARE_STREAM_LOOP(i, 0, end) {
-      int index = i;
-      if (reverse_indices) {
-         // do indices in reverse order to discover any order dependencies between loops
-         // and possibly therefore debug GPU race conditions in debug CPU builds of the code.
-         index = end-1-i;
-      }
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
 
-      int actionIndex = care::binarySearch<int>(offsets, 0, action_count, index, true);
-
-      // find the start Index of the current group of scans
-      int startIndex = actionIndex;
-      while (scan_pos_starts[startIndex] == -999) {
-         --startIndex;
-      }
-      int scan_pos_start = scan_pos_starts[startIndex];
-
-      int scan_pos_offset = startIndex == 0 ? 0 : scan_pos_outputs[startIndex-1];
-      int pos = scan_var[index];
-      pos += scan_pos_start - scan_pos_offset;
-#ifdef FUSER_VERBOSE
-      if (verbose) {
-         printf("scan_var[%i] = %i, offset %i start %i startIndex %i\n", index, scan_var[index], scan_pos_offset, scan_pos_start, startIndex);
-         printf("launching scan action %i with index %i and pos %i \n", actionIndex, index, pos);
-      }
-#endif
-      actions[actionIndex](index, true, actionIndex, pos, -1);
-   } CARE_STREAM_LOOP_END
    // need to do a synchronize data so pinned memory reads are valid
-   care::syncIfNeeded();
+   care::gpuDeviceSynchronize(fileName,lineNumber);
 
    /* need to write the scan positions to the output destinations */
    /* each destination is computed */
@@ -347,119 +231,91 @@ void LoopFuser::flush_parallel_scans() {
       int pos = scan_pos_outputs[actionIndex];
       pos -= scan_pos_offset;
       *(m_pos_output_destinations[actionIndex].data()) += pos;
+      if (very_verbose) {
+         printf("actionIndex %i: scan_pos_offset %i scan_pos_output %i pos %i store %i \n",
+                 actionIndex, scan_pos_offset, scan_pos_outputs[actionIndex], pos, *(m_pos_output_destinations[actionIndex].data()));
+      }
    } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();
-}
-void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async) {
-#ifdef FUSER_VERBOSE
-   if (m_verbose) {
-      printf("in flush_counts_to_offsets_parallel_scans with %i,%i\n", m_action_count, m_max_action_length);
+
+   if (verbose) {
+      printf("done with flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
-#endif
-   SerializableDeviceLambda<int> *actions = m_actions;
-   SerializableDeviceLambda<bool> *conditionals = m_conditionals;
+   // async is true because we just synchronized
+   reset(true, fileName, lineNumber);
+}
+
+
+void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
+   if (verbose) {
+     printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
+   }
    const int * offsets = (const int *)m_action_offsets;
 
    int end = m_action_offsets[m_action_count-1];
-   int action_count = m_action_count;
 
    care::host_device_ptr<int> scan_var(end, "scan_var");
-#ifdef FUSER_VERBOSE
-   bool verbose = m_verbose;
-   if (verbose) {
-      CARE_STREAM_LOOP(actionIndex, 0, action_count) {
-         printf("offsets[%i] = %i\n", actionIndex, offsets[actionIndex]);
-      } CARE_STREAM_LOOP_END
+   
+   action_workgroup aw = m_actions.instantiate();
+   action_worksite aws = aw.run(scan_var.data(chai::GPU, true), fusible_registers{});
+   
+   if (very_verbose) {
+      CARE_SEQUENTIAL_LOOP(i, 0, end) {
+         if (scan_var[i] == 1) {
+            printf("scan_var[%i] = %i\n", i, scan_var[i]);
+         }
+      } CARE_SEQUENTIAL_LOOP_END
+      printf("SCAN TO OFFSETS\n");
    }
-#endif
-   bool reverse_indices = m_reverse_indices;
-   CARE_STREAM_LOOP(i, 0, end) {
-      int index = i;
-      if (reverse_indices) {
-         // do indices in reverse order to discover any order dependencies between loops
-         // and possibly therefore debug GPU race conditions in debug CPU builds of the code.
-         index = end-1-i;
-      }
-      
-      int actionIndex = care::binarySearch<int>(offsets, 0, action_count, index, true);
-#ifdef FUSER_VERY_VERBOSE
-      if (verbose) {
-         printf("launching action %i with index %i \n", actionIndex, index);
-      }
-#endif
-      scan_var[index] = actions[actionIndex](index, true, actionIndex, -1, -1);
-#ifdef FUSER_VERY_VERBOSE
-      if (verbose ) {
-         printf("%i with index %i returned %i \n", actionIndex, index, scan_var[index]);
-      }
-#endif
-      
-   } CARE_STREAM_LOOP_END
-
    exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
-
-   CARE_STREAM_LOOP(i, 0, end) {
-      int index = i;
-      if (reverse_indices) {
-         // do indices in reverse order to discover any order dependencies between loops
-         // and possibly therefore debug GPU race conditions in debug CPU builds of the code.
-         index = end-1-i;
-      }
-      
-      int actionIndex = care::binarySearch<int>(offsets, 0, action_count, index, true);
-#ifdef FUSER_VERY_VERBOSE
-      if (verbose) {
-         printf("setting scan var using conditional %i with index %i offset %i\n", actionIndex, index, offsets[actionIndex]);
-      }
-#endif
-      int offset = actionIndex == 0 ? 0 : offsets[actionIndex-1];
-#ifdef FUSER_VERY_VERBOSE
-      if (verbose) {
-         printf("new offset %i\n", offset);
-         printf("LOOPFUSER::scan_var[%i] = %i\n", i, scan_var[index]-scan_var[offset]);
-      }
-#endif
-      conditionals[actionIndex](index,true,scan_var[index]-scan_var[offset],-1,-1);
-   } CARE_STREAM_LOOP_END
-
-   if (!async) {
-      // need to do a synchronize data so subsequent writes to this fuser's buffers do not overlap with zero copy reads.
-      // If async is on, programmer takes responsibility for ensuring this does not happen.
-      care::syncIfNeeded();
+   if (very_verbose) {
+      CARE_SEQUENTIAL_LOOP(i, 1, end) {
+         if (scan_var[i-1] != scan_var[i]) {
+            printf("scan_var[%i] = %i\n", i, scan_var[i]);
+         }
+      } CARE_SEQUENTIAL_LOOP_END
    }
+
+   conditional_workgroup cw = m_conditionals.instantiate();
+   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});
+
 
    scan_var.free();
+   if (verbose) {
+     printf("done with flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
+   }
+   reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flushActions(bool async) {
-#ifdef FUSER_VERBOSE
-   printf("Loop fuser flushActions\n");
-#endif
+void LoopFuser::flushActions(bool async, const char * fileName, int lineNumber) {
+   if (verbose) {
+      printf("Loop fuser flushActions\n");
+   }
    if (m_action_count > 0) {
       if (m_is_scan) {
-#ifdef FUSER_VERBOSE
-         printf("loop fuser flush parallel scans\n");
-#endif
-         flush_parallel_scans();
+         if (verbose) {
+            printf("loop fuser flush parallel scans\n");
+         }
+         flush_parallel_scans(fileName, lineNumber);
       }
       else if (m_is_counts_to_offsets_scan) {
-#ifdef FUSER_VERBOSE
-         printf("loop fuser flush counts to offsets scans\n");
-#endif
-         flush_parallel_counts_to_offsets_scans(async);
+         if (verbose) {
+            printf("loop fuser flush counts to offsets scans\n");
+         }
+         flush_parallel_counts_to_offsets_scans(async, fileName, lineNumber);
       }
       else {
          if (m_preserve_action_order) {
-#ifdef FUSER_VERBOSE
-            printf("loop fuser flush order preserving actions\n");
-#endif
-            flush_order_preserving_actions(async);
+            if (verbose) {
+               printf("loop fuser flush order preserving actions\n");
+            }
+            flush_order_preserving_actions(async, fileName, lineNumber);
          }
          else {
-#ifdef FUSER_VERBOSE
-            printf("loop fuser flush parallel actions\n");
-#endif
-            flush_parallel_actions(async);
+            if (verbose) {
+               printf("loop fuser flush parallel actions\n");
+            }
+            flush_parallel_actions(async, fileName, lineNumber);
          }
       }
    }
@@ -467,7 +323,6 @@ void LoopFuser::flushActions(bool async) {
       arr.free();
    }
    m_to_be_freed.clear();
-   reset(async);
 }
 
 #endif
