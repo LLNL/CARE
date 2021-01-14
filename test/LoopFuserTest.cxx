@@ -58,7 +58,7 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 }
 
 GPU_TEST(TestPacker, packFixedRange) {
-   LoopFuser * packer = LoopFuser::getInstance();
+   LoopFuser<64> * packer = LoopFuser<64>::getInstance();
    packer->startRecording();
   
    int arrSize = 1024;
@@ -73,8 +73,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int const*, int, fusible_registers) { },
-                          [=] CARE_DEVICE(int i, int *, fusible_registers) {
+                          [=] CARE_DEVICE(int, int *, int const*, int, LoopFuser<64>::fusible_registers) { },
+                          [=] CARE_DEVICE(int i, int *, LoopFuser<64>::fusible_registers) {
       dst[pos+i] = src[i];
    });
 
@@ -127,12 +127,12 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    int pos = 0;
 
    {
-      auto __fuser__ = LoopFuser::getInstance();
+      auto __fuser__ = LoopFuser<64>::getInstance();
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
       __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, fusible_registers){ },
-                                [=] FUSIBLE_DEVICE(int i, int *, fusible_registers) {
+                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, LoopFuser<64>::fusible_registers){ },
+                                [=] FUSIBLE_DEVICE(int i, int *, LoopFuser<64>::fusible_registers) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
@@ -336,14 +336,16 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
-   LoopFuser::getInstance()->setVerbose(true);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(true);
 
    int a_pos = 0;
    int b_pos = 0;
    int ab_pos = 0;
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, a_pos, A[i] == 1) {
       A_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, a_pos)
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, b_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, b_pos)
@@ -352,7 +354,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
 
    FUSIBLE_LOOPS_STOP
-   LoopFuser::getInstance()->setVerbose(false);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(false);
 
    // sum up the results of the scans
    RAJAReduceSum<int> sumA(0);
@@ -577,7 +579,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
-   LoopFuser::getInstance()->setVerbose(true);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(true);
 
    FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(i, 0, arrSize, A) {
       A[i] = 2;
@@ -588,7 +590,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(i, arrSize, B)
 
    FUSIBLE_LOOPS_STOP
-   LoopFuser::getInstance()->setVerbose(false);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(false);
 
    //  check answer
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize*2) {

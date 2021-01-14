@@ -40,9 +40,10 @@ bool operator!=(umpire::TypedAllocator<T> const& lhs, umpire::TypedAllocator<U> 
 #include "care/scan.h"
 #include "care/Setup.h"
 
-CARE_DLL_API int LoopFuser::non_scan_store = 0;
-CARE_DLL_API bool LoopFuser::verbose = false;
-CARE_DLL_API bool LoopFuser::very_verbose = false;
+CARE_DLL_API int FusedActions::non_scan_store = 0;
+CARE_DLL_API bool FusedActions::verbose = false;
+CARE_DLL_API bool FusedActions::very_verbose = false;
+
 CARE_DLL_API std::vector<FusedActionsObserver *> FusedActionsObserver::allObservers{};
 
 static FusedActionsObserver * defaultObserver = new FusedActionsObserver();
@@ -68,7 +69,8 @@ CARE_DLL_API void FusedActionsObserver::cleanupAllFusedActions() {
    allObservers.clear();
 }
 
-CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
+template<int REGISTER_COUNT>
+CARE_DLL_API LoopFuser<REGISTER_COUNT>::LoopFuser(allocator a) : FusedActions(),
    m_allocator(a),
    m_max_action_length(0),
    m_reserved(0),
@@ -101,21 +103,25 @@ CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
       reserve(10*1024);
 }
 
-CARE_DLL_API LoopFuser * LoopFuser::getInstance() {
-   static LoopFuser * instance = nullptr;
+template<int REGISTER_COUNT>
+CARE_DLL_API LoopFuser<REGISTER_COUNT> * LoopFuser<REGISTER_COUNT>::getInstance() {
+   static LoopFuser<REGISTER_COUNT> * instance = nullptr;
    if (instance == nullptr) {
       instance = defaultObserver->getFusedActions<LoopFuser>(CARE_DEFAULT_PHASE);
    }
    return instance;
 }
 
-void LoopFuser::startRecording() {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::startRecording() {
    m_recording = true;  warnIfNotFlushed();
 }
 
-void LoopFuser::stopRecording() { m_recording = false;  }
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::stopRecording() { m_recording = false;  }
 
-CARE_DLL_API LoopFuser::~LoopFuser() {
+template<int REGISTER_COUNT>
+CARE_DLL_API LoopFuser<REGISTER_COUNT>::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
       m_allocator.deallocate((char *)m_action_offsets, m_totalsize);
@@ -126,7 +132,8 @@ CARE_DLL_API LoopFuser::~LoopFuser() {
    }
 }
 
-void LoopFuser::reserve(size_t size) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::reserve(size_t size) {
    static char * pinned_buf;
    m_totalsize = size*(sizeof(int)*3);
    pinned_buf = (char *)m_allocator.allocate(m_totalsize);
@@ -143,7 +150,8 @@ void LoopFuser::reserve(size_t size) {
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
-void LoopFuser::reset(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::reset(bool async, const char * fileName, int lineNumber) {
    m_action_count = 0;
    m_max_action_length = 0;
    m_prev_pos_output = nullptr;
@@ -168,7 +176,8 @@ void LoopFuser::reset(bool async, const char * fileName, int lineNumber) {
 }
 
 /*ensures any previous asynchronous launch from this fuser is done before proceeding. */
-void LoopFuser::waitIfNeeded() {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::waitIfNeeded() {
    if (m_wait_needed) {
       // ensure asynchronous launch from previous flush is done
       m_async_resource.wait_for(&m_wait_for_event);
@@ -181,13 +190,15 @@ void LoopFuser::waitIfNeeded() {
    }
 }
 
-void LoopFuser::warnIfNotFlushed() {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::warnIfNotFlushed() {
    if (m_action_count > 0) {
       std::cout << (void *)this<<" LoopFuser not flushed when expected." << std::endl;
    }
 }
 
-void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
    // Do the thing
    if (verbose) {
       printf("in flush_parallel_actions at %s:%i with %zu, %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length);
@@ -202,7 +213,9 @@ void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int li
    reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
+
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
    // Do the thing
    m_aw = m_actions.instantiate();
    m_aws = m_aw.run(nullptr, fusible_registers{});
@@ -212,7 +225,8 @@ void LoopFuser::flush_order_preserving_actions(bool async, const char * fileName
 }
 
 
-void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int lineNumber) {
    if (verbose) {
       printf("in flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
@@ -298,7 +312,8 @@ void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
 }
 
 
-void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
      printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
    }
@@ -339,7 +354,8 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
    reset(async, fileName, lineNumber);
 }
 
-void LoopFuser::flushActions(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT>
+void LoopFuser<REGISTER_COUNT>::flushActions(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
       printf("Loop fuser flushActions\n");
    }
@@ -376,5 +392,10 @@ void LoopFuser::flushActions(bool async, const char * fileName, int lineNumber) 
    }
    m_to_be_freed.clear();
 }
+
+template class LoopFuser<256>; 
+template class LoopFuser<128>; 
+template class LoopFuser<64>; 
+//template class LoopFuser<32>; 
 
 #endif
