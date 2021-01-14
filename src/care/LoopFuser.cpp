@@ -193,7 +193,7 @@ void LoopFuser<REGISTER_COUNT>::waitIfNeeded() {
 template<int REGISTER_COUNT>
 void LoopFuser<REGISTER_COUNT>::warnIfNotFlushed() {
    if (m_action_count > 0) {
-      std::cout << (void *)this<<" LoopFuser not flushed when expected." << std::endl;
+      std::cout << (void *)this<<" LoopFuser<"<< REGISTER_COUNT <<"> not flushed when expected." << std::endl;
    }
 }
 

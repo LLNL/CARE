@@ -63,7 +63,7 @@ CUDA_TEST(TestFuser, Initialization) {
    trigger_device_allocation.free();
    trigger_pinned_allocation.free();
    // initialize loop fuser
-   LoopFuser::getInstance();
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance();
 
    care::syncIfNeeded();
    printf("Initialized... Benchmarking Loop Fusion\n");
@@ -94,7 +94,7 @@ CUDA_TEST(TestFuser, OneMillionSmallFusedKernels) {
    int loopLength = 32;
    int_ptr a(loopLength,"a");
    int_ptr b(loopLength,"b");
-   LoopFuser::getInstance()->setVerbose(true);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(true);
    
    FUSIBLE_LOOPS_START 
    for (int i = 0; i < numLoops; ++i) {

@@ -1119,7 +1119,7 @@ void LoopFuser<REGISTER_COUNT>::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_REGISTER_ARGS __FILE__, __LINE__, __fusible_start_index__, __fusible_end_index__
 
 // conditional xargs to pass in to lambdas
-#define FUSIBLE_CONDITIONAL_XARGS int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__, fusible_registers
+#define FUSIBLE_CONDITIONAL_XARGS(REGISTER_COUNT) int * __fusible_scan_var__, index_type const * __fusible_scan_offsets__, LoopFuser<REGISTER_COUNT>::fusible_registers
 #define FUSIBLE_ALWAYS_TRUE(INDEX, REGISTER_COUNT) [=] FUSIBLE_DEVICE(index_type INDEX, int * __fusible_scan_var__, index_type const *, int, LoopFuser<REGISTER_COUNT>::fusible_registers) { FUSIBLE_INDEX_ADJUST(INDEX);  __fusible_scan_var__[__fusible_global_index__] = true; }
 // actions xargs to pass in to lambdas
 #define FUSIBLE_ACTION_XARGS(REGISTER_COUNT) index_type *, LoopFuser<REGISTER_COUNT>::fusible_registers 
@@ -1147,8 +1147,8 @@ void LoopFuser<REGISTER_COUNT>::registerFree(care::host_device_ptr<T> & array) {
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(__FILE__, __LINE__, 0, 1, __fusible_scan_pos__, \
-                             FUSIBLE_ALWAYS_TRUE(__i__), \
-                             [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS)->int {
+                             FUSIBLE_ALWAYS_TRUE(__i__, REGISTER_COUNT), \
+                             [=] FUSIBLE_DEVICE(int, FUSIBLE_ACTION_XARGS(REGISTER_COUNT))->int {
 
 #define FUSIBLE_KERNEL FUSIBLE_KERNEL_R(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
@@ -1185,7 +1185,7 @@ void LoopFuser<REGISTER_COUNT>::registerFree(care::host_device_ptr<T> & array) {
 #define FUSIBLE_KERNEL_R_END return 0;}); }
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
-#define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_END_R
+#define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
 
