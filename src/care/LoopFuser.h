@@ -774,8 +774,6 @@ class LoopFuser : public FusedActions {
        using EventType = RAJA::resources::Event;
        EventType m_wait_for_event;
 
-      //RAJA::resources::Event m_wait_for_event;
-
       ///
       /// whether we are waiting for an active event
       ///
