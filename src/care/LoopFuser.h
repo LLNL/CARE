@@ -290,6 +290,7 @@ protected:
 
 
 using allocator = umpire::TypedAllocator<char>;
+
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson
 /// @brief The observer of FusesActions. Any FusedActions that is
@@ -662,6 +663,7 @@ class LoopFuser : public FusedActions {
 
       void setReverseIndices(bool reverse) { m_reverse_indices = reverse; }
 
+      void waitIfNeeded();
 
    private:
       ///
@@ -699,9 +701,30 @@ class LoopFuser : public FusedActions {
       conditional_workpool m_conditionals;
       
       ///
+      /// conditional workgroup
+      ///
+      conditional_workgroup m_cw;
+
+      ///
+      /// worksite for conditional workpool
+      ///
+      conditional_worksite m_cws;
+
+      ///
       /// container of action serialized lambdas
       ///
       action_workpool m_actions;
+
+      ///
+      /// action workgroup
+      ///
+      action_workgroup m_aw;
+
+
+      ///
+      /// worksite for action workpool
+      ///
+      action_worksite m_aws;
       
       ///
       /// Type of scan (0 = no scan, 1 = regular scan, 2 = counts_to_offsets scan)
@@ -738,6 +761,23 @@ class LoopFuser : public FusedActions {
       /// collection of arrays to be freed after a flush
       ///
       std::vector<care::host_device_ptr<char>> m_to_be_freed;
+
+      ///
+      /// resource whose stream we will use for asynchronous events.
+      ///
+      using StreamResource = RAJA::resources::get_resource<RAJADeviceExec>::type;
+      StreamResource m_async_resource;
+
+      ///
+      /// Event that we will use for asynchronous events.
+      ///
+       using EventType = RAJA::resources::Event;
+       EventType m_wait_for_event;
+
+      ///
+      /// whether we are waiting for an active event
+      ///
+      bool m_wait_needed = false;
 };
 
 
@@ -776,6 +816,7 @@ void LoopFuser::registerAction(const char * fileName, int lineNumber, int start,
          if (verbose) {
             printf("%p: Registering action %i type %i with start %i and end %i\n", this, m_action_count, scan_type, start, end);
          }
+         waitIfNeeded();
          m_actions.enqueue(RAJA::RangeSegment(0,length), action);
          m_conditionals.enqueue(RAJA::RangeSegment(0,length), conditional);
 

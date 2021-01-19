@@ -7,6 +7,28 @@
 
 #define GPU_ACTIVE
 
+
+// Loop Fuser uses the CUDA/HIP default stream and wants to enqueue events in the default stream
+#define CAMP_USE_PLATFORM_DEFAULT_STREAM 1
+
+#include "umpire/Allocator.hpp"
+#include "umpire/TypedAllocator.hpp"
+
+// TODO: when umpire is updated, you should get duplicate defines of this. Feel free to delete
+// with a vengeance.
+template <typename T, typename U>
+bool operator==(umpire::TypedAllocator<T> const&, umpire::TypedAllocator<U> const&)
+{
+  return true;
+}
+
+template <typename T, typename U>
+bool operator!=(umpire::TypedAllocator<T> const& lhs, umpire::TypedAllocator<U> const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+
 // CARE config header
 #include "care/config.h"
 
@@ -53,11 +75,18 @@ CARE_DLL_API LoopFuser::LoopFuser(allocator a) : FusedActions(),
    m_totalsize(0),
    m_action_offsets(nullptr),
    m_conditionals(a),
-   m_actions(a), 
+   m_cw(m_conditionals.instantiate()),
+   m_cws(m_cw.run(nullptr, nullptr, -1, fusible_registers{})),
+   m_actions(a),
+   m_aw(m_actions.instantiate()),
+   m_aws(m_aw.run(nullptr, fusible_registers{})),
    m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
-   m_reverse_indices(false) {
+   m_reverse_indices(false),
+   m_async_resource(RAJA::resources::get_default_resource<RAJADeviceExec>()),
+   m_wait_for_event(),
+   m_wait_needed(false) {
 
       // Supports fusing up to 10k loops of average lambda size of 256 bytes
       // will flush if we exceed the 10k count or if the lambda size requirements
@@ -124,9 +153,32 @@ void LoopFuser::reset(bool async, const char * fileName, int lineNumber) {
    // get reused for the next one. (Yes, this was a very fun race condition to find).
    if (!async) {
       care::gpuDeviceSynchronize(fileName, lineNumber);
+      // clear out the workgroups and worksites now that their work is done
+      m_aw.clear();
+      m_cw.clear();
+      m_aws.clear();
+      m_cws.clear();
+   }
+   else {
+      m_wait_for_event = RAJA::resources::EventProxy<StreamResource>(&m_async_resource);
+      m_wait_needed = true;
    }
    m_conditionals.reserve(m_reserved, 256*m_reserved);
    m_actions.reserve(m_reserved, 256*m_reserved);
+}
+
+/*ensures any previous asynchronous launch from this fuser is done before proceeding. */
+void LoopFuser::waitIfNeeded() {
+   if (m_wait_needed) {
+      // ensure asynchronous launch from previous flush is done
+      m_async_resource.wait_for(&m_wait_for_event);
+      // clear out our worksites now that their work is done
+      m_aw.clear();
+      m_cw.clear();
+      m_aws.clear();
+      m_cws.clear();
+      m_wait_needed = false;
+   }
 }
 
 void LoopFuser::warnIfNotFlushed() {
@@ -140,8 +192,8 @@ void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int li
    if (verbose) {
       printf("in flush_parallel_actions at %s:%i with %zu, %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length);
    }
-   action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(nullptr, fusible_registers{});
+   m_aw = m_actions.instantiate();
+   m_aws = m_aw.run(nullptr, fusible_registers{});
    // this resets m_conditionals, which we will never need to run
    m_conditionals.clear();
    if (verbose) {
@@ -152,8 +204,8 @@ void LoopFuser::flush_parallel_actions(bool async, const char * fileName, int li
 
 void LoopFuser::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
    // Do the thing
-   action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(nullptr, fusible_registers{});
+   m_aw = m_actions.instantiate();
+   m_aws = m_aw.run(nullptr, fusible_registers{});
    // this resets m_conditionals, don't run them.
    m_conditionals.clear();
    reset(async, fileName, lineNumber);
@@ -178,8 +230,8 @@ void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
    // the xarg input to the conditional is the bulk scan var the conditional needs to initialize 
    care::host_device_ptr<int> scan_var(end+1, "scan_var");
    // this will fill scan_var up from the fused conditionals 
-   conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, fusible_registers{});
+   m_cw = m_conditionals.instantiate();
+   m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, fusible_registers{});
 
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 0, end+1) {
@@ -218,8 +270,8 @@ void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
    }
    
    // execute the loop body
-   action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
+   m_aw = m_actions.instantiate();
+   m_aws = m_aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
 
    // need to do a synchronize data so pinned memory reads are valid
    care::gpuDeviceSynchronize(fileName,lineNumber);
@@ -256,8 +308,8 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
 
    care::host_device_ptr<int> scan_var(end, "scan_var");
    
-   action_workgroup aw = m_actions.instantiate();
-   action_worksite aws = aw.run(scan_var.data(chai::GPU, true), fusible_registers{});
+   m_aw = m_actions.instantiate();
+   m_aws = m_aw.run(scan_var.data(chai::GPU, true), fusible_registers{});
    
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 0, end) {
@@ -276,8 +328,8 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
       } CARE_SEQUENTIAL_LOOP_END
    }
 
-   conditional_workgroup cw = m_conditionals.instantiate();
-   conditional_worksite cws = cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});
+   m_cw = m_conditionals.instantiate();
+   m_cws = m_cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});
 
 
    scan_var.free();
