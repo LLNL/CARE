@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+
 #include "care/config.h"
 
 #if CARE_ENABLE_LOOP_FUSER
@@ -19,7 +20,13 @@
 #define CARE_DEBUG 1
 #include "gtest/gtest.h"
 
+// define if we want to test running loops as we encounter them
+//#define CARE_FUSIBLE_LOOPS_DISABLE
+// define if we want to turn on verbosity
+//#define FUSER_VERBOSE
+
 #include "care/LoopFuser.h"
+
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
@@ -53,7 +60,7 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 GPU_TEST(TestPacker, packFixedRange) {
    LoopFuser * packer = LoopFuser::getInstance();
    packer->startRecording();
-
+  
    int arrSize = 1024;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
@@ -65,13 +72,10 @@ GPU_TEST(TestPacker, packFixedRange) {
    } CARE_SEQUENTIAL_LOOP_END
 
    int pos = 0;
-   packer->registerAction(0, arrSize, pos,
-                          [=] CARE_DEVICE(int, bool, int, int, int) {
-      return true;
-   },
-                          [=] CARE_DEVICE(int i, bool, int, int, int) {
+   packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
+                          [=] CARE_DEVICE(int, int *, int const*, int, fusible_registers) { },
+                          [=] CARE_DEVICE(int i, int *, fusible_registers) {
       dst[pos+i] = src[i];
-      return 0;
    });
 
    // pack has not been flushed, so
@@ -86,7 +90,7 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    packer->flushActions();
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
@@ -126,9 +130,9 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fuser__ = LoopFuser::getInstance();
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
-      __fuser__->registerAction(0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, bool, int, int, int)->bool { return true; },
-                                [=] FUSIBLE_DEVICE(int i, bool, int, int, int) {
+      __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
+                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, fusible_registers){ },
+                                [=] FUSIBLE_DEVICE(int i, int *, fusible_registers) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
@@ -137,7 +141,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       });
    }
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    // pack should  not have happened yet so
    // host data should not be updated yet
@@ -195,16 +199,18 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       dst[pos+i] = src[i+pos]*2;
    } FUSIBLE_LOOP_STREAM_END
 
-   care::gpuDeviceSynchronize();
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    // pack should  not have happened yet so
    // host data should not be updated yet
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE 
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
    for (int i = 0; i < arrSize; ++i) {
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }
+#endif
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, dst[i] should now be i
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize/2) {
@@ -279,16 +285,18 @@ GPU_TEST(orderDependent, basic_test) {
       A[i] = 0;
       B[i] = 0;
    } CARE_STREAM_LOOP_END
-   FUSIBLE_LOOPS_PRESERVE_ORDER_START
+   // Note - this use to test PRESERVE_ORDER but that implementation was pretty flawed,
+   // prefer to use PHASES instead. 
+   FUSIBLE_LOOPS_START
    for (int t = 0; t < timesteps; ++t) {
-      FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
+      FUSIBLE_LOOP_PHASE(i, 0, arrSize, t) {
          if (t %2 == 0) {
             A[i] = (A[i] + 1)<<t;
          }
          else {
             A[i] = (A[i] + 1)>>t;
          }
-      } FUSIBLE_LOOP_STREAM_END
+      } FUSIBLE_LOOP_PHASE_END
       // do the same thing, but as separate kernels in a sequence
       CARE_STREAM_LOOP(i, 0, arrSize) {
          if (t %2 == 0) {
@@ -676,11 +684,13 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
             B[i] = (B[i] + 1)>>t;
          }
       } CARE_STREAM_LOOP_END
+#ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
+#endif
       /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
        * won't update them, so we need to mark A and C as touched on the device
        * so we get fresh data after the flush */

@@ -293,19 +293,13 @@ namespace care {
 /// @brief Convenience function for calling cuda or hip DeviceSynchronize,
 ///        depending on the context.
 ////////////////////////////////////////////////////////////////////////////////
+CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber) {
 #if defined(__CUDACC__)
-   inline cudaError_t gpuDeviceSynchronize() {
-      return ::cudaDeviceSynchronize();
-   }
+   care::gpuAssert( ::cudaDeviceSynchronize(), fileName, lineNumber);
 #elif defined(__HIPCC__)
-   inline hipError_t gpuDeviceSynchronize() {
-      return ::hipDeviceSynchronize();
-   }
-#else
-   inline int gpuDeviceSynchronize() {
-      return 0;
-   }
+   care::gpuAssert( ::hipDeviceSynchronize(), fileName, lineNumber); 
 #endif
+}
 
 // various GPU wrappers, only needed for GPU compiles
 #if defined (CARE_GPUCC)

@@ -5,3 +5,4 @@ build*
 */x64/*/
 *.aps
 *.orig
+*.vscode

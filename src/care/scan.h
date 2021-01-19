@@ -188,6 +188,7 @@ void getFinalScanCount(chai::ManagedArray<globalID> scanvar, int length, globalI
          if (EXPR) { \
             const int SCANINDX = SCANVARNAME(SCANINDX)++;
 
+
 #define SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(scan_loop_check) \
    SCANLENGTH = SCANVARNAME(SCANINDX); \
@@ -200,6 +201,7 @@ void getFinalScanCount(chai::ManagedArray<globalID> scanvar, int length, globalI
 
 #if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
 // scan var is an managed array of ints
+
 using ScanVar = chai::ManagedArray<int>;
 
 #if CARE_HAVE_LLNL_GLOBALID
@@ -255,8 +257,8 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
          if (INDX == SCANVARENDNAME(SCANINDX) -1) { \
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
-         if (EXPR) { \
-            const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)];
+         const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]; \
+         if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
 
 #define SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_check) \
@@ -278,8 +280,8 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
          if (INDX == SCANVARENDNAME(SCANINDX)-1) { \
             SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
          } \
-         if (EXPR) { \
-            const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]);
+         const globalID SCANINDX = globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]); \
+         if (SCANINDX != globalID(SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1])) {
 
 #define SCAN_LOOP_GID_END(END, SCANINDX, SCANLENGTH) } \
    } CARE_CHECKED_PARALLEL_LOOP_END(scan_loop_gid_check) \
