@@ -124,9 +124,9 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<T>& ar
  * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
  *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
-CARE_INLINE void IntersectArrays(RAJAExec,
+CARE_INLINE void IntersectArrays(RAJADeviceExec,
                                  care::host_device_ptr<const T> arr1, int size1, int start1,
                                  care::host_device_ptr<const T> arr2, int size2, int start2,
                                  care::host_device_ptr<int> &matches1,
@@ -196,7 +196,7 @@ CARE_INLINE void IntersectArrays(RAJAExec,
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
-   exclusive_scan<int, RAJAExec>(matched, nullptr, smaller + 1, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJAExec{}, matched, nullptr, smaller + 1, 0, true);
 
    CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {
@@ -228,7 +228,7 @@ CARE_INLINE void IntersectArrays(RAJAExec,
 }
 
 template <typename T>
-CARE_INLINE void IntersectArrays(RAJAExec exec,
+CARE_INLINE void IntersectArrays(RAJADeviceExec exec,
                                  care::host_device_ptr<T> arr1, int size1, int start1,
                                  care::host_device_ptr<T> arr2, int size2, int start2,
                                  care::host_device_ptr<int> &matches1,
@@ -242,7 +242,7 @@ CARE_INLINE void IntersectArrays(RAJAExec exec,
                       numMatches);
 }
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
@@ -504,7 +504,7 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
    return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
 }
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 /************************************************************************
  * Function  : uniqArray
  * Author(s) : Peter Robinson
@@ -512,7 +512,7 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
  *             scan.
   ************************************************************************/
 template <typename T>
-CARE_INLINE void uniqArray(RAJAExec, care::host_device_ptr<T>  Array, size_t len,
+CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size_t len,
                            care::host_device_ptr<T> & outArray, int & outLen, bool noCopy)
 {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
@@ -521,7 +521,7 @@ CARE_INLINE void uniqArray(RAJAExec, care::host_device_ptr<T>  Array, size_t len
       uniq[i] = (int) ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) ;
    } CARE_STREAM_LOOP_END
 
-   exclusive_scan<int, RAJAExec>(uniq, nullptr, len+1, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJADeviceExec{}, uniq, nullptr, len+1, 0, true);
    int numUniq;
    uniq.pick(len, numUniq);
    care::host_device_ptr<T> & tmp = outArray;
@@ -543,7 +543,7 @@ CARE_INLINE void uniqArray(RAJAExec, care::host_device_ptr<T>  Array, size_t len
  *             scan.
   ************************************************************************/
 template <typename T>
-CARE_INLINE int uniqArray(RAJAExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
+CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
 {
    care::host_device_ptr<T> tmp;
    int newLen;
@@ -559,7 +559,7 @@ CARE_INLINE int uniqArray(RAJAExec exec, care::host_device_ptr<T> & Array, size_
    return newLen;
 }
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 /************************************************************************
  * Function  : uniqArray
@@ -571,7 +571,7 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
                            care::host_device_ptr<T> & outArray, int & newLen)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
-   T * rawData = getter.getRawArrayData(Array);
+   auto * rawData = getter.getRawArrayData(Array);
    newLen = 0 ;
    care::host_ptr<T> arrout = nullptr ;
    outArray = nullptr;
@@ -585,10 +585,10 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
 
       while (i < len) {
          /* copy the unique value into the array */
-         arrout[newLen] = rawData[i] ;
+         arrout[newLen] = (T)rawData[i] ;
 
          /* skip over all the redundant elements */
-         while ((i<len) && (rawData[i] == arrout[newLen])) {
+         while ((i<len) && ((T)rawData[i] == arrout[newLen])) {
             i++ ;
          }
 
@@ -711,7 +711,7 @@ template <typename T>
 CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
-   T * rawData = getter.getRawArrayData(Array)+start;
+   auto * rawData = getter.getRawArrayData(Array)+start;
    std::sort(rawData, rawData+len);
    noCopy = noCopy ;
 }
@@ -720,7 +720,7 @@ template <typename T>
 CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
-   T * rawData = getter.getRawArrayData(Array);
+   auto * rawData = getter.getRawArrayData(Array);
    std::sort(rawData, rawData+len);
 }
 
@@ -754,9 +754,9 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
 *           : Note also that it's a error if any index in removed is
 *           : not found (beyond the end of arr).
 **************************************************************************/
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
-CARE_INLINE void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, const int arrLen,
+CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> removed, const int removedLen, bool noCopy)
 {
    //GPU VERSION
@@ -783,7 +783,7 @@ CARE_INLINE void CompressArray(RAJAExec exec, care::host_device_ptr<T> & arr, co
    }
 }
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 /************************************************************************
 * Function  : CompressArray<T>
@@ -925,9 +925,9 @@ CARE_INLINE void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> arr
    }
 }
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
-CARE_INLINE void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array,
+CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> array,
                                     care::host_device_ptr<int const> indexSet, int length)
 {
    if (length > 0) {
@@ -941,7 +941,7 @@ CARE_INLINE void ExpandArrayInPlace(RAJAExec, care::host_device_ptr<T> array,
    }
 }
 
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 /************************************************************************
  * Function  : fill_n

@@ -242,7 +242,7 @@ void LoopFuser::flush_parallel_scans(const char * fileName, int lineNumber) {
       printf("SCAN\n");
    }
    int scanvar_offset = 0;
-   exclusive_scan<int, RAJAExec>(scan_var, nullptr, end+1, RAJA::operators::plus<int>{}, scanvar_offset, true);
+   care::exclusive_scan(RAJAExec{}, scan_var, nullptr, end+1, scanvar_offset, true);
 
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 1, end+1) {
@@ -319,7 +319,7 @@ void LoopFuser::flush_parallel_counts_to_offsets_scans(bool async, const char * 
       } CARE_SEQUENTIAL_LOOP_END
       printf("SCAN TO OFFSETS\n");
    }
-   exclusive_scan<int, RAJAExec>(scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJAExec{}, scan_var, nullptr, end, RAJA::operators::plus<int>{}, 0, true);
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 1, end) {
          if (scan_var[i-1] != scan_var[i]) {

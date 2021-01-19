@@ -215,7 +215,7 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, con
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
 void IntersectArrays(RAJADeviceExec exec,
                      care::host_device_ptr<const T> arr1, int size1, int start1,
@@ -229,7 +229,7 @@ void IntersectArrays(RAJADeviceExec exec,
                      care::host_device_ptr<T> arr2, int size2, int start2,
                      care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                      int *numMatches);
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 template <typename T>
 void IntersectArrays(RAJA::seq_exec,
@@ -284,12 +284,12 @@ template <typename T>
 void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_t len, care::host_device_ptr<T> & outArray, int & newLen);
 template <typename T>
 int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
 void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size_t len, care::host_device_ptr<T> & outArray, int & outLen, bool noCopy=false);
 template <typename T>
 int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 template <typename T, typename Exec>
 void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy = false);
@@ -297,11 +297,11 @@ void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy 
 template <typename T>
 void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
 void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 template <typename T>
 void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
@@ -317,10 +317,10 @@ CARE_HOST_DEVICE void uniqLocal(care::local_ptr<T> array, int& len);
 
 template <typename T>
 void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> array, care::host_device_ptr<int const> indexSet, int length);
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 template <typename T>
 void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> array, care::host_device_ptr<int const> indexSet, int length);
-#endif // defined(RAJA_PARALLEL_ACTIVE)
+#endif // defined(CARE_GPUCC)
 
 } // end namespace care
 

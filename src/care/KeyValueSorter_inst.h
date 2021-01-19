@@ -4,6 +4,10 @@
 // CARE_INSTANTIATE defined. All other compilation units should include it
 // without CARE_INSTANTIATE set.
 
+#ifndef CARE_TEMPLATE_ARRAY_TYPE
+#error "CARE_TEMPLATE_ARRAY_TYPE must be defined"
+#endif
+
 #include "care/KeyValueSorter_decl.h"
 
 #ifdef CARE_EXTERN
@@ -28,7 +32,7 @@ namespace care {
 
    CARE_EXTERN template CARE_DLL_API void IntersectKeyValueSorters(RAJA::seq_exec, KeyValueSorter<CARE_TEMPLATE_ARRAY_TYPE, RAJA::seq_exec>, int, KeyValueSorter<CARE_TEMPLATE_ARRAY_TYPE, RAJA::seq_exec>, int, host_device_ptr<int> &, host_device_ptr<int>&, int &);
 
-#ifdef RAJA_PARALLEL_ACTIVE
+#ifdef CARE_GPUCC
 
    CARE_EXTERN template CARE_DLL_API void setKeyValueArraysFromArray(host_device_ptr<size_t> &, host_device_ptr<CARE_TEMPLATE_ARRAY_TYPE> &, const size_t, const CARE_TEMPLATE_ARRAY_TYPE*);
    CARE_EXTERN template CARE_DLL_API void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> &, host_device_ptr<CARE_TEMPLATE_ARRAY_TYPE> &, const size_t, const host_device_ptr<const CARE_TEMPLATE_ARRAY_TYPE>&);
@@ -39,10 +43,9 @@ namespace care {
 
    CARE_EXTERN template CARE_DLL_API void IntersectKeyValueSorters(RAJADeviceExec, KeyValueSorter<CARE_TEMPLATE_ARRAY_TYPE, RAJADeviceExec>, int, KeyValueSorter<CARE_TEMPLATE_ARRAY_TYPE, RAJADeviceExec>, int, host_device_ptr<int> &, host_device_ptr<int>&, int &);
 
-#endif // RAJA_PARALLEL_ACTIVE
+#endif // defined(CARE_GPUCC)
 
 } // namespace care
 
-#ifdef CARE_TEMPLATE_ARRAY_TYPE
 #undef CARE_TEMPLATE_ARRAY_TYPE
-#endif
+

@@ -276,7 +276,7 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
-   exclusive_scan<int, RAJADeviceExec>(matched, nullptr, smaller+1, RAJA::operators::plus<int>{}, 0, true);
+   care::exclusive_scan(RAJADeviceExec{}, matched, nullptr, smaller+1, 0, true);
 
    CARE_STREAM_LOOP(i, 0, smaller) {
       if (searches[i] > -1) {

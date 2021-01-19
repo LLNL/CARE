@@ -48,6 +48,7 @@ set(care_headers
     care.h
     RAJAPlugin.h
     scan.h
+    scan_impl.h
     Setup.h
     single_access_ptr.h
     util.h
@@ -58,6 +59,7 @@ set(care_sources
     CHAICallback.cpp
     LoopFuser.cpp
     RAJAPlugin.cpp
+    scan.cpp
     )
 
 if(CARE_ENABLE_EXTERN_INSTANTIATE)
