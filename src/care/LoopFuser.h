@@ -1207,9 +1207,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 #define FUSIBLE_LOOPS_FENCEPOST { \
    int __fusible_action_count__ = LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()->size(); \
-   int __fusible_action_count__ = LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()->size(); \
-   int __fusible_action_count__ = LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()->size(); \
-   int __fusible_action_count__ = LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()->size(); \
+   __fusible_action_count__ += LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()->size(); \
+   __fusible_action_count__ += LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()->size(); \
+   __fusible_action_count__ += LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()->size(); \
    if (__fusible_action_count__ > 0) { \
       std::cout << __FILE__ << "FUSIBLE_FENCEPOST reached before FUSIBLE_LOOPS_STOP occurred!" << std::endl; \
    } \
@@ -1244,7 +1244,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 #define FUSIBLE_LOOP_SCAN_PHASE_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY, REGISTER_COUNT) \
-   _FUSIBLE_LOOP_SCAN_R(FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>>(PRIORITY), \
+   _FUSIBLE_LOOP_SCAN_R(FusedActionsObserver::getActiveObserver()->getFusedActions<LOOPFUSER(REGISTER_COUNT)>(PRIORITY), \
                         INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT)
 
 #define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY) \
