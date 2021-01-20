@@ -69,8 +69,8 @@ CARE_DLL_API void FusedActionsObserver::cleanupAllFusedActions() {
    allObservers.clear();
 }
 
-template<int REGISTER_COUNT>
-CARE_DLL_API LoopFuser<REGISTER_COUNT>::LoopFuser(allocator a) : FusedActions(),
+template<int REGISTER_COUNT, typename...XARGS>
+CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...>::LoopFuser(allocator a) : FusedActions(),
    m_allocator(a),
    m_max_action_length(0),
    m_reserved(0),
@@ -78,10 +78,10 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT>::LoopFuser(allocator a) : FusedActions(),
    m_action_offsets(nullptr),
    m_conditionals(a),
    m_cw(m_conditionals.instantiate()),
-   m_cws(m_cw.run(nullptr, nullptr, -1, fusible_registers{})),
+   m_cws(m_cw.run(nullptr, nullptr, -1, XARGS{}...)),
    m_actions(a),
    m_aw(m_actions.instantiate()),
-   m_aws(m_aw.run(nullptr, fusible_registers{})),
+   m_aws(m_aw.run(nullptr, XARGS{}...)),
    m_scan_type(0),
    m_scan_pos_outputs(nullptr),
    m_scan_pos_starts(nullptr),
@@ -103,25 +103,25 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT>::LoopFuser(allocator a) : FusedActions(),
       reserve(10*1024);
 }
 
-template<int REGISTER_COUNT>
-CARE_DLL_API LoopFuser<REGISTER_COUNT> * LoopFuser<REGISTER_COUNT>::getInstance() {
-   static LoopFuser<REGISTER_COUNT> * instance = nullptr;
+template<int REGISTER_COUNT, typename...XARGS>
+CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...> * LoopFuser<REGISTER_COUNT,XARGS...>::getInstance() {
+   static LoopFuser<REGISTER_COUNT,XARGS...> * instance = nullptr;
    if (instance == nullptr) {
-      instance = defaultObserver->getFusedActions<LoopFuser>(CARE_DEFAULT_PHASE);
+      instance = defaultObserver->getFusedActions<LoopFuser<REGISTER_COUNT, XARGS...>>(CARE_DEFAULT_PHASE);
    }
    return instance;
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::startRecording() {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording() {
    m_recording = true;  warnIfNotFlushed();
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::stopRecording() { m_recording = false;  }
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::stopRecording() { m_recording = false;  }
 
-template<int REGISTER_COUNT>
-CARE_DLL_API LoopFuser<REGISTER_COUNT>::~LoopFuser() {
+template<int REGISTER_COUNT, typename...XARGS>
+CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...>::~LoopFuser() {
    warnIfNotFlushed();
    if (m_reserved > 0) {
       m_allocator.deallocate((char *)m_action_offsets, m_totalsize);
@@ -132,8 +132,8 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT>::~LoopFuser() {
    }
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::reserve(size_t size) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::reserve(size_t size) {
    static char * pinned_buf;
    m_totalsize = size*(sizeof(int)*3);
    pinned_buf = (char *)m_allocator.allocate(m_totalsize);
@@ -150,8 +150,8 @@ void LoopFuser<REGISTER_COUNT>::reserve(size_t size) {
 
 /* resets lambda_size and m_action_count to 0, keeping our buffers
  * the same */
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::reset(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::reset(bool async, const char * fileName, int lineNumber) {
    m_action_count = 0;
    m_max_action_length = 0;
    m_prev_pos_output = nullptr;
@@ -176,8 +176,8 @@ void LoopFuser<REGISTER_COUNT>::reset(bool async, const char * fileName, int lin
 }
 
 /*ensures any previous asynchronous launch from this fuser is done before proceeding. */
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::waitIfNeeded() {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::waitIfNeeded() {
    if (m_wait_needed) {
       // ensure asynchronous launch from previous flush is done
       m_async_resource.wait_for(&m_wait_for_event);
@@ -190,21 +190,21 @@ void LoopFuser<REGISTER_COUNT>::waitIfNeeded() {
    }
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::warnIfNotFlushed() {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::warnIfNotFlushed() {
    if (m_action_count > 0) {
       std::cout << (void *)this<<" LoopFuser<"<< REGISTER_COUNT <<"> not flushed when expected." << std::endl;
    }
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_actions(bool async, const char * fileName, int lineNumber) {
    // Do the thing
    if (verbose) {
       printf("in flush_parallel_actions at %s:%i with %zu, %i\n", fileName, lineNumber, m_actions.num_loops(), m_max_action_length);
    }
    m_aw = m_actions.instantiate();
-   m_aws = m_aw.run(nullptr, fusible_registers{});
+   m_aws = m_aw.run(nullptr, XARGS{}...);
    // this resets m_conditionals, which we will never need to run
    m_conditionals.clear();
    if (verbose) {
@@ -214,19 +214,19 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_actions(bool async, const char * 
 }
 
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::flush_order_preserving_actions(bool async, const char * fileName, int  lineNumber) {
    // Do the thing
    m_aw = m_actions.instantiate();
-   m_aws = m_aw.run(nullptr, fusible_registers{});
+   m_aws = m_aw.run(nullptr, XARGS{}...);
    // this resets m_conditionals, don't run them.
    m_conditionals.clear();
    reset(async, fileName, lineNumber);
 }
 
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_scans(const char * fileName, int lineNumber) {
    if (verbose) {
       printf("in flush_parallel_scans at %s:%i with %i,%i\n", fileName, lineNumber, m_action_count, m_max_action_length);
    }
@@ -237,7 +237,7 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int 
    int action_count = m_action_count;
 
    // handle the last index by enqueuing a specialized lambda to batch with the rest.
-   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int, fusible_registers) {
+   m_conditionals.enqueue(RAJA::RangeSegment(0,1), [=]FUSIBLE_DEVICE(int , int * SCANVAR, int const*, int, XARGS...) {
       SCANVAR[end] = false;
    });
 
@@ -245,7 +245,7 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int 
    care::host_device_ptr<int> scan_var(end+1, "scan_var");
    // this will fill scan_var up from the fused conditionals 
    m_cw = m_conditionals.instantiate();
-   m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, fusible_registers{});
+   m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, XARGS{}...);
 
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 0, end+1) {
@@ -285,7 +285,7 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int 
    
    // execute the loop body
    m_aw = m_actions.instantiate();
-   m_aws = m_aw.run(scan_var.data(chai::GPU,true), fusible_registers{});
+   m_aws = m_aw.run(scan_var.data(chai::GPU,true), XARGS{}...);
 
    // need to do a synchronize data so pinned memory reads are valid
    care::gpuDeviceSynchronize(fileName,lineNumber);
@@ -312,8 +312,8 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_scans(const char * fileName, int 
 }
 
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_counts_to_offsets_scans(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
      printf("in flush_counts_to_offsets_parallel_scans at %s:%i with %i,%i\n", fileName,lineNumber, m_action_count, m_max_action_length);
    }
@@ -324,7 +324,7 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_counts_to_offsets_scans(bool asyn
    care::host_device_ptr<int> scan_var(end, "scan_var");
    
    m_aw = m_actions.instantiate();
-   m_aws = m_aw.run(scan_var.data(chai::GPU, true), fusible_registers{});
+   m_aws = m_aw.run(scan_var.data(chai::GPU, true), XARGS{}...);
    
    if (very_verbose) {
       CARE_SEQUENTIAL_LOOP(i, 0, end) {
@@ -344,7 +344,7 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_counts_to_offsets_scans(bool asyn
    }
 
    m_cw = m_conditionals.instantiate();
-   m_cws = m_cw.run(scan_var.data(chai::GPU,true), offsets, end, fusible_registers{});
+   m_cws = m_cw.run(scan_var.data(chai::GPU,true), offsets, end, XARGS{}...);
 
 
    scan_var.free();
@@ -354,8 +354,8 @@ void LoopFuser<REGISTER_COUNT>::flush_parallel_counts_to_offsets_scans(bool asyn
    reset(async, fileName, lineNumber);
 }
 
-template<int REGISTER_COUNT>
-void LoopFuser<REGISTER_COUNT>::flushActions(bool async, const char * fileName, int lineNumber) {
+template<int REGISTER_COUNT, typename...XARGS>
+void LoopFuser<REGISTER_COUNT,XARGS...>::flushActions(bool async, const char * fileName, int lineNumber) {
    if (verbose) {
       printf("Loop fuser flushActions\n");
    }
@@ -393,9 +393,9 @@ void LoopFuser<REGISTER_COUNT>::flushActions(bool async, const char * fileName, 
    m_to_be_freed.clear();
 }
 
-template class LoopFuser<256>; 
-template class LoopFuser<128>; 
-template class LoopFuser<64>; 
-//template class LoopFuser<32>; 
+template class LoopFuser<32, FUSIBLE_REGISTERS(32)>; 
+template class LoopFuser<64, FUSIBLE_REGISTERS(64)>; 
+template class LoopFuser<128, FUSIBLE_REGISTERS(128)>; 
+template class LoopFuser<256, FUSIBLE_REGISTERS(256)>; 
 
 #endif
