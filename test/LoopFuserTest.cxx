@@ -73,8 +73,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int const*, int, LoopFuser<64>::fusible_registers) { },
-                          [=] CARE_DEVICE(int i, int *, LoopFuser<64>::fusible_registers) {
+                          [=] CARE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)) { },
+                          [=] CARE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
       dst[pos+i] = src[i];
    });
 
@@ -131,8 +131,8 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
       __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, LoopFuser<64>::fusible_registers){ },
-                                [=] FUSIBLE_DEVICE(int i, int *, LoopFuser<64>::fusible_registers) {
+                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)){ },
+                                [=] FUSIBLE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
@@ -354,7 +354,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
 
    FUSIBLE_LOOPS_STOP
-   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->setVerbose(false);
+   LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT, FUSIBLE_REGISTERS(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)>::getInstance()->setVerbose(false);
 
    // sum up the results of the scans
    RAJAReduceSum<int> sumA(0);

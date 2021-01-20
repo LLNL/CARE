@@ -1025,7 +1025,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 // frees
-#define FUSIBLE_FREE(A) LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT>::getInstance()->registerFree(A);
+#define FUSIBLE_FREE(A) LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT, FUSIBLE_REGISTERS(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)>::getInstance()->registerFree(A);
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1085,7 +1085,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
    index_type *__fusible_scan_pos_outputs__ = FUSER->getScanPosOutputs(); \
    __fusible_start_index__ = START; \
    auto __fusible_end_index__ = END; \
-   auto __fusible_verbose__ = LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>::verbose; \
+   auto __fusible_verbose__ = FusedActions::verbose; \
    __fusible_offset__ = __fusible_offset__; \
    __fusible_action_index__ = __fusible_action_index__ ; \
    __fusible_scan_pos_starts__ = __fusible_scan_pos_starts__ ;  \
@@ -1170,7 +1170,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 #define FUSIBLE_LOOP_PHASE_R(INDEX, START, END, PRIORITY, REGISTER_COUNT) { \
    if (END > START) { \
-      LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT>>(PRIORITY); \
+      LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__fuser__, START, END, REGISTER_COUNT); \
       static int __fusible_scan_pos__; \
       __fusible_scan_pos__ = 0; \
@@ -1189,7 +1189,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 #define FUSIBLE_KERNEL_PHASE_R(PRIORITY, REGISTER_COUNT) { \
-   LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT>>(PRIORITY); \
+   LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>>(PRIORITY); \
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(__FILE__, __LINE__, 0, 1, __fusible_scan_pos__, \
@@ -1215,6 +1215,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
    } \
 }
 
+#define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
 // SCANS
 #define _FUSIBLE_LOOP_SCAN_R(FUSER, INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT) { \
    auto __fuser__ = FUSER; \
@@ -1233,7 +1234,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                  FUSIBLE_SCAN_LOOP_PREAMBLE(INDEX, BOOL_EXPR, SCANVAR, POS) {
 
 #define FUSIBLE_LOOP_SCAN_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT) \
-   _FUSIBLE_LOOP_SCAN_R(LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>::getInstance(), INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT)
+   _FUSIBLE_LOOP_SCAN_R(LOOPFUSER(REGISTER_COUNT)::getInstance(), INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT)
 
 #define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) \
    FUSIBLE_LOOP_SCAN_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
@@ -1271,19 +1272,19 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                               [=] FUSIBLE_DEVICE(int INDEX, int *FUSED_SCANVAR, FUSIBLE_REGISTERS(REGISTER_COUNT)) { \
                                  FUSIBLE_LOOP_PREAMBLE(INDEX) {
 
-#define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R_END(INDEX, LENGTH, SCANVAR, REGISTER_COUNT)  \
+#define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R_END(INDEX, LENGTH, SCANVAR)  \
                                  } \
                                  if (FUSED_SCANVAR != nullptr) { \
                                     FUSED_SCANVAR[__fusible_global_index__] = SCANVAR[INDEX]; \
                                  } \
                                  }, \
-                              2, __fusible_scan_pos__ , SCANVAR, FUSIBLE_REGISTER_ARGS(REGISTER_COUNT)); }
+                              2, __fusible_scan_pos__ , SCANVAR); }
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR) \
    FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDEX,START,END,SCANVAR,CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(INDEX, LENGTH, SCANVAR) \
-   FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R_END(INDEX, LENGTH, SCANVAR, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
+   FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R_END(INDEX, LENGTH, SCANVAR)
 
 #else /* CARE_ENABLE_LOOP_FUSER */
 
