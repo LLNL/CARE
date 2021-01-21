@@ -969,16 +969,19 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #else
 #define START_RECORDING(FUSER) FUSER->startRecording()
 #endif
+
+#define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
+
 #if defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : { \
-                                    static_cast<FusedActions *> (LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(false); \
@@ -991,10 +994,10 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions *__fuser__ : {\
-                                    static_cast<FusedActions *> (LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(true); \
@@ -1006,10 +1009,10 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 // Execute, then stop recording
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
    for ( FusedActions *__fuser__ : {\
-                                    static_cast<FusedActions *> (LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()),\
-                                    static_cast<FusedActions *> (LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
                                     static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
       __fuser__->flushActions(ASYNC, __FILE__, __LINE__); \
       __fuser__->stopRecording(); \
@@ -1025,7 +1028,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 // frees
-#define FUSIBLE_FREE(A) LoopFuser<CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT, FUSIBLE_REGISTERS(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)>::getInstance()->registerFree(A);
+#define FUSIBLE_FREE(A) LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->registerFree(A);
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1034,10 +1037,10 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
    for ( FusedActions * __fuser__ : {\
-                                     static_cast<FusedActions *> (LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()),\
-                                     static_cast<FusedActions *> (LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()),\
-                                     static_cast<FusedActions *> (LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()),\
-                                     static_cast<FusedActions *> (LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()),\
+                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                     static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
                                      static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->stopRecording(); \
       __fuser__->setScan(false); \
@@ -1141,7 +1144,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define FUSIBLE_ACTION_XARGS(REGISTER_COUNT) index_type *, FUSIBLE_REGISTERS(REGISTER_COUNT)
 
 #define FUSIBLE_LOOP_STREAM_R(INDEX, START, END, REGISTER_COUNT) { \
-   auto __fuser__ = LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>::getInstance(); \
+   auto __fuser__ = LOOPFUSER(REGISTER_COUNT)::getInstance(); \
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
    FUSIBLE_BOOKKEEPING(__fuser__,START,END, REGISTER_COUNT); \
@@ -1158,7 +1161,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 #define FUSIBLE_KERNEL_R(REGISTER_COUNT) { \
-   auto __fuser__ = LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>::getInstance(); \
+   auto __fuser__ = LOOPFUSER(REGISTER_COUNT)::getInstance(); \
    FUSIBLE_KERNEL_BOOKKEEPING(__fuser__) ; \
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
@@ -1170,7 +1173,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 #define FUSIBLE_LOOP_PHASE_R(INDEX, START, END, PRIORITY, REGISTER_COUNT) { \
    if (END > START) { \
-      LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>>(PRIORITY); \
+      LOOPFUSER(REGISTER_COUNT) * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LOOPFUSER(REGISTER_COUNT)>(PRIORITY); \
       FUSIBLE_BOOKKEEPING(__fuser__, START, END, REGISTER_COUNT); \
       static int __fusible_scan_pos__; \
       __fusible_scan_pos__ = 0; \
@@ -1189,7 +1192,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 #define FUSIBLE_KERNEL_PHASE_R(PRIORITY, REGISTER_COUNT) { \
-   LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)> * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>>(PRIORITY); \
+   LOOPFUSER(REGISTER_COUNT) * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LOOPFUSER(REGISTER_COUNT)>(PRIORITY); \
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(__FILE__, __LINE__, 0, 1, __fusible_scan_pos__, \
@@ -1206,16 +1209,15 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
 
 #define FUSIBLE_LOOPS_FENCEPOST { \
-   int __fusible_action_count__ = LoopFuser<256, FUSIBLE_REGISTERS(256)>::getInstance()->size(); \
-   __fusible_action_count__ += LoopFuser<128, FUSIBLE_REGISTERS(128)>::getInstance()->size(); \
-   __fusible_action_count__ += LoopFuser<64, FUSIBLE_REGISTERS(64)>::getInstance()->size(); \
-   __fusible_action_count__ += LoopFuser<32, FUSIBLE_REGISTERS(32)>::getInstance()->size(); \
+   int __fusible_action_count__ = LOOPFUSER(256)::getInstance()->size(); \
+   __fusible_action_count__ += LOOPFUSER(128)::getInstance()->size(); \
+   __fusible_action_count__ += LOOPFUSER(64)::getInstance()->size(); \
+   __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size(); \
    if (__fusible_action_count__ > 0) { \
       std::cout << __FILE__ << "FUSIBLE_FENCEPOST reached before FUSIBLE_LOOPS_STOP occurred!" << std::endl; \
    } \
 }
 
-#define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
 // SCANS
 #define _FUSIBLE_LOOP_SCAN_R(FUSER, INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT) { \
    auto __fuser__ = FUSER; \
@@ -1257,7 +1259,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 // note - FUSED_SCANVAR will be nullptr if m_call_as_packed is set in registerAction, as there will be no need for an intermediate
 // FUSED_SCANVAR, so we won't need to write to it in the action or store into it in the conditional
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDEX,START,END,SCANVAR, REGISTER_COUNT)  { \
-   auto __fuser__ = LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>::getInstance(); \
+   auto __fuser__ = LOOPFUSER(REGISTER_COUNT)::getInstance(); \
    FUSIBLE_BOOKKEEPING(__fuser__, START, END, REGISTER_COUNT); \
    static int __fusible_scan_pos__; \
    __fusible_scan_pos__ = 0; \
