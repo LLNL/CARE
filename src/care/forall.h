@@ -210,8 +210,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB, typename FUSIBLE_REGISTERS>
-   void forall(raja_fusible_seq, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers) {
+   template <typename LB, typename ...XARGS>
+   void forall(raja_fusible_seq, int start, int end, LB body, XARGS ...xargs) {
       const int length = end - start;
 
       if (length != 0) {
@@ -222,7 +222,7 @@ namespace care {
          LB my_body = body;
 
          for (int i = 0; i < length; ++i) {
-            my_body(i,nullptr,fusible_registers);
+            my_body(i,nullptr,xargs...);
          }
 
          threadRM->setExecutionSpace(chai::NONE);
@@ -245,13 +245,13 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB, typename FUSIBLE_REGISTERS>
-   __global__ void forall_fusible_kernel(LB body, int start, int end, FUSIBLE_REGISTERS fusible_registers) {
+   template <typename LB, typename ...XARGS>
+   __global__ void forall_fusible_kernel(LB body, int start, int end, XARGS... xargs){
       int i = blockDim.x * blockIdx.x + threadIdx.x;
       int length =  end - start;
 
       if (i < length) {
-         body(i, nullptr, fusible_registers);
+         body(i, nullptr, xargs...);
       }
    }
 
@@ -270,8 +270,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB, typename FUSIBLE_REGISTERS>
-   void forall(raja_fusible, int start, int end, LB body, FUSIBLE_REGISTERS fusible_registers, const char *fileName, int lineNumber) {
+   template <typename LB, typename ...XARGS>
+   void forall(raja_fusible, int start, int end, LB body, const char * fileName, int lineNumber, XARGS ...xargs){
       const int length = end - start;
 
       if (length != 0) {
@@ -283,12 +283,12 @@ namespace care {
          LB my_body = body;
 
          for (int i = 0; i < length; ; ++i) {
-            my_body(i,nullptr , fusible_registers);
+            my_body(i,nullptr , xargs...);
          }
 #else
          size_t blockSize = CARE_CUDA_BLOCK_SIZE;
          size_t gridSize = length / blockSize + 1;
-         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fusible_registers);
+         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, xargs...);
 
 #if FORCE_SYNC
          care::gpuDeviceSynchronize(fileName, lineNumber);
