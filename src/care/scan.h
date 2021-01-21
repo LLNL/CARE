@@ -73,25 +73,25 @@ void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #endif // defined(CARE_GPUCC)
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
-                    int size, globalID val, bool inPlace);
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val, bool inPlace);
 // typesafe wrapper for out of place scan
-void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
-                    int size, globalID val);
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val);
 
 #ifdef CARE_GPUCC
 
-void exclusive_scan(RAJADeviceExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
-                    int size, globalID val, bool inPlace);
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val, bool inPlace);
 // typesafe wrapper for out of place scan
-void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
-                    int size, globalID val);
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val);
 
 #endif // defined(CARE_GPUCC)
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
@@ -144,25 +144,25 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #endif // defined(CARE_GPUCC)
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
-void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
 #ifdef CARE_GPUCC
 
-void inclusive_scan(RAJADeviceExec, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
-void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
 #endif // defined(CARE_GPUCC)
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // scan count accessors
@@ -170,12 +170,12 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const globalID> inData, c
 void getFinalScanCountFromPinned(chai::ManagedArray<int> scanvar_length, int& scanCount) ;
 void getFinalScanCount(chai::ManagedArray<int> scanvar, int length, int& scanCount) ;
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void getFinalScanCountFromPinned(chai::ManagedArray<globalID> scanvar_length, globalID& scanCount) ;
-void getFinalScanCount(chai::ManagedArray<globalID> scanvar, int length, globalID& scanCount) ;
+void getFinalScanCountFromPinned(chai::ManagedArray<GIDTYPE> scanvar_length, GIDTYPE& scanCount) ;
+void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE& scanCount) ;
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 } // namespace care
 

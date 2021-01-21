@@ -137,24 +137,24 @@ void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const double> inData, cha
     exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<double> *>(&inData), outData, size, val, inPlace);
 }
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
-                    int size, globalID val, bool inPlace)
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val, bool inPlace)
 {
-   exclusive_scan<globalID, CARE_SCAN_EXEC, RAJA::operators::plus<GIDTYPE>, GIDTYPE>(data, outData, size,
-                                                                                     RAJA::operators::plus<GIDTYPE>{}, val.Value(), inPlace) ;
+   exclusive_scan<GIDTYPE, CARE_SCAN_EXEC, RAJA::operators::plus<GIDTYPE>, GIDTYPE>(data, outData, size,
+                                                                                    RAJA::operators::plus<GIDTYPE>{}, val, inPlace) ;
 }
 
 // typesafe wrapper for out of place scan
-void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
-                    int size, globalID val)
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
+                    int size, GIDTYPE val)
 { 
     const bool inPlace = false;
-    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<globalID> *>(&inData), outData, size, val, inPlace);
+    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<GIDTYPE> *>(&inData), outData, size, val, inPlace);
 }
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
@@ -204,24 +204,24 @@ void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const double> inData, cha
     inclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<double> *>(&inData), outData, size, inPlace);
 }
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<globalID> data, chai::ManagedArray<globalID> outData,
+void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, bool inPlace)
 {
-   inclusive_scan<globalID, CARE_SCAN_EXEC, RAJA::operators::plus<GIDTYPE>, GIDTYPE>(data, outData, size,
-                                                                                     RAJA::operators::plus<GIDTYPE>{}, inPlace) ;
+   inclusive_scan<GIDTYPE, CARE_SCAN_EXEC, RAJA::operators::plus<GIDTYPE>, GIDTYPE>(data, outData, size,
+                                                                                    RAJA::operators::plus<GIDTYPE>{}, inPlace) ;
 }
 
 // typesafe wrapper for out of place scan
-void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const globalID> inData, chai::ManagedArray<globalID> outData,
+void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size)
 {
     const bool inPlace = false;
-    inclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<globalID> *>(&inData), outData, size, inPlace);
+    inclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<GIDTYPE> *>(&inData), outData, size, inPlace);
 }
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 } // namespace care
 
