@@ -783,7 +783,12 @@ class LoopFuser : public FusedActions {
       bool m_wait_needed = false;
 };
 
-
+// The FUSIBLE_REGISTERS_* macros define the type signature for the XARGS that LoopFuser will be templated on. They are designed
+// to provide function signatures that are unique to the each respective register bin. This ensures that the linker will only consider
+// fused loops within a register bin when doing block/grid/register size determinations. 
+// Note that for nvcc, the linker appears to consider LoopFuser<32> to be compatible with LoopFuser<64> etc, so differentiating the signature
+// by the integer template parameter was not sufficient. Thus we differentiate by number of parameters as well. 
+//
 #define FUSIBLE_REGISTERS_32 LoopFuser<32>::fusible_registers
 #define FUSIBLE_REGISTERS_64 LoopFuser<64>::fusible_registers, LoopFuser<64>::fusible_registers
 #define FUSIBLE_REGISTERS_128 LoopFuser<128>::fusible_registers, LoopFuser<128>::fusible_registers, LoopFuser<128>::fusible_registers
