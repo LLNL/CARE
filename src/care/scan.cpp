@@ -39,21 +39,21 @@ void getFinalScanCount(chai::ManagedArray<int> scanvar, int length, int& scanCou
    scanCount = scanvar.pick(length);
 }
 
-#if CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void getFinalScanCountFromPinned(chai::ManagedArray<globalID> scanvar_length, globalID& scanCount)
+void getFinalScanCountFromPinned(chai::ManagedArray<GIDTYPE> scanvar_length, GIDTYPE& scanCount)
 {
    CARE_CHECKED_HOST_KERNEL_WITH_REF_START(scan_loop_check, scanCount) {
       scanCount = scanvar_length[0];
    } CARE_CHECKED_HOST_KERNEL_WITH_REF_END(scan_loop_check)
 }
 
-void getFinalScanCount(chai::ManagedArray<globalID> scanvar, int length, globalID& scanCount)
+void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE& scanCount)
 {
    scanCount = scanvar.pick(length);
 }
 
-#endif // CARE_HAVE_LLNL_GLOBALID
+#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 } // namespace care
 
