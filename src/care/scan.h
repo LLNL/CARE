@@ -25,22 +25,22 @@ namespace care {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // exclusive scan functionality
 
- CARE_DLL_API
- void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, int val, bool inPlace);
 // typesafe wrapper for out of place scan
- CARE_DLL_API
-      void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
 #ifdef CARE_GPUCC
 
- CARE_DLL_API
-    void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, int val, bool inPlace);
 // typesafe wrapper for out of place scan
- CARE_DLL_API
-    void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
 #endif // defined(CARE_GPUCC)
