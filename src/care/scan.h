@@ -25,49 +25,61 @@ namespace care {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // exclusive scan functionality
 
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, int val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, int val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
 #endif // defined(CARE_GPUCC)
 
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
                     int size, float val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size, float val);
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
                     int size, float val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size, float val);
 
 #endif // defined(CARE_GPUCC)
 
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
                     int size, double val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size, double val);
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
                     int size, double val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size, double val);
 
@@ -75,17 +87,21 @@ void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val);
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val);
 
@@ -96,49 +112,61 @@ void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, ch
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
 
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
 #endif // defined(CARE_GPUCC)
 
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size) ;
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size) ;
 
 #endif // defined(CARE_GPUCC)
 
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size) ;
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size) ;
 
@@ -146,17 +174,21 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
 #ifdef CARE_GPUCC
 
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
+CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
@@ -167,12 +199,16 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, ch
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // scan count accessors
 
+CARE_DLL_API
 void getFinalScanCountFromPinned(chai::ManagedArray<int> scanvar_length, int& scanCount) ;
+CARE_DLL_API
 void getFinalScanCount(chai::ManagedArray<int> scanvar, int length, int& scanCount) ;
 
 #if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
+CARE_DLL_API
 void getFinalScanCountFromPinned(chai::ManagedArray<GIDTYPE> scanvar_length, GIDTYPE& scanCount) ;
+CARE_DLL_API
 void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE& scanCount) ;
 
 #endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
