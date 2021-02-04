@@ -282,7 +282,7 @@ namespace care {
          /* trigger the chai copy constructors in captured variables */
          LB my_body = body;
 
-         for (int i = 0; i < length; ; ++i) {
+         for (int i = 0; i < length; ++i) {
             my_body(i,nullptr , xargs...);
          }
 #else
