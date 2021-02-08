@@ -211,7 +211,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename ...XARGS>
-   void forall(raja_fusible_seq, int start, int end, LB body, XARGS ...xargs) {
+   void forall(raja_fusible_seq, int start, int end, LB && body, XARGS ...xargs) {
       const int length = end - start;
 
       if (length != 0) {
@@ -271,7 +271,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename ...XARGS>
-   void forall(raja_fusible, int start, int end, LB body, const char * fileName, int lineNumber, XARGS ...xargs){
+   void forall(raja_fusible, int start, int end, LB && body, const char * fileName, int lineNumber, XARGS ...xargs){
       const int length = end - start;
 
       if (length != 0) {
