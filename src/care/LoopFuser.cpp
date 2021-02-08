@@ -393,7 +393,9 @@ void LoopFuser<REGISTER_COUNT,XARGS...>::flushActions(bool async, const char * f
    m_to_be_freed.clear();
 }
 
+#ifdef CARE_ENABLE_FUSER_BIN_32
 template class LoopFuser<32, FUSIBLE_REGISTERS(32)>; 
+#endif
 template class LoopFuser<64, FUSIBLE_REGISTERS(64)>; 
 template class LoopFuser<128, FUSIBLE_REGISTERS(128)>; 
 template class LoopFuser<256, FUSIBLE_REGISTERS(256)>; 
