@@ -317,6 +317,7 @@ public:
                             m_fused_action_order(),
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
+                            m_to_be_freed_device(),
                             m_recording(false) 
     {
        if (registerWithAllObservers) {
@@ -387,6 +388,13 @@ public:
          array.free();
       }
       m_to_be_freed.clear();
+      for (auto & array: m_to_be_freed_device) {
+         // Prevent two duplicate frees when wrapping the same host pointer more than once
+         if (chai::ArrayManager::getInstance()->getPointerRecord((void *)array.getActivePointer()) != &chai::ArrayManager::s_null_record) {
+            array.freeDeviceMemory();
+         }
+      }
+      m_to_be_freed_device.clear();
    }
 
    template<typename ActionsType>
@@ -438,22 +446,34 @@ public:
       }
       m_fused_action_order.clear();
       m_to_be_freed.clear();
+      m_to_be_freed_device.clear();
       m_recording = false;
    }
 
 
    ///////////////////////////////////////////////////////////////////////////
-   /// @author Peter Robinson
+   /// @author Peter Robinson, Benjamin Liu
    /// @brief registers an array to be released after a flushActions()
    /// @param[in] array : the array to be freed after a flushActions
+   /// @param[in] freeDeviceOnly: whether to only free device memory
    ///////////////////////////////////////////////////////////////////////////
    template <typename T>
-   inline void registerFree(care::host_device_ptr<T> & array) {
-      if (m_recording) {
-         m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+   inline void registerFree(care::host_device_ptr<T> & array, bool freeDeviceOnly = false) {
+      if (!freeDeviceOnly) {
+         if (m_recording) {
+            m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+         }
+         else {
+            array.free();
+         }
       }
       else {
-         array.free();
+         if (m_recording) {
+            m_to_be_freed_device.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+         }
+         else {
+            array.freeDeviceMemory();
+         }
       }
    }
 
@@ -469,6 +489,7 @@ public:
       std::map<double, FusedActions *> m_fused_action_order;
       double m_last_insert_priority;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
+      std::vector<care::host_device_ptr<char> > m_to_be_freed_device;
       bool m_recording;
 
 };
@@ -1037,6 +1058,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 // frees
 #define FUSIBLE_FREE(A) FusedActionsObserver::getActiveObserver()->registerFree(A);
+#define FUSIBLE_FREE_DEVICE(A) FusedActionsObserver::getActiveObserver()->registerFree(A, true);
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1063,6 +1085,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOPS_STOP FusedActionsObserver::setActiveObserver(nullptr);
 #define FUSIBLE_LOOPS_STOP_ASYNC FusedActionsObserver::setActiveObserver(nullptr);
 #define FUSIBLE_FREE(A) A.free();
+#define FUSIBLE_FREE_DEVICE(A) A.freeDeviceMemory();
 
 #endif // defined(CARE_DEBUG) || defined(CARE_GPUCC)
 
@@ -1349,6 +1372,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) SCAN_LOOP_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 #define FUSIBLE_FREE(A) A.free()
+#define FUSIBLE_FREE_DEVICE(A) A.freeDeviceMemory()
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDX,START,END,SCANVAR, REGISTER_COUNT) SCAN_COUNTS_TO_OFFSETS_LOOP(INDX, START, END, SCANVAR)
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDX,START,END,SCANVAR) SCAN_COUNTS_TO_OFFSETS_LOOP(INDX, START, END, SCANVAR)
