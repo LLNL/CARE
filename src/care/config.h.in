@@ -19,6 +19,7 @@
 #cmakedefine CARE_ENABLE_MANAGED_PTR
 #cmakedefine CARE_DISABLE_RAJAPLUGIN
 #cmakedefine CARE_ENABLE_EXTERN_INSTANTIATE
+#cmakedefine CARE_ENABLE_FUSER_BIN_32
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID

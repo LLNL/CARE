@@ -789,7 +789,9 @@ class LoopFuser : public FusedActions {
 // Note that for nvcc, the linker appears to consider LoopFuser<32> to be compatible with LoopFuser<64> etc, so differentiating the signature
 // by the integer template parameter was not sufficient. Thus we differentiate by number of parameters as well. 
 //
+#ifdef CARE_ENABLE_FUSER_BIN_32
 #define FUSIBLE_REGISTERS_32 LoopFuser<32>::fusible_registers
+#endif
 #define FUSIBLE_REGISTERS_64 LoopFuser<64>::fusible_registers, LoopFuser<64>::fusible_registers
 #define FUSIBLE_REGISTERS_128 LoopFuser<128>::fusible_registers, LoopFuser<128>::fusible_registers, LoopFuser<128>::fusible_registers
 #define FUSIBLE_REGISTERS_256 LoopFuser<256>::fusible_registers, LoopFuser<256>::fusible_registers, LoopFuser<256>::fusible_registers, LoopFuser<256>::fusible_registers
@@ -797,7 +799,9 @@ class LoopFuser : public FusedActions {
 #define _FUSIBLE_REGISTERS(REGISTER_COUNT) FUSIBLE_REGISTERS_##REGISTER_COUNT
 #define FUSIBLE_REGISTERS(REGISTER_COUNT) _FUSIBLE_REGISTERS(REGISTER_COUNT)
 
+#ifdef CARE_ENABLE_FUSER_BIN_32
 extern template class LoopFuser<32 , FUSIBLE_REGISTERS(32)>; 
+#endif
 extern template class LoopFuser<64 , FUSIBLE_REGISTERS(64)>; 
 extern template class LoopFuser<128, FUSIBLE_REGISTERS(128)>; 
 extern template class LoopFuser<256, FUSIBLE_REGISTERS(256)>; 
@@ -977,7 +981,15 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 #define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
 
+#if defined(CARE_ENABLE_FUSER_BIN_32)
+#define FUSED_ACTION_INSTANCE_32 static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),
+#else
+#define FUSED_ACTION_INSTANCE_32
+#endif
+
 #if defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+
+
 
 // Start recording
 #define FUSIBLE_LOOPS_START { \
@@ -986,7 +998,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(false); \
@@ -1002,7 +1014,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(true); \
@@ -1017,7 +1029,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
                                     static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
       __fuser__->flushActions(ASYNC, __FILE__, __LINE__); \
       __fuser__->stopRecording(); \
@@ -1045,7 +1057,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                      static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                      static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                      static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                     static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),\
+                                     FUSED_ACTION_INSTANCE_32 \
                                      static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->stopRecording(); \
       __fuser__->setScan(false); \
@@ -1213,11 +1225,17 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 #define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
 
+#ifdef CARE_ENABLE_FUSER_BIN_32
+#define INSTANCE_32_INCREMENT_SIZE __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size();
+#else
+#define INSTANCE_32_INCREMENT_SIZE
+#endif
+
 #define FUSIBLE_LOOPS_FENCEPOST { \
    int __fusible_action_count__ = LOOPFUSER(256)::getInstance()->size(); \
    __fusible_action_count__ += LOOPFUSER(128)::getInstance()->size(); \
    __fusible_action_count__ += LOOPFUSER(64)::getInstance()->size(); \
-   __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size(); \
+   INSTANCE_32_INCREMENT_SIZE \
    if (__fusible_action_count__ > 0) { \
       std::cout << __FILE__ << "FUSIBLE_FENCEPOST reached before FUSIBLE_LOOPS_STOP occurred!" << std::endl; \
    } \
