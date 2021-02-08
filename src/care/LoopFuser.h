@@ -377,7 +377,7 @@ public:
             if (verbose) {
                printf("flushing actions at priority %g\n", priority_action.first);
             }
-            actions->flushActions(async, fileName, lineNumber);
+            actions->flushActions(true, fileName, lineNumber);
          }
       }
       if (!async) {
