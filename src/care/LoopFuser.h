@@ -378,6 +378,10 @@ public:
             if (verbose) {
                printf("flushing actions at priority %g\n", priority_action.first);
             }
+            // We allow the launching to be asynchronous regardless of async.
+            // The if async is false, this routine is still synchronous in
+            // that the work will be done before we leave it (and everything
+            // will be synchronized), but we allow it to be asynchronous internally.
             actions->flushActions(true, fileName, lineNumber);
          }
       }
