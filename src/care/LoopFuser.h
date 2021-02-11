@@ -373,10 +373,14 @@ public:
    inline void flushActions(bool async, const char * fileName, int lineNumber) {
       for (auto & priority_action : m_fused_action_order) {
          FusedActions * const & actions = priority_action.second;
-         if (actions -> actionCount() > 0) {
+         if (actions->actionCount() > 0) {
             if (verbose) {
                printf("flushing actions at priority %g\n", priority_action.first);
             }
+            // We allow the Observer to flush actions asynchronously.
+            // If async is false, this routine is still synchronous in
+            // that the work will be done before we leave it (and everything
+            // will be synchronized), but we allow it to be asynchronous internally.
             actions->flushActions(true, fileName, lineNumber);
          }
       }
@@ -866,7 +870,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             if (m_prev_pos_output.cdata() != &pos_store) {
                m_prev_pos_output = &pos_store;
             }
-            // if we haven't enountered a different output yet, mark this index for continuation
+            // if we haven't encountered a different output yet, mark this index for continuation
             else if (m_prev_pos_output.cdata() == &pos_store) {
                // mark the start for continuation
                m_scan_pos_starts[m_action_count] = -999;
