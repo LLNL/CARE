@@ -387,10 +387,6 @@ void LoopFuser<REGISTER_COUNT,XARGS...>::flushActions(bool async, const char * f
          }
       }
    }
-   for (auto arr : m_to_be_freed) {
-      arr.free();
-   }
-   m_to_be_freed.clear();
 }
 
 #ifdef CARE_ENABLE_FUSER_BIN_32

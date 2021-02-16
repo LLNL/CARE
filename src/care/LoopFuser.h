@@ -373,9 +373,19 @@ public:
    inline void flushActions(bool async, const char * fileName, int lineNumber) {
       for (auto & priority_action : m_fused_action_order) {
          FusedActions * const & actions = priority_action.second;
-         if (actions -> actionCount() > 0) {
-            actions->flushActions(async, fileName, lineNumber);
+         if (actions->actionCount() > 0) {
+            if (verbose) {
+               printf("flushing actions at priority %g\n", priority_action.first);
+            }
+            // We allow the Observer to flush actions asynchronously.
+            // If async is false, this routine is still synchronous in
+            // that the work will be done before we leave it (and everything
+            // will be synchronized), but we allow it to be asynchronous internally.
+            actions->flushActions(true, fileName, lineNumber);
          }
+      }
+      if (!async) {
+         care::gpuDeviceSynchronize(fileName, lineNumber);
       }
       for (auto & array: m_to_be_freed) {
          array.free();
@@ -443,7 +453,12 @@ public:
    ///////////////////////////////////////////////////////////////////////////
    template <typename T>
    inline void registerFree(care::host_device_ptr<T> & array) {
-      m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+      if (m_recording) {
+         m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+      }
+      else {
+         array.free();
+      }
    }
 
 
@@ -576,12 +591,6 @@ class LoopFuser : public FusedActions {
                           LB && action, int scan_type = 0, int & pos_store = non_scan_store,
                           care::host_device_ptr<int> counts_to_offsets_scanvar = nullptr);
       
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Peter Robinson
-      /// @brief registers an array to be released after a flush()
-      ///////////////////////////////////////////////////////////////////////////
-      template <typename T>
-      void registerFree(care::host_device_ptr<T> & array);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -761,11 +770,6 @@ class LoopFuser : public FusedActions {
       bool m_reverse_indices = false;
 
       ///
-      /// collection of arrays to be freed after a flush
-      ///
-      std::vector<care::host_device_ptr<char>> m_to_be_freed;
-
-      ///
       /// resource whose stream we will use for asynchronous events.
       ///
       using StreamResource = RAJA::resources::get_resource<RAJADeviceExec>::type;
@@ -866,7 +870,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             if (m_prev_pos_output.cdata() != &pos_store) {
                m_prev_pos_output = &pos_store;
             }
-            // if we haven't enountered a different output yet, mark this index for continuation
+            // if we haven't encountered a different output yet, mark this index for continuation
             else if (m_prev_pos_output.cdata() == &pos_store) {
                // mark the start for continuation
                m_scan_pos_starts[m_action_count] = -999;
@@ -953,21 +957,6 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-/// @author Peter Robinson
-/// @brief registers an array to be released after a flush()
-/// @param[in] array : the array to be freed after a flush
-///////////////////////////////////////////////////////////////////////////
-template<int REGISTER_COUNT, typename...XARGS>
-template <typename T>
-void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> & array) {
-   if (m_recording) { 
-      m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
-   }
-   else {
-      array.free();
-   }
-}
 #if defined(CARE_GPUCC)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
 #else
@@ -982,9 +971,11 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
 
 #if defined(CARE_ENABLE_FUSER_BIN_32)
-#define FUSED_ACTION_INSTANCE_32 static_cast<FusedActions *> (LOOPFUSER(32)::getInstance()),
+#define FUSED_ACTION_INSTANCE_32 static_cast<FusedActions *> (LOOPFUSER(32)::getInstance())
+#define FUSED_INSTANCE_COMMA ,
 #else
 #define FUSED_ACTION_INSTANCE_32
+#define FUSED_INSTANCE_COMMA
 #endif
 
 #if defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
@@ -998,7 +989,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    FUSED_ACTION_INSTANCE_32 \
+                                    FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(false); \
@@ -1014,7 +1005,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    FUSED_ACTION_INSTANCE_32 \
+                                    FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
       START_RECORDING(__fuser__); \
       __fuser__->preserveOrder(true); \
@@ -1023,17 +1014,21 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
    FusedActionsObserver::setActiveObserver(__phase_observer); \
 }
 
-// Execute, then stop recording
+// Execute, then stop recording. Note only need to pass ASYNC to last flush call. Prevents
+// extra synchronizes between each loop fuser.
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
    for ( FusedActions *__fuser__ : {\
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
                                     FUSED_ACTION_INSTANCE_32 \
-                                    static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
-      __fuser__->flushActions(ASYNC, __FILE__, __LINE__); \
+                                    }) { \
+      __fuser__->flushActions(true, __FILE__, __LINE__); \
       __fuser__->stopRecording(); \
    } \
+   FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
+   __fuser__->flushActions(ASYNC, __FILE__, __LINE__); \
+   __fuser__->stopRecording(); \
    FusedActionsObserver::setActiveObserver(nullptr); \
 }
 
@@ -1045,7 +1040,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 // frees
-#define FUSIBLE_FREE(A) LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->registerFree(A);
+#define FUSIBLE_FREE(A) FusedActionsObserver::getActiveObserver()->registerFree(A);
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1057,7 +1052,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
                                      static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                      static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
                                      static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                     FUSED_ACTION_INSTANCE_32 \
+                                     FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
                                      static_cast<FusedActions *>(__phase_observer)}) { \
       __fuser__->stopRecording(); \
       __fuser__->setScan(false); \
@@ -1219,9 +1214,10 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 
 
 #define FUSIBLE_KERNEL_R_END return 0;}); }
+#define FUSIBLE_KERNEL_PHASE_R_END FUSIBLE_KERNEL_R_END
+#define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
-#define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
 
@@ -1276,7 +1272,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
    FUSIBLE_LOOP_SCAN_PHASE_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
 #define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION)
-#define FUSIBLE_LOOP_SCAN_PHASE_R_END(LENGTH, POS, POS_STORE_DESTINATION, REGISTER_COUNT) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION, REGISTER_COUNT)
+#define FUSIBLE_LOOP_SCAN_PHASE_R_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 
 // note - FUSED_SCANVAR will be nullptr if m_call_as_packed is set in registerAction, as there will be no need for an intermediate
@@ -1333,6 +1329,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerFree(care::host_device_ptr<T> 
 #define FUSIBLE_LOOP_STREAM_R_END  CARE_STREAM_LOOP_END
 #define FUSIBLE_LOOP_STREAM_END  CARE_STREAM_LOOP_END
 
+#define FUSIBLE_KERNEL_PHASE_R_END CARE_PARALLEL_KERNEL_END
 #define FUSIBLE_KERNEL_R_END CARE_PARALLEL_KERNEL_END
 #define FUSIBLE_KERNEL_END CARE_PARALLEL_KERNEL_END
 
