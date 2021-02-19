@@ -17,7 +17,7 @@ namespace care {
    struct parallel {};
    struct raja_fusible {};
    struct raja_fusible_seq {};
-   struct raja_chai_everywhere {};
+   struct managed_ptr_update {};
    struct gpu_simulation {};
 
    enum class Policy {
@@ -26,7 +26,7 @@ namespace care {
       openmp,
       gpu,
       parallel,
-      raja_chai_everywhere
+      managed_ptr_update
    };
 } // namespace care
 
