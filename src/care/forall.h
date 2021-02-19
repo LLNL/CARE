@@ -307,10 +307,15 @@ namespace care {
    ///
    /// @brief Loops over the given indices and calls the loop body with each index.
    ///        This overload is CHAI and RAJA aware. It sets the execution space
-   ///        accordingly and calls RAJA::forall. First executes on the device, and
-   ///        then on the host.
+   ///        accordingly and calls RAJA::forall. First executes on the host, and
+   ///        then on the device.
+   /// @note In GPU_SIM mode, this does not simulate the call on the device because
+   ///       there is only a single pointer for the managed_ptr in GPU_SIM mode.
+   ///       If managed_ptr is ever updated to use a separate space in GPU_SIM mode,
+   ///       an additional sequential RAJA::forall in the GPU space must be added
+   ///       for GPU_SIM mode.
    ///
-   /// @arg[in] raja_chai_everywhere Used to choose this overload of forall
+   /// @arg[in] managed_ptr_update Used to choose this overload of forall
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
@@ -319,21 +324,19 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void forall(raja_chai_everywhere, const char * fileName, int lineNumber,
+   void forall(managed_ptr_update, const char * fileName, int lineNumber,
                int start, const int end, LB body) {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CARE_GPUCC)
       const int length = end - start;
 
       if (length != 0) {
          chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
          threadRM->setExecutionSpace(chai::GPU);
 
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
-#elif defined(__CUDACC__)
+#if defined(__CUDACC__)
          RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
 #elif defined(__HIPCC__)
          RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
@@ -379,8 +382,8 @@ namespace care {
          case Policy::parallel:
             forall(parallel{}, fileName, lineNumber, start, end, body);
             break;
-         case Policy::raja_chai_everywhere:
-            forall(raja_chai_everywhere{}, fileName, lineNumber, start, end, body);
+         case Policy::managed_ptr_update:
+            forall(managed_ptr_update{}, fileName, lineNumber, start, end, body);
             break;
          default:
             std::cout << "[CARE] Error: Invalid policy!" << std::endl;

@@ -279,16 +279,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device. The legacy version only
-///        executes code on the host.
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device.
+///        The legacy version only executes code on the host.
 ///
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_EVERYWHERE_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
 
-#define CARE_CHECKED_EVERYWHERE_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
 
 
 
@@ -528,8 +529,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device.
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device.
 ///
 /// @note This should execute on the device even if GPU_ACTIVE is not defined.
 ///       The reason for this is that managed_ptrs are always constructed on
@@ -539,11 +541,11 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_EVERYWHERE_KERNEL_START(CHECK) { \
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::raja_chai_everywhere{}, __FILE__, __LINE__, 0, 1, [=] CARE_HOST_DEVICE (const int) {
+   care::forall(care::managed_ptr_update{}, __FILE__, __LINE__, 0, 1, [=] CARE_HOST_DEVICE (const int) {
 
-#define CARE_CHECKED_EVERYWHERE_KERNEL_END(CHECK) }); \
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
 #endif  // CARE_LEGACY_COMPATIBILITY_MODE
@@ -792,13 +794,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device.
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device.
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_EVERYWHERE_KERNEL { CARE_CHECKED_EVERYWHERE_KERNEL_START(care_everywhere_kernel_check)
+#define CARE_MANAGED_PTR_UPDATE_KERNEL { CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(care_managed_ptr_update_kernel_check)
 
-#define CARE_EVERYWHERE_KERNEL_END CARE_CHECKED_EVERYWHERE_KERNEL_END(care_everywhere_kernel_check) }
+#define CARE_MANAGED_PTR_UPDATE_KERNEL_END CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(care_managed_ptr_update_kernel_check) }
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 
