@@ -34,34 +34,37 @@ namespace care {
 // exclusive scan functionality
 
 template <typename T, typename Exec, typename Fn, typename ValueType=T>
-void exclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
-                    int size, Fn binop, ValueType val, bool inPlace) {
-   if (size > 1 && data != nullptr) {
-      CHAIDataGetter<T, Exec> D {};
-      ValueType * rawData = D.getRawArrayData(data);
-      ValueType * rawDataEnd = rawData+size;
-      if (inPlace) {
-         RAJA::exclusive_scan_inplace(Exec {}, rawData, rawDataEnd, binop, val);
+void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output also if in place)
+                    chai::ManagedArray<T> outData, //!< [out] Output data if not in place
+                    int size, //!< [in] Number of elements in input/output data
+                    Fn binop, //!< [in] The operation to perform (such as addition)
+                    ValueType val, //!< [in] The starting value
+                    bool inPlace) { //!< [in] Whether or not to do the operations in place
+   if (size > 0 && data) {
+      if (!inPlace && !outData) {
+         printf("Invalid arguments to care::exclusive_scan. If inPlace is false, outData cannot be nullptr.");
       }
-      else {
-         ValueType * rawOutData = D.getRawArrayData(outData);
-         RAJA::exclusive_scan(Exec {}, rawData, rawDataEnd, rawOutData, binop, val);
-      }
-   }
-   else {
-      if ( size == 1) {
-         if (! inPlace) {
-            if (outData != nullptr) {
-               outData.set(0, (T)val);
-            }
-         } else {
-            if (data != nullptr) {
-               data.set(0, (T)val);
-            }
+
+      if (size == 1) {
+         if (inPlace) {
+            data.set(0, (T) val);
+         }
+         else {
+            outData.set(0, (T) val);
          }
       }
       else {
-         printf("care::scan - unhandled combination of size, data, and outData\n - no-op will occur.\n");
+         CHAIDataGetter<T, Exec> D {};
+         ValueType * rawData = D.getRawArrayData(data);
+         ValueType * rawDataEnd = rawData+size;
+
+         if (inPlace) {
+            RAJA::exclusive_scan_inplace(Exec {}, rawData, rawDataEnd, binop, val);
+         }
+         else {
+            ValueType * rawOutData = D.getRawArrayData(outData);
+            RAJA::exclusive_scan(Exec {}, rawData, rawDataEnd, rawOutData, binop, val);
+         }
       }
    }
 }
