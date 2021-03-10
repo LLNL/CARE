@@ -40,9 +40,22 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
                     Fn binop, //!< [in] The operation to perform (such as addition)
                     ValueType val, //!< [in] The starting value
                     bool inPlace) { //!< [in] Whether or not to do the operations in place
-   if (size > 0 && data) {
-      if (!inPlace && !outData) {
-         printf("Invalid arguments to care::exclusive_scan. If inPlace is false, outData cannot be nullptr.");
+   if (size > 0) {
+      if (inPlace) {
+         if (!data) {
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is true, data cannot be nullptr.");
+            return;
+         }
+      }
+      else {
+         if (!outData) {
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false, outData cannot be nullptr.");
+            return;
+         }
+         else if (size > 1 && !data) {
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false and size > 1, data cannot be nullptr.");
+            return;
+         }
       }
 
       if (size == 1) {
