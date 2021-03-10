@@ -298,20 +298,20 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec,
    i = j = 0 ;
 
    /* the host arrays */
-   const T * A1, *A2;
+   const T * a1, *a2;
    int * m1 = matches1.data();
    int * m2 = matches2.data();
 
-   A1 = arr1.cdata();
-   A1 += start1;
-   A2 = arr2.cdata();
-   A2 += start2;
+   a1 = arr1.cdata();
+   a1 += start1;
+   a2 = arr2.cdata();
+   a2 += start2;
 
    while (i < size1 && j < size2) {
-      if ((A1)[i] < A2[j]) {
+      if ((a1)[i] < a2[j]) {
          ++i;
       }
-      else if (A2[j] < A1[i]) {
+      else if (a2[j] < a1[i]) {
          ++j;
       }
       else {
