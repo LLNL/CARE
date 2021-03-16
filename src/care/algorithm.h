@@ -1450,6 +1450,23 @@ CARE_INLINE void ArrayCopy(RAJA::seq_exec,
 }
 
 /************************************************************************
+ * Function  : ArrayCopy
+ * Author(s) : Peter Robinson
+ * Purpose   : Copies from one local_ptr into another. from and to
+ *             should not have the same or overlapping memory addresses.
+ * ************************************************************************/
+template<typename T>
+CARE_HOST_DEVICE CARE_INLINE void ArrayCopy(
+                           care::local_ptr<T> into,
+                           care::local_ptr<const T> from,
+                           int n, int start1, int start2)
+{
+   for (int i = 0; i < n; ++i)  {
+      into[i+start1] = from[i+start2];
+   }
+}
+
+/************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
  * Purpose   : Duplicates a ManagedArray.

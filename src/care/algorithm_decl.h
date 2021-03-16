@@ -178,6 +178,12 @@ void ArrayCopy(RAJA::seq_exec,
                care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
                int n, int start1=0, int start2=0);
 
+template<typename T>
+CARE_HOST_DEVICE void ArrayCopy(
+                           care::local_ptr<T> into,
+                           care::local_ptr<const T> from,
+                           int n, int start1=0, int start2=0);
+
 template <typename T, typename Exec=RAJAExec >
 int FindIndexMax(care::host_device_ptr<const T> arr, int n);
 
