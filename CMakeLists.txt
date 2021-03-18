@@ -33,6 +33,8 @@ option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproduce
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
 option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)
 option(CARE_ENABLE_GPU_SIMULATION_MODE "Enable GPU simulation mode." OFF )
+option(CARE_ENABLE_LOOP_FUSER "Enable the loop fuser" OFF)
+
 #  Known to not compile for Debug configurations, have low probability of working in 
 #  practice for Release / RelWithDebInfo configurations.
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
@@ -116,11 +118,8 @@ if (ENABLE_CUDA)
 
    # CUDA optional dependencies without submodules (not open source)
    set(NVTOOLSEXT_DIR "" CACHE PATH "Path to external NVTOOLSEXT")
-   # Optional features
-   set(CARE_ENABLE_LOOP_FUSER ON CACHE STRING "Enable the loop fuser")
-else()
-   set(CARE_ENABLE_LOOP_FUSER OFF CACHE STRING "Enable the loop fuser")
 endif()
+
 ################################
 # BLT
 ################################
