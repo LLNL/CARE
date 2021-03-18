@@ -178,6 +178,29 @@ void ArrayCopy(RAJA::seq_exec,
                care::host_device_ptr<T> into, care::host_device_ptr<const T> from,
                int n, int start1=0, int start2=0);
 
+template<typename T>
+CARE_HOST_DEVICE void ArrayCopy(
+                           care::local_ptr<T> into,
+                           care::local_ptr<const T> from,
+                           int n, int start1=0, int start2=0);
+
+/************************************************************************
+ * Function  : ArrayCopy
+ * Author(s) : Peter Robinson
+ * Purpose   : Copies from one local_ptr into another. from and to
+ *             should not have the same or overlapping memory addresses.
+ * ************************************************************************/
+template<typename T>
+CARE_HOST_DEVICE inline void ArrayCopy(
+                           care::local_ptr<T> into,
+                           care::local_ptr<const T> from,
+                           int n, int start1, int start2)
+{
+   for (int i = 0; i < n; ++i)  {
+      into[i+start1] = from[i+start2];
+   }
+}
+
 template <typename T, typename Exec=RAJAExec >
 int FindIndexMax(care::host_device_ptr<const T> arr, int n);
 
@@ -309,8 +332,57 @@ void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
 template <typename T>
 CARE_HOST_DEVICE void InsertionSort(care::local_ptr<T> array, int len);
 
+/************************************************************************
+ * Function  : InsertionSort
+ * Author(s) : Rob Neely
+ * Purpose   : Simple insertion sort function.  Should only be used on
+ *             small arrays - otherwise use the qsort function from the
+ *             standard C library.  Sorts in ascending order.
+ ************************************************************************/
+template <typename T>
+CARE_HOST_DEVICE inline void InsertionSort(care::local_ptr<T> array, int len)
+{
+   if (len <= 1) {
+      return;
+   }
+
+   for (int i=1 ; i<len ; ++i) {
+      T tmp = array[i] ;
+      int j ;
+      for (j=i-1 ; (j >= 0) && (array[j] > tmp) ; --j) {
+         array[j+1] = array[j];
+      }
+      array[j+1] = tmp ;
+   }
+}
+
 template <typename T>
 CARE_HOST_DEVICE void sortLocal(care::local_ptr<T> array, int len);
+
+/************************************************************************
+ * Function  : sortLocal
+ * Author(s) : Benjamin Liu
+ * Purpose   : General sort routine to call from within RAJA loops.
+ *             Sorts in ascending order.
+ ************************************************************************/
+template <typename T>
+CARE_HOST_DEVICE inline void sortLocal(care::local_ptr<T> array, int len)
+{  
+   if (len > 1) {
+#if defined(__CUDA_ARCH__)
+      // TODO this should be replaced with a CUDA GPU sort implementation that
+      // is reasonable for longer arrays.
+      InsertionSort(array, len) ;
+#elif defined(__HIP_DEVICE_COMPILE__)
+      // TODO this should be replaced with a HIPCC GPU sort implementation that
+      // is reasonable for longer arrays.
+      InsertionSort(array, len) ;
+#else
+      // host compile case
+      std::sort(array.data(), array.data()+len) ;
+#endif
+   }
+}
 
 template <typename T>
 CARE_HOST_DEVICE void uniqLocal(care::local_ptr<T> array, int& len);
