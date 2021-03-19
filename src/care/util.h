@@ -298,6 +298,9 @@ CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber)
    care::gpuAssert( ::cudaDeviceSynchronize(), fileName, lineNumber);
 #elif defined(__HIPCC__)
    care::gpuAssert( ::hipDeviceSynchronize(), fileName, lineNumber); 
+#else
+   (void) fileName;
+   (void) lineNumber;
 #endif
 }
 
