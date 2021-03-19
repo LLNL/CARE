@@ -14,21 +14,6 @@
 #include "umpire/Allocator.hpp"
 #include "umpire/TypedAllocator.hpp"
 
-// TODO: when umpire is updated, you should get duplicate defines of this. Feel free to delete
-// with a vengeance.
-template <typename T, typename U>
-bool operator==(umpire::TypedAllocator<T> const&, umpire::TypedAllocator<U> const&)
-{
-  return true;
-}
-
-template <typename T, typename U>
-bool operator!=(umpire::TypedAllocator<T> const& lhs, umpire::TypedAllocator<U> const& rhs)
-{
-  return !(lhs == rhs);
-}
-
-
 // CARE config header
 #include "care/config.h"
 
