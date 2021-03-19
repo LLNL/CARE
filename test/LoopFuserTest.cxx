@@ -318,6 +318,10 @@ FUSIBLE_DEVICE bool printAndAssign(care::host_device_ptr<int> B, int i) {
    return B[i] == 1;
 }
 
+#if defined(CARE_GPUCC)
+// parallel scans cannot work on CPU-only builds. This will call  void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_scans,
+// which fails at the line m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, XARGS{}...);. Specifying chai::GPU
+// is not correct for CPU-only builds
 GPU_TEST(fusible_scan, basic_fusible_scan) {
    // arrSize should be even for this test
    int arrSize = 4;
@@ -375,7 +379,12 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    EXPECT_EQ(b_pos, arrSize/2);
    EXPECT_EQ(ab_pos, arrSize);
 }
+#endif // CARE_GPUCC
 
+#if defined(CARE_GPUCC)
+// parallel scans cannot work on CPU-only builds. This will call  void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_scans,
+// which fails at the line m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, XARGS{}...);. Specifying chai::GPU
+// is not correct for CPU-only builds
 GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    // sarrSize should be even for this test
    int arrSize = 4;
@@ -451,7 +460,12 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    // check scan positions
    EXPECT_EQ(result_pos, arrSize*2);
 }
+#endif // CARE_GPUCC
 
+#if defined(CARE_GPUCC)
+// parallel scans cannot work on CPU-only builds. This will call  void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_scans,
+// which fails at the line m_cws = m_cw.run(scan_var.data(chai::GPU,true), nullptr, end+1, XARGS{}...);. Specifying chai::GPU
+// is not correct for CPU-only builds
 GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    // should be even for this test
    int arrSize = 4;
@@ -555,7 +569,12 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       EXPECT_EQ(E[i], 3*i);
    } CARE_SEQUENTIAL_LOOP_END
 }
+#endif // CARE_GPUCC
 
+#if defined(CARE_GPUCC)
+// parallel custom scans cannot work on CPU-only builds. This will call LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_counts_to_offsets_scans,
+// which fails at the line m_aws = m_aw.run(scan_var.data(chai::GPU, true), XARGS{}...);. Specifying chai::GPU
+// is not correct for CPU-only builds
 GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    // arrSize should be even for this test
    int arrSize = 4;
@@ -604,7 +623,11 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } CARE_SEQUENTIAL_LOOP_END
 
 }
+#endif // CARE_GPUCC
 
+#if defined(CARE_GPUCC)
+// This test explicitly calls registerTouch(care::GPU);, which leads to m_pointer_record->m_pointers[GPU] in chai. 
+// This means that it cannot be run on CPU-only builds. TODO: generalize this test so we can try it on the CPU.
 GPU_TEST(fusible_phase, fusible_loop_phase) {
    int arrSize = 128;
    int timesteps = 3;
@@ -718,6 +741,8 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
    }
 
 }
+#endif // CARE_GPUCC
+
 // TODO: FUSIBLE_LOOP_STREAM Should not batch if FUSIBLE_LOOPS_START has not been called.
 // TODO: test with two START and STOP to make sure new stuff is overwriting the old stuff.
 //
