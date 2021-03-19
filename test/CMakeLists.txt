@@ -125,19 +125,6 @@ if (CARE_ENABLE_MANAGED_PTR)
 
    blt_add_test( NAME TestManagedPtr
                  COMMAND TestManagedPtr )
-
-   blt_add_executable( NAME Benchmarks
-                       SOURCES Benchmarks.cpp
-                       DEPENDS_ON ${care_test_dependencies} )
-
-   target_include_directories(Benchmarks
-                              PRIVATE ${PROJECT_SOURCE_DIR}/src)
-
-   target_include_directories(Benchmarks
-                              PRIVATE ${PROJECT_BINARY_DIR}/include)
-
-   blt_add_test( NAME Benchmarks
-                 COMMAND Benchmarks )
 endif()
 
 blt_add_executable( NAME TestNumeric
