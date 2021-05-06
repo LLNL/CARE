@@ -281,6 +281,7 @@ namespace care {
             }
 
             CHAICallback::setName(pointer_record, pointerName);
+            CHAICallback::setTypeIndex(pointer_record, typeid(T));
          }
 #endif
       }
@@ -295,10 +296,6 @@ namespace care {
              * conditions. */
             const chai::PointerRecord * pointer_record = MA::m_pointer_record;
             MA::setUserCallback(CHAICallback(pointer_record));
-
-            CHAICallback::setPrintCallback(pointer_record, [] (std::ostream& os, const void* array, size_t size) {
-               print(os, (const T*) array, size_t(size / sizeof(T)));
-            });
          }
 #endif
       }
@@ -420,25 +417,6 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
    }; // class host_device_ptr
-
-   /////////////////////////////////////////////////////////////////////////////////
-   /// @author Danny Taller
-   /// @brief Prints host_device data to the given ostream. 
-   /// When ENABLE_IMPLICIT_CONVERSIONS is off, this function is needed for the
-   /// line 'using stream_insertion_t = decltype(std::cout << std::declval<T>());'
-   /// in util.h to compile.
-   /// @param os  - the output stream that we will print to
-   /// @param ptr - the host_device_ptr whose data we will print
-   /// @return the output stream after printing
-   /////////////////////////////////////////////////////////////////////////////////
-   template<typename T>
-   std::ostream& operator<<(std::ostream& os, host_device_ptr<T> ptr) {
-      // TODO: When CHAI has a new tagged version greather than v2.1.1,
-      //       use .data instead of .getPointer. Also, we should be able
-      //       to pass const host_device_ptr<T>& ptr to this function.
-      print(os, ptr.getPointer(care::CPU), ptr.size());
-      return os;
-   }
 
    /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
    template< typename T>
