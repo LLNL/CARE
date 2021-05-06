@@ -32,6 +32,7 @@ option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
 option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)
+option(CARE_ENABLE_BOUNDS_CHECKING "Enable bounds checking for host_device_ptr on the host" OFF)
 option(CARE_ENABLE_GPU_SIMULATION_MODE "Enable GPU simulation mode." OFF )
 #  Known to not compile for Debug configurations, have low probability of working in 
 #  practice for Release / RelWithDebInfo configurations.

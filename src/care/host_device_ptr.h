@@ -198,15 +198,15 @@ namespace care {
 
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
       template <class Index>
-      inline void boundsCheck(const Index i) {
-         if (i < 0 || i >= MA::size()) {
+      inline void boundsCheck(const Index i) const {
+         if (i < 0 || i >= (Index) MA::size()) {
             const char* name = CHAICallback::getName(MA::m_pointer_record);
 
             if (name) {
-               std::cerr << "[CARE] Error: Index " << i << " is access out of bounds for array '" << std::string(name) << "'!" << std::endl;
+               std::cerr << "[CARE] Error: Index " << i << " is out of bounds for array '" << std::string(name) << "'!" << std::endl;
             }
             else {
-               std::cerr << "[CARE] Error: Index " << i << " is access out of bounds for array!" << std::endl;
+               std::cerr << "[CARE] Error: Index " << i << " is out of bounds for array!" << std::endl;
             }
          }
       }
