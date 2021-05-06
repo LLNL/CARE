@@ -199,7 +199,7 @@ namespace care {
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
       template <class Index>
       inline void boundsCheck(const Index i) const {
-         if (i < 0 || i >= (Index) MA::size()) {
+         if (i < 0 || i >= (Index) (MA::m_pointer_record->m_size / sizeof(T))) {
             const char* name = CHAICallback::getName(MA::m_pointer_record);
 
             if (name) {
