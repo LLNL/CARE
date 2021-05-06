@@ -196,6 +196,22 @@ namespace care {
          return *reinterpret_cast<host_device_ptr<const T> const *> (this);
       }
 
+#if defined(CARE_ENABLE_BOUNDS_CHECKING)
+      template <class Index>
+      inline void boundsCheck(const Index i) {
+         if (i < 0 || i >= MA::size()) {
+            const char* name = CHAICallback::getName(MA::m_pointer_record);
+
+            if (name) {
+               std::cerr << "[CARE] Error: Index " << i << " is access out of bounds for array '" << std::string(name) << "'!" << std::endl;
+            }
+            else {
+               std::cerr << "[CARE] Error: Index " << i << " is access out of bounds for array!" << std::endl;
+            }
+         }
+      }
+#endif
+
       ///
       /// @author Peter Robinson
       ///
@@ -206,11 +222,19 @@ namespace care {
 #if !CARE_LEGACY_COMPATIBILITY_MODE
       const
 #endif
-      { return MA::operator[](i); }
+      {
+#if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
+         boundsCheck(i);
+#endif
+         return MA::operator[](i);
+      }
 
 #if CARE_LEGACY_COMPATIBILITY_MODE
      template<typename Idx>
      inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
+#if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
+        boundsCheck(i);
+#endif
         return MA::operator[](i);
      }
 #endif
