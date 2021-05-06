@@ -24,9 +24,7 @@
 #endif
 
 // Std library headers
-#include <cstring>
-#include <iostream>
-#include <type_traits>
+#include <cstddef>
 
 /// Whether or not to force CUDA device synchronization after every call to forall
 #ifndef FORCE_SYNC
@@ -40,108 +38,6 @@
 #endif // !FORCE_SYNC
 
 namespace care {
-   namespace detail {
-      // c++17 feature
-      // https://en.cppreference.com/w/cpp/types/void_t
-      template< class... >
-      using void_t = void;
-
-      // Experimental c++ features
-
-      // https://en.cppreference.com/w/cpp/experimental/nonesuch
-      struct nonesuch {
-         ~nonesuch() = delete;
-         nonesuch(nonesuch const&) = delete;
-         void operator=(nonesuch const&) = delete;
-      };
-
-      // https://en.cppreference.com/w/cpp/experimental/is_detected
-      template <class Default, class AlwaysVoid,
-                template<class...> class Op, class... Args>
-      struct detector {
-         using value_t = std::false_type;
-         using type = Default;
-      };
-       
-      template <class Default, template<class...> class Op, class... Args>
-      struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
-         using value_t = std::true_type;
-         using type = Op<Args...>;
-      };
-
-      template <template<class...> class Op, class... Args>
-      using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
-       
-      template <template<class...> class Op, class... Args>
-      using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
-       
-      template <class Default, template<class...> class Op, class... Args>
-      using detected_or = detail::detector<Default, void, Op, Args...>;
-   } // namespace detail
-
-   // Taken and modified from https://nyorain.github.io/cpp-valid-expression.html
-   // Also inspired by https://www.fluentcpp.com/2017/06/06/using-tostring-custom-types-cpp/
-   template <typename T>
-   using stream_insertion_t = decltype(std::cout << std::declval<T>());
-
-   template <typename T,
-             typename std::enable_if<detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   inline void print(std::ostream& os, const T& obj)
-   {
-      os << obj;
-   }
-
-   template <typename T,
-             typename std::enable_if<!detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   inline void print(std::ostream& os, const T& obj)
-   {
-      os << "operator<< is not supported for type " << typeid(obj).name();
-   }
-
-   template <typename T,
-             typename std::enable_if<detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   inline void print(std::ostream& os, const T* array, size_t size)
-   {
-      // Write out size
-      os << "[CARE] Size: " << size << std::endl;
-
-      // Write out elements
-      const int maxDigits = std::strlen(std::to_string(size).c_str());
-
-      for (size_t i = 0; i < size; ++i) {
-         const int digits = std::strlen(std::to_string(i).c_str());
-         const int numSpaces = maxDigits - digits;
-
-         // Write out index
-         os << "[CARE] Index: ";
-
-         for (int j = 0; j < numSpaces; ++j) {
-            os << " ";
-         }
-
-         os << i;
-
-         // Write out white space between index and value
-         os << "    ";
-
-         // Write out value
-         os << "Value: " << array[i] << std::endl;
-      }
-
-      os << std::endl;
-   }
-
-   template <typename T,
-             typename std::enable_if<!detail::is_detected<stream_insertion_t, T>::value, int>::type = 0>
-   inline void print(std::ostream& os, const T* /* array */, size_t size)
-   {
-      // Write out size
-      os << "[CARE] Size: " << size << std::endl;
-
-      // TODO: Decide if we should write out the bytes
-      os << "operator<< is not supported for type " << typeid(T).name() << std::endl;
-   }
-
 #if defined(__CUDACC__)
 
    /////////////////////////////////////////////////////////////////////////////////
