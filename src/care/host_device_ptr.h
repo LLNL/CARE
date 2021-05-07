@@ -423,14 +423,14 @@ namespace care {
 
       CARE_HOST_DEVICE void pick(int idx, T_non_const& val) const  {
 #if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
-         boundsCheck(i);
+         boundsCheck(idx);
 #endif
          val = MA::pick((size_t) idx);
       }
 
       CARE_HOST_DEVICE T pick(int idx) const {
 #if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
-         boundsCheck(i);
+         boundsCheck(idx);
 #endif
          return MA::pick((size_t) idx);
       }
