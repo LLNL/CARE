@@ -160,8 +160,6 @@ include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 ################################
 # Set up compiler and flags
 ################################
-set(CMAKE_CXX_STD 11)
-
 if (ENABLE_CUDA)
    set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc" CACHE PATH "")
    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
