@@ -23,7 +23,7 @@ jobs:
       run: make -j
       working-directory: build
     - name: Run tests
-      run: make test CTEST_OUTPUT_ON_FAILURE=TRUE
+      run: make test VERBOSE=1 CTEST_OUTPUT_ON_FAILURE=TRUE
       working-directory: build
     - name: Clean up
       run: rm -rf build
