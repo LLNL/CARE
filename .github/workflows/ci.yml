@@ -17,13 +17,13 @@ jobs:
     - name: Make build directory
       run: mkdir build
     - name: Run cmake
-      run: cmake ../
+      run: cmake ../ -DCMAKE_BUILD_TYPE=Debug
       working-directory: build
     - name: Run make
       run: make -j
       working-directory: build
     - name: Run tests
-      run: make test
+      run: make test CTEST_OUTPUT_ON_FAILURE=TRUE
       working-directory: build
     - name: Clean up
       run: rm -rf build
