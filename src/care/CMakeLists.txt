@@ -19,6 +19,7 @@ set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
     algorithm.h
     algorithm_decl.h
+    algorithm_impl.h
     array.h
     atomic.h
     CHAICallback.h
@@ -35,6 +36,7 @@ set(care_headers
     host_ptr.h
     KeyValueSorter.h
     KeyValueSorter_decl.h
+    KeyValueSorter_impl.h
     KeyValueSorter_inst.h
     local_host_device_ptr.h
     local_ptr.h
