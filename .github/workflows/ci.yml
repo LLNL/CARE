@@ -23,7 +23,7 @@ jobs:
       run: make -j
       working-directory: build
     - name: Run tests
-      run: make test
+      run: make test --output-on-failure
       working-directory: build
     - name: Clean up
       run: rm -rf build
