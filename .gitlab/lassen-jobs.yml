@@ -5,108 +5,64 @@
 # SPDX-License-Identifier: (MIT)
 ##############################################################################
 
+# TODO: what variants do we want to actually test?
+
 # CPU ONLY
 ibm_clang_9:
   variables:
-    SPEC: "+fortran %clang@9.0.0ibm"
+    SPEC: " %clang@9.0.0ibm"
   extends: .build_and_test_on_lassen
 
 ibm_clang_9_gcc_8:
   variables:
-    SPEC: "+fortran %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
-  extends: .build_and_test_on_lassen
-
-clang_10_0_1_mpi (build and test on lassen):
-  variables:
-    SPEC: "%clang@10.0.1ibm +mpi ^spectrum-mpi"
-  extends: .build_and_test_on_lassen
-
-clang_10_0_1_mpi_shmem:
-  variables:
-    SPEC: "%clang@10.0.1ibm +ipc_shmem +mpi ^spectrum-mpi"
+    SPEC: " %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
   extends: .build_and_test_on_lassen
 
 gcc_8_3_1:
   variables:
-    SPEC: "+fortran%gcc@8.3.1"
+    SPEC: "%gcc@8.3.1"
   extends: .build_and_test_on_lassen
 
-pgi_19_10:
-  variables:
-    SPEC: "+fortran%pgi@19.10"
-  extends: .build_and_test_on_lassen
-
-pgi_19_10_gcc_8_3_1:
-  variables:
-    SPEC: "+fortran%pgi@19.10 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
-  extends: .build_and_test_on_lassen
-
-pgi_20_4_gcc_8_3_1:
-  variables:
-    SPEC: "+fortran%pgi@20.4 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
-  extends: .build_and_test_on_lassen
 
 xl_16_1_1_7:
   variables:
-    SPEC: "+fortran%xl@16.1.1.7"
+    SPEC: "%xl@16.1.1.7"
   extends: .build_and_test_on_lassen
 
 xl_16_1_1_7_gcc_8_3_1:
   variables:
-    SPEC: "+fortran%xl@16.1.1.7 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
+    SPEC: "%xl@16.1.1.7 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
   extends: .build_and_test_on_lassen
 
 # CUDA
 
 ibm_clang_9_cuda:
   variables:
-    SPEC: "+fortran+cuda+allow-untested-versions %clang@9.0.0ibm ^cuda@10.1.168"
+    SPEC: "+cuda %clang@9.0.0ibm ^cuda@10.1.168"
   extends: .build_and_test_on_lassen
 
 ibm_clang_9_gcc_8_cuda:
   variables:
-    SPEC: "+fortran+cuda %clang@9.0.0ibm +allow-untested-versions cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168"
+    SPEC: "+cuda %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168"
   extends: .build_and_test_on_lassen
 
 gcc_8_3_1_cuda:
   variables:
-    SPEC: "+fortran+cuda %gcc@8.3.1 ^cuda@10.1.168"
-  extends: .build_and_test_on_lassen
-
-pgi_19_10_cuda:
-  variables:
-    SPEC: "+fortran+cuda %pgi@19.10 ^cuda@10.1.168"
-  extends: .build_and_test_on_lassen
-
-pgi_19_10_gcc_8_3_1_cuda:
-  variables:
-    SPEC: "+fortran+cuda %pgi@19.10 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168"
-  allow_failure: true
-  extends: .build_and_test_on_lassen
-
-pgi_20_4_gcc_8_3_1_cuda_11:
-  variables:
-    SPEC: "+fortran+cuda %pgi@20.4 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@11.0.2"
-  allow_failure: true
+    SPEC: "+cuda %gcc@8.3.1 ^cuda@10.1.168"
   extends: .build_and_test_on_lassen
 
 xl_16_1_1_7_cuda:
   variables:
-    SPEC: "+fortran+cuda %xl@16.1.1.7 ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda %xl@16.1.1.7 ^cuda@10.1.168 ^cmake@3.14.5"
   extends: .build_and_test_on_lassen
 
 xl_16_1_1_7_gcc_8_3_1_cuda_11:
   variables:
-    SPEC: "+fortran+cuda %xl@16.1.1.7 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@11.0.2"
+    SPEC: "+cuda %xl@16.1.1.7 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@11.0.2"
   allow_failure: true
   extends: .build_and_test_on_lassen
 
 # EXTRAS
-
-clang_9_0_0_libcpp (build and test on lassen):
-  variables:
-    SPEC: "%clang@9.0.0+libcpp"
-  extends: .build_and_test_on_lassen
 
 clang_9_0_0_memleak (build and test on lassen):
   variables:
@@ -125,12 +81,3 @@ gcc_8_3_1_dev_benchmarks:
     SPEC: "+dev_benchmarks %gcc@8.3.1 build_type=Release"
   extends: .build_and_test_on_lassen
 
-xl_default_omp_target (build and test on lassen):
-  variables:
-    SPEC: "%xl@default+openmp+openmp_target ^cmake@3.14.5"
-  extends: .build_and_test_on_lassen
-
-gcc_8_3_1_numa:
-  variables:
-    SPEC: "+fortran+numa%gcc@8.3.1"
-  extends: .build_and_test_on_lassen
