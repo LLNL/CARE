@@ -53,6 +53,8 @@ static unsigned int currentColor = 0;
 using namespace care;
 using int_ptr = host_device_ptr<int>;
 
+#if defined(CARE_GPUCC)
+//This test is not valid on the CPU since AllocationStrategy chai::PINNED does not exist for that build.
 CUDA_TEST(TestFuser, Initialization) {
    printf("Initializing\n");
    // initializing and allocate memory pools
@@ -68,7 +70,7 @@ CUDA_TEST(TestFuser, Initialization) {
    care::syncIfNeeded();
    printf("Initialized... Benchmarking Loop Fusion\n");
 }
-
+#endif //CARE_GPUCC
 
 CUDA_TEST(TestFuser, OneMillionSmallKernels) {
    int numLoops = 1000000;

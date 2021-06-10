@@ -38,7 +38,6 @@ set(care_headers
     KeyValueSorter_inst.h
     local_host_device_ptr.h
     local_ptr.h
-    LoopFuser.h
     managed_ptr.h
     openmp.h
     SortFuser.h
@@ -57,10 +56,14 @@ set(care_headers
 set(care_sources
     care.cpp
     CHAICallback.cpp
-    LoopFuser.cpp
     RAJAPlugin.cpp
     scan.cpp
     )
+
+if (CARE_ENABLE_LOOP_FUSER)
+   list(APPEND care_headers LoopFuser.h)
+   list(APPEND care_sources LoopFuser.cpp)
+endif()
 
 if(CARE_ENABLE_EXTERN_INSTANTIATE)
    list(APPEND care_headers care_inst.h)
