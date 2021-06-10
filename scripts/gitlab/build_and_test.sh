@@ -146,16 +146,8 @@ then
     cd ${build_dir}
 
     date
-    ctest --output-on-failure --no-compress-output -T test -VV 2>&1 | tee tests_output.txt
+    make test 2>&1 | tee tests_output.txt
     date
-
-    # If Developer benchmarks enabled, run the no-op benchmark and show output
-    if [[ "${option}" != "--build-only" ]] && grep -q -i "ENABLE_DEVELOPER_BENCHMARKS.*ON" ${hostconfig_path}
-    then
-        date
-        ctest --verbose -C Benchmark -R no-op_stress_test
-        date
-    fi
 
     no_test_str="No tests were found!!!"
     if [[ "$(tail -n 1 tests_output.txt)" == "${no_test_str}" ]]
@@ -163,10 +155,10 @@ then
         echo "ERROR: No tests were found" && exit 1
     fi
 
-    echo "Copying Testing xml reports for export"
-    tree Testing
-    xsltproc -o junit.xml ${project_dir}/blt/tests/ctest-to-junit.xsl Testing/*/Test.xml
-    mv junit.xml ${project_dir}/junit.xml
+    #echo "Copying Testing xml reports for export"
+    #tree Testing
+    #xsltproc -o junit.xml ${project_dir}/blt/tests/ctest-to-junit.xsl Testing/*/Test.xml
+    #mv junit.xml ${project_dir}/junit.xml
 
     if grep -q "Errors while running CTest" ./tests_output.txt
     then
