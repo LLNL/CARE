@@ -28,8 +28,9 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     variant('docs', default=False, description='Build documentation')
-    variant('tests', default=True, description='Build tests')
+    variant('tests', default=False, description='Build tests')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
+    variant('allow-unsupported-compilers', default=True, description="Allow untested combinations of cuda and host compilers.")
 
     depends_on('blt@0.4.0:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
@@ -43,11 +44,16 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     # package. This will cause a race condition if compiled with another
     # package that uses cub. TODO: have all packages point to the same external
     # cub package.
+    depends_on('cub', when='+cuda')
+
     depends_on('camp+cuda', when='+cuda')
     depends_on('umpire+cuda~shared', when='+cuda')
-    depends_on('cub', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda~shared', when='+cuda')
+    depends_on('camp+cuda+allow-unsupported-compilers', when='+cuda+allow-unsupported-compilers')
+    depends_on('umpire+cuda+allow-unsupported-compilers~shared', when='+cuda+allow-unsupported-compilers')
+    depends_on('raja+cuda+allow-unsupported-compilers~openmp', when='+cuda+allow-unsupported-compilers')
+    depends_on('chai+cuda+allow-unsupported-compilers~shared', when='+cuda+allow-unsupported-compilers')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
