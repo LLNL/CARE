@@ -18,7 +18,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     git      = "https://github.com/LLNL/CARE.git"
 
     version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
+    version('main', branch='main', submodules='True')
     version('0.3.0', tag='v0.3.0', submodules='True')
     version('0.2.0', tag='v0.2.0', submodules='True')
 
@@ -30,15 +30,17 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('docs', default=False, description='Build documentation')
     variant('tests', default=False, description='Build tests')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
-    variant('allow-unsupported-compilers', default=True, description="Allow untested combinations of cuda and host compilers.")
+    variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
 
     depends_on('blt@0.4.0:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
+    depends_on('cmake@3.14.5', when="+cuda")
+
     depends_on('camp')
-    depends_on('umpire@develop')
-    depends_on('raja@develop')
-    depends_on('chai@develop+enable_pick~benchmarks')
+    depends_on('umpire@main')
+    depends_on('raja@main')
+    depends_on('chai@main+enable_pick')
 
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
@@ -50,10 +52,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('umpire+cuda~shared', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda~shared', when='+cuda')
-    depends_on('camp+cuda+allow-unsupported-compilers', when='+cuda+allow-unsupported-compilers')
-    depends_on('umpire+cuda+allow-unsupported-compilers~shared', when='+cuda+allow-unsupported-compilers')
-    depends_on('raja+cuda+allow-unsupported-compilers~openmp', when='+cuda+allow-unsupported-compilers')
-    depends_on('chai+cuda+allow-unsupported-compilers~shared', when='+cuda+allow-unsupported-compilers')
+    depends_on('camp+allow-unsupported-compilers', when='+allow-unsupported-compilers')
+    depends_on('umpire+allow-unsupported-compilers', when='+allow-unsupported-compilers')
+    depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
+    depends_on('chai+allow-unsupported-compilers', when='+allow-unsupported-compilers')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.

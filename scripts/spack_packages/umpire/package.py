@@ -58,7 +58,7 @@ class Umpire(CMakePackage, CudaPackage):
     git      = 'https://github.com/LLNL/Umpire.git'
 
     version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
+    version('main', branch='main', submodules='True')
     version('3.0.0', tag='v3.0.0', submodules='True')
     version('2.1.0', tag='v2.1.0', submodules='True')
     version('2.0.0', tag='v2.0.0', submodules='True')
@@ -101,7 +101,7 @@ class Umpire(CMakePackage, CudaPackage):
     variant('werror', default=True, description='Enable warnings as errors')
     variant('asan', default=False, description='Enable ASAN')
     variant('sanitizer_tests', default=False, description='Enable address sanitizer tests')
-    variant('allow-unsupported-compilers', default=True, description="Allow untested combinations of cuda and host compilers.")
+    variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
