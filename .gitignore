@@ -9,3 +9,4 @@ hc-*
 *.aps
 *.orig
 *.vscode
+spack-*.txt
