@@ -23,6 +23,8 @@ job_unique_id=${CI_JOB_ID:-""}
 sys_type=${SYS_TYPE:-""}
 py_env_path=${PYTHON_ENVIRONMENT_PATH:-""}
 
+launch=${LAUNCH:-""}
+
 # Dependencies
 date
 if [[ "${option}" != "--build-only" && "${option}" != "--test-only" ]]
@@ -146,7 +148,7 @@ then
     cd ${build_dir}
 
     date
-    make test 2>&1 | tee tests_output.txt
+    ${launch} make test 2>&1 | tee tests_output.txt
     date
 
     no_test_str="No tests were found!!!"

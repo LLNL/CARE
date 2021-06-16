@@ -124,7 +124,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
                 entries.append(cmake_cache_string(
                     "CMAKE_CUDA_ARCHITECTURES",
                     cuda_arch))
-                cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} -code compute_{CMAKE_CUDA_ARCHITECTURES} '
+                cudaflags += '-arch compute_${CMAKE_CUDA_ARCHITECTURES} -code sm_${CMAKE_CUDA_ARCHITECTURES} '
             else:
                 entries.append(
                     "# cuda_arch could not be determined\n\n")
@@ -182,10 +182,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option('CARE_ENABLE_IMPLICIT_CONVERSIONS', spec.satisfies('+implicit_conversions')))
         entries.append(cmake_cache_option('CARE_ENABLE_LOOP_FUSER', spec.satisfies('+loop_fuser')))
-        entries.append(cmake_cache_path('CAMP_DIR', spec['camp'].prefix.share.camp.cmake))
-        entries.append(cmake_cache_path('UMPIRE_DIR', spec['umpire'].prefix.share.umpire.cmake))
-        entries.append(cmake_cache_path('RAJA_DIR', spec['raja'].prefix.share.raja.cmake))
-        entries.append(cmake_cache_path('CHAI_DIR', spec['chai'].prefix.share.chai.cmake))
+        entries.append(cmake_cache_path('CAMP_DIR', spec['camp'].prefix))
+        entries.append(cmake_cache_path('umpire_DIR', spec['umpire'].prefix.share.umpire.cmake))
+        entries.append(cmake_cache_path('raja_DIR', spec['raja'].prefix.share.raja.cmake))
+        entries.append(cmake_cache_path('chai_DIR', spec['chai'].prefix.share.chai.cmake))
         entries.append(cmake_cache_option('CARE_ENABLE_TESTS', spec.satisfies('+tests')))
         entries.append(cmake_cache_option('BLT_ENABLE_TESTS', spec.satisfies('+tests')))
 

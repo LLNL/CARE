@@ -24,44 +24,24 @@ gcc_8_3_1:
   extends: .build_and_test_on_lassen
 
 
-xl_16_1_1_7:
-  variables:
-    SPEC: "%xl@16.1.1.7+tests"
-  extends: .build_and_test_on_lassen
-
-xl_16_1_1_7_gcc_8_3_1:
-  variables:
-    SPEC: "%xl@16.1.1.7+tests cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
-  extends: .build_and_test_on_lassen
 
 # CUDA
 
 ibm_clang_9_cuda:
   variables:
-    SPEC: "+cuda +allow-unsupported-compilers +tests %clang@9.0.0ibm+tests ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 +tests %clang@9.0.0ibm^cuda@10.1.168 ^cmake@3.14.5"
   extends: .build_and_test_on_lassen
 
 ibm_clang_9_gcc_8_cuda:
   variables:
-    SPEC: "+cuda +allow-unspported-compilers +tests %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda cuda_arch=70 +allow-unspported-compilers +tests %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
   extends: .build_and_test_on_lassen
 
 gcc_8_3_1_cuda:
   variables:
-    SPEC: "+cuda +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
   extends: .build_and_test_on_lassen
 
-xl_16_1_1_7_cuda:
-  variables:
-    SPEC: "+cuda +allow-unsupported-compilers +tests %xl@16.1.1.7 ^cuda@10.1.168 ^cmake@3.14.5"
-  allow_failure: true
-  extends: .build_and_test_on_lassen
-
-xl_16_1_1_7_gcc_8_3_1_cuda_11:
-  variables:
-    SPEC: "+cuda +allow-unspported-compilers +tests %xl@16.1.1.7 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@11.0.2"
-  allow_failure: true
-  extends: .build_and_test_on_lassen
 
 # EXTRAS
 
