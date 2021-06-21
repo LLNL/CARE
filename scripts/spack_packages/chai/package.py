@@ -61,6 +61,7 @@ class Chai(CMakePackage, CudaPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main', branch='main', submodules='True')
+    version('2.3.0', commit='d3282bc', submodules='True')
     version('2.1.1', tag='v2.1.1', submodules='True')
     version('2.1.0', tag='v2.1.0', submodules='True')
     version('2.0.0', tag='v2.0.0', submodules='True')
@@ -74,10 +75,11 @@ class Chai(CMakePackage, CudaPackage):
             multi=False, description='Tests to run')
     variant('libcpp', default=False, description='Use libc++')
     variant('enable_pick', default=False, description=' enable pick API')
+    variant('disable_rm', default=True, description='disable the resource manager')
 
     depends_on('cmake@3.8:', type='build')
-    depends_on('umpire@main')
-    depends_on('raja@main', when="+raja")
+    depends_on('umpire')
+    depends_on('raja', when="+raja")
 
     depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
@@ -240,6 +242,8 @@ class Chai(CMakePackage, CudaPackage):
                 flag = '-arch {0}'.format(cuda_arch)
                 cfg.write(cmake_cache_string("CUDA_ARCH",cuda_arch))
                 cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS", flag))
+            
+            cfg.write(cmake_cache_option("ENABLE_PINNED", True))
 
         else:
             cfg.write(cmake_cache_option("ENABLE_CUDA", False))
@@ -265,6 +269,7 @@ class Chai(CMakePackage, CudaPackage):
         cfg.write(cmake_cache_option("ENABLE_TESTS", not 'tests=none' in spec))
 
         cfg.write(cmake_cache_option("ENABLE_PICK", '+enable_pick' in spec))
+        cfg.write(cmake_cache_option("DISABLE_RM", '+disable_rm' in spec))
 
         #######################
         # Close and save

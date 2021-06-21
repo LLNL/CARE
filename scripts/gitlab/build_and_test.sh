@@ -62,12 +62,14 @@ then
 fi
 date
 
+
+hostname_base=`printf '%s\n' "${hostname//[[:digit:]]/}"`
 # Host config file
 if [[ -z ${hostconfig} ]]
 then
     # If no host config file was provided, we assume it was generated.
     # This means we are looking of a unique one in project dir.
-    hostconfigs=( $( ls "${project_dir}/"hc-*.cmake ) )
+    hostconfigs=( $( ls "${project_dir}/"hc-${hostname_base}-*.cmake ) )
     if [[ ${#hostconfigs[@]} == 1 ]]
     then
         hostconfig_path=${hostconfigs[0]}
@@ -78,7 +80,7 @@ then
         echo "Spack generated host-config not found."
         exit 1
     else
-        echo "More than one result for: ${project_dir}/hc-*.cmake"
+        echo "More than one result for: ${project_dir}/hc-${hostname_base}-*.cmake"
         echo "${hostconfigs[@]}"
         echo "Please specify one with HOST_CONFIG variable"
         exit 1
@@ -94,7 +96,7 @@ then
     build_root=$(pwd)
 fi
 
-build_dir="${build_root}/build_${hostconfig//.cmake/}"
+build_dir="${build_root}/build_${hostname_base//.cmake/}"
 
 cmake_exe=`grep 'CMake executable' ${hostconfig_path} | cut -d ':' -f 2 | xargs`
 

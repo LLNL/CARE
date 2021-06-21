@@ -37,10 +37,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.14.5', when="+cuda")
 
-    depends_on('camp')
-    depends_on('umpire@main')
+    depends_on('camp@0.1.0')
+    depends_on('umpire@5.0.0')
     depends_on('raja@main')
-    depends_on('chai@main+enable_pick')
+    depends_on('chai+enable_pick@2.3.0')
 
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
@@ -51,7 +51,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp+cuda', when='+cuda')
     depends_on('umpire+cuda~shared', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
-    depends_on('chai+cuda~shared', when='+cuda')
+    depends_on('chai+cuda~shared~disable_rm', when='+cuda')
     depends_on('camp+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('umpire+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
@@ -62,7 +62,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp+rocm', when='+rocm')
     depends_on('umpire+rocm', when='+rocm')
     depends_on('raja+rocm~openmp', when='+rocm')
-    depends_on('chai+rocm', when='+rocm')
+    depends_on('chai+rocm~disable_rm', when='+rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
