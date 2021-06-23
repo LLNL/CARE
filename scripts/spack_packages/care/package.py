@@ -57,19 +57,19 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('chai+allow-unsupported-compilers', when='+allow-unsupported-compilers')
 
-    # variants +rocm and amdgpu_targets are not automatically passed to
+    # variants +hip and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    depends_on('camp+rocm', when='+rocm')
-    depends_on('umpire+rocm', when='+rocm')
-    depends_on('raja+rocm~openmp', when='+rocm')
-    depends_on('chai+rocm~disable_rm', when='+rocm')
+    depends_on('camp+hip', when='+hip')
+    depends_on('umpire+hip', when='+hip')
+    depends_on('raja+hip~openmp', when='+hip')
+    depends_on('chai+hip~disable_rm', when='+hip')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('raja amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('chai amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
-    conflicts('+openmp', when='+rocm')
+    conflicts('+openmp', when='+hip')
     conflicts('+openmp', when='+cuda')
 
     def flag_handler(self, name, flags):
@@ -141,7 +141,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(
                 cmake_cache_option("gtest_disable_pthreads", True))
 
-        if '+rocm' in spec:
+        if '+hip' in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_string("HIP_ROOT_DIR", spec['hip'].prefix))
             
