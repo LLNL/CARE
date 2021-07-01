@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
-##############################################################################
-# Copyright (c) 2016-20, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the COPYRIGHT file for details.
+###############################################################################
+# Copyright 2021 Lawrence Livermore National Security, LLC and other CARE
+# developers.
 #
-# SPDX-License-Identifier: (MIT)
-##############################################################################
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Based on implementation in the Umpire Project,  Copyright (c) 2018-20, 
+# Lawrence Livermore National Security, LLC and Umpire project contributors.
+#
+# See the COPYRIGHT file for details.
+###############################################################################
 
 
 set -o errexit

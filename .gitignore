@@ -2,6 +2,7 @@
 *.swo
 build-*
 build_/*
+build_*/*
 hc-*
 hc-*
 *.vcxproj.user
