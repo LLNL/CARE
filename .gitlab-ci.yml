@@ -34,12 +34,12 @@
 # TODO: add a clean-up mechanism
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_STRATEGY: normal
   ALLOC_NAME: ${CI_PROJECT_NAME}_ci_${CI_PIPELINE_ID}
   BUILD_ROOT: ${CI_PROJECT_DIR}
 
 # Normally, stages are blocking in Gitlab. However, using the keyword "needs" we
-# can express dependencies between job that break the ordering of stages, in
+# can express dependencies between jobs that break the ordering of stages, in
 # favor of a DAG.
 # In practice r_*, l_* and b_* stages are independently run and start immediately.
 
@@ -49,7 +49,6 @@ stages:
   - r_release_resources
   - l_build_and_test
   - c_build_and_test
-#  - multi_project
 
 # This is the rules that drives the activation of "advanced" jobs. All advanced
 # jobs will share this through a template mechanism.
@@ -91,20 +90,6 @@ stages:
 
 .build_blueos_3_ppc64le_ib_p9_script:
   extends: .build_blueos_3_ppc64le_ib_script
-
-# If testing develop branch, trigger CHAI pipeline with this version of Umpire.
-# TODO: Once spack allows to clone a specific commit on demand, then point to the exact commit.
-#       This will prevent from sticking to a branch (here develop).
-# trigger-chai:
-#  stage: multi_project
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == "develop" || $MULTI_PROJECT == "ON"' #run only if ...
-#  variables:
-#    UPDATE_UMPIRE: develop
-#  trigger:
-#    project: radiuss/chai
-#    branch: develop
-#    strategy: depend
 
 # This is where jobs are included.
 include:

@@ -46,3 +46,16 @@ PackageName: CHAI
 PackageHomePage: https://github.com/LLNL/chai/
 PackageLicenseDeclared: MIT
 
+Below dependencies are used for continuous integration.
+
+PackageName: Uberenv
+PackageHomePage: https://github.com/LLNL/uberenv/
+PackageLicenseDeclared: BSD-3-Clause
+
+PackageName: RADIUSS-CI
+PackageHomePage: https://github.com/LLNL/radiuss-ci/
+PackageLicenseDeclared: MIT
+
+PackageName: RADIUSS-Spack-Configs
+PackageHomePage: https://github.com/LLNL/radiuss-spack-configs/
+PackageLicenseDeclared: MIT
