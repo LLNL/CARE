@@ -1,0 +1,22 @@
+################################################################################
+# Copyright 2021 Lawrence Livermore National Security, LLC and other CARE
+# developers.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Based on implementation in the Umpire Project,  Copyright (c) 2018-20, 
+# Lawrence Livermore National Security, LLC and Umpire project contributors.
+#
+# See the COPYRIGHT file for details.
+################################################################################
+hip_4_0_gcc_8_1_0 (build and test on corona):
+  variables:
+    SPEC: "+hip +tests %gcc@8.1.0 ^hip@4.0.0"
+  extends: .build_and_test_on_corona
+  allow_failure: true
+
+hip_4_1_gcc_8_1_0 (build and test on corona):
+  variables:
+    SPEC: "+hip +tests %gcc@8.1.0 ^hip@4.1.0"
+  extends: .build_and_test_on_corona
+  allow_failure: true

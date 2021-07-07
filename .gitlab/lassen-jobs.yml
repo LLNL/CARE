@@ -1,0 +1,70 @@
+###############################################################################
+# Copyright 2021 Lawrence Livermore National Security, LLC and other CARE
+# developers.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Based on implementation in the Umpire Project,  Copyright (c) 2018-20, 
+# Lawrence Livermore National Security, LLC and Umpire project contributors.
+#
+# See the COPYRIGHT file for details.
+###############################################################################
+
+# TODO: what variants do we want to actually test?
+
+# CPU ONLY
+ibm_clang_9:
+  variables:
+    SPEC: " %clang@9.0.0ibm"
+  extends: .build_and_test_on_lassen
+
+ibm_clang_9_gcc_8:
+  variables:
+    SPEC: " %clang@9.0.0ibm+tests cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
+  extends: .build_and_test_on_lassen
+
+gcc_8_3_1:
+  variables:
+    SPEC: "%gcc@8.3.1+tests"
+  extends: .build_and_test_on_lassen
+
+
+
+# CUDA - TODO - fix cuda tests and add + tests back to the tests here
+
+ibm_clang_9_cuda:
+  variables:
+#    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 +tests %clang@9.0.0ibm^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 %clang@9.0.0ibm^cuda@10.1.168 ^cmake@3.14.5"
+  extends: .build_and_test_on_lassen
+
+#TODO - this is getting a linking error (The link line is getting -L/path/to/4.9.3 libraries in tests for chai)
+ibm_clang_9_gcc_8_cuda:
+  variables:
+#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %clang@9.0.0ibm cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+  allow_failure: true
+  extends: .build_and_test_on_lassen
+
+gcc_8_3_1_cuda:
+  variables:
+#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+  extends: .build_and_test_on_lassen
+
+
+# EXTRAS
+
+#clang_9_0_0_memleak (build and test on lassen):
+#  variables:
+#    SPEC: "+asan +sanitizer_tests +tests %clang@9.0.0 cxxflags=-fsanitize=address"
+#    ASAN_OPTIONS: "detect_leaks=1"
+#  extends: .build_and_test_on_lassen
+
+#clang_9_0_0_datarace (build and test on lassen):
+#  variables:
+#    SPEC: "%clang@9.0.0 +tests cxxflags=-fsanitize=thread"
+#  allow_failure: true
+#  extends: .build_and_test_on_lassen
+
+

@@ -1,0 +1,38 @@
+###############################################################################
+# Copyright 2021 Lawrence Livermore National Security, LLC and other CARE
+# developers.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Based on implementation in the Umpire Project,  Copyright (c) 2018-20, 
+# Lawrence Livermore National Security, LLC and Umpire project contributors.
+#
+# See the COPYRIGHT file for details.
+###############################################################################
+clang_10:
+  variables:
+    SPEC: "%clang@10.0.1+tests"
+  extends: .build_and_test_on_ruby
+
+clang_9:
+  variables:
+    SPEC: "%clang@9.0.0+tests"
+  extends: .build_and_test_on_ruby
+
+gcc_8_1_0:
+  variables:
+    SPEC: "%gcc@8.1.0+tests"
+  extends: .build_and_test_on_ruby
+
+#intel takes  a long time to link Loop Fuser tests, so we disable tests for this compiler
+icpc_19_0_4:
+  variables:
+    SPEC: " %intel@19.0.4"
+  extends: .build_and_test_on_ruby
+
+
+gcc_4_9_3:
+  variables:
+    SPEC: "%gcc@4.9.3+tests"
+  extends: .build_and_test_on_ruby
+
