@@ -10,8 +10,8 @@
 
 #define GPU_ACTIVE
 
-#include "care/algorithm.h"
-#include "care/KeyValueSorter.h"
+#include "care/algorithm_impl.h"
+#include "care/KeyValueSorter_impl.h"
 
 #define CARE_INSTANTIATE
 #include "care/care_inst.h"
