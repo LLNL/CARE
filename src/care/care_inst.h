@@ -4,9 +4,7 @@
 // CARE config header
 #include "care/config.h"
 
-#ifndef CARE_ENABLE_EXTERN_INSTANTIATE
-#error "CARE external instantiations may only be used with CARE_ENABLE_EXTERN_INSTANTIATE"
-#endif
+#ifdef CARE_ENABLE_EXTERN_INSTANTIATE
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1211,5 +1209,12 @@ int PickAndPerformFindMaxIndex<double, RAJA::seq_exec>(care::host_device_ptr<con
 ///////////////////////////////////////////////////////////////////////////////
 
 } // namespace care
+
+#else // CARE_ENABLE_EXTERN_INSTANTIATE
+
+// Just include the header if we are not using external instantiations
+#include "care/KeyValueSorter.h"
+
+#endif // else CARE_ENABLE_EXTERN_INSTANTIATE
 
 #endif // __CARE_INST_H
