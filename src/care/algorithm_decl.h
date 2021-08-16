@@ -207,19 +207,22 @@ int FindIndexMax(care::host_device_ptr<const T> arr, int n);
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const T* array, const int len,
                                   const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
+                                  const bool allowDuplicates = false,
+                                  const bool warnOnFailure = true);
 
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, const int len,
                                   const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
+                                  const bool allowDuplicates = false,
+                                  const bool warnOnFailure = true);
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template <typename T>
 CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
                                   const char* name, const char* argname,
-                                  const bool allowDuplicates = false);
+                                  const bool allowDuplicates = false,
+                                  const bool warnOnFailure = true);
 
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
