@@ -22,6 +22,7 @@ set(care_headers
     algorithm_impl.h
     array.h
     atomic.h
+    care_inst.h
     CHAICallback.h
     CHAIDataGetter.h
     GPUWatchpoint.h
@@ -65,7 +66,6 @@ set(care_sources
     )
 
 if(CARE_ENABLE_EXTERN_INSTANTIATE)
-   list(APPEND care_headers care_inst.h)
    list(APPEND care_sources care_inst.cpp)
 endif()
 
