@@ -73,7 +73,7 @@ namespace care {
          ///
          /// Construct from host_ptr
          ///
-         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T> const &ptr) noexcept : m_ptr(ptr) {}
+         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          ///
          /// @author Peter Robinson
@@ -82,7 +82,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
+         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.cdata()) {}
 
          ///
          /// @author Peter Robinson
