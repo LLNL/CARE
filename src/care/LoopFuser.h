@@ -48,12 +48,14 @@ namespace care {
    /// @param[in] name            - The name of the calling function
    /// @param[in] argname         - The name of the sorter in the calling function
    /// @param[in] allowDuplicates - Whether or not to allow duplicates
+   /// @param[in] warnOnFailure   - Whether to print a warning if array not sorted
    /// @return true if sorted, false otherwise
    ///////////////////////////////////////////////////////////////////////////
    template <typename T>
    inline bool CheckSorted(const T* array, const int len,
                            const char* name, const char* argname,
-                           const bool allowDuplicates = false) {
+                           const bool allowDuplicates = false,
+                           const bool warnOnFailure = true) {
       if (len > 0) {
          int last = 0;
          bool failed = false;
@@ -84,7 +86,9 @@ namespace care {
          }
 
          if (failed) {
-            std::cout << name << " " << argname << " not in ascending order at index " << last + 1 << std::endl;
+            if (warnOnFailure) {
+               std::cout << name << " " << argname << " not in ascending order at index " << last + 1 << std::endl;
+            }
             return false;
          }
       }

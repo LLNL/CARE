@@ -41,38 +41,38 @@ namespace care {
 ///////////////////////////////////////////////////////////////////////////////
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const int*, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const int*, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const float*, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const float*, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const double*, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const double*, const int, const char*, const char*, const bool, const bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const globalID*, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const globalID*, const int, const char*, const char*, const bool, const bool) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const int>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const int>&, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const float>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const float>&, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const double>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const double>&, const int, const char*, const char*, const bool, const bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const globalID>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const globalID>&, const int, const char*, const char*, const bool, const bool) ;
 #endif
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<int>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<int>&, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<float>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<float>&, const int, const char*, const char*, const bool, const bool) ;
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<double>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<double>&, const int, const char*, const char*, const bool, const bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<globalID>&, const int, const char*, const char*, const bool) ;
+CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<globalID>&, const int, const char*, const char*, const bool, const bool) ;
 #endif
 
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)

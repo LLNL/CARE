@@ -43,12 +43,14 @@ namespace care {
 /// @param[in] name            - The name of the calling function
 /// @param[in] argname         - The name of the sorter in the calling function
 /// @param[in] allowDuplicates - Whether or not to allow duplicates
+/// @param[in] warnOnFailure   - Whether to print a warning if array not sorted
 /// @return true if sorted, false otherwise
 ///////////////////////////////////////////////////////////////////////////
 template <typename T>
 CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
                                               const char* name, const char* argname,
-                                              const bool allowDuplicates)
+                                              const bool allowDuplicates,
+                                              const bool warnOnFailure)
 {
    if (len > 0) {
       int last = 0;
@@ -80,7 +82,9 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
       }
 
       if (failed) {
-         printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+         if (warnOnFailure) {
+            printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+         }
          return false;
       }
    }
@@ -93,9 +97,10 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<const 
                                               const int len,
                                               const char* name,
                                               const char* argname,
-                                              const bool allowDuplicates)
+                                              const bool allowDuplicates,
+                                              const bool warnOnFailure)
 {
-   return checkSorted<T>(array.data(), len, name, argname, allowDuplicates);
+   return checkSorted<T>(array.data(), len, name, argname, allowDuplicates, warnOnFailure);
 }
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
@@ -105,9 +110,10 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<T>& ar
                                               const int len,
                                               const char* name,
                                               const char* argname,
-                                              const bool allowDuplicates)
+                                              const bool allowDuplicates,
+                                              const bool warnOnFailure)
 {
-   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates);
+   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates, warnOnFailure);
 }
 
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
@@ -431,7 +437,8 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
    }
 #ifdef CARE_DEBUG
    const bool allowDuplicates = true;
-   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates) ;
+   const bool warnOnFailure = true;
+   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates, warnOnFailure) ;
 #endif
 
    while (khi-klo > 1) {
