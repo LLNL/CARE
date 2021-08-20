@@ -72,10 +72,6 @@ if (NOT TARGET umpire)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/umpire/CMakeLists.txt)
          message(FATAL_ERROR "CARE: Umpire submodule not initialized. Run 'git submodule update --init' in the git repository or set umpire_DIR or UMPIRE_DIR to use an external build of Umpire.")
       else ()
-         # TODO: Put these changes back into umpire
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/umpire/CMakeLists.txt
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/umpire)
-
          set(UMPIRE_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable Umpire tests")
          set(UMPIRE_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable Umpire benchmarks")
          set(UMPIRE_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable Umpire examples")
