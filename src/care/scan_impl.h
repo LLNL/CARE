@@ -69,14 +69,16 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
       else {
          CHAIDataGetter<T, Exec> D {};
          ValueType * rawData = D.getRawArrayData(data);
-         ValueType * rawDataEnd = rawData+size;
 
          if (inPlace) {
-            RAJA::exclusive_scan_inplace(Exec {}, rawData, rawDataEnd, binop, val);
+            RAJA::exclusive_scan_inplace<Exec>(RAJA::make_span(rawData, size),
+                                               binop, val);
          }
          else {
             ValueType * rawOutData = D.getRawArrayData(outData);
-            RAJA::exclusive_scan(Exec {}, rawData, rawDataEnd, rawOutData, binop, val);
+            RAJA::exclusive_scan<Exec>(RAJA::make_span(rawData, size),
+                                       RAJA::make_span(rawOutData, size),
+                                       binop, val);
          }
       }
    }
@@ -90,12 +92,16 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
    CHAIDataGetter<T, Exec> D {};
    ValueType * rawData = D.getRawArrayData(data);
    ValueType * rawDataEnd = rawData+size;
+
    if (inPlace) {
-      RAJA::inclusive_scan_inplace(Exec {}, rawData, rawDataEnd, binop);
+      RAJA::inclusive_scan_inplace<Exec>(RAJA::make_span(rawData, size),
+                                         binop);
    }
    else {
       ValueType * rawOutData = D.getRawArrayData(outData);
-      RAJA::inclusive_scan(Exec {}, rawData, rawDataEnd, rawOutData, binop);
+      RAJA::inclusive_scan<Exec>(RAJA::make_span(rawData, size),
+                                 RAJA::make_span(rawOutData, size),
+                                 binop);
    }
 }
 
