@@ -48,9 +48,10 @@ if (NOT TARGET cub)
       set(CUB_INCLUDE_DIRS ${CUB_INCLUDE_DIR})
       set(CUB_DEPENDS cuda)
 
-      blt_register_library(NAME cub
-                           INCLUDES ${CUB_INCLUDE_DIR}
-                           DEPENDS_ON ${CUB_DEPENDS})
+      blt_import_library(NAME cub
+                         INCLUDES ${CUB_INCLUDE_DIR}
+                         DEPENDS_ON ${CUB_DEPENDS})
+
       message(STATUS "CARE: CUB found at ${CUB_INCLUDE_DIR}")
    else ()
       message(FATAL_ERROR "CARE: CUB not found. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")

@@ -153,7 +153,7 @@ void LoopFuser<REGISTER_COUNT,XARGS...>::reset(bool async, const char * fileName
       m_cws.clear();
    }
    else {
-      m_wait_for_event = RAJA::resources::EventProxy<StreamResource>(&m_async_resource);
+      m_wait_for_event = RAJA::resources::EventProxy<StreamResource>(m_async_resource);
       m_wait_needed = true;
    }
    m_conditionals.reserve(m_reserved, 256*m_reserved);

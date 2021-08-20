@@ -91,7 +91,6 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
                     int size, Fn binop, bool inPlace) {
    CHAIDataGetter<T, Exec> D {};
    ValueType * rawData = D.getRawArrayData(data);
-   ValueType * rawDataEnd = rawData+size;
 
    if (inPlace) {
       RAJA::inclusive_scan_inplace<Exec>(RAJA::make_span(rawData, size),
