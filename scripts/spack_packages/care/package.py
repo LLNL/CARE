@@ -32,15 +32,15 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
     variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
 
-    depends_on('blt@0.4.0:', type='build', when='@0.3.1:')
+    depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
     depends_on('cmake@3.14.5', when="+cuda")
 
-    depends_on('camp@0.1.0')
-    depends_on('umpire@5.0.0')
-    depends_on('raja@main')
-    depends_on('chai+enable_pick@2.3.0')
+    depends_on('camp@0.2.2')
+    depends_on('umpire@6.0.0')
+    depends_on('raja@0.14.0')
+    depends_on('chai+enable_pick@2.4.0')
 
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
