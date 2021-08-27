@@ -54,7 +54,6 @@ option(CARE_ENABLE_SUBMODULE_TOOLS "Build submodule tools" OFF)
 option(CARE_ENABLE_SUBMODULE_EXERCISES "Build submodule exercises" OFF)
 option(CARE_ENABLE_SUBMODULE_REPRODUCERS "Build submodule reproducers" OFF)
 
-
 # Enable tests
 if (CARE_ENABLE_TESTS OR CARE_ENABLE_SUBMODULE_TESTS)
    option(ENABLE_TESTS "Build tests" ON)
@@ -67,7 +66,13 @@ endif ()
 
 # Enable documentation
 if (CARE_ENABLE_DOCS OR CARE_ENABLE_SUBMODULE_DOCS)
-   option(ENABLE_DOCS "Build documentation" ON)
+   option(ENABLE_DOCS    "Build documentation" ON)
+   option(ENABLE_DOXYGEN "Enables Doxygen support" ON)
+   option(ENABLE_SPHINX  "Enables Sphinx support" ON)
+else ()
+   option(ENABLE_DOCS    "Build documentation" OFF)
+   option(ENABLE_DOXYGEN "Enables Doxygen support" OFF)
+   option(ENABLE_SPHINX  "Enables Sphinx support" OFF)
 endif ()
 
 # Enable examples
@@ -126,16 +131,17 @@ endif()
 # BLT
 ################################
 
-# TODO: Setting BLT_DOCS_TARGET_NAME will not be necessary after RAJA is
-#       updated past v0.11.0. BLT and RAJA both define a "docs" target,
-#       which cmake does not allow. The name of the BLT "docs" target is
-#       changed here to "blt-docs". The next version of RAJA renames its
-#       "docs" target to "raja-docs". A future update of BLT may also change
-#       the default name in BLT to something like "blt-docs", in which case
-#       this would no longer be necessary, either.
-if (CARE_ENABLE_SUBMODULE_DOCS)
-   set(BLT_DOCS_TARGET_NAME "blt-docs" CACHE STRING "Name of the master documentation generation target")
-endif ()
+# Prevent BLT from looking for the following unused executables
+option(ENABLE_CLANGQUERY   "Enables clang-query support" OFF)
+option(ENABLE_CLANGTIDY    "Enables clang-tidy support" OFF)
+option(ENABLE_CPPCHECK     "Enables Cppcheck support" OFF)
+option(ENABLE_VALGRIND     "Enables Valgrind support" OFF)
+
+option(ENABLE_ASTYLE       "Enables AStyle support" OFF)
+option(ENABLE_CLANGFORMAT  "Enables ClangFormat support" OFF)
+option(ENABLE_CMAKEFORMAT  "Enables CMakeFormat support" OFF)
+option(ENABLE_UNCRUSTIFY   "Enables Uncrustify support" OFF)
+option(ENABLE_YAPF         "Enables Yapf support" OFF)
 
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
