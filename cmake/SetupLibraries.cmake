@@ -72,15 +72,9 @@ if (NOT TARGET umpire)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/umpire/CMakeLists.txt)
          message(FATAL_ERROR "CARE: Umpire submodule not initialized. Run 'git submodule update --init' in the git repository or set umpire_DIR or UMPIRE_DIR to use an external build of Umpire.")
       else ()
-         # TODO: Put these changes back into umpire
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/umpire/CMakeLists.txt
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/umpire)
-
          set(UMPIRE_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable Umpire tests")
-         set(UMPIRE_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable Umpire benchmarks")
          set(UMPIRE_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable Umpire examples")
          set(UMPIRE_ENABLE_DOCS ${CARE_ENABLE_SUBMODULE_DOCS} CACHE BOOL "Enable Umpire documentation")
-         set(UMPIRE_ENABLE_TOOLS ${CARE_ENABLE_SUBMODULE_TOOLS} CACHE BOOL "Enable Umpire tools")
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/umpire)
       endif ()
@@ -118,17 +112,14 @@ if (NOT TARGET raja)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/raja/CMakeLists.txt)
          message(FATAL_ERROR "CARE: RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR or RAJA_DIR to use an external build of RAJA.")
       else ()
-         # TODO: Remove when these fixes are in RAJA (after v0.11.0).
-         # The current patch includes fixes for integrating CAMP and CUB
-         # as neighbor submodules.
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/CMakeLists.txt
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja)
+         # TODO: Remove when these fixes are in RAJA
+         # The current patch includes fixes for integrating CUB as a neighbor submodule.
+         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/SetupPackages.cmake
+              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja/cmake)
 
          set(RAJA_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable RAJA tests")
          set(RAJA_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable RAJA benchmarks")
          set(RAJA_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable RAJA examples")
-         set(RAJA_ENABLE_DOCS ${CARE_ENABLE_SUBMODULE_DOCS} CACHE BOOL "Enable RAJA documentation")
-         set(RAJA_ENABLE_REPRODUCERS ${CARE_ENABLE_SUBMODULE_REPRODUCERS} CACHE BOOL "Enable RAJA reproducers")
          set(RAJA_ENABLE_EXERCISES ${CARE_ENABLE_SUBMODULE_EXERCISES} CACHE BOOL "Enable RAJA exercises")
 
          if (ENABLE_CUDA)
