@@ -86,17 +86,9 @@ namespace care {
          host_ptr<T>(chai::ManagedArray<T_non_const> ptr) : m_ptr(ptr.data(chai::CPU)) {}
 
          ///
-         /// @author Alan Dayton
-         ///
          /// Copy assignment operator
          ///
-         host_ptr& operator=(const host_ptr& other) {
-            if (this != &other) {
-               m_ptr = other.data();
-            }
-
-            return *this;
-         }
+         host_ptr& operator=(const host_ptr& other) = default;
 
          ///
          /// @author Peter Robinson

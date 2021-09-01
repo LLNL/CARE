@@ -213,6 +213,11 @@ namespace care {
 #endif
 
       ///
+      /// Copy assignment operator
+      ///
+      host_device_ptr& operator=(const host_device_ptr& other) = default;
+
+      ///
       /// @author Peter Robinson
       ///
       /// Return the value at the given index
