@@ -213,6 +213,9 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       ASSERT_EQ(dst[i], i*2);
       ASSERT_EQ(src[i], i);
    } CARE_SEQUENTIAL_LOOP_END
+
+   src.free();
+   dst.free();
 }
 
 GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
@@ -237,6 +240,9 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
          ASSERT_EQ(src[i], i);
       } CARE_SEQUENTIAL_LOOP_END
    }
+
+   src.free();
+   dst.free();
 }
 
 
@@ -264,6 +270,9 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
          ASSERT_EQ(src[i], i);
       } CARE_SEQUENTIAL_LOOP_END
    }
+
+   src.free();
+   dst.free();
 }
 
 
@@ -304,7 +313,11 @@ GPU_TEST(orderDependent, basic_test) {
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       ASSERT_EQ(A[i], B[i]);
    } CARE_SEQUENTIAL_LOOP_END
+
+   A.free();
+   B.free();
 }
+
 static
 FUSIBLE_DEVICE bool printAndAssign(care::host_device_ptr<int> B, int i) {
    return B[i] == 1;
@@ -366,6 +379,12 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    ASSERT_EQ(a_pos, arrSize/2);
    ASSERT_EQ(b_pos, arrSize/2);
    ASSERT_EQ(ab_pos, arrSize);
+
+   A.free();
+   B.free();
+   A_scan.free();
+   B_scan.free();
+   AB_scan.free();
 }
 
 GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
@@ -442,6 +461,12 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    }
    // check scan positions
    ASSERT_EQ(result_pos, arrSize*2);
+
+   A.free();
+   B.free();
+   A_scan.free();
+   B_scan.free();
+   AB_scan.free();
 }
 
 GPU_TEST(fusible_loops_and_scans, mix_and_match) {
@@ -546,6 +571,15 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       ASSERT_EQ(D[i], 2*i);
       ASSERT_EQ(E[i], 3*i);
    } CARE_SEQUENTIAL_LOOP_END
+
+   A.free();
+   B.free();
+   C.free();
+   D.free();
+   E.free();
+   A_scan.free();
+   B_scan.free();
+   AB_scan.free();
 }
 
 GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
@@ -595,6 +629,9 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
       }
    } CARE_SEQUENTIAL_LOOP_END
 
+   A.free();
+   B.free();
+   AB_scan.free();
 }
 
 GPU_TEST(fusible_phase, fusible_loop_phase) {
@@ -709,6 +746,15 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
       } CARE_SEQUENTIAL_LOOP_END
    }
 
+   A1.free();
+   A2.free();
+   A3.free();
+   B1.free();
+   B2.free();
+   B3.free();
+   C1.free();
+   C2.free();
+   C3.free();
 }
 // TODO: FUSIBLE_LOOP_STREAM Should not batch if FUSIBLE_LOOPS_START has not been called.
 // TODO: test with two START and STOP to make sure new stuff is overwriting the old stuff.
