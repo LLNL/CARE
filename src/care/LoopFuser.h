@@ -506,7 +506,7 @@ public:
 
 template <int REGISTER_COUNT>
 struct fusible_registers_t {
-   static const int CUDA_WORKGROUP_BLOCK_SIZE = 2048/(REGISTER_COUNT/32);
+   static const int GPU_WORKGROUP_BLOCK_SIZE = 2048/(REGISTER_COUNT/32);
 };
 
 
@@ -526,13 +526,21 @@ class LoopFuser : public FusedActions {
       using conditional_xargs = RAJA::xargs<index_type * /*scan_var*/, index_type const * /*scan_offsets*/,  int /*total length */, XARGS...>;
 
       // TODO - explore varying policy block execution based off of register binning types
-#if defined CARE_GPUCC && defined GPU_ACTIVE
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+#if defined(__CUDACC__)
+      using gpu_work_async_policy = RAJA::cuda_work_async<fusible_registers::GPU_WORKGROUP_BLOCK_SIZE>;
+      using unordered_gpu_loop_y_block_iter_x_threadblock_average = RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average;
+#elif defined(__HIPCC__)
+      using gpu_work_async_policy = RAJA::hip_work_async<fusible_registers::GPU_WORKGROUP_BLOCK_SIZE>;
+      using unordered_gpu_loop_y_block_iter_x_threadblock_average = RAJA::unordered_hip_loop_y_block_iter_x_threadblock_average;
+#endif
+
       using workgroup_policy = RAJA::WorkGroupPolicy <
-                                 RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
-                                 RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average,
+                                 gpu_work_async_policy,
+                                 unordered_gpu_loop_y_block_iter_x_threadblock_average,
                                  RAJA::constant_stride_array_of_objects >;
       using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
-                                 RAJA::cuda_work_async<fusible_registers::CUDA_WORKGROUP_BLOCK_SIZE>,
+                                 gpu_work_async_policy,
                                  RAJA::ordered,
                                  RAJA::constant_stride_array_of_objects >;
 #else
@@ -1070,7 +1078,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
-// in opt, non cuda builds, never start recording
+// in opt, non GPU builds, never start recording
 #define FUSIBLE_LOOPS_START \
 { \
    static FusedActionsObserver * __phase_observer = new FusedActionsObserver(); \
