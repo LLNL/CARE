@@ -31,22 +31,22 @@ TEST(UpperBound_binarySearch, checkOffsets) {
    int offset;
 
    offset = care::binarySearch<int>(offsetArr, 0, 1, 0, true);
-   ASSERT_EQ(offsetArr[offset], 17);
+   EXPECT_EQ(offsetArr[offset], 17);
 
    offset = care::binarySearch<int>(offsetArr, 0, 20, 37, true);
-   ASSERT_EQ(offsetArr[offset], 51);
+   EXPECT_EQ(offsetArr[offset], 51);
 
    offset = care::binarySearch<int>(offsetArr, 0, 20, 33, true);
-   ASSERT_EQ(offsetArr[offset], 34);
+   EXPECT_EQ(offsetArr[offset], 34);
 
    offset = care::binarySearch<int>(offsetArr, 0, 20, 34, true);
-   ASSERT_EQ(offsetArr[offset], 51);
+   EXPECT_EQ(offsetArr[offset], 51);
 
    offset = care::binarySearch<int>(offsetArr, 0, 20, 339, true);
-   ASSERT_EQ(offsetArr[offset], 340);
+   EXPECT_EQ(offsetArr[offset], 340);
 
    offset = care::binarySearch<int>(offsetArr, 0, 20, 340, true);
-   ASSERT_EQ(offset, -1);
+   EXPECT_EQ(offset, -1);
 }
 
 GPU_TEST(TestPacker, packFixedRange) {
@@ -76,8 +76,8 @@ GPU_TEST(TestPacker, packFixedRange) {
    int * host_src = src.getPointer(care::CPU, false);
 
    for (int i = 0; i < 2; ++i) {
-      ASSERT_EQ(host_dst[i], -1);
-      ASSERT_EQ(host_src[i], i);
+      EXPECT_EQ(host_dst[i], -1);
+      EXPECT_EQ(host_src[i], i);
    }
 
    packer->flushActions();
@@ -88,15 +88,15 @@ GPU_TEST(TestPacker, packFixedRange) {
    // pack should have happened on the device, so
    // host data should not be updated yet
    for (int i = 0; i < 2; ++i) {
-      ASSERT_EQ(host_dst[i], -1);
-      ASSERT_EQ(host_src[i], i);
+      EXPECT_EQ(host_dst[i], -1);
+      EXPECT_EQ(host_src[i], i);
    }
 #endif
 
    // bringing stuff back to the host, dst[i] should now be i
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      ASSERT_EQ(dst[i], i);
-      ASSERT_EQ(src[i], i);
+      EXPECT_EQ(dst[i], i);
+      EXPECT_EQ(src[i], i);
    } CARE_SEQUENTIAL_LOOP_END
 
    src.free();
@@ -141,16 +141,16 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    int * host_src = src.getPointer(care::CPU, false);
 
    for (int i = 0; i < arrSize; ++i) {
-      ASSERT_EQ(host_dst[i], -1);
-      ASSERT_EQ(host_src[i], i);
+      EXPECT_EQ(host_dst[i], -1);
+      EXPECT_EQ(host_src[i], i);
    }
 
    FUSIBLE_LOOPS_STOP
 
    // bringing stuff back to the host, dst[i] should now be i
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      ASSERT_EQ(dst[i], i);
-      ASSERT_EQ(src[i], i);
+      EXPECT_EQ(dst[i], i);
+      EXPECT_EQ(src[i], i);
    } CARE_SEQUENTIAL_LOOP_END
 
    src.free();
@@ -167,7 +167,7 @@ GPU_TEST(TestPacker, singleFusedLoop) {
    FUSIBLE_LOOPS_STOP
 
    CARE_SEQUENTIAL_LOOP(i,0,2) {
-      ASSERT_EQ(test[i],0);
+      EXPECT_EQ(test[i],0);
    } CARE_SEQUENTIAL_LOOP_END
    test.free();
 }
@@ -199,19 +199,19 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
    for (int i = 0; i < arrSize; ++i) {
-      ASSERT_EQ(host_dst[i], -1);
-      ASSERT_EQ(host_src[i], i);
+      EXPECT_EQ(host_dst[i], -1);
+      EXPECT_EQ(host_src[i], i);
    }
 #endif
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, dst[i] should now be i
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize/2) {
-      ASSERT_EQ(dst[i], i);
-      ASSERT_EQ(src[i], i);
+      EXPECT_EQ(dst[i], i);
+      EXPECT_EQ(src[i], i);
    } CARE_SEQUENTIAL_LOOP_END
    CARE_SEQUENTIAL_LOOP(i, arrSize/2, arrSize) {
-      ASSERT_EQ(dst[i], i*2);
-      ASSERT_EQ(src[i], i);
+      EXPECT_EQ(dst[i], i*2);
+      EXPECT_EQ(src[i], i);
    } CARE_SEQUENTIAL_LOOP_END
 
    src.free();
@@ -236,8 +236,8 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
       }
       // bringing stuff back to the host, dst[i] should now be i
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         ASSERT_EQ(dst[i], i);
-         ASSERT_EQ(src[i], i);
+         EXPECT_EQ(dst[i], i);
+         EXPECT_EQ(src[i], i);
       } CARE_SEQUENTIAL_LOOP_END
    }
 
@@ -266,8 +266,8 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
       FUSIBLE_LOOPS_STOP
       // bringing stuff back to the host, dst[i] should now be i
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         ASSERT_EQ(dst[i], i);
-         ASSERT_EQ(src[i], i);
+         EXPECT_EQ(dst[i], i);
+         EXPECT_EQ(src[i], i);
       } CARE_SEQUENTIAL_LOOP_END
    }
 
@@ -311,7 +311,7 @@ GPU_TEST(orderDependent, basic_test) {
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, A[i] should now be B[i]
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      ASSERT_EQ(A[i], B[i]);
+      EXPECT_EQ(A[i], B[i]);
    } CARE_SEQUENTIAL_LOOP_END
 
    A.free();
@@ -372,13 +372,13 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } CARE_STREAM_LOOP_END
 
    // check sums
-   ASSERT_EQ((int)sumA, arrSize/2);
-   ASSERT_EQ((int)sumB, arrSize/2);
-   ASSERT_EQ((int)sumAB, arrSize);
+   EXPECT_EQ((int)sumA, arrSize/2);
+   EXPECT_EQ((int)sumB, arrSize/2);
+   EXPECT_EQ((int)sumAB, arrSize);
    // check scan positions
-   ASSERT_EQ(a_pos, arrSize/2);
-   ASSERT_EQ(b_pos, arrSize/2);
-   ASSERT_EQ(ab_pos, arrSize);
+   EXPECT_EQ(a_pos, arrSize/2);
+   EXPECT_EQ(b_pos, arrSize/2);
+   EXPECT_EQ(ab_pos, arrSize);
 
    A.free();
    B.free();
@@ -435,9 +435,9 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       } CARE_STREAM_LOOP_END
 
       // check sums
-      ASSERT_EQ((int)sumA, arrSize/2);
-      ASSERT_EQ((int)sumB, arrSize/2);
-      ASSERT_EQ((int)sumAB, arrSize);
+      EXPECT_EQ((int)sumA, arrSize/2);
+      EXPECT_EQ((int)sumB, arrSize/2);
+      EXPECT_EQ((int)sumAB, arrSize);
    }
    // sum up the results of the scans within the expected ranges of the scans
    {
@@ -455,12 +455,12 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       } CARE_STREAM_LOOP_END
 
       // check sums
-      ASSERT_EQ((int)sumA, arrSize/2);
-      ASSERT_EQ((int)sumB, arrSize/2);
-      ASSERT_EQ((int)sumAB, arrSize);
+      EXPECT_EQ((int)sumA, arrSize/2);
+      EXPECT_EQ((int)sumB, arrSize/2);
+      EXPECT_EQ((int)sumAB, arrSize);
    }
    // check scan positions
-   ASSERT_EQ(result_pos, arrSize*2);
+   EXPECT_EQ(result_pos, arrSize*2);
 
    A.free();
    B.free();
@@ -498,7 +498,8 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    } FUSIBLE_LOOP_STREAM_END
 
    int outer_dim = 2;
-   care::host_ptr<int> results(outer_dim);
+   int results[2];
+
    for (int m = 0; m < outer_dim; ++m) {
       results[m] = 0;
       int & result_pos = results[m];
@@ -534,9 +535,9 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       } CARE_STREAM_LOOP_END
 
       // check sums
-      ASSERT_EQ((int)sumA, arrSize/2);
-      ASSERT_EQ((int)sumB, arrSize/2);
-      ASSERT_EQ((int)sumAB, arrSize);
+      EXPECT_EQ((int)sumA, arrSize/2);
+      EXPECT_EQ((int)sumB, arrSize/2);
+      EXPECT_EQ((int)sumAB, arrSize);
    }
    // sum up the results of the scans within the expected ranges of the scans
    {
@@ -554,22 +555,22 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       } CARE_STREAM_LOOP_END
 
       // check sums
-      ASSERT_EQ((int)sumA, arrSize/2);
-      ASSERT_EQ((int)sumB, arrSize/2);
-      ASSERT_EQ((int)sumAB, arrSize);
+      EXPECT_EQ((int)sumA, arrSize/2);
+      EXPECT_EQ((int)sumB, arrSize/2);
+      EXPECT_EQ((int)sumAB, arrSize);
    }
    // check scan positions
    for (int m = 0; m < outer_dim; ++m) {
-      ASSERT_EQ(results[m], arrSize*2);
+      EXPECT_EQ(results[m], arrSize*2);
    }
 
    // Check that FUSIBLE STREAM loops interwoven between scans also worked (yes, they had race conditions, but all races should have
    // written the same value)
 
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      ASSERT_EQ(C[i], i);
-      ASSERT_EQ(D[i], 2*i);
-      ASSERT_EQ(E[i], 3*i);
+      EXPECT_EQ(C[i], i);
+      EXPECT_EQ(D[i], 2*i);
+      EXPECT_EQ(E[i], 3*i);
    } CARE_SEQUENTIAL_LOOP_END
 
    A.free();
@@ -622,10 +623,10 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize*2) {
       int indx = i%arrSize;
       if (i / arrSize == 0 ) { 
-         ASSERT_EQ(AB_scan[i],A[indx]);
+         EXPECT_EQ(AB_scan[i],A[indx]);
       }
       else {
-         ASSERT_EQ(AB_scan[i],B[indx]);
+         EXPECT_EQ(AB_scan[i],B[indx]);
       }
    } CARE_SEQUENTIAL_LOOP_END
 
@@ -718,8 +719,8 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
 #ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         ASSERT_EQ(A[i], -2);
-         ASSERT_EQ(C[i], -2);
+         EXPECT_EQ(A[i], -2);
+         EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
 #endif
       /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
@@ -736,12 +737,12 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
       care::host_device_ptr<int> B = Bs[t];
       care::host_device_ptr<int> C = Cs[t];
       CARE_SEQUENTIAL_LOOP(i, 0, 5) {
-         ASSERT_EQ(A[i], B[i]);
+         EXPECT_EQ(A[i], B[i]);
          if (t == 1) {
-            ASSERT_EQ(C[i], 0);
+            EXPECT_EQ(C[i], 0);
          }
          else {
-            ASSERT_EQ(C[i], -2);
+            EXPECT_EQ(C[i], -2);
          }
       } CARE_SEQUENTIAL_LOOP_END
    }
