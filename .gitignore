@@ -1,8 +1,8 @@
 *.swp
 *.swo
+build
 build-*
 build_*/*
-hc-*
 hc-*
 *.vcxproj.user
 */x64/*/
