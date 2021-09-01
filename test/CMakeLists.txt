@@ -33,7 +33,7 @@ blt_add_test( NAME TestForall
               COMMAND TestForall )
 
 blt_add_executable( NAME TestLoopFuser
-                    SOURCES LoopFuserTest.cxx
+                    SOURCES TestLoopFuser.cxx
                     DEPENDS_ON ${care_test_dependencies} )
 
 target_include_directories(TestLoopFuser

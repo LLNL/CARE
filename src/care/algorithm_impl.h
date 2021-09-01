@@ -720,7 +720,7 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, siz
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array)+start;
    std::sort(rawData, rawData+len);
-   noCopy = noCopy ;
+   (void) noCopy;
 }
 
 template <typename T>
@@ -834,7 +834,7 @@ CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, c
       printf("CompressArray<T> seq_exec: did not remove expected number of members!\n");
    }
 #endif
-   noCopy = noCopy;
+   (void) noCopy;
 }
 
 template <typename T>

@@ -452,7 +452,7 @@ CARE_INLINE void initializeValueArray(host_device_ptr<T>& values,
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
 
 template <typename T>
-CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec exec, 
+CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */, 
                                           KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
                                           KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
                                           host_device_ptr<int> &matches1,

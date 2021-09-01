@@ -888,12 +888,12 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
          // SCAN related variables
          if (m_prev_pos_output == nullptr) {
             // initialize m_prev_pos_output
-            m_prev_pos_output = &pos_store;
+            m_prev_pos_output = care::host_ptr<int>(&pos_store);
          }
          else {
             // if we encounter a different output, remember it
             if (m_prev_pos_output.cdata() != &pos_store) {
-               m_prev_pos_output = &pos_store;
+               m_prev_pos_output = care::host_ptr<int>(&pos_store);
             }
             // if we haven't encountered a different output yet, mark this index for continuation
             else if (m_prev_pos_output.cdata() == &pos_store) {

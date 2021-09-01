@@ -88,6 +88,11 @@ namespace care {
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
          CARE_HOST_DEVICE device_ptr(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.data()) {}
+
+         ///
+         /// Copy assignment operator
+         ///
+         device_ptr& operator=(const device_ptr& other) = default;
          
          ///
          /// @author Peter Robinson
