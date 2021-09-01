@@ -101,6 +101,11 @@ namespace care {
          CARE_HOST_DEVICE local_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.data()) {}
 
          ///
+         /// Copy assignment operator
+         ///
+         local_ptr& operator=(const local_ptr& other) = default;
+
+         ///
          /// @author Peter Robinson
          ///
          /// Return the element at the given index
