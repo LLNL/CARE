@@ -136,7 +136,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
 #ifdef CARE_GPUCC
-   // pack should not have happened yet so
+   // pack should have happened on the device, so
    // host data should not be updated yet
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
@@ -195,9 +195,9 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
-   // pack should  not have happened yet so
-   // host data should not be updated yet
 #ifdef CARE_GPUCC
+   // pack should have happened on the device, so
+   // host data should not be updated yet
 #ifndef CARE_FUSIBLE_LOOPS_DISABLE 
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
@@ -717,6 +717,8 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          }
       } CARE_STREAM_LOOP_END
 #ifdef CARE_GPUCC
+      // pack should have happened on the device, so
+      // host data should not be updated yet
 #ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
