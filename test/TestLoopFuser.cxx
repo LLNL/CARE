@@ -135,7 +135,8 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
-   // pack should  not have happened yet so
+#ifdef CARE_GPUCC
+   // pack should not have happened yet so
    // host data should not be updated yet
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
@@ -144,6 +145,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }
+#endif
 
    FUSIBLE_LOOPS_STOP
 
@@ -195,6 +197,7 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
 
    // pack should  not have happened yet so
    // host data should not be updated yet
+#ifdef CARE_GPUCC
 #ifndef CARE_FUSIBLE_LOOPS_DISABLE 
    int * host_dst = dst.getPointer(care::CPU, false);
    int * host_src = src.getPointer(care::CPU, false);
@@ -202,6 +205,7 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
       EXPECT_EQ(host_dst[i], -1);
       EXPECT_EQ(host_src[i], i);
    }
+#endif
 #endif
    FUSIBLE_LOOPS_STOP
    // bringing stuff back to the host, dst[i] should now be i
@@ -341,7 +345,6 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
-   LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->setVerbose(true);
 
    int a_pos = 0;
    int b_pos = 0;
@@ -359,7 +362,6 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
 
    FUSIBLE_LOOPS_STOP
-   LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->setVerbose(false);
 
    // sum up the results of the scans
    RAJAReduceSum<int> sumA(0);
@@ -606,7 +608,6 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
-   LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->setVerbose(true);
 
    FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(i, 0, arrSize, A) {
       A[i] = 2;
@@ -617,7 +618,6 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    } FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_END(i, arrSize, B)
 
    FUSIBLE_LOOPS_STOP
-   LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance()->setVerbose(false);
 
    //  check answer
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize*2) {
@@ -716,12 +716,14 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
             B[i] = (B[i] + 1)>>t;
          }
       } CARE_STREAM_LOOP_END
+#ifdef CARE_GPUCC
 #ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
       CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
          EXPECT_EQ(A[i], -2);
          EXPECT_EQ(C[i], -2);
       } CARE_SEQUENTIAL_LOOP_END
+#endif
 #endif
       /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
        * won't update them, so we need to mark A and C as touched on the device
