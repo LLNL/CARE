@@ -5,20 +5,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
+#define GPU_ACTIVE
 
 #include "care/config.h"
 
 #if CARE_ENABLE_LOOP_FUSER
-
-#define GPU_ACTIVE
-#define HAVE_FUSER_TEST CARE_ENABLE_LOOP_FUSER
-#if HAVE_FUSER_TEST
-// always have DEBUG on to force the packer to be on for CPU builds.
-#ifdef CARE_DEBUG
-#undef CARE_DEBUG
-#endif
-#define CARE_DEBUG 1
-#include "gtest/gtest.h"
 
 // define if we want to test running loops as we encounter them
 //#define CARE_FUSIBLE_LOOPS_DISABLE
@@ -27,6 +18,7 @@
 
 #include "care/LoopFuser.h"
 
+#include "gtest/gtest.h"
 
 // This makes it so we can use device lambdas from within a GPU_TEST
 #define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
@@ -721,5 +713,4 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
 // TODO: FUSIBLE_LOOP_STREAM Should not batch if FUSIBLE_LOOPS_START has not been called.
 // TODO: test with two START and STOP to make sure new stuff is overwriting the old stuff.
 //
-#endif
 #endif // CARE_ENABLE_LOOP_FUSER
