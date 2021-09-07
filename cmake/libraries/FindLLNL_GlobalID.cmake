@@ -8,27 +8,34 @@
 ###############################################################################
 #
 # Setup LLNL_GlobalID
+#
 # This file defines:
-#  LLNL_GLOBALID_FOUND - If LLNL_GlobalID was found
-#  LLNL_GLOBALID_INCLUDE_DIRS - The LLNL_GlobalID include directories
+#    LLNL_GLOBALID_FOUND - If LLNL_GlobalID was found
+#    LLNL_GLOBALID_INCLUDE_DIRS - The LLNL_GlobalID include directories
+#    llnl_globalid - An imported target
+#
+###############################################################################
 
-# first Check for LLNL_GLOBALID_DIR
+if (NOT TARGET llnl_globalid)
+   find_path(LLNL_GLOBALID_INCLUDE_DIRS LLNL_GlobalID.h
+             PATHS ${LLNL_GLOBALID_DIR}/include/ ${LLNL_GLOBALID_DIR}
+             NO_DEFAULT_PATH
+             NO_CMAKE_ENVIRONMENT_PATH
+             NO_CMAKE_PATH
+             NO_SYSTEM_ENVIRONMENT_PATH
+             NO_CMAKE_SYSTEM_PATH)
 
-if(NOT LLNL_GLOBALID_DIR)
-    MESSAGE(FATAL_ERROR "Could not find LLNL_GlobalID. LLNL_GlobalID support needs explicit LLNL_GLOBALID_DIR")
-endif()
+   include(FindPackageHandleStandardArgs)
 
-#find includes
-find_path( LLNL_GLOBALID_INCLUDE_DIRS LLNL_GlobalID.h
-           PATHS  ${LLNL_GLOBALID_DIR}/include/ ${LLNL_GLOBALID_DIR}
-           NO_DEFAULT_PATH
-           NO_CMAKE_ENVIRONMENT_PATH
-           NO_CMAKE_PATH
-           NO_SYSTEM_ENVIRONMENT_PATH
-           NO_CMAKE_SYSTEM_PATH)
+   find_package_handle_standard_args(LLNL_GLOBALID DEFAULT_MSG
+                                     LLNL_GLOBALID_INCLUDE_DIRS)
 
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set LLNL_GLOBALID_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(LLNL_GLOBALID  DEFAULT_MSG
-                                  LLNL_GLOBALID_INCLUDE_DIRS )
+   if (LLNL_GLOBALID_FOUND)
+      blt_import_library(NAME llnl_globalid
+                         TREAT_INCLUDES_AS_SYSTEM ON
+                         INCLUDES ${LLNL_GLOBALID_INCLUDE_DIRS})
+   else ()
+      message(FATAL_ERROR "CARE: Unable to find LLNL_GlobalID with given path: ${LLNL_GLOBALID_DIR}!")
+   endif ()
+endif ()
+
