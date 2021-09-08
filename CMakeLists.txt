@@ -121,7 +121,8 @@ if (ENABLE_CUDA)
    set(CUB_DIR "" CACHE PATH "Path to CUB")
 
    # CUDA optional dependencies without submodules (not open source)
-   set(NVTOOLSEXT_DIR "" CACHE PATH "Path to external NVTOOLSEXT")
+   set(NVTX_DIR "" CACHE PATH "Path to external NVTX")
+
    # Optional features
    set(CARE_ENABLE_LOOP_FUSER ON CACHE STRING "Enable the loop fuser")
 else()

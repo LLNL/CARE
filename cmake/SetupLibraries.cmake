@@ -35,6 +35,12 @@ if (NOT TARGET camp)
       endif ()
    endif ()
 
+   # Manually set includes as system includes
+   get_target_property(_dirs camp INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET camp
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
+
    if (ENABLE_CUDA)
       blt_add_target_definitions(TO camp
                                  SCOPE INTERFACE
@@ -54,12 +60,6 @@ if (NOT TARGET umpire)
 
    if (umpire_FOUND)
       message(STATUS "CARE: Using external Umpire")
-
-      # Manually set includes as system includes
-      get_target_property(_dirs umpire INTERFACE_INCLUDE_DIRECTORIES)
-      set_property(TARGET umpire
-                   APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                   "${_dirs}")
    else ()
       message(STATUS "CARE: Using Umpire submodule")
 
@@ -73,12 +73,18 @@ if (NOT TARGET umpire)
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/umpire)
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs umpire INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET umpire
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
 # RAJA (required)
 ################################
-if (NOT TARGET raja)
+if (NOT TARGET RAJA)
    if (RAJA_DIR)
       set(raja_DIR ${RAJA_DIR}/share/raja/cmake)
    endif ()
@@ -87,12 +93,6 @@ if (NOT TARGET raja)
 
    if (raja_FOUND)
       message(STATUS "CARE: Using external RAJA")
-
-      # Manually set includes as system includes
-      get_target_property(_dirs RAJA INTERFACE_INCLUDE_DIRECTORIES)
-      set_property(TARGET RAJA
-                   APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                   "${_dirs}")
    else ()
       message(STATUS "CARE: Using RAJA submodule")
 
@@ -125,6 +125,12 @@ if (NOT TARGET raja)
          endif ()
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs RAJA INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET RAJA
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
@@ -139,12 +145,6 @@ if (NOT TARGET chai)
 
    if (chai_FOUND)
       message(STATUS "CARE: Using external CHAI")
-
-      # Manually set includes as system includes
-      get_target_property(_dirs chai INTERFACE_INCLUDE_DIRECTORIES)
-      set_property(TARGET chai
-                   APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                   "${_dirs}")
    else ()
       message(STATUS "CARE: Using CHAI submodule")
 
@@ -163,38 +163,49 @@ if (NOT TARGET chai)
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/chai)
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs chai INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET chai
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
-# NVTOOLSEXT
+# NVTX (optional)
 ################################
-if (NVTOOLSEXT_DIR)
-    if (ENABLE_CUDA)
-       include(cmake/libraries/FindNvToolsExt.cmake)
-       if (NVTOOLSEXT_FOUND)
-           blt_import_library( NAME       nvtoolsext
-                               TREAT_INCLUDES_AS_SYSTEM ON
-                               INCLUDES   ${NVTOOLSEXT_INCLUDE_DIRS}
-                               LIBRARIES  ${NVTOOLSEXT_LIBRARY} )
+if (ENABLE_CUDA)
+   if (NVTX_DIR)
+      find_package(NVTX QUIET)
 
-           set(CARE_HAVE_NVTOOLSEXT "1" CACHE STRING "")
-       else()
-           message(FATAL_ERROR "CARE: Unable to find NVTOOLSEXT with given path: ${NVTOOLSEXT_DIR}")
-       endif()
-    endif()
-else()
-    message(STATUS "CARE: NVTOOLSEXT disabled")
-    set(CARE_HAVE_NVTOOLSEXT "0" CACHE STRING "")
-endif()
+      if (NVTX_FOUND)
+         message(STATUS "CARE: NVTX support enabled.")
+         set(CARE_HAVE_NVTX "1" CACHE STRING "")
+      else ()
+         message(WARNING "CARE: Unable to find NVTX. NVTX support disabled.")
+         set(CARE_HAVE_NVTX "0" CACHE STRING "")
+      endif ()
+   else ()
+      message(STATUS "CARE: NVTX support disabled.")
+      set(CARE_HAVE_NVTX "0" CACHE STRING "")
+   endif ()
+endif ()
 
 ################################
-# LLNL_GlobalID
+# LLNL_GlobalID (optional)
 ################################
 if (LLNL_GLOBALID_DIR)
-    include(cmake/libraries/FindLLNL_GlobalID.cmake)
-    set(CARE_HAVE_LLNL_GLOBALID "1" CACHE STRING "")
-else()
-    message(STATUS "CARE: LLNL_GlobalID disabled")
-    set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
-endif()
+   find_package(LLNL_GlobalID QUIET)
+
+   if (LLNL_GlobalID_FOUND)
+      message(STATUS "CARE: LLNL_GlobalID support enabled.")
+      set(CARE_HAVE_LLNL_GLOBALID "1" CACHE STRING "")
+   else ()
+      message(WARNING "CARE: Unable to find LLNL_GlobalID. LLNL_GlobalID support disabled.")
+      set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
+   endif ()
+else ()
+   message(STATUS "CARE: LLNL_GlobalID support disabled.")
+   set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
+endif ()
 

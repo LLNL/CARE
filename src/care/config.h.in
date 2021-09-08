@@ -24,7 +24,7 @@
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID
-#cmakedefine01 CARE_HAVE_NVTOOLSEXT
+#cmakedefine01 CARE_HAVE_NVTX
 
 #ifdef CARE_ENABLE_EXTERN_INSTANTIATE
 #define CARE_INLINE

@@ -10,32 +10,36 @@
 # Setup LLNL_GlobalID
 #
 # This file defines:
-#    LLNL_GLOBALID_FOUND - If LLNL_GlobalID was found
-#    LLNL_GLOBALID_INCLUDE_DIRS - The LLNL_GlobalID include directories
-#    llnl_globalid - An imported target
+#    LLNL_GlobalID_FOUND - If LLNL_GlobalID was found
+#    LLNL_GlobalID_INCLUDE_DIRS - The LLNL_GlobalID include directories
+#    LLNL_GlobalID::LLNL_GlobalID - The LLNL_GlobalID imported target
 #
 ###############################################################################
 
-if (NOT TARGET llnl_globalid)
-   find_path(LLNL_GLOBALID_INCLUDE_DIRS LLNL_GlobalID.h
-             PATHS ${LLNL_GLOBALID_DIR}/include/ ${LLNL_GLOBALID_DIR}
-             NO_DEFAULT_PATH
-             NO_CMAKE_ENVIRONMENT_PATH
-             NO_CMAKE_PATH
-             NO_SYSTEM_ENVIRONMENT_PATH
-             NO_CMAKE_SYSTEM_PATH)
+find_path(LLNL_GlobalID_INCLUDE_DIR
+          NAMES LLNL_GlobalID.h
+          PATHS ${LLNL_GLOBALID_DIR}/include/ ${LLNL_GLOBALID_DIR}
+          NO_DEFAULT_PATH
+          NO_CMAKE_ENVIRONMENT_PATH
+          NO_CMAKE_PATH
+          NO_SYSTEM_ENVIRONMENT_PATH
+          NO_CMAKE_SYSTEM_PATH)
 
-   include(FindPackageHandleStandardArgs)
+include(FindPackageHandleStandardArgs)
 
-   find_package_handle_standard_args(LLNL_GLOBALID DEFAULT_MSG
-                                     LLNL_GLOBALID_INCLUDE_DIRS)
+find_package_handle_standard_args(LLNL_GlobalID
+                                  FOUND_VAR LLNL_GlobalID_FOUND
+                                  REQUIRED_VARS
+                                    LLNL_GlobalID_LIBRARY
+                                    LLNL_GlobalID_INCLUDE_DIR)
 
-   if (LLNL_GLOBALID_FOUND)
-      blt_import_library(NAME llnl_globalid
-                         TREAT_INCLUDES_AS_SYSTEM ON
-                         INCLUDES ${LLNL_GLOBALID_INCLUDE_DIRS})
-   else ()
-      message(FATAL_ERROR "CARE: Unable to find LLNL_GlobalID with given path: ${LLNL_GLOBALID_DIR}!")
-   endif ()
-endif ()
+if (LLNL_GlobalID_FOUND)
+   set(LLNL_GlobalID_INCLUDE_DIRS ${LLNL_GlobalID_INCLUDE_DIR})
+
+   if (NOT TARGET LLNL_GlobalID::LLNL_GlobalID)
+      blt_import_library(NAME LLNL_GlobalID::LLNL_GlobalID
+                         INCLUDES ${LLNL_GLOBALID_INCLUDE_DIR}
+                         TREAT_INCLUDES_AS_SYSTEM ON)
+   endif()
+endif()
 

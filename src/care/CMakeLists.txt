@@ -65,38 +65,24 @@ set(care_sources
     scan.cpp
     )
 
-if(CARE_ENABLE_EXTERN_INSTANTIATE)
+if (CARE_ENABLE_EXTERN_INSTANTIATE)
    list(APPEND care_sources care_inst.cpp)
 endif()
 
+set(care_depends chai umpire RAJA camp)
 
-set(care_depends chai RAJA umpire camp)
-
-if (ENABLE_MPI)
-   list(APPEND care_depends mpi)
-endif ()
-
-if (LLNL_GLOBALID_FOUND)
-   list (APPEND care_depends llnl_globalid)
-endif()
+blt_list_append(TO care_depends ELEMENTS LLNL_GlobalID::LLNL_GlobalID IF ${LLNL_GlobalID_FOUND})
+blt_list_append(TO care_depends ELEMENTS mpi IF ${ENABLE_MPI})
 
 if (ENABLE_CUDA)
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
-   if (NVTOOLSEXT_FOUND)
-      list(APPEND care_depends nvtoolsext)
-   endif()
-
+   blt_list_append(TO care_depends ELEMENTS NVTX::NVTX IF ${NVTX_FOUND})
    list(APPEND care_depends cub cuda)
 endif()
 
-if (ENABLE_OPENMP)
-   list(APPEND care_depends openmp)
-endif()
-
-if (ENABLE_HIP)
-  list(APPEND care_depends hip)
-endif ()
+blt_list_append(TO care_depends ELEMENTS hip IF ${ENABLE_HIP})
+blt_list_append(TO care_depends ELEMENTS openmp IF ${ENABLE_OPENMP})
 
 blt_add_library(NAME care
                 SOURCES ${care_sources}

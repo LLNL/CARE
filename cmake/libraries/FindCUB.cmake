@@ -8,10 +8,14 @@
 ###############################################################################
 #
 # Setup CUB
+#
 # This file defines:
-#  CUB_FOUND - If CUB was found
-#  CUB_INCLUDE_DIRS - The CUB include directories
-#  cub - An imported target
+#    CUB_FOUND - If CUB was found
+#    CUB_INCLUDE_DIRS - The CUB include directories
+#    CUB_DEPENDS - The CUB dependencies
+#    cub - An imported target
+#
+###############################################################################
 
 if (NOT TARGET cub)
    if (CUB_DIR)
@@ -28,7 +32,7 @@ if (NOT TARGET cub)
       endif ()
    endif ()
 
-   find_path(CUB_INCLUDE_DIR
+   find_path(CUB_INCLUDE_DIRS
              NAMES cub/cub.cuh
              PATHS ${CUB_PATHS}
              NO_DEFAULT_PATH
@@ -42,17 +46,17 @@ if (NOT TARGET cub)
 
    find_package_handle_standard_args(CUB
                                      DEFAULT_MSG
-                                     CUB_INCLUDE_DIR)
+                                     CUB_INCLUDE_DIRS)
 
    if (CUB_FOUND)
-      set(CUB_INCLUDE_DIRS ${CUB_INCLUDE_DIR})
       set(CUB_DEPENDS cuda)
 
       blt_import_library(NAME cub
-                         INCLUDES ${CUB_INCLUDE_DIR}
-                         DEPENDS_ON ${CUB_DEPENDS})
+                         INCLUDES ${CUB_INCLUDE_DIRS}
+                         DEPENDS_ON ${CUB_DEPENDS}
+                         TREAT_INCLUDES_AS_SYSTEM ON)
 
-      message(STATUS "CARE: CUB found at ${CUB_INCLUDE_DIR}")
+      message(STATUS "CARE: CUB found at ${CUB_INCLUDE_DIRS}")
    else ()
       message(FATAL_ERROR "CARE: CUB not found. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
    endif ()
