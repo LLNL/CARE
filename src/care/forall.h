@@ -71,14 +71,33 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
+
 #ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+         RAJA::RangeStrideSegment rangeSegment;
+
+         if (std::is_same<ExecutionPolicy, openmp>::value ||
+             std::is_same<ExecutionPolicy, gpu>::value ||
+             std::is_same<ExecutionPolicy, parallel>::value ||
+             std::is_same<ExecutionPolicy, gpu_simulation>::value) {
+            rangeSegment = RAJA::RangeStrideSegment(end - 1, start - 1, -1);
+         }
+         else {
+            rangeSgement = RAJA::RangeStrideSegment(start, end, 1);
+         }
 #else
-         RAJA::forall<ExecutionPolicy>(RAJA::RangeSegment(start, end), body);
+         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
 #endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         RAJA::forall<RAJA::seq_exec>(rangeSegment, body);
+#else
+         RAJA::forall<ExecutionPolicy>(rangeSegment, body);
+#endif
+
 #ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
