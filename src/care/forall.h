@@ -77,7 +77,7 @@ namespace care {
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-         RAJA::RangeStrideSegment rangeSegment;
+         RAJA::RangeStrideSegment rangeSegment(start, end, 1);
 
          if (std::is_same<ExecutionPolicy, openmp>::value ||
              std::is_same<ExecutionPolicy, gpu>::value ||
@@ -86,7 +86,7 @@ namespace care {
             rangeSegment = RAJA::RangeStrideSegment(end - 1, start - 1, -1);
          }
          else {
-            rangeSgement = RAJA::RangeStrideSegment(start, end, 1);
+            rangeSegment = RAJA::RangeStrideSegment(start, end, 1);
          }
 #else
          RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
