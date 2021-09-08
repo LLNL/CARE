@@ -78,7 +78,7 @@ if (ENABLE_CUDA)
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
    blt_list_append(TO care_depends ELEMENTS NVTX::NVTX IF ${NVTX_FOUND})
-   list(APPEND care_depends cub cuda)
+   list(APPEND care_depends CUB::CUB cuda)
 endif()
 
 blt_list_append(TO care_depends ELEMENTS hip IF ${ENABLE_HIP})

@@ -12,52 +12,36 @@
 # This file defines:
 #    CUB_FOUND - If CUB was found
 #    CUB_INCLUDE_DIRS - The CUB include directories
-#    CUB_DEPENDS - The CUB dependencies
 #    cub - An imported target
 #
 ###############################################################################
 
-if (NOT TARGET cub)
-   if (CUB_DIR)
-      message(STATUS "CARE: Using external CUB")
+find_path(CUB_INCLUDE_DIR
+          NAMES cub/cub.cuh
+          PATHS ${CUB_PATHS}
+          NO_DEFAULT_PATH
+          NO_PACKAGE_ROOT_PATH
+          NO_CMAKE_PATH
+          NO_CMAKE_ENVIRONMENT_PATH
+          NO_SYSTEM_ENVIRONMENT_PATH
+          NO_CMAKE_SYSTEM_PATH)
 
-      set(CUB_PATHS ${CUB_DIR} ${CUB_DIR}/include)
-   else ()
-      message(STATUS "CARE: Using CUB submodule")
+include(FindPackageHandleStandardArgs)
 
-      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/cub/cub/cub.cuh)
-         message(FATAL_ERROR "CARE: CUB submodule not initialized. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
-      else ()
-         set(CUB_PATHS ${PROJECT_SOURCE_DIR}/tpl/cub)
-      endif ()
-   endif ()
+find_package_handle_standard_args(CUB
+                                  FOUND_VAR CUB_FOUND
+                                  CUB_INCLUDE_DIR)
 
-   find_path(CUB_INCLUDE_DIRS
-             NAMES cub/cub.cuh
-             PATHS ${CUB_PATHS}
-             NO_DEFAULT_PATH
-             NO_PACKAGE_ROOT_PATH
-             NO_CMAKE_PATH
-             NO_CMAKE_ENVIRONMENT_PATH
-             NO_SYSTEM_ENVIRONMENT_PATH
-             NO_CMAKE_SYSTEM_PATH)
+if(CUB_FOUND)
+   set(CUB_INCLUDE_DIRS ${CUB_INCLUDE_DIR})
 
-   include(FindPackageHandleStandardArgs)
-
-   find_package_handle_standard_args(CUB
-                                     DEFAULT_MSG
-                                     CUB_INCLUDE_DIRS)
-
-   if (CUB_FOUND)
-      set(CUB_DEPENDS cuda)
-
-      blt_import_library(NAME cub
-                         INCLUDES ${CUB_INCLUDE_DIRS}
-                         DEPENDS_ON ${CUB_DEPENDS}
+   if(NOT TARGET CUB::CUB)
+      blt_import_library(NAME CUB::CUB
+                         DEPENDS_ON cuda
+                         INCLUDES ${CUB_INCLUDE_DIR}
                          TREAT_INCLUDES_AS_SYSTEM ON)
+   endif()
+endif()
 
-      message(STATUS "CARE: CUB found at ${CUB_INCLUDE_DIRS}")
-   else ()
-      message(FATAL_ERROR "CARE: CUB not found. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB.")
-   endif ()
-endif ()
+mark_as_advanced(CUB_INCLUDE_DIR)
+

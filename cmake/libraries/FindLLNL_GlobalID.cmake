@@ -43,3 +43,5 @@ if (LLNL_GlobalID_FOUND)
    endif()
 endif()
 
+mark_as_advanced(LLNL_GlobalID_INCLUDE_DIR)
+

@@ -49,6 +49,7 @@ if(NVTX_FOUND)
 
    if(NOT TARGET NVTX::NVTX)
       blt_import_library(NAME NVTX::NVTX
+                         DEPENDS_ON cuda
                          LIBRARIES ${NVTX_LIBRARY}
                          INCLUDES ${NVTX_INCLUDE_DIR}
                          TREAT_INCLUDES_AS_SYSTEM ON)
