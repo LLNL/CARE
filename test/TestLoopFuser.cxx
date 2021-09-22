@@ -81,6 +81,7 @@ GPU_TEST(TestPacker, packFixedRange) {
    }
 
    packer->flushActions();
+   packer->stopRecording();
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
