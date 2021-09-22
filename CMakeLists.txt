@@ -122,11 +122,16 @@ if (ENABLE_CUDA)
 
    # CUDA optional dependencies without submodules (not open source)
    set(NVTOOLSEXT_DIR "" CACHE PATH "Path to external NVTOOLSEXT")
+
    # Optional features
    set(CARE_ENABLE_LOOP_FUSER ON CACHE STRING "Enable the loop fuser")
+
+   # This is needed for the loop fuser to work
+   option(ENABLE_RAJA_PLUGIN "Build plugin to set RAJA execution spaces" ON)
 else()
    set(CARE_ENABLE_LOOP_FUSER OFF CACHE STRING "Enable the loop fuser")
 endif()
+
 ################################
 # BLT
 ################################

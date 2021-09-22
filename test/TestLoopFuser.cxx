@@ -50,8 +50,14 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 }
 
 GPU_TEST(TestPacker, packFixedRange) {
+   // TODO: Determine why basic_fusible_scan test fails if FUSIBLE_LOOPS_START
+   //       is removed here.
+   FUSIBLE_LOOPS_START
+
    LOOPFUSER(64) * packer = LOOPFUSER(64)::getInstance();
    packer->startRecording();
+   packer->preserveOrder(false);
+   packer->setScan(false);
   
    int arrSize = 1024;
    care::host_device_ptr<int> src(arrSize);
@@ -65,8 +71,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)) { },
-                          [=] CARE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
+                          [=] FUSIBLE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)) { },
+                          [=] FUSIBLE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
       dst[pos+i] = src[i];
    });
 
@@ -81,6 +87,7 @@ GPU_TEST(TestPacker, packFixedRange) {
    }
 
    packer->flushActions();
+   packer->stopRecording();
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
@@ -249,7 +256,6 @@ GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
    dst.free();
 }
 
-
 GPU_TEST(performanceWithPacker, allOfTheFuses) {
    int arrSize = 128;
    int timesteps = 5;
@@ -278,7 +284,6 @@ GPU_TEST(performanceWithPacker, allOfTheFuses) {
    src.free();
    dst.free();
 }
-
 
 GPU_TEST(orderDependent, basic_test) {
    int arrSize = 128;
@@ -357,6 +362,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, b_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, b_pos)
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, ab_pos, (A[i] == 1) || (B[i] ==1)) {
       AB_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
