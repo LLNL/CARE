@@ -132,6 +132,11 @@ else()
    set(CARE_ENABLE_LOOP_FUSER OFF CACHE STRING "Enable the loop fuser")
 endif()
 
+# HIP specific options
+if (ENABLE_HIP)
+   option(RAJA_ENABLE_HIP_INDIRECT_FUNCTION_CALL "Enable use of device function pointers in hip backend" OFF)
+endif()
+
 ################################
 # BLT
 ################################

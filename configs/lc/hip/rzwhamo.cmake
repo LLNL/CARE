@@ -2,6 +2,7 @@ set(ENABLE_HIP ON CACHE BOOL "Enable HIP build")
 set(HIP_ROOT_DIR "/opt/rocm-4.4.0/hip" CACHE PATH "Path to HIP root directory")
 
 set(ENABLE_RAJA_PLUGIN ON CACHE BOOL "Enable the RAJA plugin in CHAI")
+set(RAJA_ENABLE_HIP_INDIRECT_FUNCTION_CALL ON CACHE BOOL "Enable use of device function pointers in hip backend")
 set(CARE_ENABLE_LOOP_FUSER ON CACHE BOOL "Enable the loop fuser")
 
 set(CHAI_ENABLE_MANAGED_PTR ON CACHE BOOL "Enable aliases, tests, and reproducer for managed_ptr")
