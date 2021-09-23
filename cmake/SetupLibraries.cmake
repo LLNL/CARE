@@ -41,6 +41,12 @@ if (NOT TARGET camp)
                                  TARGET_DEFINITIONS CAMP_HAVE_CUDA)
    endif ()
 
+   if (ENABLE_HIP)
+      blt_add_target_definitions(TO camp
+                                 SCOPE INTERFACE
+                                 TARGET_DEFINITIONS CAMP_HAVE_HIP)
+   endif ()
+
    # Manually set includes as system includes
    get_target_property(_dirs camp INTERFACE_INCLUDE_DIRECTORIES)
    set_property(TARGET camp
