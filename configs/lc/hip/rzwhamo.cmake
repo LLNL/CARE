@@ -2,6 +2,8 @@
 # module load rocm/4.4.0
 # module load gcc/10.3.0
 
+# salloc -N 1 -pmi100
+
 set(ENABLE_HIP ON CACHE BOOL "Enable HIP build")
 set(HIP_ROOT_DIR "/opt/rocm-4.4.0/hip" CACHE PATH "Path to HIP root directory")
 set(BLT_ROCM_ARCH "gfx908" CACHE STRING "gfx architecture to use when generating ROCm code")
