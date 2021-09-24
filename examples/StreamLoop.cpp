@@ -8,8 +8,8 @@
 // This macro needs to be defined before including care/care.h,
 // which allows you to port a file at a time. Without this define,
 // CARE_STREAM_LOOP will run on the CPU. With this define, CARE_STREAM_LOOP
-// will run on the GPU only if you built with CUDA enabled. Otherwise,
-// if CUDA is disabled, it will default back to running on the host.
+// will run on the GPU only if you built with CUDA or HIP enabled. Otherwise,
+// if CUDA and HIP are disabled, it will default back to running on the host.
 #define GPU_ACTIVE
 
 // CARE library header
@@ -72,7 +72,7 @@ int main(int, char**) {
    // This code illustrates how to check if something ran on the host or the device.
    // In practice it is not necessary. It really just shows that this example compiles
    // and runs fine on the host or device without any changes.
-#if defined(__CUDACC__) && defined(GPU_ACTIVE)
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
    std::cout << "GPU max: ";
 #else
    std::cout << "Fallback to CPU max: ";
