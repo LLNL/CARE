@@ -78,8 +78,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    // pack has not been flushed, so
    // host data should not be updated yet
-   const int* host_src = src.data(false);
-   const int* host_dst = dst.data(false);
+   const int* host_src = src.data(chai::CPU, false);
+   const int* host_dst = dst.data(chai::CPU, false);
 
    for (int i = 0; i < arrSize; ++i) {
       ASSERT_EQ(host_src[i], i);
@@ -152,8 +152,8 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
-   host_src = src.data(false);
-   host_dst = dst.data(false);
+   host_src = src.data(chai::CPU, false);
+   host_dst = dst.data(chai::CPU, false);
 
    for (int i = 0; i < arrSize; ++i) {
       ASSERT_EQ(host_src[i], i);
@@ -228,8 +228,8 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
-   host_dst = dst.data(false);
-   host_src = src.data(false);
+   host_dst = dst.data(chai::CPU, false);
+   host_src = src.data(chai::CPU, false);
 
    for (int i = 0; i < arrSize; ++i) {
       ASSERT_EQ(host_src[i], i);
