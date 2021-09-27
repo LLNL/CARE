@@ -54,7 +54,7 @@ GPU_TEST(TestPacker, packFixedRange) {
    //       is removed here.
    FUSIBLE_LOOPS_START
 
-   LOOPFUSER(64) * packer = LOOPFUSER(64)::getInstance();
+   LOOPFUSER(64)* packer = LOOPFUSER(64)::getInstance();
    packer->startRecording();
    packer->preserveOrder(false);
    packer->setScan(false);
@@ -71,8 +71,8 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
-                          [=] FUSIBLE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)) { },
-                          [=] FUSIBLE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
+                          [=] FUSIBLE_DEVICE(int, int*, int const*, int, FUSIBLE_REGISTERS(64)) { },
+                          [=] FUSIBLE_DEVICE(int i, int*, FUSIBLE_REGISTERS(64)) {
       dst[pos+i] = src[i];
    });
 
@@ -134,8 +134,8 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       int scan_pos = 0;
 
       __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)){ },
-                                [=] FUSIBLE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
+                                [=] FUSIBLE_DEVICE(int, int*, int const*, int, FUSIBLE_REGISTERS(64)){ },
+                                [=] FUSIBLE_DEVICE(int i, int*, FUSIBLE_REGISTERS(64)) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
@@ -147,7 +147,7 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    const int* host_src;
-   const int * host_dst;
+   const int* host_dst;
 
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
