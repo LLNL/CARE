@@ -50,8 +50,14 @@ TEST(UpperBound_binarySearch, checkOffsets) {
 }
 
 GPU_TEST(TestPacker, packFixedRange) {
-   LOOPFUSER(64) * packer = LOOPFUSER(64)::getInstance();
+   // TODO: Determine why basic_fusible_scan test fails if FUSIBLE_LOOPS_START
+   //       is removed here.
+   FUSIBLE_LOOPS_START
+
+   LOOPFUSER(64)* packer = LOOPFUSER(64)::getInstance();
    packer->startRecording();
+   packer->preserveOrder(false);
+   packer->setScan(false);
   
    int arrSize = 1024;
    care::host_device_ptr<int> src(arrSize);
@@ -65,42 +71,46 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    int pos = 0;
    packer->registerAction(__FILE__, __LINE__, 0, arrSize, pos,
-                          [=] CARE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)) { },
-                          [=] CARE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
+                          [=] FUSIBLE_DEVICE(int, int*, int const*, int, FUSIBLE_REGISTERS(64)) { },
+                          [=] FUSIBLE_DEVICE(int i, int*, FUSIBLE_REGISTERS(64)) {
       dst[pos+i] = src[i];
    });
 
    // pack has not been flushed, so
    // host data should not be updated yet
-   int * host_dst = dst.getPointer(care::CPU, false);
-   int * host_src = src.getPointer(care::CPU, false);
+   const int* host_src = src.data(chai::CPU, false);
+   const int* host_dst = dst.data(chai::CPU, false);
 
-   for (int i = 0; i < 2; ++i) {
-      EXPECT_EQ(host_dst[i], -1);
-      EXPECT_EQ(host_src[i], i);
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], -1);
    }
 
    packer->flushActions();
+   packer->stopRecording();
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
-   for (int i = 0; i < 2; ++i) {
-      EXPECT_EQ(host_dst[i], -1);
-      EXPECT_EQ(host_src[i], i);
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], -1);
    }
 #endif
 
    // bringing stuff back to the host, dst[i] should now be i
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      EXPECT_EQ(dst[i], i);
-      EXPECT_EQ(src[i], i);
-   } CARE_SEQUENTIAL_LOOP_END
+   host_src = src.cdata();
+   host_dst = dst.cdata();
 
-   src.free();
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], i);
+   }
+
    dst.free();
+   src.free();
 }
 
 GPU_TEST(TestPacker, packFixedRangeMacro) {
@@ -122,9 +132,10 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
       auto __fuser__ = LOOPFUSER(64)::getInstance();
       auto __fusible_offset__ = __fuser__->getOffset();
       int scan_pos = 0;
+
       __fuser__->registerAction(__FILE__, __LINE__, 0, arrSize, scan_pos,
-                                [=] FUSIBLE_DEVICE(int, int *, int const*, int, FUSIBLE_REGISTERS(64)){ },
-                                [=] FUSIBLE_DEVICE(int i, int *, FUSIBLE_REGISTERS(64)) {
+                                [=] FUSIBLE_DEVICE(int, int*, int const*, int, FUSIBLE_REGISTERS(64)){ },
+                                [=] FUSIBLE_DEVICE(int i, int*, FUSIBLE_REGISTERS(64)) {
          i += 0 -  __fusible_offset__ ;
          if (i < arrSize) {
             dst[pos+i] = src[i];
@@ -135,191 +146,239 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
+   const int* host_src;
+   const int* host_dst;
+
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
-   int * host_dst = dst.getPointer(care::CPU, false);
-   int * host_src = src.getPointer(care::CPU, false);
+   host_src = src.data(chai::CPU, false);
+   host_dst = dst.data(chai::CPU, false);
 
    for (int i = 0; i < arrSize; ++i) {
-      EXPECT_EQ(host_dst[i], -1);
-      EXPECT_EQ(host_src[i], i);
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], -1);
    }
 #endif
 
    FUSIBLE_LOOPS_STOP
 
    // bringing stuff back to the host, dst[i] should now be i
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      EXPECT_EQ(dst[i], i);
-      EXPECT_EQ(src[i], i);
-   } CARE_SEQUENTIAL_LOOP_END
+   host_src = src.cdata();
+   host_dst = dst.cdata();
 
-   src.free();
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], i);
+   }
+
    dst.free();
+   src.free();
 }
 
 GPU_TEST(TestPacker, singleFusedLoop) {
-
    FUSIBLE_LOOPS_START
    chai::ManagedArray<int> test(2) ;
+
    FUSIBLE_LOOP_STREAM(i, 0, 2) {
       test[i] = 0 ;
    } FUSIBLE_LOOP_STREAM_END
+
    FUSIBLE_LOOPS_STOP
 
-   CARE_SEQUENTIAL_LOOP(i,0,2) {
-      EXPECT_EQ(test[i],0);
-   } CARE_SEQUENTIAL_LOOP_END
+   const int* host_test = test.cdata();
+
+   for (int i = 0; i < 2; ++i) {
+      ASSERT_EQ(host_test[i], 0);
+   }
+
    test.free();
 }
 
 GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    FUSIBLE_LOOPS_START
+
    int arrSize = 8;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
+
    // initialize the src and dst on the host
    CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
       src[i] = i;
       dst[i] = -1;
    } CARE_SEQUENTIAL_LOOP_END
+
    int pos = 0;
+
    FUSIBLE_LOOP_STREAM(i, 0, arrSize/2) {
       dst[pos+i] = src[i];
    } FUSIBLE_LOOP_STREAM_END
+
    pos += arrSize/2;
+
    FUSIBLE_LOOP_STREAM(i, 0, arrSize/2) {
       dst[pos+i] = src[i+pos]*2;
    } FUSIBLE_LOOP_STREAM_END
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
+   const int* host_src;
+   const int* host_dst;
+
 #ifdef CARE_GPUCC
    // pack should have happened on the device, so
    // host data should not be updated yet
-#ifndef CARE_FUSIBLE_LOOPS_DISABLE 
-   int * host_dst = dst.getPointer(care::CPU, false);
-   int * host_src = src.getPointer(care::CPU, false);
+   host_dst = dst.data(chai::CPU, false);
+   host_src = src.data(chai::CPU, false);
+
    for (int i = 0; i < arrSize; ++i) {
-      EXPECT_EQ(host_dst[i], -1);
-      EXPECT_EQ(host_src[i], i);
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], -1);
    }
 #endif
-#endif
-   FUSIBLE_LOOPS_STOP
-   // bringing stuff back to the host, dst[i] should now be i
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize/2) {
-      EXPECT_EQ(dst[i], i);
-      EXPECT_EQ(src[i], i);
-   } CARE_SEQUENTIAL_LOOP_END
-   CARE_SEQUENTIAL_LOOP(i, arrSize/2, arrSize) {
-      EXPECT_EQ(dst[i], i*2);
-      EXPECT_EQ(src[i], i);
-   } CARE_SEQUENTIAL_LOOP_END
 
-   src.free();
+   FUSIBLE_LOOPS_STOP
+
+   // bringing stuff back to the host, dst[i] should now be i
+   host_src = src.cdata();
+   host_dst = dst.cdata();
+
+   for (int i = 0; i < arrSize/2; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], i);
+   }
+
+   for (int i = arrSize/2; i < arrSize; ++i) {
+      ASSERT_EQ(host_src[i], i);
+      ASSERT_EQ(host_dst[i], i*2);
+   }
+
    dst.free();
+   src.free();
 }
 
 GPU_TEST(performanceWithoutPacker, allOfTheStreams) {
    int arrSize = 128;
-   int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
+
    // initialize the src and dst on the device
+   int timesteps = 5;
+
    for (int t = 0; t < timesteps; ++t) {
       CARE_STREAM_LOOP(i, 0, arrSize) {
          src[i] = i;
          dst[i] = -1;
       } CARE_STREAM_LOOP_END
+
       for (int i = 0; i < arrSize; ++i) {
          CARE_STREAM_LOOP(j, i, i+1) {
             dst[j] = src[j];
          } CARE_STREAM_LOOP_END
       }
+
       // bringing stuff back to the host, dst[i] should now be i
-      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         EXPECT_EQ(dst[i], i);
-         EXPECT_EQ(src[i], i);
-      } CARE_SEQUENTIAL_LOOP_END
+      const int* host_src = src.cdata();
+      const int* host_dst = dst.cdata();
+
+      for (int i = 0; i < arrSize; ++i) {
+         ASSERT_EQ(host_src[i], i);
+         ASSERT_EQ(host_dst[i], i);
+      }
    }
 
-   src.free();
    dst.free();
+   src.free();
 }
-
 
 GPU_TEST(performanceWithPacker, allOfTheFuses) {
    int arrSize = 128;
-   int timesteps = 5;
    care::host_device_ptr<int> src(arrSize);
    care::host_device_ptr<int> dst(arrSize);
+
+   int timesteps = 5;
+
    for (int t = 0; t < timesteps; ++t) {
       // initialize the src and dst on the device
       CARE_STREAM_LOOP(i, 0, arrSize) {
          src[i] = i;
          dst[i] = -1;
       } CARE_STREAM_LOOP_END
+
       FUSIBLE_LOOPS_START
+
       for (int i = 0; i < arrSize; ++i) {
          FUSIBLE_LOOP_STREAM(j, i, i+1) {
             dst[j] = src[j];
          } FUSIBLE_LOOP_STREAM_END
       }
+
       FUSIBLE_LOOPS_STOP
+
       // bringing stuff back to the host, dst[i] should now be i
-      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         EXPECT_EQ(dst[i], i);
-         EXPECT_EQ(src[i], i);
-      } CARE_SEQUENTIAL_LOOP_END
+      const int* host_src = src.cdata();
+      const int* host_dst = dst.cdata();
+
+      for (int i = 0; i < arrSize; ++i) {
+         ASSERT_EQ(host_src[i], i);
+         ASSERT_EQ(host_dst[i], i);
+      }
    }
 
-   src.free();
    dst.free();
+   src.free();
 }
-
 
 GPU_TEST(orderDependent, basic_test) {
    int arrSize = 128;
-   int timesteps = 5;
    care::host_device_ptr<int> A(arrSize);
    care::host_device_ptr<int> B(arrSize);
+
    // initialize A on the host
    CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = 0;
       B[i] = 0;
    } CARE_STREAM_LOOP_END
+
    // Note - this use to test PRESERVE_ORDER but that implementation was pretty flawed,
    // prefer to use PHASES instead. 
    FUSIBLE_LOOPS_START
+
+   int timesteps = 5;
+
    for (int t = 0; t < timesteps; ++t) {
       FUSIBLE_LOOP_PHASE(i, 0, arrSize, t) {
-         if (t %2 == 0) {
-            A[i] = (A[i] + 1)<<t;
+         if (t % 2 == 0) {
+            A[i] = (A[i] + 1) << t;
          }
          else {
-            A[i] = (A[i] + 1)>>t;
+            A[i] = (A[i] + 1) >> t;
          }
       } FUSIBLE_LOOP_PHASE_END
+
       // do the same thing, but as separate kernels in a sequence
       CARE_STREAM_LOOP(i, 0, arrSize) {
-         if (t %2 == 0) {
-            B[i] = (B[i] + 1)<<t;
+         if (t % 2 == 0) {
+            B[i] = (B[i] + 1) << t;
          }
          else {
-            B[i] = (B[i] + 1)>>t;
+            B[i] = (B[i] + 1) >> t;
          }
       } CARE_STREAM_LOOP_END
    }
-   FUSIBLE_LOOPS_STOP
-   // bringing stuff back to the host, A[i] should now be B[i]
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      EXPECT_EQ(A[i], B[i]);
-   } CARE_SEQUENTIAL_LOOP_END
 
-   A.free();
+   FUSIBLE_LOOPS_STOP
+
+   // bringing stuff back to the host, A[i] should now be B[i]
+   const int* host_A = A.cdata();
+   const int* host_B = B.cdata();
+
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_A[i], host_B[i]);
+   }
+
    B.free();
+   A.free();
 }
 
 static
@@ -335,6 +394,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    care::host_device_ptr<int> A_scan(arrSize, "A_scan");
    care::host_device_ptr<int> B_scan(arrSize, "B_scan");
    care::host_device_ptr<int> AB_scan(arrSize, "AB_scan");
+
    // initialize A on the host
    CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = i%2;
@@ -357,6 +417,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, b_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, b_pos)
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, ab_pos, (A[i] == 1) || (B[i] ==1)) {
       AB_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, ab_pos)
@@ -367,6 +428,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    RAJAReduceSum<int> sumA(0);
    RAJAReduceSum<int> sumB(0);
    RAJAReduceSum<int> sumAB(0);
+
    CARE_STREAM_LOOP(i, 0, arrSize) {
       sumA += A_scan[i];
       sumB += B_scan[i];
@@ -377,6 +439,7 @@ GPU_TEST(fusible_scan, basic_fusible_scan) {
    EXPECT_EQ((int)sumA, arrSize/2);
    EXPECT_EQ((int)sumB, arrSize/2);
    EXPECT_EQ((int)sumAB, arrSize);
+
    // check scan positions
    EXPECT_EQ(a_pos, arrSize/2);
    EXPECT_EQ(b_pos, arrSize/2);
@@ -413,12 +476,15 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
    FUSIBLE_LOOPS_START
 
    int result_pos = 0;
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, A[i] == 1) {
       A_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, printAndAssign(B, i)) {
       B_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
+
    FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, (A[i] == 1) || (B[i] ==1)) {
       AB_scan[pos] = 1;
    } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
@@ -430,6 +496,7 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
+
       CARE_STREAM_LOOP(i, 0, 3*arrSize) {
          sumA += A_scan[i];
          sumB += B_scan[i];
@@ -441,17 +508,21 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       EXPECT_EQ((int)sumB, arrSize/2);
       EXPECT_EQ((int)sumAB, arrSize);
    }
+
    // sum up the results of the scans within the expected ranges of the scans
    {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
+
       CARE_STREAM_LOOP(i, 0, arrSize/2) {
          sumA += A_scan[i];
       } CARE_STREAM_LOOP_END
+
       CARE_STREAM_LOOP(i, arrSize/2, arrSize) {
          sumB += B_scan[i];
       } CARE_STREAM_LOOP_END
+
       CARE_STREAM_LOOP(i, arrSize, 2*arrSize) {
          sumAB += AB_scan[i];
       } CARE_STREAM_LOOP_END
@@ -461,6 +532,7 @@ GPU_TEST(fusible_dependent_scan, basic_dependent_fusible_scan) {
       EXPECT_EQ((int)sumB, arrSize/2);
       EXPECT_EQ((int)sumAB, arrSize);
    }
+
    // check scan positions
    EXPECT_EQ(result_pos, arrSize*2);
 
@@ -482,6 +554,7 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    care::host_device_ptr<int> A_scan(3*arrSize, "A_scan");
    care::host_device_ptr<int> B_scan(3*arrSize, "B_scan");
    care::host_device_ptr<int> AB_scan(3*arrSize, "AB_scan");
+
    // initialize A on the host
    CARE_STREAM_LOOP(i, 0, arrSize) {
       A[i] = i%2;
@@ -495,6 +568,7 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
    } CARE_STREAM_LOOP_END
 
    FUSIBLE_LOOPS_START
+
    FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
       C[i] = i;
    } FUSIBLE_LOOP_STREAM_END
@@ -509,16 +583,20 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, A[i] == 1) {
          A_scan[pos] = 1;
       } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
+
       FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, printAndAssign(B, i)) {
          B_scan[pos] = 1;
       } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
+
       FUSIBLE_LOOP_SCAN(i, 0, arrSize, pos, result_pos, (A[i] == 1) || (B[i] ==1)) {
          AB_scan[pos] = 1;
       } FUSIBLE_LOOP_SCAN_END(arrSize, pos, result_pos)
    }
+
    FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
       D[i] = 2*i;
    } FUSIBLE_LOOP_STREAM_END
+
    FUSIBLE_LOOP_STREAM(i, 0, arrSize) {
       E[i] = 3*i;
    } FUSIBLE_LOOP_STREAM_END
@@ -530,6 +608,7 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
+
       CARE_STREAM_LOOP(i, 0, 3*arrSize) {
          sumA += A_scan[i];
          sumB += B_scan[i];
@@ -541,17 +620,21 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       EXPECT_EQ((int)sumB, arrSize/2);
       EXPECT_EQ((int)sumAB, arrSize);
    }
+
    // sum up the results of the scans within the expected ranges of the scans
    {
       RAJAReduceSum<int> sumA(0);
       RAJAReduceSum<int> sumB(0);
       RAJAReduceSum<int> sumAB(0);
+
       CARE_STREAM_LOOP(i, 0, arrSize/2) {
          sumA += A_scan[i];
       } CARE_STREAM_LOOP_END
+
       CARE_STREAM_LOOP(i, arrSize/2, arrSize) {
          sumB += B_scan[i];
       } CARE_STREAM_LOOP_END
+
       CARE_STREAM_LOOP(i, arrSize, 2*arrSize) {
          sumAB += AB_scan[i];
       } CARE_STREAM_LOOP_END
@@ -561,19 +644,23 @@ GPU_TEST(fusible_loops_and_scans, mix_and_match) {
       EXPECT_EQ((int)sumB, arrSize/2);
       EXPECT_EQ((int)sumAB, arrSize);
    }
+
    // check scan positions
    for (int m = 0; m < outer_dim; ++m) {
-      EXPECT_EQ(results[m], arrSize*2);
+      ASSERT_EQ(results[m], arrSize*2);
    }
 
    // Check that FUSIBLE STREAM loops interwoven between scans also worked (yes, they had race conditions, but all races should have
    // written the same value)
+   const int* host_C = C.cdata();
+   const int* host_D = D.cdata();
+   const int* host_E = E.cdata();
 
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-      EXPECT_EQ(C[i], i);
-      EXPECT_EQ(D[i], 2*i);
-      EXPECT_EQ(E[i], 3*i);
-   } CARE_SEQUENTIAL_LOOP_END
+   for (int i = 0; i < arrSize; ++i) {
+      ASSERT_EQ(host_C[i], i);
+      ASSERT_EQ(host_D[i], 2*i);
+      ASSERT_EQ(host_E[i], 3*i);
+   }
 
    A.free();
    B.free();
@@ -591,6 +678,7 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
    care::host_device_ptr<int> A(arrSize, "A");
    care::host_device_ptr<int> B(arrSize, "B");
    care::host_device_ptr<int> AB_scan(arrSize*2, "AB_scan");
+
    // initialize A on the host
    CARE_STREAM_LOOP(i, 0, arrSize*2) {
       if (i / arrSize == 0) { 
@@ -600,9 +688,11 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
          AB_scan[i] = 3;
       }
    } CARE_STREAM_LOOP_END
+
    // convert to offsets
    care::exclusive_scan(RAJAExec{}, AB_scan, nullptr, arrSize*2, 0, true);
    int offset = AB_scan.pick(arrSize);
+
    CARE_STREAM_LOOP(i,arrSize,arrSize*2) {
       AB_scan[i] -= offset;
    } CARE_STREAM_LOOP_END
@@ -619,16 +709,21 @@ GPU_TEST(fusible_scan_custom, basic_fusible_scan_custom) {
 
    FUSIBLE_LOOPS_STOP
 
-   //  check answer
-   CARE_SEQUENTIAL_LOOP(i, 0, arrSize*2) {
-      int indx = i%arrSize;
-      if (i / arrSize == 0 ) { 
-         EXPECT_EQ(AB_scan[i],A[indx]);
+   // check answer
+   const int* host_A = A.cdata();
+   const int* host_B = B.cdata();
+   const int* host_AB_scan = AB_scan.cdata();
+
+   for (int i = 0; i < arrSize*2; ++i) {
+      const int indx = i%arrSize;
+
+      if (i / arrSize == 0) { 
+         ASSERT_EQ(host_AB_scan[i], host_A[indx]);
       }
       else {
-         EXPECT_EQ(AB_scan[i],B[indx]);
+         ASSERT_EQ(host_AB_scan[i], host_B[indx]);
       }
-   } CARE_SEQUENTIAL_LOOP_END
+   }
 
    A.free();
    B.free();
@@ -661,15 +756,16 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
     * */
 
    FUSIBLE_LOOPS_START
+
    for (int t = 0; t < timesteps; ++t) {
       care::host_device_ptr<int> A = As[t];
       care::host_device_ptr<int> B = Bs[t];
       care::host_device_ptr<int> C = Cs[t];
 
-
       CARE_STREAM_LOOP(i, 0, arrSize) {
          A[i] = -2;
          C[i] = -2;
+
          switch (t) {
             case 0:
                B[i] = -1;
@@ -695,58 +791,67 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
             if (A[i] == -1) {
                A[i] += 1 ;
             }
+
             C[i] = A[i];
          } FUSIBLE_LOOP_PHASE_END
       }
 
       FUSIBLE_LOOP_PHASE(i, 0, arrSize, __LINE__) {
-         if (t %2 == 0) {
-            A[i] = (A[i] + 1)<<t;
+         if (t % 2 == 0) {
+            A[i] = (A[i] + 1) << t;
          }
          else {
-            A[i] = (A[i] + 1)>>t;
+            A[i] = (A[i] + 1) >> t;
          }
       } FUSIBLE_LOOP_PHASE_END
+
       // do the same thing, but as separate kernels in a sequence
       CARE_STREAM_LOOP(i, 0, arrSize) {
-         if (t %2 == 0) {
-            B[i] = (B[i] + 1)<<t;
+         if (t % 2 == 0) {
+            B[i] = (B[i] + 1) << t;
          }
          else {
-            B[i] = (B[i] + 1)>>t;
+            B[i] = (B[i] + 1) >> t;
          }
       } CARE_STREAM_LOOP_END
+
 #ifdef CARE_GPUCC
       // pack should have happened on the device, so
       // host data should not be updated yet
-#ifndef CARE_FUSIBLE_LOOPS_DISABLE
       // check that no phases have been executed yet
-      CARE_SEQUENTIAL_LOOP(i, 0, arrSize) {
-         EXPECT_EQ(A[i], -2);
-         EXPECT_EQ(C[i], -2);
-      } CARE_SEQUENTIAL_LOOP_END
-#endif
+      const int* host_A = A.cdata();
+      const int* host_C = C.cdata();
+
+      for (int i = 0; i < arrSize; ++i) {
+         ASSERT_EQ(host_A[i], -2);
+         ASSERT_EQ(host_C[i], -2);
+      }
 #endif
       /* the captures and CHAI checks have already occurred, the FUSIBLE_LOOPS_STOP
        * won't update them, so we need to mark A and C as touched on the device
        * so we get fresh data after the flush */
       A.registerTouch(care::GPU);
       C.registerTouch(care::GPU);
+
       FUSIBLE_PHASE_RESET
    }
+
    FUSIBLE_LOOPS_STOP_ASYNC
+
    // bringing stuff back to the host, A[i] should now be B[i], C[i] should remember what A[i] was on the second phase.
    for (int t = 0; t < timesteps; ++t) {
-      care::host_device_ptr<int> A = As[t];
-      care::host_device_ptr<int> B = Bs[t];
-      care::host_device_ptr<int> C = Cs[t];
+      const int* A = As[t].cdata();
+      const int* B = Bs[t].cdata();
+      const int* C = Cs[t].cdata();
+
       CARE_SEQUENTIAL_LOOP(i, 0, 5) {
-         EXPECT_EQ(A[i], B[i]);
+         ASSERT_EQ(A[i], B[i]);
+
          if (t == 1) {
-            EXPECT_EQ(C[i], 0);
+            ASSERT_EQ(C[i], 0);
          }
          else {
-            EXPECT_EQ(C[i], -2);
+            ASSERT_EQ(C[i], -2);
          }
       } CARE_SEQUENTIAL_LOOP_END
    }

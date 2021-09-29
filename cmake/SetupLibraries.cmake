@@ -40,6 +40,18 @@ if (NOT TARGET camp)
                                  SCOPE INTERFACE
                                  TARGET_DEFINITIONS CAMP_HAVE_CUDA)
    endif ()
+
+   if (ENABLE_HIP)
+      blt_add_target_definitions(TO camp
+                                 SCOPE INTERFACE
+                                 TARGET_DEFINITIONS CAMP_HAVE_HIP)
+   endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs camp INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET camp
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
@@ -54,18 +66,6 @@ if (NOT TARGET umpire)
 
    if (umpire_FOUND)
       message(STATUS "CARE: Using external Umpire")
-
-      set(UMPIRE_LIBRARIES umpire)
-      set(UMPIRE_DEPENDS camp)
-      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
-      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
-      blt_list_append(TO UMPIRE_DEPENDS ELEMENTS hip IF ENABLE_HIP)
-
-      blt_register_library(NAME umpire
-                           TREAT_INCLUDES_AS_SYSTEM ON
-                           INCLUDES ${UMPIRE_INCLUDE_DIRS}
-                           LIBRARIES ${UMPIRE_LIBRARIES}
-                           DEPENDS_ON ${UMPIRE_DEPENDS})
    else ()
       message(STATUS "CARE: Using Umpire submodule")
 
@@ -79,6 +79,12 @@ if (NOT TARGET umpire)
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/umpire)
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs umpire INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET umpire
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
@@ -93,19 +99,6 @@ if (NOT TARGET raja)
 
    if (raja_FOUND)
       message(STATUS "CARE: Using external RAJA")
-
-      get_target_property(RAJA_INCLUDE_DIRS RAJA INTERFACE_INCLUDE_DIRECTORIES)
-      set(RAJA_LIBRARIES RAJA)
-      set(RAJA_DEPENDS camp)
-      blt_list_append(TO RAJA_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
-      blt_list_append(TO RAJA_DEPENDS ELEMENTS openmp IF ENABLE_OPENMP)
-      blt_list_append(TO RAJA_DEPENDS ELEMENTS hip IF ENABLE_HIP)
-
-      blt_register_library(NAME RAJA
-                           TREAT_INCLUDES_AS_SYSTEM ON
-                           INCLUDES ${RAJA_INCLUDE_DIRS}
-                           LIBRARIES ${RAJA_LIBRARIES}
-                           DEPENDS_ON ${RAJA_DEPENDS})
    else ()
       message(STATUS "CARE: Using RAJA submodule")
 
@@ -138,6 +131,12 @@ if (NOT TARGET raja)
          endif ()
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs RAJA INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET RAJA
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
@@ -152,18 +151,6 @@ if (NOT TARGET chai)
 
    if (chai_FOUND)
       message(STATUS "CARE: Using external CHAI")
-
-      set(CHAI_LIBRARIES chai)
-      set(CHAI_DEPENDS umpire camp)
-      blt_list_append(TO CHAI_DEPENDS ELEMENTS mpi IF ENABLE_MPI)
-      blt_list_append(TO CHAI_DEPENDS ELEMENTS cuda IF ENABLE_CUDA)
-      blt_list_append(TO CHAI_DEPENDS ELEMENTS hip IF ENABLE_HIP)
-
-      blt_register_library(NAME chai
-                           TREAT_INCLUDES_AS_SYSTEM ON
-                           INCLUDES ${CHAI_INCLUDE_DIRS}
-                           LIBRARIES ${CHAI_LIBRARIES}
-                           DEPENDS_ON ${CHAI_DEPENDS})
    else ()
       message(STATUS "CARE: Using CHAI submodule")
 
@@ -182,6 +169,12 @@ if (NOT TARGET chai)
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/chai)
       endif ()
    endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs chai INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET chai
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
 endif ()
 
 ################################
@@ -190,12 +183,12 @@ endif ()
 if (NVTOOLSEXT_DIR)
     if (ENABLE_CUDA)
        include(cmake/libraries/FindNvToolsExt.cmake)
+
        if (NVTOOLSEXT_FOUND)
-           blt_register_library( NAME       nvtoolsext
-                                   TREAT_INCLUDES_AS_SYSTEM ON
-                                   INCLUDES   ${NVTOOLSEXT_INCLUDE_DIRS}
-                                   LIBRARIES  ${NVTOOLSEXT_LIBRARY}
-                                   )
+           blt_import_library(NAME nvtoolsext
+                              LIBRARIES ${NVTOOLSEXT_LIBRARY}
+                              INCLUDES ${NVTOOLSEXT_INCLUDE_DIRS}
+                              TREAT_INCLUDES_AS_SYSTEM ON)
 
            set(CARE_HAVE_NVTOOLSEXT "1" CACHE STRING "")
        else()
@@ -214,9 +207,10 @@ if (LLNL_GLOBALID_DIR)
     include(cmake/libraries/FindLLNL_GlobalID.cmake)
 
     if (LLNL_GLOBALID_FOUND)
-        blt_register_library( NAME       llnl_globalid
-                                TREAT_INCLUDES_AS_SYSTEM ON
-                                INCLUDES   ${LLNL_GLOBALID_INCLUDE_DIRS})
+        blt_import_library(NAME llnl_globalid
+                           INCLUDES ${LLNL_GLOBALID_INCLUDE_DIRS}
+                           TREAT_INCLUDES_AS_SYSTEM ON)
+
         set(CARE_HAVE_LLNL_GLOBALID "1" CACHE STRING "")
     else()
         message(FATAL_ERROR "CARE: Unable to find LLNL_GlobalID with given path: ${LLNL_GLOBALID_DIR}")
