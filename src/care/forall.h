@@ -26,12 +26,16 @@
 #include "RAJA/RAJA.hpp"
 
 namespace care {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+   static bool s_reverseLoopOrder = false;
+#endif
+
    template <typename T>
    struct ExecutionPolicyToSpace {
       static constexpr const chai::ExecutionSpace value = chai::CPU;
    };
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
    template <>
    struct ExecutionPolicyToSpace<RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
@@ -74,11 +78,22 @@ namespace care {
 #ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+         RAJA::RangeStrideSegment rangeSegment =
+            s_reverseLoopOrder ?
+            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
+            RAJA::RangeStrideSegment(start, end, 1);
 #else
-         RAJA::forall<ExecutionPolicy>(RAJA::RangeSegment(start, end), body);
+         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
 #endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         RAJA::forall<RAJA::seq_exec>(rangeSegment, body);
+#else
+         RAJA::forall<ExecutionPolicy>(rangeSegment, body);
+#endif
+
 #ifndef CARE_DISABLE_RAJAPLUGIN
          RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
@@ -123,10 +138,18 @@ namespace care {
    template <typename LB>
    void forall(openmp, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
 #if defined(_OPENMP) && defined(OPENMP_ACTIVE)
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
 #endif
    }
 
@@ -148,6 +171,10 @@ namespace care {
    template <typename LB>
    void forall(gpu, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
 #if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
 #elif defined(GPU_ACTIVE) && defined(__CUDACC__)
@@ -158,6 +185,10 @@ namespace care {
              fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
 #endif
    }
 
@@ -180,6 +211,10 @@ namespace care {
    template <typename LB>
    void forall(parallel, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
 #if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
 #elif defined(GPU_ACTIVE) && defined(__CUDACC__)
@@ -192,6 +227,10 @@ namespace care {
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
 #endif
    }
 

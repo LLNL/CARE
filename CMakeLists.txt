@@ -37,6 +37,7 @@ option(CARE_ENABLE_GPU_SIMULATION_MODE "Enable GPU simulation mode." OFF )
 #  Known to not compile for Debug configurations, have low probability of working in 
 #  practice for Release / RelWithDebInfo configurations.
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
+option(CARE_ENABLE_PARALLEL_LOOP_BACKWARDS "Reverse the start and end for parallel loops." OFF)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)
