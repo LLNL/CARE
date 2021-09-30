@@ -80,14 +80,10 @@ namespace care {
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-         RAJA::RangeStrideSegment rangeSegment(start, end, 1);
-
-         if (s_reverseLoopOrder) {
-            rangeSegment = RAJA::RangeStrideSegment(end - 1, start - 1, -1);
-         }
-         else {
-            rangeSegment = RAJA::RangeStrideSegment(start, end, 1);
-         }
+         RAJA::RangeStrideSegment rangeSegment =
+            s_reverseLoopOrder ?
+            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
+            RAJA::RangeStrideSegment(start, end, 1);
 #else
          RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
 #endif
