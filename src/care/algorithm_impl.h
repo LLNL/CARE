@@ -23,13 +23,13 @@
 #include "care/scan.h"
 
 // Other library headers
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
 #include "cub/cub.cuh"
 #undef CUB_NS_POSTFIX
 #undef CUB_NS_PREFIX
 #endif
 
-#ifdef __HIPCC__
+#if defined(__HIPCC__)
 #include "hipcub/hipcub.hpp"
 #endif
 
