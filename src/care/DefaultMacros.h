@@ -19,6 +19,7 @@
 // Other CARE headers
 #include "care/forall.h"
 #include "care/FOREACHMACRO.h"
+#include "care/GPUMacros.h"
 #include "care/policies.h"
 
 // This makes sure the lambdas get decorated with the right __host__ and or
@@ -34,6 +35,12 @@
 #define CARE_HOST_ACTIVE
 #define CARE_GLOBAL_ACTIVE
 #endif // defined CARE_GPUCC
+
+#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#define CARE_MANAGED_PTR_DEVICE_ACTIVE __device__
+#else
+#define CARE_MANAGED_PTR_DEVICE_ACTIVE
+#endif
 
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
@@ -276,6 +283,25 @@
 #define CARE_CHECKED_PARALLEL_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
 
 #define CARE_CHECKED_PARALLEL_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -529,6 +555,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE_ACTIVE (const int INDEX) {
+
+#define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros for updating/initializing managed_ptrs.
 ///        Will start and end a sequential loop of length one.
 ///        If GPU is available, also executes on the device.
@@ -543,7 +592,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::managed_ptr_update{}, __FILE__, __LINE__, 0, 1, [=] CARE_HOST_DEVICE (const int) {
+   care::forall(care::managed_ptr_write{}, __FILE__, __LINE__, 0, 1, [=] CARE_MANAGED_PTR_HOST_DEVICE (const int) {
 
 #define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -700,6 +749,24 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_MANAGED_PTR_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, care_managed_ptr_read_loop_check)
+
+#define CARE_MANAGED_PTR_LOOP_END CARE_CHECKED_MANAGED_PTR_LOOP_END(care_managed_ptr_read_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
 ///        executes on the device. If GPU is not available but OpenMP is,
 ///        executes in parallel on the host. Otherwise, executes sequentially
@@ -799,9 +866,9 @@
 ///        If GPU is available, also executes on the device.
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_MANAGED_PTR_UPDATE_KERNEL { CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(care_managed_ptr_update_kernel_check)
+#define CARE_MANAGED_PTR_UPDATE_KERNEL { CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(care_managed_ptr_write_kernel_check)
 
-#define CARE_MANAGED_PTR_UPDATE_KERNEL_END CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(care_managed_ptr_update_kernel_check) }
+#define CARE_MANAGED_PTR_UPDATE_KERNEL_END CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(care_managed_ptr_write_kernel_check) }
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 

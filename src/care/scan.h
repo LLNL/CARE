@@ -279,6 +279,20 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 
 #endif // CARE_HAVE_LLNL_GLOBALID
 
+#define MANAGED_PTR_SCAN_LOOP_INIT(INDX, START, END, SCANVAR, SCANVARLENGTH, SCANVAR_OFFSET, EXPR) \
+   if (END - START > 0) { \
+      int const SCANVARENDNAME(SCANVAR) = END; \
+      CARE_CHECKED_MANAGED_PTR_LOOP_START(INDX, START, END+1, managed_ptr_scan_loop_init_check) { \
+         SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
+      } CARE_CHECKED_MANAGED_PTR_LOOP_END(managed_ptr_scan_loop_init_check) \
+      care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, END-START+1, SCANVAR_OFFSET, true); \
+   } else { \
+      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, managed_ptr_scan_loop_init_check) { \
+         SCANVAR[INDX] = SCANVAR_OFFSET; \
+         SCANVARLENGTH[0] = SCANVAR_OFFSET; \
+      } CARE_CHECKED_SEQUENTIAL_LOOP_END(managed_ptr_scan_loop_init_check) \
+   }
+
 // grab the number of elements that met the scan criteria, place it in SCANLENGTH
 #define SCAN_LOOP_FINAL(END, SCANVARLENGTH, SCANCOUNT) care::getFinalScanCountFromPinned(SCANVARLENGTH, SCANCOUNT);
 
@@ -376,6 +390,26 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
       care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, LENGTH, 0, true); \
    }
          
+#define MANAGED_PTR_SCAN_LOOP(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR) \
+   { \
+      int const SCANVARSTARTNAME(SCANINDX) = START; \
+      ScanVar SCANVARNAME(SCANINDX)(END-START+1); \
+      ScanVar SCANVARLENGTHNAME(SCANINDX)(1, chai::PINNED); \
+      MANAGED_PTR_SCAN_LOOP_INIT(INDX, SCANVARSTARTNAME(SCANINDX), END, SCANVARNAME(SCANINDX), SCANVARLENGTHNAME(SCANINDX), SCANINDX_OFFSET, EXPR); \
+      int const SCANVARENDNAME(SCANINDX) = END; \
+      CARE_CHECKED_MANAGED_PTR_LOOP_START(INDX, START, END, managed_ptr_scan_loop_check) { \
+         if (INDX == SCANVARENDNAME(SCANINDX) -1) { \
+            SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
+         } \
+         const int SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]; \
+         if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
+
+#define MANAGED_PTR_SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) } \
+   } CARE_CHECKED_MANAGED_PTR_LOOP_END(managed_ptr_scan_loop_check) \
+   SCAN_LOOP_FINAL(END, SCANVARLENGTHNAME(SCANINDX), SCANLENGTH) \
+   SCANVARNAME(SCANINDX).free(); \
+   SCANVARLENGTHNAME(SCANINDX).free(); \
+   }
 
 #else // GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN
 
@@ -433,6 +467,13 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
       } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_counts_to_offsets_loop_check) \
       care::exclusive_scan(RAJA::seq_exec{}, SCANVAR, nullptr, LENGTH, 0, true); \
    }
+
+#define MANAGED_PTR_SCAN_LOOP(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)  \
+   SCAN_LOOP_P(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR)
+
+#define MANAGED_PTR_SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) \
+   SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH)
+
 #endif // GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN
 
 #endif // !defined(_CARE_SCAN_H_)
