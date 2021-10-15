@@ -273,9 +273,9 @@ GPU_TEST(ManagedPtr, SplitHostDevicePointer)
       }
    });
 
-   CARE_STREAM_LOOP(i, 0, length) {
+   CARE_MANAGED_PTR_LOOP(i, 0, length) {
       base->setData(i, i);
-   } CARE_STREAM_LOOP_END
+   } CARE_MANAGED_PTR_LOOP_END
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(base->getData(i), i);
@@ -313,17 +313,17 @@ GPU_TEST(ManagedPtr, RawPointer)
    // ensure that this works.
    care::managed_ptr<BaseClass> base = care::make_managed<DerivedClass>(data);
 
-   CARE_STREAM_LOOP(i, 0, length) {
+   CARE_MANAGED_PTR_LOOP(i, 0, length) {
       base->setData(i, i);
-   } CARE_STREAM_LOOP_END
+   } CARE_MANAGED_PTR_LOOP_END
 
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, length) {
+   CARE_MANAGED_PTR_LOOP(i, 0, length) {
       if (base->getData(i) != i) {
          passed.min(false);
       }
-   } CARE_REDUCE_LOOP_END
+   } CARE_MANAGED_PTR_LOOP_END
 
    EXPECT_TRUE((bool) passed);
 
