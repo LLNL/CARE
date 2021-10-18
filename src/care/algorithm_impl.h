@@ -754,38 +754,57 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
 
 /************************************************************************
 * Function  : CompressArray<T>
-* Author(s) : Peter Robinson
-* Purpose   : Removes items at indices defined in removed from arr.
-*           : Thread safe version of CompressArray.
-*           : Note that thread safe version only requires removed to be sorted.
-*           : Note also that it's a error if any index in removed is
-*           : not found (beyond the end of arr).
+* Author(s) : Peter Robinson, Benjamin Liu
+* Purpose   : Compress an array based on list of array indices.
+*             Based on listType, the list is either
+*             removed_list: a list of indices to remove
+*                or
+*             mapping_list: a mapping from compressed indices to original indices.
+*             All entries in list must be > 0 and < arrLen.
+*             Thread safe version of CompressArray.
+*             Note that thread safe version only requires list to be sorted,
+*             and only if listType == removed_list is true.
+*             For listType == removed_list, setting noCopy will set arr to a
+*             newly allocated array rather than copying the result into the
+*             original arr.
 **************************************************************************/
 #ifdef CARE_GPUCC
 template <typename T>
 CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
-                               care::host_device_ptr<int const> removed, const int removedLen, bool noCopy)
+                               care::host_device_ptr<int const> list, const int listLen,
+                               const care::compress_array listType, bool noCopy)
 {
    //GPU VERSION
-   care::host_device_ptr<T> tmp(arrLen-removedLen, "CompressArray_tmp");
-   int numKept = 0;
-   SCAN_LOOP(i, 0, arrLen, pos, numKept,
-             -1 == BinarySearch<int>(removed, 0, removedLen, i)) {
-      tmp[pos] = arr[i];
-   } SCAN_LOOP_END(arrLen, pos, numKept)
+   if (listType == care::compress_array::removed_list) {
+      care::host_device_ptr<T> tmp(arrLen-listLen, "CompressArray_tmp");
+      int numKept = 0;
+      SCAN_LOOP(i, 0, arrLen, pos, numKept,
+                -1 == BinarySearch<int>(list, 0, listLen, i)) {
+         tmp[pos] = arr[i];
+      } SCAN_LOOP_END(arrLen, pos, numKept)
 
 #ifdef CARE_DEBUG
-   int numRemoved = arrLen - numKept;
-   if (removedLen != numRemoved) {
-      printf("Warning in CompressArray<T>: did not remove expected number of members!\n");
-   }
+      int numRemoved = arrLen - numKept;
+      if (listLen != numRemoved) {
+         printf("Warning in CompressArray<T>: did not remove expected number of members!\n");
+      }
 #endif
-   if (noCopy) {
-      arr.free();
-      arr = tmp;
+      if (noCopy) {
+         arr.free();
+         arr = tmp;
+      }
+      else {
+         ArrayCopy<T>(exec, arr, tmp, numKept);
+         tmp.free();
+      }
    }
    else {
-      ArrayCopy<T>(exec, arr, tmp, numKept);
+      care::host_device_ptr<T> tmp(arrLen, "CompressArray tmp");
+      ArrayCopy<T>(tmp, arr, arrLen);
+      CARE_STREAM_LOOP(newIndex, 0, listLen) {
+         int oldIndex = list[newIndex] ;
+         arr[newIndex] = tmp[oldIndex] ;
+      } CARE_STREAM_LOOP_END
       tmp.free();
    }
 }
@@ -794,54 +813,84 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
 
 /************************************************************************
 * Function  : CompressArray<T>
-* Author(s) : Peter Robinson
-* Purpose   : Removes items at indices defined in removed from arr.
+* Author(s) : Peter Robinson, Benjamin Liu
+* Purpose   : Compress an array based on list of array indices.
+*             Based on listType, the list is either
+*             removed_list: a list of indices to remove
+*                or
+*             mapping_list: a mapping from compressed indices to original indices.
+*             All entries in list must be > 0 and < arrLen.
 *             Sequential Version of CompressArray
-*             Requires both arr and removed to be sorted.
-*             Note that it's a error if any index in removed is
-*             not found (beyond the end of arr).
+*             Requires both arr and list to be sorted.
+*             noCopy has no effect.
 **************************************************************************/
 template <typename T>
 CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, const int arrLen,
-                               care::host_device_ptr<int const> removed, const int removedLen, bool noCopy)
+                               care::host_device_ptr<int const> list, const int listLen,
+                               const care::compress_array listType, bool noCopy)
 {
    // CPU VERSION
-
-   int readLoc;
-   int writeLoc = 0, numRemoved = 0;
-   care::host_ptr<int const> removedHost = removed ;
-   care::host_ptr<T> arrHost = arr ;
+   if (listType == care::compress_array::removed_list) {
+      int readLoc;
+      int writeLoc = 0, numRemoved = 0;
+      care::host_ptr<int const> listHost = list ;
+      care::host_ptr<T> arrHost = arr ;
 #ifdef CARE_DEBUG
-   if (removedHost[removedLen-1] > arrLen-1) {
-      printf("Warning in CompressArray<T> seq_exec: asking to remove entries not in array!\n");
-   }
-#endif
-   for (readLoc = 0; readLoc < arrLen; ++readLoc) {
-      if ((numRemoved == removedLen) || (readLoc < removedHost[numRemoved])) {
-         arrHost[writeLoc++] = arrHost[readLoc];
-      }
-      else if (readLoc == removedHost[numRemoved]) {
-         ++numRemoved;
-      }
-#ifdef CARE_DEBUG
-      else {
-         printf("Warning in CompressArray<int> seq_exec: list of removed members not sorted!\n");
+      if (listHost[listLen-1] > arrLen-1) {
+         printf("Warning in CompressArray<T> seq_exec: asking to remove entries not in array!\n");
       }
 #endif
-   }
+      for (readLoc = 0; readLoc < arrLen; ++readLoc) {
+         if ((numRemoved == listLen) || (readLoc < listHost[numRemoved])) {
+            arrHost[writeLoc++] = arrHost[readLoc];
+         }
+         else if (readLoc == listHost[numRemoved]) {
+            ++numRemoved;
+         }
 #ifdef CARE_DEBUG
-   if ((removedLen != numRemoved) || (writeLoc != arrLen - removedLen)) {
-      printf("CompressArray<T> seq_exec: did not remove expected number of members!\n");
-   }
+         else {
+            printf("Warning in CompressArray<int> seq_exec: list of removed members not sorted!\n");
+         }
 #endif
+      }
+#ifdef CARE_DEBUG
+      if ((listLen != numRemoved) || (writeLoc != arrLen - listLen)) {
+         printf("CompressArray<T> seq_exec: did not remove expected number of members!\n");
+      }
+#endif
+   }
+   else {
+      CARE_SEQUENTIAL_LOOP(newIndex, 0, listLen) {
+         int oldIndex = list[newIndex] ;
+#ifdef CARE_DEBUG
+         if (oldIndex > arrLen-1 || oldIndex < 0) {
+            printf("Warning in CompressArray<T> seq_exec: asking to remove entries not in array!\n");
+         }
+#endif
+         arr[newIndex] = arr[oldIndex] ;
+      } CARE_SEQUENTIAL_LOOP_END
+   }
    (void) noCopy;
 }
 
+/************************************************************************
+* Function  : CompressArray<T>
+* Author(s) : Peter Robinson, Benjamin Liu
+* Purpose   : Compress an array based on list of array indices.
+*             Based on listType, the list is either
+*             removed_list: a list of indices to remove
+*                or
+*             mapping_list: a mapping from compressed indices to original indices.
+*             All entries in list must be > 0 and < arrLen.
+*             Both arr and list should be sorted to support the sequential
+*             implementation.
+**************************************************************************/
 template <typename T>
 CARE_INLINE void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
-                               care::host_device_ptr<int const> removed, const int removedLen, bool noCopy)
+                               care::host_device_ptr<int const> list, const int listLen,
+                               const care::compress_array listType, bool noCopy)
 {
-   return CompressArray(RAJAExec(), arr, arrLen, removed, removedLen, noCopy);
+   return CompressArray(RAJAExec(), arr, arrLen, list, listLen, listType, noCopy);
 }
 
 
