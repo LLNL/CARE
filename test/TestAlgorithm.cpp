@@ -236,15 +236,15 @@ TEST(algorithm, compressarray)
    int newLen = 7;
    care::host_device_ptr<int> mapList(newLen, "mapList");
 
-   // Keep the last 7 entries, but in reverse order
+   // Skip the first 3 entries
    CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
-      mapList[i] = size-i ;
+      mapList[i] = i + 3 ;
    } CARE_SEQUENTIAL_LOOP_END
 
    care::CompressArray<int>(RAJA::seq_exec(), b, size, mapList, newLen, care::compress_array::mapping_list, true) ;
 
    CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
-      EXPECT_EQ(a[i], 100 + (size-i));
+      EXPECT_EQ(b[i], 100 + (i+3));
    } CARE_SEQUENTIAL_LOOP_END
 
    b.free();

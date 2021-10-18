@@ -900,6 +900,10 @@ CARE_INLINE void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> list, const int listLen,
                                const care::compress_array listType, bool realloc)
 {
+#ifdef CARE_DEBUG
+   checkSorted<T>(arr, arrLen, "CompressArray", "arr") ;
+   checkSorted<T>(list, listLen, "CompressArray", "list") ;
+#endif
    return CompressArray(RAJAExec(), arr, arrLen, list, listLen, listType, realloc);
 }
 
