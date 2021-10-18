@@ -241,7 +241,7 @@ TEST(algorithm, compressarray)
       mapList[i] = 10-i ;
    } CARE_SEQUENTIAL_LOOP_END
 
-   care::CompressArray<int>(RAJA::seq_exec(), b, size, mapList, newLen, care::compress_array::map_list, true) ;
+   care::CompressArray<int>(RAJA::seq_exec(), b, size, mapList, newLen, care::compress_array::mapping_list, true) ;
 
    CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
       EXPECT_EQ(a[i], 100 + (10-i));
