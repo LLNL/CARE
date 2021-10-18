@@ -220,7 +220,7 @@ TEST(algorithm, compressarray)
    care::CompressArray<int>(RAJA::seq_exec(), a, size, removed, removedLen, care::compress_array::removed_list, true) ;
 
    CARE_SEQUENTIAL_LOOP(i, 0, size-removedLen) {
-      EXPECT_EQ(a[i], 100 + (i - removedLen));
+      EXPECT_EQ(a[i], 100 + (i + removedLen));
    } CARE_SEQUENTIAL_LOOP_END
 
    a.free();
