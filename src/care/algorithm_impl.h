@@ -761,18 +761,17 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
 *                or
 *             mapping_list: a mapping from compressed indices to original indices.
 *             All entries in list must be > 0 and < arrLen.
+*             If the realloc parameter is true, arr will be resized/reallocated to
+*             the compressed size.
 *             Thread safe version of CompressArray.
 *             Note that thread safe version only requires list to be sorted,
 *             and only if listType == removed_list is true.
-*             For listType == removed_list, setting noCopy will set arr to a
-*             newly allocated array rather than copying the result into the
-*             original arr.
 **************************************************************************/
 #ifdef CARE_GPUCC
 template <typename T>
 CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> list, const int listLen,
-                               const care::compress_array listType, bool noCopy)
+                               const care::compress_array listType, bool realloc)
 {
    //GPU VERSION
    if (listType == care::compress_array::removed_list) {
@@ -789,7 +788,7 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
          printf("Warning in CompressArray<T>: did not remove expected number of members!\n");
       }
 #endif
-      if (noCopy) {
+      if (realloc) {
          arr.free();
          arr = tmp;
       }
@@ -801,6 +800,9 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
    else {
       care::host_device_ptr<T> tmp(arrLen, "CompressArray tmp");
       ArrayCopy<T>(tmp, arr, arrLen);
+      if (realloc) {
+         arr.realloc(listLen) ;
+      }
       CARE_STREAM_LOOP(newIndex, 0, listLen) {
          int oldIndex = list[newIndex] ;
          arr[newIndex] = tmp[oldIndex] ;
@@ -820,14 +822,15 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
 *                or
 *             mapping_list: a mapping from compressed indices to original indices.
 *             All entries in list must be > 0 and < arrLen.
+*             If the realloc parameter is true, arr will be resized/reallocated to
+*             the compressed size.
 *             Sequential Version of CompressArray
 *             Requires both arr and list to be sorted.
-*             noCopy has no effect.
 **************************************************************************/
 template <typename T>
 CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> list, const int listLen,
-                               const care::compress_array listType, bool noCopy)
+                               const care::compress_array listType, bool realloc)
 {
    // CPU VERSION
    if (listType == care::compress_array::removed_list) {
@@ -858,6 +861,9 @@ CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, c
          printf("CompressArray<T> seq_exec: did not remove expected number of members!\n");
       }
 #endif
+      if (realloc) {
+         arr.realloc(arrLen - listLen) ;
+      }
    }
    else {
       CARE_SEQUENTIAL_LOOP(newIndex, 0, listLen) {
@@ -869,8 +875,10 @@ CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, c
 #endif
          arr[newIndex] = arr[oldIndex] ;
       } CARE_SEQUENTIAL_LOOP_END
+      if (realloc) {
+         arr.realloc(listLen) ;
+      }
    }
-   (void) noCopy;
 }
 
 /************************************************************************
@@ -882,15 +890,17 @@ CARE_INLINE void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, c
 *                or
 *             mapping_list: a mapping from compressed indices to original indices.
 *             All entries in list must be > 0 and < arrLen.
+*             If the realloc parameter is true, arr will be resized/reallocated to
+*             the compressed size.
 *             Both arr and list should be sorted to support the sequential
 *             implementation.
 **************************************************************************/
 template <typename T>
 CARE_INLINE void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> list, const int listLen,
-                               const care::compress_array listType, bool noCopy)
+                               const care::compress_array listType, bool realloc)
 {
-   return CompressArray(RAJAExec(), arr, arrLen, list, listLen, listType, noCopy);
+   return CompressArray(RAJAExec(), arr, arrLen, list, listLen, listType, realloc);
 }
 
 
