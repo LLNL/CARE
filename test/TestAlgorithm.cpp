@@ -1985,5 +1985,58 @@ GPU_TEST(algorithm, localsortunique) {
    aptr.free();
 }
 
+GPU_TEST(algorithm, compressarray)
+{
+   // Test CompressArray with removed list mode
+   int size = 10;
+   care::host_device_ptr<int> a(size, "a");
+
+   CARE_STREAM_LOOP(i, 0, size) {
+      a[i] = 100 + i;
+   } CARE_STREAM_LOOP_END
+
+   int removedLen = 3;
+   care::host_device_ptr<int> removed(removedLen, "removed");
+
+   // Remove entries 0-2
+   CARE_STREAM_LOOP(i, 0, removedLen) {
+      removed[i] = i ;
+   } CARE_STREAM_LOOP_END
+
+   care::CompressArray<int>(RAJAExec(), a, size, removed, removedLen, care::compress_array::removed_list, true) ;
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size-removedLen) {
+      EXPECT_EQ(a[i], 100 + (i + removedLen));
+   } CARE_SEQUENTIAL_LOOP_END
+
+   a.free();
+   removed.free();
+
+   // Test CompressArray with map list mode
+   care::host_device_ptr<int> b(size, "b");
+
+   CARE_STREAM_LOOP(i, 0, size) {
+      b[i] = 100 + i;
+   } CARE_STREAM_LOOP_END
+
+   int newLen = 7;
+   care::host_device_ptr<int> mapList(newLen, "mapList");
+
+   // Skip the first 3 entries
+   CARE_STREAM_LOOP(i, 0, newLen) {
+      mapList[i] = i + 3 ;
+   } CARE_STREAM_LOOP_END
+
+   care::CompressArray<int>(RAJAExec(), b, size, mapList, newLen, care::compress_array::mapping_list, true) ;
+
+   CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
+      EXPECT_EQ(b[i], 100 + (i+3));
+   } CARE_SEQUENTIAL_LOOP_END
+
+   b.free();
+   mapList.free();
+}
+
+
 #endif // CARE_GPUCC
 
