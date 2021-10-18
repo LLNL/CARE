@@ -199,6 +199,58 @@ TEST(algorithm, intersectarrays) {
    EXPECT_EQ(numMatches[0], 0);
 }
 
+TEST(algorithm, compressarray)
+{
+   // Test CompressArray with removed list mode
+   int size = 10;
+   care::host_device_ptr<int> a(size, "a");
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      a[i] = 100 + i;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   int removedLen = 3;
+   care::host_device_ptr<int> removed(removedLen, "removed");
+
+   // Remove entries 0-2
+   CARE_SEQUENTIAL_LOOP(i, 0, removedLen) {
+      removed[i] = i ;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::CompressArray<int>(RAJA::seq_exec(), a, size, removed, removedLen, care::compress_array::removed_list, true) ;
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size-removedLen) {
+      EXPECT_EQ(a[i], 100 + (i - 2));
+   } CARE_SEQUENTIAL_LOOP_END
+
+   a.free();
+   removed.free();
+
+   // Test CompressArray with map list mode
+   care::host_device_ptr<int> b(size, "b");
+
+   CARE_SEQUENTIAL_LOOP(i, 0, size) {
+      b[i] = 100 + i;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   int newLen = 7;
+   care::host_device_ptr<int> mapList(newLen, "mapList");
+
+   // Keep the last 7 entries, but in reverse order
+   CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
+      mapList[i] = 10-i ;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::CompressArray<int>(RAJA::seq_exec(), b, size, mapList, newLen, care::compress_array::map_list, true) ;
+
+   CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
+      EXPECT_EQ(a[i], 100 + (10-i));
+   } CARE_SEQUENTIAL_LOOP_END
+
+   b.free();
+   mapList.free();
+}
+
 #if defined(CARE_GPUCC)
 
 // Adapted from CHAI
