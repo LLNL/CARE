@@ -220,7 +220,7 @@ TEST(algorithm, compressarray)
    care::CompressArray<int>(RAJA::seq_exec(), a, size, removed, removedLen, care::compress_array::removed_list, true) ;
 
    CARE_SEQUENTIAL_LOOP(i, 0, size-removedLen) {
-      EXPECT_EQ(a[i], 100 + (i - 2));
+      EXPECT_EQ(a[i], 100 + (i - removedLen));
    } CARE_SEQUENTIAL_LOOP_END
 
    a.free();
@@ -238,13 +238,13 @@ TEST(algorithm, compressarray)
 
    // Keep the last 7 entries, but in reverse order
    CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
-      mapList[i] = 10-i ;
+      mapList[i] = size-i ;
    } CARE_SEQUENTIAL_LOOP_END
 
    care::CompressArray<int>(RAJA::seq_exec(), b, size, mapList, newLen, care::compress_array::mapping_list, true) ;
 
    CARE_SEQUENTIAL_LOOP(i, 0, newLen) {
-      EXPECT_EQ(a[i], 100 + (10-i));
+      EXPECT_EQ(a[i], 100 + (size-i));
    } CARE_SEQUENTIAL_LOOP_END
 
    b.free();
