@@ -45,6 +45,22 @@ namespace care {
                         std::size_t min_block_size,
                         bool grows = true);
 
+   void initialize_pool_block_heuristic(const std::string& resource,
+                                        const std::string& poolname,
+                                        chai::ExecutionSpace space,
+                                        std::size_t initial_size,
+                                        std::size_t min_block_size,
+                                        std::size_t block_coalesce_heuristic = 3,
+                                        bool grows = true);
+
+   void initialize_pool_percent_heuristic(const std::string& resource,
+                                          const std::string& poolname,
+                                          chai::ExecutionSpace space,
+                                          std::size_t initial_size,
+                                          std::size_t min_block_size,
+                                          std::size_t percent_coalesce_heuristic = 100,
+                                          bool grows = true);
+
    void dump_memory_statistics();
 
    inline void report_leaks() {

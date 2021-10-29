@@ -19,12 +19,16 @@
 
 
 namespace care {
+
+  ///
+  /// @brief Initializes a pool using umpire's default strategy
+  ///
    void initialize_pool(
-      const std::string& resource,
-      const std::string& poolname,
-      chai::ExecutionSpace space,
-      std::size_t initial_size,
-      std::size_t min_block_size,
+      const std::string& resource, ///< The name of the umpire resource this pool will be built on
+      const std::string& poolname, ///< The (application specific) name of the pool to be created
+      chai::ExecutionSpace space,  ///< The CHAI Execution space associated with this pool
+      std::size_t initial_size,    ///< The initial size in bytes
+      std::size_t min_block_size,  ///< The minimum block size in bytes
       bool /* grows */)
    {
 #ifndef CHAI_DISABLE_RM
@@ -36,7 +40,66 @@ namespace care {
          rm.makeAllocator<umpire::strategy::QuickPool>(poolname,
                                                        allocator,
                                                        initial_size, /* default = 512Mb*/
-                                                       min_block_size /* default = 1Mb */);
+                                                       min_block_size); /* default = 1Mb */
+
+      chai::ArrayManager * am = chai::ArrayManager::getInstance();
+      am->setAllocator(space, pooled_allocator);
+#endif
+   }
+  ///
+  /// @brief Initializes a pool using a block heuristic
+  ///
+   void initialize_pool_block_heuristic(
+      const std::string& resource, ///< The name of the umpire resource this pool will be built on
+      const std::string& poolname, ///< The (application specific) name of the pool to be created
+      chai::ExecutionSpace space,  ///< The CHAI Execution space associated with this pool
+      std::size_t initial_size,    ///< The initial size in bytes
+      std::size_t min_block_size,  ///< The minimum block size in bytes
+      std::size_t block_coalesce_heuristic, ///< The number of blocks that should be releasable to trigger coalescing
+      bool /* grows */)
+   {
+#ifndef CHAI_DISABLE_RM
+      auto& rm = umpire::ResourceManager::getInstance();
+
+      auto allocator = rm.getAllocator(resource);
+
+      auto pooled_allocator =
+         rm.makeAllocator<umpire::strategy::QuickPool>(poolname,
+                                                       allocator,
+                                                       initial_size, /* default = 512Mb*/
+                                                       min_block_size, /* default = 1Mb */
+                                                       16, /* default alignment */
+                                                       umpire::strategy::QuickPool::blocks_releasable(block_coalesce_heuristic));
+
+      chai::ArrayManager * am = chai::ArrayManager::getInstance();
+      am->setAllocator(space, pooled_allocator);
+#endif
+   }
+
+  ///
+  /// @brief Initializes a pool using a percent heuristic
+  ///
+   void initialize_pool_percent_heuristic(
+      const std::string& resource, ///< The name of the umpire resource this pool will be built on
+      const std::string& poolname, ///< The (application specific) name of the pool to be created
+      chai::ExecutionSpace space,  ///< The CHAI Execution space associated with this pool
+      std::size_t initial_size,    ///< The initial size in bytes
+      std::size_t min_block_size,  ///< The minimum block size in bytes
+      std::size_t percent_coalesce_heuristic, ///< The percentage of blocks that should be releasable to trigger coalescing
+      bool /* grows */)
+   {
+#ifndef CHAI_DISABLE_RM
+      auto& rm = umpire::ResourceManager::getInstance();
+
+      auto allocator = rm.getAllocator(resource);
+
+      auto pooled_allocator =
+         rm.makeAllocator<umpire::strategy::QuickPool>(poolname,
+                                                       allocator,
+                                                       initial_size, /* default = 512Mb*/
+                                                       min_block_size, /* default = 1Mb */
+                                                       16, /* default alignment */
+                                                       umpire::strategy::QuickPool::percent_releasable(percent_coalesce_heuristic));
 
       chai::ArrayManager * am = chai::ArrayManager::getInstance();
       am->setAllocator(space, pooled_allocator);
