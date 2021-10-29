@@ -291,44 +291,44 @@ void sort_uniq(RAJA::seq_exec, care::host_device_ptr<globalID> *, int *, bool) ;
 #ifdef CARE_GPUCC
 
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJADeviceExec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJADeviceExec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJADeviceExec, care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJADeviceExec, care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJADeviceExec, care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJADeviceExec, care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJADeviceExec, care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJADeviceExec, care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJADeviceExec, care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJADeviceExec, care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #endif
 
 #endif // defined(CARE_GPUCC)
 
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJA::seq_exec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJA::seq_exec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJA::seq_exec, care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJA::seq_exec, care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJA::seq_exec, care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJA::seq_exec, care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJA::seq_exec, care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJA::seq_exec, care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(RAJA::seq_exec, care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(RAJA::seq_exec, care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(care::host_device_ptr<int> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(care::host_device_ptr<float> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(care::host_device_ptr<double> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void CompressArray(care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, bool) ;
+void CompressArray(care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

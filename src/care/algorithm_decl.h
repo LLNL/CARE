@@ -320,17 +320,19 @@ int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len,
 template <typename T, typename Exec>
 void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy = false);
 
+enum class compress_array { removed_list, mapping_list };
+
 template <typename T>
 void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, const int arrLen,
-                   care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
+                   care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
 #ifdef CARE_GPUCC
 template <typename T>
 void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
-                   care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
+                   care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
 #endif // defined(CARE_GPUCC)
 template <typename T>
 void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
-                   care::host_device_ptr<int const> removed, const int removedLen, bool noCopy=false);
+                   care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
 
 template <typename T>
 CARE_HOST_DEVICE void InsertionSort(care::local_ptr<T> array, int len);
