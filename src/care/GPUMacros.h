@@ -8,6 +8,8 @@
 #ifndef _CARE_GPUMACROS_H_
 #define _CARE_GPUMACROS_H_
 
+#include "chai/config.hpp"
+
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define CARE_DEVICE_COMPILE
 #endif
@@ -31,6 +33,12 @@
 #define CARE_HOST
 #define CARE_GLOBAL
 #endif // defined(CARE_GPUCC)
+
+#if defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#define CARE_MANAGED_PTR_HOST_DEVICE CARE_HOST_DEVICE
+#else
+#define CARE_MANAGED_PTR_HOST_DEVICE
+#endif
 
 // set various aliases
 #if defined(__CUDACC__)

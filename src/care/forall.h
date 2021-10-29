@@ -236,6 +236,41 @@ namespace care {
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
+   /// @author Alan Dayton
+   ///
+   /// @brief If GPU is available and managed_ptr is available on the device,
+   ///        execute on the device. If GPU is not available but openmp is,
+   ///        execute an openmp policy. Otherwise, execute on the host.
+   ///        This specialization is needed for clang-query.
+   ///
+   /// @arg[in] managed_ptr_read Used to choose this overload of forall
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(managed_ptr_read, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
+#elif defined(GPU_ACTIVE) && defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, body);
+#elif defined(GPU_ACTIVE) && defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, body);
+#elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+#else
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
    /// @author Peter Robinson
    ///
    /// @brief Executes a group of fused loops. This overload is CHAI aware and sets
@@ -354,7 +389,7 @@ namespace care {
    ///       an additional sequential RAJA::forall in the GPU space must be added
    ///       for GPU_SIM mode.
    ///
-   /// @arg[in] managed_ptr_update Used to choose this overload of forall
+   /// @arg[in] managed_ptr_write Used to choose this overload of forall
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
@@ -363,12 +398,12 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void forall(managed_ptr_update, const char * fileName, int lineNumber,
+   void forall(managed_ptr_write, const char * fileName, int lineNumber,
                int start, const int end, LB body) {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(CARE_GPUCC)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       const int length = end - start;
 
       if (length != 0) {
@@ -421,8 +456,11 @@ namespace care {
          case Policy::parallel:
             forall(parallel{}, fileName, lineNumber, start, end, body);
             break;
-         case Policy::managed_ptr_update:
-            forall(managed_ptr_update{}, fileName, lineNumber, start, end, body);
+         case Policy::managed_ptr_read:
+            forall(managed_ptr_read{}, fileName, lineNumber, start, end, body);
+            break;
+         case Policy::managed_ptr_write:
+            forall(managed_ptr_write{}, fileName, lineNumber, start, end, body);
             break;
          default:
             std::cout << "[CARE] Error: Invalid policy!" << std::endl;

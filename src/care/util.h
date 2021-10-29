@@ -134,7 +134,7 @@ namespace care {
                                      const int, const bool = true) {
    }
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
 
    /////////////////////////////////////////////////////////////////////////////////
    ///
