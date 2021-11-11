@@ -298,6 +298,19 @@ namespace care {
       s_names.emplace(record, name);
    }
 
+   void CHAICallback::deregisterRecord(const chai::PointerRecord* record) {
+#ifndef CARE_DISABLE_RAJAPLUGIN
+      if (s_log_data > 0) {
+         RAJAPlugin::removeActivePointer(record);
+      }
+#endif
+      NameMap& s_names = getNameMap();
+      TypeMap& s_types = getTypeMap();
+
+      s_names.erase(record);
+      s_types.erase(record);
+   }
+
    bool CHAICallback::hasTypeIndex(const chai::PointerRecord* record) {
       const TypeMap& s_types = getTypeMap();
       auto it = s_types.find(record);
@@ -410,14 +423,7 @@ namespace care {
                      }
                   }
 
-#ifndef CARE_DISABLE_RAJAPLUGIN
-                  if (s_log_data > 0) {
-                     RAJAPlugin::removeActivePointer(m_record);
-                  }
-#endif
-
-                  s_names.erase(m_record);
-                  s_types.erase(m_record);
+                  deregisterRecord(m_record);
 
                   break;
                case chai::ACTION_MOVE:
@@ -511,13 +517,7 @@ namespace care {
             // Just update or remove the stored data without logging anything
             switch(action) {
                case chai::ACTION_FREE:
-#ifndef CARE_DISABLE_RAJAPLUGIN
-                  if (s_log_data > 0) {
-                     RAJAPlugin::removeActivePointer(m_record);
-                  }
-#endif
-                  s_names.erase(m_record);
-                  s_types.erase(m_record);
+                  deregisterRecord(m_record);
 
                   break;
                case chai::ACTION_CAPTURED:
