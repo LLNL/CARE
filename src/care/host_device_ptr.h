@@ -422,6 +422,7 @@ namespace care {
          if (deregisterPointer) {
             auto arrayManager = chai::ArrayManager::getInstance();
             arrayManager->deregisterPointer(MA::m_pointer_record,true);
+            CHAICallback::deregisterRecord(MA::m_pointer_record);
          }
 #endif
       }
