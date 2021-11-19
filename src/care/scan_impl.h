@@ -13,6 +13,7 @@
 #error "CARE_SCAN_EXEC must be defined"
 #endif
 
+#include "care/CHAICallback.h"
 #include "care/CHAIDataGetter.h"
 #include "care/DefaultMacros.h"
 #include "care/scan.h"
@@ -43,20 +44,48 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
    if (size > 0) {
       if (inPlace) {
          if (!data) {
-            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is true, data cannot be nullptr.");
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is true, data cannot be nullptr.\n");
             return;
          }
       }
       else {
          if (!outData) {
-            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false, outData cannot be nullptr.");
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false, outData cannot be nullptr.\n");
             return;
          }
          else if (size > 1 && !data) {
-            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false and size > 1, data cannot be nullptr.");
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. If inPlace is false and size > 1, data cannot be nullptr.\n");
             return;
          }
       }
+
+#if !defined(CHAI_DISABLE_RM)
+      // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
+      // reliable if it is cast to a different template type.
+      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.cdata());
+      int dataSize = dataRecord->m_size/sizeof(T);
+
+      if (dataSize < size) {
+         const char* dataName = CHAICallback::getName(dataRecord);
+         if (dataName == nullptr) {
+            dataName = "array" ;
+         }
+         printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
+      }
+
+      if (!inPlace) {
+         const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.cdata());
+         int outDataSize = dataRecord->m_size/sizeof(T);
+
+         if (outDataSize < size) {
+            const char* outDataName = CHAICallback::getName(outDataRecord);
+            if (outDataName == nullptr) {
+               outDataName = "array" ;
+            }
+            printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
+         }
+      }
+#endif
 
       if (size == 1) {
          if (inPlace) {
