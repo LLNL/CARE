@@ -220,6 +220,13 @@ namespace care {
                                           std::string name);
 
          ///
+         /// Deregister the given pointer record
+         ///
+         /// @param[in] record The record to deregister
+         ///
+         CARE_DLL_API static void deregisterRecord(const chai::PointerRecord* record);
+
+         ///
          /// Returns true or false depending on whether there is a type index
          /// associated with the given pointer record.
          ///
