@@ -60,29 +60,41 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
       }
 
 #if !defined(CHAI_DISABLE_RM)
-      // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
-      // reliable if it is cast to a different template type.
-      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.cdata());
-      int dataSize = dataRecord->m_size/sizeof(T);
+      if (size > 1) {
+         // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
+         // reliable if it is cast to a different template type.
+         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.cdata());
+         int dataSize = dataRecord->m_size/sizeof(T);
+         bool warned = false;
 
-      if (dataSize < size) {
-         const char* dataName = CHAICallback::getName(dataRecord);
-         if (dataName == nullptr) {
-            dataName = "array" ;
-         }
-         printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
-      }
-
-      if (!inPlace) {
-         const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.cdata());
-         int outDataSize = dataRecord->m_size/sizeof(T);
-
-         if (outDataSize < size) {
-            const char* outDataName = CHAICallback::getName(outDataRecord);
-            if (outDataName == nullptr) {
-               outDataName = "array" ;
+         if (dataSize < size) {
+            const char* dataName = CHAICallback::getName(dataRecord);
+            if (dataName == nullptr) {
+               dataName = "array" ;
             }
-            printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
+            printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
+            warned = true;
+         }
+
+         if (!inPlace) {
+            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.cdata());
+            int outDataSize = dataRecord->m_size/sizeof(T);
+
+            if (outDataSize < size) {
+               const char* outDataName = CHAICallback::getName(outDataRecord);
+               if (outDataName == nullptr) {
+                  outDataName = "array" ;
+               }
+               printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
+               warned = true;
+            }
+         }
+
+         if (warned) {
+            umpire::util::backtrace bt;
+            umpire::util::backtracer<umpire::util::trace_always>::get_backtrace(bt);
+            std::string stack = umpire::util::backtracer<umpire::util::trace_always>::print(bt);
+            printf("%s", stack.c_str());
          }
       }
 #endif
@@ -141,6 +153,7 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
       // reliable if it is cast to a different template type.
       const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.cdata());
       int dataSize = dataRecord->m_size/sizeof(T);
+      bool warned = false;
 
       if (dataSize < size) {
          const char* dataName = CHAICallback::getName(dataRecord);
@@ -148,6 +161,7 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
             dataName = "array" ;
          }
          printf("[CARE] Warning: Invalid argument to care::inclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
+         warned = true;
       }
 
       if (!inPlace) {
@@ -160,7 +174,15 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
                outDataName = "array" ;
             }
             printf("[CARE] Warning: Invalid argument to care::inclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
+            warned = true;
          }
+      }
+
+      if (warned) {
+         umpire::util::backtrace bt;
+         umpire::util::backtracer<umpire::util::trace_always>::get_backtrace(bt);
+         std::string stack = umpire::util::backtracer<umpire::util::trace_always>::print(bt);
+         printf("%s", stack.c_str());
       }
 #endif
    }
