@@ -53,6 +53,15 @@
 #define gpuMemcpyDeviceToDevice cudaMemcpyDeviceToDevice
 #define gpuMemcpyDefault cudaMemcpyDefault
 
+#define gpuMemGetInfo cudaMemGetInfo
+
+#define gpuDeviceSetLimit cudaDeviceSetLimit
+#define gpuDeviceSynchronize cudaDeviceSynchronize
+#define gpuLimitStackSize cudaLimitStackSize
+#define gpuLimitMallocHeapSize cudaLimitMallocHeapSize
+
+#define gpuPeekAtLastError cudaPeekAtLastError
+
 #define gpuSuccess cudaSuccess
 
 #elif defined(__HIPCC__)
@@ -66,6 +75,15 @@
 #define gpuMemcpyDeviceToHost hipMemcpyDeviceToHost
 #define gpuMemcpyDeviceToDevice hipMemcpyDeviceToDevice
 #define gpuMemcpyDefault hipMemcpyDefault
+
+#define gpuMemGetInfo hipMemGetInfo
+
+#define gpuDeviceSetLimit hipDeviceSetLimit
+#define gpuDeviceSynchronize hipDeviceSynchronize
+#define gpuLimitStackSize hipLimitStackSize
+#define gpuLimitMallocHeapSize hipLimitMallocHeapSize
+
+#define gpuPeekAtLastError hipPeekAtLastError
 
 #define gpuSuccess hipSuccess
 
