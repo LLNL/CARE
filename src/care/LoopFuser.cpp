@@ -28,7 +28,7 @@
 CARE_DLL_API int FusedActions::non_scan_store = 0;
 CARE_DLL_API bool FusedActions::verbose = false;
 CARE_DLL_API bool FusedActions::very_verbose = false;
-// set flush lenght to 8M by default
+// set flush length to 8M by default
 CARE_DLL_API int FusedActions::flush_length = 8388608; 
 CARE_DLL_API bool FusedActions::flush_now = false;
 
