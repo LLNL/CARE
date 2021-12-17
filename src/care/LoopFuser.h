@@ -201,6 +201,8 @@ public:
    CARE_DLL_API static int non_scan_store;
    CARE_DLL_API static bool verbose;
    CARE_DLL_API static bool very_verbose;
+   CARE_DLL_API static int flush_length;
+   CARE_DLL_API static bool flush_now;
 
    FusedActions() = default;
    ///////////////////////////////////////////////////////////////////////////
@@ -403,6 +405,7 @@ public:
          }
       }
       m_to_be_freed_device.clear();
+      flush_now = false;
    }
 
    template<typename ActionsType>
@@ -434,8 +437,11 @@ public:
       return actions;
    }
 
-   inline void reset_phases() {
+   inline void reset_phases(const char * fileName, int lineNumber) {
       m_last_insert_priority = -FLT_MAX;
+      if (flush_now) {
+         flushActions(true, fileName, lineNumber);
+      }
    }
 
 
@@ -916,14 +922,14 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             if (verbose) {
                printf("hit reserved flushActions\n");
             }
-            flushActions();
+            flush_now = true;
          }
          // if we are approaching the 2^31-1 limit proactively flush
-         else if (m_action_offsets[m_action_count-1] > 2000000000) {
+         else if (m_action_offsets[m_action_count-1] > flush_length) {
             if (verbose) {
                printf("hit m_action_offsets flushActions\n");
             }
-            flushActions();
+            flush_now = true;
          }
       }
       else {
@@ -1201,7 +1207,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                               FUSIBLE_LOOP_PREAMBLE(INDEX) {
 
 #define FUSIBLE_LOOP_STREAM_R_END \
-                              } }); }
+                              } }); } FUSIBLE_PHASE_RESET
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) FUSIBLE_LOOP_STREAM_R(INDEX, START, END, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 #define FUSIBLE_LOOP_STREAM_END FUSIBLE_LOOP_STREAM_R_END
@@ -1254,7 +1260,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases();
+#define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__);
 
 #ifdef CARE_ENABLE_FUSER_BIN_32
 #define INSTANCE_32_INCREMENT_SIZE __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size();
@@ -1295,7 +1301,8 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) \
    FUSIBLE_LOOP_SCAN_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
+#define _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
+#define FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_PHASE_RESET
 
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
@@ -1306,8 +1313,8 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_SCAN_PHASE(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY) \
    FUSIBLE_LOOP_SCAN_PHASE_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION)
-#define FUSIBLE_LOOP_SCAN_PHASE_R_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
+#define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
+#define FUSIBLE_LOOP_SCAN_PHASE_R_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 
 // note - FUSED_SCANVAR will be nullptr if m_call_as_packed is set in registerAction, as there will be no need for an intermediate
