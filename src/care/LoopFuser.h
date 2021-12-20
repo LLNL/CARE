@@ -924,7 +924,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             }
             flush_now = true;
          }
-         // if we are approaching the 2^31-1 limit proactively flush
+         // if we are approaching the limit proactively flush
          else if (m_action_offsets[m_action_count-1] > flush_length) {
             if (verbose) {
                printf("hit m_action_offsets flushActions\n");
@@ -1254,13 +1254,21 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 
 
-#define FUSIBLE_KERNEL_R_END return 0;}); }
+#define FUSIBLE_KERNEL_R_END return 0;}); } FUSIBLE_PHASE_RESET
 #define FUSIBLE_KERNEL_PHASE_R_END FUSIBLE_KERNEL_R_END
 #define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__);
+#define FUSIBLE_PHASE_RESET   for ( FusedActions *__fuser__ : {\
+                                  static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                  static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                  static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                  FUSED_ACTION_INSTANCE_32 \
+                                  }) { \
+                                 __fuser__->flushActions(true, __FILE__, __LINE__); \
+                              } \
+                              FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__);
 
 #ifdef CARE_ENABLE_FUSER_BIN_32
 #define INSTANCE_32_INCREMENT_SIZE __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size();
@@ -1341,7 +1349,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     FUSED_SCANVAR[__fusible_global_index__] = SCANVAR[INDEX]; \
                                  } \
                                  }, \
-                              2, __fusible_scan_pos__ , SCANVAR); }
+                              2, __fusible_scan_pos__ , SCANVAR); } FUSIBLE_PHASE_RESET
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR) \
    FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDEX,START,END,SCANVAR,CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
