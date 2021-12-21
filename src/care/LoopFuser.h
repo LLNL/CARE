@@ -439,9 +439,6 @@ public:
 
    inline void reset_phases(const char * fileName, int lineNumber) {
       m_last_insert_priority = -FLT_MAX;
-      if (flush_now) {
-         flushActions(true, fileName, lineNumber);
-      }
    }
 
 
@@ -1207,7 +1204,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                               FUSIBLE_LOOP_PREAMBLE(INDEX) {
 
 #define FUSIBLE_LOOP_STREAM_R_END \
-                              } }); } FUSIBLE_PHASE_RESET
+                              } }); } FUSIBLE_FLUSH_IF_NEEDED
 
 #define FUSIBLE_LOOP_STREAM(INDEX, START, END) FUSIBLE_LOOP_STREAM_R(INDEX, START, END, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 #define FUSIBLE_LOOP_STREAM_END FUSIBLE_LOOP_STREAM_R_END
@@ -1254,23 +1251,23 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 
 
-#define FUSIBLE_KERNEL_R_END return 0;}); } FUSIBLE_PHASE_RESET
+#define FUSIBLE_KERNEL_R_END return 0;}); } FUSIBLE_FLUSH_IF_NEEDED
 #define FUSIBLE_KERNEL_PHASE_R_END FUSIBLE_KERNEL_R_END
 #define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_PHASE_RESET   if (FusedActions::flush_now) { \
-                                 for ( FusedActions *__fuser__ : { \
-                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
-                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
-                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                    FUSED_ACTION_INSTANCE_32 \
-                                    }) { \
-                                    __fuser__->flushActions(true, __FILE__, __LINE__); \
-                                 } \
-                              } \
-                              FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__);
+#define FUSIBLE_FLUSH_IF_NEEDED  if (FusedActions::flush_now) { \
+                                    for ( FusedActions *__fuser__ : { \
+                                       static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                       static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                       static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                       FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
+                                       static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
+                                       __fuser__->flushActions(true, __FILE__, __LINE__); \
+                                    } \
+                                 }
+#define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__); FUSIBLE_FLUSH_IF_NEEDED
 
 #ifdef CARE_ENABLE_FUSER_BIN_32
 #define INSTANCE_32_INCREMENT_SIZE __fusible_action_count__ += LOOPFUSER(32)::getInstance()->size();
@@ -1312,7 +1309,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
    FUSIBLE_LOOP_SCAN_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
 #define _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) } return 0; }, 1, POS_STORE_DESTINATION); }
-#define FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_PHASE_RESET
+#define FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_FLUSH_IF_NEEDED
 
 #define FUSIBLE_LOOP_SCAN_END(LENGTH, POS, POS_STORE_DESTINATION) FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
@@ -1351,7 +1348,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     FUSED_SCANVAR[__fusible_global_index__] = SCANVAR[INDEX]; \
                                  } \
                                  }, \
-                              2, __fusible_scan_pos__ , SCANVAR); } FUSIBLE_PHASE_RESET
+                              2, __fusible_scan_pos__ , SCANVAR); } FUSIBLE_FLUSH_IF_NEEDED
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDEX,START,END,SCANVAR) \
    FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDEX,START,END,SCANVAR,CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
@@ -1370,6 +1367,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_PHASE_END CARE_STREAM_LOOP_END
 #define FUSIBLE_LOOP_PHASE_R_END CARE_STREAM_LOOP_END
 
+#define FUSIBLE_FLUSH_IF_NEEDED
 #define FUSIBLE_PHASE_RESET
 
 #define FUSIBLE_KERNEL_R(REGISTER_COUNT) CARE_PARALLEL_KERNEL
