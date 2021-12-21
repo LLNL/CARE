@@ -1260,13 +1260,15 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
-#define FUSIBLE_PHASE_RESET   for ( FusedActions *__fuser__ : {\
-                                  static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
-                                  static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
-                                  static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                  FUSED_ACTION_INSTANCE_32 \
-                                  }) { \
-                                 __fuser__->flushActions(true, __FILE__, __LINE__); \
+#define FUSIBLE_PHASE_RESET   if (FusedActions::flush_now) { \
+                                 for ( FusedActions *__fuser__ : { \
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
+                                    }) { \
+                                    __fuser__->flushActions(true, __FILE__, __LINE__); \
+                                 } \
                               } \
                               FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__);
 
