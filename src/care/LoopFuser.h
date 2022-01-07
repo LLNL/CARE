@@ -1261,11 +1261,11 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     for ( FusedActions *__fuser__ : { \
                                        static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                        static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
-                                       static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
-                                       FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
-                                       static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver())}) { \
+                                       static_cast<FusedActions *> (LOOPFUSER(64)::getInstance())}) { \
                                        __fuser__->flushActions(true, __FILE__, __LINE__); \
                                     } \
+                                    FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
+                                    __fuser__->flushActions(false, __FILE__, __LINE__); \
                                  }
 #define FUSIBLE_PHASE_RESET FusedActionsObserver::getActiveObserver()->reset_phases(__FILE__, __LINE__); FUSIBLE_FLUSH_IF_NEEDED
 
