@@ -1265,7 +1265,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     for ( FusedActions *__fuser__ : { \
                                        static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
                                        static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
-                                       static_cast<FusedActions *> (LOOPFUSER(64)::getInstance())}) { \
+                                       static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                       FUSED_ACTION_INSTANCE_32\
+                                       }) { \
                                        __fuser__->flushActions(true, __FILE__, __LINE__); \
                                     } \
                                     FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
