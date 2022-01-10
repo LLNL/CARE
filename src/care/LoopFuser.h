@@ -1050,8 +1050,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
    FusedActionsObserver::setActiveObserver(__phase_observer); \
 }
 
-// Execute, then stop recording. Note only need to pass ASYNC to last flush call. Prevents
-// extra synchronizes between each loop fuser.
+// Execute, then stop recording. Note that we only need to pass ASYNC to last flush call.
+// All fusers are flushed asynchronously except the active observer, which is flushed
+// synchronously unless ASYNC is true. This prevents extra synchronizes between each loop fuser.
 #define _FUSIBLE_LOOPS_STOP(ASYNC) { \
    for ( FusedActions *__fuser__ : {\
                                     static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
@@ -1257,6 +1258,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
 
+// Flush the fusible actions if needed (if we have reached the buffer limit, for example).
+// All fusers are flushed asynchronously except the active observer, which is flushed synchronously
+// to prevent possible corruption of the previous loop with buffer information for the next loop.
 #define FUSIBLE_FLUSH_IF_NEEDED  if (FusedActions::flush_now) { \
                                     for ( FusedActions *__fuser__ : { \
                                        static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
