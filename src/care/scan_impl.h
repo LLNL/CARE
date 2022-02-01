@@ -66,7 +66,7 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
       if (size > 1) {
          // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
          // reliable if it is cast to a different template type.
-         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(care::ExecutionSpace::CPU, false));
+         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(chai::ExecutionSpace::CPU, false));
          int dataSize = dataRecord->m_size/sizeof(T);
          bool warned = false;
 
@@ -80,7 +80,7 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
          }
 
          if (!inPlace) {
-            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(care::ExecutionSpace::CPU, false)());
+            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false)());
             int outDataSize = dataRecord->m_size/sizeof(T);
 
             if (outDataSize < size) {
@@ -154,7 +154,7 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
 #if !defined(CHAI_DISABLE_RM)
       // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
       // reliable if it is cast to a different template type.
-      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(care::ExecutionSpace::CPU, false));
+      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(chai::ExecutionSpace::CPU, false));
       int dataSize = dataRecord->m_size/sizeof(T);
       bool warned = false;
 
@@ -168,7 +168,7 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
       }
 
       if (!inPlace) {
-         const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(care::ExecutionSpace::CPU, false));
+         const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false));
          int outDataSize = dataRecord->m_size/sizeof(T);
 
          if (outDataSize < size) {
