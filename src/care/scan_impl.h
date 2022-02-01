@@ -16,7 +16,6 @@
 #include "care/CHAICallback.h"
 #include "care/CHAIDataGetter.h"
 #include "care/DefaultMacros.h"
-#include "care/ExecutionSpace.h"
 #include "care/scan.h"
 
 #include "umpire/util/backtrace.hpp"
