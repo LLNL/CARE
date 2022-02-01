@@ -79,7 +79,7 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
          }
 
          if (!inPlace) {
-            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false)());
+            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false));
             int outDataSize = dataRecord->m_size/sizeof(T);
 
             if (outDataSize < size) {
