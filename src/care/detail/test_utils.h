@@ -67,6 +67,7 @@ using int_ptr = care::host_device_ptr<int>;
 // memory pool initialization
 
 void init_care_for_testing() {
+#ifdef CARE_GPUCC
    // initializing and allocate memory pools
    care::initialize_pool("PINNED","PINNED_POOL",chai::PINNED,128*1024*1024,128*1024*1024,true);
    care::initialize_pool("DEVICE","DEVICE_POOL",chai::GPU,1024*1024*1024,1024*1024*1024,true);
@@ -74,6 +75,7 @@ void init_care_for_testing() {
    int_ptr trigger_pinned_allocation = chai::ManagedArray<int>(1, chai::PINNED);
    trigger_device_allocation.free();
    trigger_pinned_allocation.free();
+#endif
 
    // initialize loop fuser
 #if CARE_ENABLE_LOOP_FUSER
