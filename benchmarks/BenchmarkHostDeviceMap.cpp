@@ -98,7 +98,6 @@ static void benchmark_seq_unordered_map(benchmark::State& state) {
       PUSH_RANGE("cleanup")
       answer.free();
       data.free();
-      cudaDeviceSynchronize();
       POP_RANGE
    }
 }
@@ -131,7 +130,6 @@ static void benchmark_host_device_map(benchmark::State& state) {
       PUSH_RANGE("cleanup")
       answer.free();
       data.free();
-      cudaDeviceSynchronize();
       POP_RANGE
    }
 }
@@ -164,7 +162,6 @@ static void benchmark_seq_force_kvs_unordered_map(benchmark::State& state) {
       PUSH_RANGE("cleanup")
       answer.free();
       data.free();
-      cudaDeviceSynchronize();
       POP_RANGE
    }
 }
