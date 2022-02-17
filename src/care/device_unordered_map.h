@@ -17,7 +17,7 @@ namespace care {
    ///
    /// @author Peter Robinson
    ///
-   /// @class device_unordered_map is a rudimentary associative map. On the host,
+   /// @class host_device_map is a rudimentary associative map. On the host,
    /// it is backed by a std::unordered_map, and on the device it uses a
    /// care::KeyValueSorter.
    ///
@@ -30,10 +30,10 @@ namespace care {
    template <typename key_type,
              typename mapped_type,
              typename Exec>
-   class device_unordered_map
+   class host_device_map
    {
       public:
-         device_unordered_map(size_t max_entries);
+         host_device_map(size_t max_entries);
          CARE_HOST_DEVICE inline void emplace(key_type key, mapped_type val) const;
          CARE_HOST_DEVICE inline mapped_type at(key_type key) const;
          void sort();
@@ -44,10 +44,10 @@ namespace care {
 // RAJA::seq_exec specialization.
 // ********************************************************************************
    template <typename key_type, typename mapped_type>
-   class device_unordered_map< key_type, mapped_type, RAJA::seq_exec> {
+   class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
          // constructor
-         device_unordered_map(size_t max_entries) : m_map()  {
+         host_device_map(size_t max_entries) : m_map()  {
             m_map = new std::unordered_map<key_type, mapped_type>{};
          }
         // emplace a key value pair
@@ -76,12 +76,12 @@ namespace care {
 // RAJADeviceExec specialization.
 // ********************************************************************************
    template <typename key_type, typename mapped_type>
-   class device_unordered_map<key_type, mapped_type, RAJADeviceExec>
+   class host_device_map<key_type, mapped_type, RAJADeviceExec>
    {
       public:
          using int_ptr = care::host_device_ptr<int>;
          // constructor
-         device_unordered_map(size_t max_entries)  {
+         host_device_map(size_t max_entries)  {
             // m_size will be atomically incremented as elements are emplaced into the map
             m_size = int_ptr(1, "map_size");
             int_ptr size = m_size;
@@ -135,12 +135,12 @@ namespace care {
 // force_keyvaluesorter specialization. Host only.
 // ********************************************************************************
    template <typename key_type, typename mapped_type>
-   class device_unordered_map<key_type, mapped_type, force_keyvaluesorter>
+   class host_device_map<key_type, mapped_type, force_keyvaluesorter>
    {
       public:
 
          // constructor
-         device_unordered_map(size_t max_entries)  {
+         host_device_map(size_t max_entries)  {
             m_length = new int();
             *m_length = 0;
             // back the map with a KeyValueSorter<key_type, mapped_type>

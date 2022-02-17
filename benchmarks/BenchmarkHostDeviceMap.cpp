@@ -17,7 +17,7 @@
 
 #include "care/DefaultMacros.h"
 #include "care/detail/test_utils.h"
-#include "care/device_unordered_map.h"
+#include "care/host_device_map.h"
 #include "care/host_device_ptr.h"
 #include "care/KeyValueSorter.h"
 
@@ -73,7 +73,7 @@ BENCHMARK(benchmark_kvs)->Range(1, 1<<23);
 
 
 template<typename Key, typename Value>
-using care_std_map = care::device_unordered_map<Key, Value, RAJA::seq_exec>;
+using care_std_map = care::host_device_map<Key, Value, RAJA::seq_exec>;
 
 static void benchmark_seq_unordered_map(benchmark::State& state) {
    for (auto _ : state) {
@@ -107,8 +107,8 @@ static void benchmark_seq_unordered_map(benchmark::State& state) {
 BENCHMARK(benchmark_seq_unordered_map)->Range(1, 1<<23);
 
 template<typename Key, typename Value>
-using care_kv_map = care::device_unordered_map<Key, Value, RAJADeviceExec>;
-static void benchmark_device_unordered_map(benchmark::State& state) {
+using care_kv_map = care::host_device_map<Key, Value, RAJADeviceExec>;
+static void benchmark_host_device_map(benchmark::State& state) {
    for (auto _ : state) {
       size_t length = state.range(0);
       PUSH_RANGE("createDeviceObject")
@@ -136,10 +136,10 @@ static void benchmark_device_unordered_map(benchmark::State& state) {
    }
 }
 // Register the function as a benchmark
-BENCHMARK(benchmark_device_unordered_map)->Range(1, 1<<23);
+BENCHMARK(benchmark_host_device_map)->Range(1, 1<<23);
 
 template<typename Key, typename Value>
-using care_seq_kv_map = care::device_unordered_map<Key, Value, care::force_keyvaluesorter>;
+using care_seq_kv_map = care::host_device_map<Key, Value, care::force_keyvaluesorter>;
 static void benchmark_seq_force_kvs_unordered_map(benchmark::State& state) {
 
    for (auto _ : state) {
