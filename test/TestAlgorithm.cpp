@@ -10,13 +10,22 @@
 // CARE config header
 #include "care/config.h"
 
-// CARE headers
-#include "care/algorithm.h"
-
 // Other library headers
 #include "gtest/gtest.h"
 
+// CARE headers
+#include "care/algorithm.h"
+#include "care/detail/test_utils.h"
 
+
+
+#if defined(CARE_GPUCC)
+GPU_TEST(algorithm, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Benchmarking Loop Fusion\n");
+}
+#endif
 
 // fill_n Tests
 TEST(algorithm, fill_empty)
@@ -252,12 +261,6 @@ TEST(algorithm, compressarray)
 }
 
 #if defined(CARE_GPUCC)
-
-// Adapted from CHAI
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
 
 GPU_TEST(algorithm, min_empty)
 {

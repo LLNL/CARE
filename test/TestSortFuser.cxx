@@ -7,23 +7,17 @@
 
 #include "care/Setup.h"
 #include "care/SortFuser.h"
+#include "care/detail/test_utils.h"
 
 using namespace care;
 
-// This makes it so we can use device lambdas from within a GPU_TEST
-#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
-   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
-   static void gpu_test_ ## X_ ## Y()
-
-using int_ptr = host_device_ptr<int>;
+GPU_TEST(TestPacker, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Benchmarking Loop Fusion\n");
+}
 
 GPU_TEST(TestPacker, testFuseSort) {
-#if defined(CARE_GPUCC)
-   int poolSize = 128*1024*1024; // 128 MB
-   care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
-   care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);
-#endif
-
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);

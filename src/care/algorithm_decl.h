@@ -232,12 +232,12 @@ CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
                              bool returnUpperBound = false) ;
 
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType> & map, const int start,
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType> & map, const int start,
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 

@@ -16,6 +16,7 @@
 #include "care/algorithm.h"
 #include "care/host_device_ptr.h"
 #include "care/PointerTypes.h"
+#include "care/detail/test_utils.h"
 
 /////////////////////////////////////////////////////////////////////////
 ///
@@ -132,6 +133,19 @@ class DerivedClass : public BaseClass {
 
 /////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Test case that initializes GPU memory pools. 
+///
+/////////////////////////////////////////////////////////////////////////
+#if defined(CARE_GPUCC)
+GPU_TEST(ManagedPtr, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Benchmarking Loop Fusion\n");
+}
+#endif
+
+/////////////////////////////////////////////////////////////////////////
+///
 /// @brief Test case that checks that splitting a host_device_ptr through
 ///        the call to make_managed behaves correctly.
 ///
@@ -216,22 +230,6 @@ TEST(ManagedPtr, RawPointer)
 
 #if defined(CARE_GPUCC)
 
-/////////////////////////////////////////////////////////////////////////
-///
-/// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
-///        CARE_STREAM_LOOP) to be used in google tests. Essentially,
-///        extended __host__ __device__ lambdas cannot be used in
-///        private or protected members, and the TEST macro creates a
-///        protected member function. We get around this by creating a
-///        function that the TEST macro then calls.
-///
-/// @note  Adapted from CHAI
-///
-/////////////////////////////////////////////////////////////////////////
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
 
 /////////////////////////////////////////////////////////////////////////
 ///

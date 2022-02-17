@@ -18,12 +18,16 @@
 // care headers
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
+#include "care/detail/test_utils.h"
 
-// Adapted from CHAI
-#define CPU_TEST(X, Y) \
-   static void cpu_test_##X##Y(); \
-   TEST(X, cpu_test_##Y) { cpu_test_##X##Y(); } \
-   static void cpu_test_##X##Y()
+
+#if defined(CARE_GPUCC)
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Benchmarking Loop Fusion\n");
+}
+#endif
 
 CPU_TEST(forall, static_policy)
 {
@@ -58,12 +62,6 @@ CPU_TEST(forall, dynamic_policy)
 }
 
 #if defined(CARE_GPUCC)
-
-// Adapted from CHAI
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
 
 GPU_TEST(forall, static_policy)
 {

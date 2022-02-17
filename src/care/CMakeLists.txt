@@ -29,6 +29,7 @@ set(care_headers
     Debug.h
     DefaultMacros.h
     device_ptr.h
+    device_unordered_map.h
     ExecutionSpace.h
     forall.h
     FOREACHMACRO.h

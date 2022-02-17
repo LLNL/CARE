@@ -17,60 +17,19 @@
 #include "care/Setup.h"
 #include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
+#include "care/detail/test_utils.h"
 
 #if CARE_ENABLE_LOOP_FUSER
-/* CUDA profiling macros */
-#ifdef __CUDACC__
-#include "nvToolsExt.h"
-
-const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
-const int num_colors = sizeof(colors)/sizeof(uint32_t);
-static unsigned int currentColor = 0;
-#define PUSH_RANGE(name) { \
-      int color_id = currentColor++; \
-      color_id = color_id%num_colors; \
-      nvtxEventAttributes_t eventAttrib = { 0 }; \
-      eventAttrib.version = NVTX_VERSION; \
-      eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
-      eventAttrib.colorType = NVTX_COLOR_ARGB; \
-      eventAttrib.color = colors[color_id]; \
-      eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
-      eventAttrib.message.ascii = name; \
-      nvtxRangePushEx(&eventAttrib); \
-}
-#define POP_RANGE nvtxRangePop();
-#else
-#define PUSH_RANGE(name)
-#define POP_RANGE
-#endif
-
-#define str(X) #X
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { PUSH_RANGE(str(Y)); cuda_test_ ## X_ ## Y(); POP_RANGE ;} \
-   static void cuda_test_ ## X_ ## Y()
 
 using namespace care;
-using int_ptr = host_device_ptr<int>;
 
-CUDA_TEST(TestFuser, Initialization) {
+GPU_TEST(TestFuser, Initialization) {
    printf("Initializing\n");
-   // initializing and allocate memory pools
-   care::initialize_pool("PINNED","PINNED_POOL",chai::PINNED,128*1024*1024,128*1024*1024,true);
-   care::initialize_pool("DEVICE","DEVICE_POOL",chai::GPU,128*1024*1024,128*1024*1024,true);
-   int_ptr trigger_device_allocation(1,"trigger_device");
-   int_ptr trigger_pinned_allocation = chai::ManagedArray<int>(1, chai::PINNED);
-   trigger_device_allocation.free();
-   trigger_pinned_allocation.free();
-   // initialize loop fuser
-   LOOPFUSER(CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)::getInstance();
-
-   care::syncIfNeeded();
+   init_care_for_testing();
    printf("Initialized... Benchmarking Loop Fusion\n");
 }
 
-
-CUDA_TEST(TestFuser, OneMillionSmallKernels) {
+GPU_TEST(TestFuser, OneMillionSmallKernels) {
    int numLoops = 1000000;
    int loopLength = 32;
    int_ptr a(loopLength,"a");
@@ -89,7 +48,7 @@ CUDA_TEST(TestFuser, OneMillionSmallKernels) {
 }
 
 
-CUDA_TEST(TestFuser, OneMillionSmallFusedKernels) {
+GPU_TEST(TestFuser, OneMillionSmallFusedKernels) {
    int numLoops = 1000000;
    int loopLength = 32;
    int_ptr a(loopLength,"a");
@@ -111,7 +70,7 @@ CUDA_TEST(TestFuser, OneMillionSmallFusedKernels) {
 }
 
 
-CUDA_TEST(TestFuser, OneThousandLargeKernels) {
+GPU_TEST(TestFuser, OneThousandLargeKernels) {
    int numLoops = 1000;
    int loopLength = 7000000;
    int_ptr a(loopLength,"a");
@@ -129,7 +88,7 @@ CUDA_TEST(TestFuser, OneThousandLargeKernels) {
    care::syncIfNeeded();
 }
 
-CUDA_TEST(TestFuser, OneThousandLargeFusedKernels) {
+GPU_TEST(TestFuser, OneThousandLargeFusedKernels) {
    int numLoops = 1000;
    int loopLength = 7000000;
    int_ptr a(loopLength,"a");
@@ -154,7 +113,7 @@ CUDA_TEST(TestFuser, OneThousandLargeFusedKernels) {
 
 static int medium_length = 32000;
 
-CUDA_TEST(TestFuser, TenThousandMediumKernels) {
+GPU_TEST(TestFuser, TenThousandMediumKernels) {
    int numLoops = 10000;
    int loopLength = medium_length;
    int_ptr a(loopLength,"a");
@@ -174,7 +133,7 @@ CUDA_TEST(TestFuser, TenThousandMediumKernels) {
 
 
 
-CUDA_TEST(TestFuser, TenThousandMediumFusedKernels) {
+GPU_TEST(TestFuser, TenThousandMediumFusedKernels) {
    int numLoops = 10000;
    int loopLength = medium_length;
    int_ptr a(loopLength,"a");
@@ -194,7 +153,7 @@ CUDA_TEST(TestFuser, TenThousandMediumFusedKernels) {
    care::syncIfNeeded();
 }
 
-CUDA_TEST(TestFuser, OneThousandFusedLaunches) {
+GPU_TEST(TestFuser, OneThousandFusedLaunches) {
    int numLoops = 1000;
    int loopLength = medium_length;
    int_ptr a(loopLength,"a");
@@ -213,6 +172,5 @@ CUDA_TEST(TestFuser, OneThousandFusedLaunches) {
    b.free();
    care::syncIfNeeded();
 }
-
 
 #endif
