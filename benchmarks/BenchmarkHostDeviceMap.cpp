@@ -43,7 +43,6 @@ BENCHMARK(benchmark_init);
 static void benchmark_kvs(benchmark::State& state) {
    for (auto _ : state) {
       const int length = state.range(0);
-      care::host_device_ptr<int> data(length, "data");
       care::host_device_ptr<int> answer(length);
       PUSH_RANGE("createSorter")
       care::KeyValueSorter<size_t, int, RAJAExec> sorter(length);

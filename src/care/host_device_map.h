@@ -4,8 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
-#ifndef _CARE_DEVICE_UNORDERED_MAP_H
-#define _CARE_DEVICE_UNORDERED_MAP_H
+#ifndef _CARE_HOST_DEVICE_MAP_H
+#define _CARE_HOST_DEVICE_MAP_H
 #include "care/config.h"
 #include "care/atomic.h"
 
@@ -47,12 +47,12 @@ namespace care {
    class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
          // constructor
-         host_device_map(size_t max_entries) : m_map()  {
+         host_device_map(size_t /*max_entries*/) : m_map()  {
             m_map = new std::unordered_map<key_type, mapped_type>{};
          }
         // emplace a key value pair
         inline void emplace(key_type key, mapped_type val) const {
-           (*m_map)[key] = val;
+           m_map->emplace(key, val);
         }
         // lookup a value
         inline mapped_type at(key_type key) const {
@@ -84,10 +84,8 @@ namespace care {
          host_device_map(size_t max_entries)  {
             // m_size will be atomically incremented as elements are emplaced into the map
             m_size = int_ptr(1, "map_size");
-            int_ptr size = m_size;
-            CARE_SEQUENTIAL_LOOP(i, 0, 1) {
-               size[0] = 0;
-            } CARE_SEQUENTIAL_LOOP_END
+            // set size to 0
+            reset_size();
             // back the map with a KeyValueSorter<key_type, mapped_type>
             m_gpu_map = KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{max_entries};
          }
@@ -117,6 +115,15 @@ namespace care {
            m_size.free();
            // KeyValueSorter will free its data during destruction.
         }
+
+        /* initializes size value to 0 */
+        void reset_size() {
+           int_ptr size = m_size;
+           CARE_PARALLEL_KERNEL{
+              size[0] = 0;
+           } CARE_PARALLEL_KERNEL_END
+        }
+
 
       private:
          int_ptr m_size = nullptr;
@@ -166,7 +173,7 @@ namespace care {
         void sort() {
            m_map.sortByKey();
            // cache the keys and values for lookups. Doing this outside of a kernel context is important
-           // so that the primary m_map object (not the lambda-capgtured copy) has initialized keys.
+           // so that the primary m_map object (not the lambda-captured copy) has initialized keys.
            m_map.initializeKeys();
            m_map.initializeValues();
         }
@@ -180,6 +187,7 @@ namespace care {
       private:
          mutable int *  m_length = 0;
          KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> m_map;
+         /* hasBeenSorted may be used in the future to enable an implicit sort on lambda capture */
          bool hasBeenSorted = false;
    };
 
