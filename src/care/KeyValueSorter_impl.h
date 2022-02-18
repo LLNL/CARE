@@ -151,13 +151,13 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys,
-                                            host_device_ptr<T> & values,
-                                            const size_t len, const T* arr)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<KeyType> & keys,
+                                            host_device_ptr<ValueType> & values,
+                                            const size_t len, const ValueType* arr)
 {
    CARE_SEQUENTIAL_LOOP(i, 0, len) {
-      keys[i] = i;
+      keys[i] = (KeyType)i;
       values[i] = arr[i];
    } CARE_SEQUENTIAL_LOOP_END
 }
@@ -171,13 +171,13 @@ CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys,
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys,
-                                                   host_device_ptr<T> & values,
-                                                   const size_t len, const host_device_ptr<const T>& arr)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<KeyType> & keys,
+                                                   host_device_ptr<ValueType> & values,
+                                                   const size_t len, const host_device_ptr<const ValueType>& arr)
 {
    FUSIBLE_LOOP_STREAM(i, 0, len) {
-      keys[i] = (size_t) i;
+      keys[i] = (KeyType) i;
       values[i] = arr[i];
    } FUSIBLE_LOOP_STREAM_END
 }
@@ -195,11 +195,11 @@ CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & key
 /// @param[in] oldLen Length of old key/value array and initial length for new
 /// @return newLen Length of new key/value arrays
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
-                                               host_device_ptr<T>& newValues,
-                                               const host_device_ptr<const size_t>& oldKeys,
-                                               const host_device_ptr<const T>& oldValues,
+template <typename KeyType, typename ValueType>
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<KeyType>& newKeys,
+                                               host_device_ptr<ValueType>& newValues,
+                                               const host_device_ptr<const KeyType>& oldKeys,
+                                               const host_device_ptr<const ValueType>& oldValues,
                                                const size_t oldLen)
 {
    // Save values that are not duplicates and their corresponding keys
@@ -217,10 +217,10 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
    return (size_t)newSize;
 }
 
-template <typename T>
+template <typename KeyType, typename ValueType>
 CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
-                                          KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
-                                          KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
+                                          KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
+                                          KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
                                           host_device_ptr<int> &matches1,
                                           host_device_ptr<int>& matches2,
                                           int & numMatches)
@@ -243,9 +243,9 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
    }
 
    host_device_ptr<int> smallerMatches, largerMatches;
-   host_device_ptr<size_t> smallerKeys, largerKeys;
+   host_device_ptr<KeyType> smallerKeys, largerKeys;
    int larger, smallStart, largeStart;
-   host_device_ptr<const T> smallerArray, largerArray;
+   host_device_ptr<const ValueType> smallerArray, largerArray;
    if (smaller == size1) {
       smallerArray = sorter1.values();
       largerArray = sorter2.values();
@@ -272,7 +272,7 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
    host_device_ptr<int> searches{smaller+1};
    host_device_ptr<int> matched{smaller+1};
    CARE_STREAM_LOOP(i, 0, smaller+1) {
-      searches[i] = i != smaller ? care::BinarySearch<T>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
+      searches[i] = i != smaller ? care::BinarySearch<ValueType>(largerArray, largeStart, larger, smallerArray[i+smallStart]) : -1;
       matched[i] = i != smaller && searches[i] > -1;
    } CARE_STREAM_LOOP_END
 
@@ -309,12 +309,12 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
-                                            const size_t len, const T* arr)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType,ValueType>> & keyValues,
+                                            const size_t len, const ValueType* arr)
 {
    CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-      keyValues[i].key = i;
+      keyValues[i].key = (KeyType)i;
       keyValues[i].value = arr[i];
    } CARE_SEQUENTIAL_LOOP_END
 }
@@ -327,12 +327,12 @@ CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
-                                                   const size_t len, const host_device_ptr<const T>& arr)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType> > & keyValues,
+                                                   const size_t len, const host_device_ptr<const ValueType>& arr)
 {
    FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
-      keyValues[i].key = i;
+      keyValues[i].key = (KeyType)i;
       keyValues[i].value = arr[i];
    } FUSIBLE_LOOP_STREAM_END
 }
@@ -346,17 +346,17 @@ CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & ke
 /// @param[in/out] keyValues - The key value array to eliminate duplicates in
 /// @param[in/out] len - original length of key value array/new length of array
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len)
+template <typename KeyType, typename ValueType>
+CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, ValueType> > & keyValues, const size_t len)
 {
    size_t newSize = len;
    if (len > 1) {
-      CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-      _kv<T> * rawData = getter.getRawArrayData(keyValues);
+      CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
+      _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(keyValues);
 
       // First do a stable sort by value (preserve the original order
       // in the case of a tie)
-      std::sort(rawData, rawData + len, cmpValsStable<T>);
+      std::sort(rawData, rawData + len, cmpValsStable<_kv<KeyType,ValueType>>);
       // TODO: investigate performance of std::stable_sort
       // std::stable_sort(rawData, rawData + len);
 
@@ -367,7 +367,7 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyVal
 
       while (get < lsize) {
          if (put != get) {
-            memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<T>));
+            memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<KeyType, ValueType>));
          }
 
          if (rawData[get].value == rawData[get+1].value) {
@@ -386,13 +386,13 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyVal
       }
 
       if (rawData[lsize].value != rawData[lsize-1].value) {
-         memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<T>));
+         memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<KeyType, ValueType>));
       }
 
       lsize = put;
 
       // Then sort by key to get the original ordering
-      std::sort(rawData, rawData + lsize, cmpKeys<T>);
+      std::sort(rawData, rawData + lsize, cmpKeys<_kv<KeyType,ValueType>>);
 
       // Reallocate memory
       keyValues.realloc(lsize);
@@ -413,9 +413,9 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyVal
 /// @param[in/out] len - length of key value array
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void initializeKeyArray(host_device_ptr<size_t>& keys,
-                                    const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void initializeKeyArray(host_device_ptr<KeyType>& keys,
+                                    const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len)
 {
    CARE_STREAM_LOOP(i, 0, len) {
       keys[i] = keyValues[i].key;
@@ -434,9 +434,9 @@ CARE_INLINE void initializeKeyArray(host_device_ptr<size_t>& keys,
 /// @param[in/out] len - length of key value array
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_INLINE void initializeValueArray(host_device_ptr<T>& values,
-                                      const host_device_ptr<const _kv<T> >& keyValues, const size_t len)
+template <typename KeyType, typename ValueType>
+CARE_INLINE void initializeValueArray(host_device_ptr<ValueType>& values,
+                                      const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len)
 {
    CARE_STREAM_LOOP(i, 0, len) {
       values[i] = keyValues[i].value;
@@ -451,10 +451,10 @@ CARE_INLINE void initializeValueArray(host_device_ptr<T>& values,
 // and CPU versions may have different behaviors (the index they match to may be different, 
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
 
-template <typename T>
+template <typename KeyType, typename ValueType>
 CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */, 
-                                          KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
-                                          KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
+                                          KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
+                                          KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
                                           host_device_ptr<int> &matches1,
                                           host_device_ptr<int>& matches2,
                                           int & numMatches)
@@ -488,10 +488,10 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
    bool sorter2KeysAllocated = sorter2.keysAllocated() ;
    bool sorter1ValuesAllocated = sorter1.valuesAllocated() ;
    bool sorter2ValuesAllocated = sorter2.valuesAllocated() ;
-   host_ptr<size_t const> host_sorter1_key = sorter1.keys() ;
-   host_ptr<size_t const> host_sorter2_key = sorter2.keys() ;
-   host_ptr<T const> host_sorter1_value = sorter1.values() ;
-   host_ptr<T const> host_sorter2_value = sorter2.values() ;
+   host_ptr<KeyType const> host_sorter1_key = sorter1.keys() ;
+   host_ptr<KeyType const> host_sorter2_key = sorter2.keys() ;
+   host_ptr<ValueType const> host_sorter1_value = sorter1.values() ;
+   host_ptr<ValueType const> host_sorter2_value = sorter2.values() ;
 
    for (;; ) {
       if ((i >= size1) || (j >= size2)) {

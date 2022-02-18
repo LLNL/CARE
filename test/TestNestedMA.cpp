@@ -18,23 +18,20 @@
 #include "care/algorithm.h"
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
+#include "care/detail/test_utils.h"
 
-#if defined(CARE_GPUCC) && GTEST_HAS_DEATH_TEST
-// This asserts a crash on the GPU, but does not mark gtest as passing.
-#define GPU_FAIL(code) ASSERT_DEATH(code, "")
-#else
-#define GPU_FAIL(code) code
-#endif
 
-// This makes it so we can use device lambdas from within a GPU_TEST
-#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
-   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
-   static void gpu_test_ ## X_ ## Y()
 
 template<typename T>
 void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
 {
    *ptr = care::host_device_ptr<T>(size, name);
+}
+
+GPU_TEST(nestedMA, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... testing nested care::host_device_ptr patterns\n");
 }
 
 // This initialization pattern works fine

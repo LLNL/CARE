@@ -7,17 +7,38 @@
 #ifdef CARE_ENABLE_EXTERN_INSTANTIATE
 
 ///////////////////////////////////////////////////////////////////////////////
-
+#define CARE_TEMPLATE_KEY_TYPE size_t
 #define CARE_TEMPLATE_ARRAY_TYPE int
 #include "care/KeyValueSorter_inst.h"
 
+#define CARE_TEMPLATE_KEY_TYPE size_t
 #define CARE_TEMPLATE_ARRAY_TYPE float
 #include "care/KeyValueSorter_inst.h"
 
+#define CARE_TEMPLATE_KEY_TYPE size_t
 #define CARE_TEMPLATE_ARRAY_TYPE double
 #include "care/KeyValueSorter_inst.h"
 
 #if CARE_HAVE_LLNL_GLOBALID
+#define CARE_TEMPLATE_KEY_TYPE size_t
+#define CARE_TEMPLATE_ARRAY_TYPE globalID
+#include "care/KeyValueSorter_inst.h"
+#endif
+
+#define CARE_TEMPLATE_KEY_TYPE int
+#define CARE_TEMPLATE_ARRAY_TYPE int
+#include "care/KeyValueSorter_inst.h"
+
+#define CARE_TEMPLATE_KEY_TYPE int
+#define CARE_TEMPLATE_ARRAY_TYPE float
+#include "care/KeyValueSorter_inst.h"
+
+#define CARE_TEMPLATE_KEY_TYPE int
+#define CARE_TEMPLATE_ARRAY_TYPE double
+#include "care/KeyValueSorter_inst.h"
+
+#if CARE_HAVE_LLNL_GLOBALID
+#define CARE_TEMPLATE_KEY_TYPE int
 #define CARE_TEMPLATE_ARRAY_TYPE globalID
 #include "care/KeyValueSorter_inst.h"
 #endif
@@ -127,6 +148,8 @@ void IntersectArrays(RAJA::seq_exec, care::host_device_ptr<globalID>, int, int, 
 
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const int *, const int, const int, const int, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const size_t *, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const globalID *, const int, const int, const globalID, bool) ;
@@ -134,6 +157,8 @@ CARE_HOST_DEVICE int BinarySearch(const globalID *, const int, const int, const 
 
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<int>&, const int, const int, const int, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<size_t>&, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<globalID>&, const int, const int, const globalID, bool) ;
@@ -141,6 +166,8 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<globalID>&, const 
 
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const int>&, const int, const int, const int, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const size_t>&, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const globalID>&, const int, const int, const globalID, bool) ;

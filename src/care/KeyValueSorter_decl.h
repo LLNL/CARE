@@ -26,7 +26,7 @@ namespace care {
 ///    this template class. Templating rather than inheritance is used
 ///    to make this GPU friendly.
 ///////////////////////////////////////////////////////////////////////////
-template <typename T, typename Exec=RAJAExec>
+template <typename KeyType, typename ValueType,  typename Exec=RAJAExec>
 class KeyValueSorter {};
 
 /// LocalKeyValueSorter should be used as the type for HOSTDEV functions
@@ -35,8 +35,8 @@ class KeyValueSorter {};
 /// should not be called outside a lambda context.
 /// Note that this does not actually enforce that the HOSTDEV function
 /// is only called from RAJA loops.
-template <typename T, typename Exec>
-using LocalKeyValueSorter = KeyValueSorter<T, Exec> ;
+template <typename KeyType, typename ValueType, typename Exec>
+using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 
 
 // TODO openMP parallel implementation
@@ -71,9 +71,9 @@ void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 /// @param[in] arr - input array
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
-                                const size_t len, const T* arr) ;
+template <typename KeyType, typename ValueType>
+void setKeyValueArraysFromArray(host_device_ptr<KeyType> & keys, host_device_ptr<ValueType> & values,
+                                const size_t len, const ValueType* arr) ;
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -84,9 +84,9 @@ void setKeyValueArraysFromArray(host_device_ptr<size_t> & keys, host_device_ptr<
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_device_ptr<T> & values,
-                                       const size_t len, const host_device_ptr<const T>& arr) ;
+template <typename KeyType, typename ValueType>
+void setKeyValueArraysFromManagedArray(host_device_ptr<KeyType> & keys, host_device_ptr<ValueType> & values,
+                                       const size_t len, const host_device_ptr<const ValueType>& arr) ;
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Jeff Keasler, Alan Dayton
@@ -101,11 +101,11 @@ void setKeyValueArraysFromManagedArray(host_device_ptr<size_t> & keys, host_devi
 /// @param[in] oldLen Length of old key/value array and initial length for new
 /// @return Length of new key/value arrays
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
-                                   host_device_ptr<T>& newValues,
-                                   const host_device_ptr<const size_t>& oldKeys,
-                                   const host_device_ptr<const T>& oldValues,
+template <typename KeyType, typename ValueType>
+size_t eliminateKeyValueDuplicates(host_device_ptr<KeyType>& newKeys,
+                                   host_device_ptr<ValueType>& newValues,
+                                   const host_device_ptr<const KeyType>& oldKeys,
+                                   const host_device_ptr<const ValueType>& oldValues,
                                    const size_t oldLen);
 
 ///////////////////////////////////////////////////////////////////////////
@@ -113,8 +113,8 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<size_t>& newKeys,
 /// The GPU version of KeyValueSorter stores keys and values as separate
 ///    arrays to be compatible with sortKeyValueArrays.
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-class KeyValueSorter<T, RAJADeviceExec> {
+template <typename KeyType, typename ValueType>
+class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
    public:
 
       ///////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] len - The number of elements to allocate space for
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<T, RAJADeviceExec>(const size_t len)
+      explicit KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -148,7 +148,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] arr - The raw array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const T* arr)
+      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const ValueType* arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -166,7 +166,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<const T> & arr)
+      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const host_device_ptr<const ValueType> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -193,8 +193,8 @@ class KeyValueSorter<T, RAJADeviceExec> {
       ///
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec>(const size_t len, const host_device_ptr<T> & arr)
-      : KeyValueSorter<T, RAJADeviceExec>(len, host_device_ptr<const T>(arr))
+      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const host_device_ptr<ValueType> & arr)
+      : KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(len, host_device_ptr<const ValueType>(arr))
       {
       }
 
@@ -210,7 +210,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<T, RAJADeviceExec>(const KeyValueSorter<T, RAJADeviceExec> &other)
+      CARE_HOST_DEVICE KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const KeyValueSorter<KeyType, ValueType, RAJADeviceExec> &other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
@@ -223,7 +223,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @brief Destructor
       /// Frees the underlying memory if this is the owner.
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJADeviceExec>()
+      CARE_HOST_DEVICE ~KeyValueSorter<KeyType, ValueType, RAJADeviceExec>()
       {
 #ifndef CARE_DEVICE_COMPILE
          /// Only attempt to free if we are on the CPU
@@ -239,7 +239,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> & other)
+      KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & operator=(KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & other)
       {
          if (this != &other) {
             free();
@@ -261,7 +261,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to move from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJADeviceExec> & operator=(KeyValueSorter<T, RAJADeviceExec> && other)
+      KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & operator=(KeyValueSorter<KeyType, ValueType, RAJADeviceExec> && other)
       {
          if (this != &other) {
             free();
@@ -287,7 +287,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] index - The index at which to get the key
       /// @return the key at the given index
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t key(const size_t index) const {
+      CARE_HOST_DEVICE KeyType key(const size_t index) const {
          return m_keys[index];
       }
 
@@ -299,7 +299,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] key   - The new key
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setKey(const size_t index, const size_t key) const {
+      CARE_HOST_DEVICE void setKey(const size_t index, const KeyType key) const {
          m_keys[index] = key;
       }
 
@@ -310,7 +310,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] index - The index at which to get the value
       /// @return the value at the given index
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE T value(const size_t index) const {
+      CARE_HOST_DEVICE ValueType value(const size_t index) const {
          return m_values[index];
       }
 
@@ -322,7 +322,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @param[in] value - The new value
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setValue(const size_t index, const T value) const {
+      CARE_HOST_DEVICE void setValue(const size_t index, const ValueType value) const {
          m_values[index] = value;
       }
 
@@ -331,7 +331,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @brief Gets the keys contained in the KeyValueSorter
       /// @return the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE host_device_ptr<size_t> & keys() {
+      CARE_HOST_DEVICE host_device_ptr<KeyType> & keys() {
          return m_keys;
       }
 
@@ -340,7 +340,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @brief Gets a const copy of the keys contained in the KeyValueSorter
       /// @return a const copy of the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE const host_device_ptr<size_t> & keys() const {
+      CARE_HOST_DEVICE const host_device_ptr<KeyType> & keys() const {
          return m_keys;
       }
 
@@ -349,7 +349,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @brief Gets the values contained in the KeyValueSorter
       /// @return the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE host_device_ptr<T> & values() {
+      CARE_HOST_DEVICE host_device_ptr<ValueType> & values() {
          return m_values;
       }
 
@@ -358,7 +358,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @brief Gets a const copy of the values contained in the KeyValueSorter
       /// @return a const copy of the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE const host_device_ptr<T> & values() const {
+      CARE_HOST_DEVICE const host_device_ptr<ValueType> & values() const {
          return m_values;
       }
 
@@ -380,7 +380,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sort(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_values, m_keys, start, len, false);
+         sortKeyValueArrays<ValueType, KeyType, RAJADeviceExec>(m_values, m_keys, start, len, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -399,7 +399,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void sort() {
-         sortKeyValueArrays(m_values, m_keys, 0, m_len, true);
+         sortKeyValueArrays<ValueType, KeyType, RAJADeviceExec>(m_values, m_keys, 0, m_len, true);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -411,7 +411,7 @@ class KeyValueSorter<T, RAJADeviceExec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sortByKey(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_keys, m_values, start, len, false);
+         sortKeyValueArrays<KeyType, ValueType, RAJADeviceExec>(m_keys, m_values, start, len, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -481,12 +481,12 @@ class KeyValueSorter<T, RAJADeviceExec> {
             stableSort();
 
             // Allocate storage for the key value pairs without duplicates
-            host_device_ptr<size_t> newKeys{m_len, "newKeys"};
-            host_device_ptr<T> newValues{m_len, "newValues"};
+            host_device_ptr<KeyType> newKeys{m_len, "newKeys"};
+            host_device_ptr<ValueType> newValues{m_len, "newValues"};
 
             int newSize = eliminateKeyValueDuplicates(newKeys, newValues,
-                                                      (host_device_ptr<const size_t>)m_keys,
-                                                      (host_device_ptr<const T>)m_values,
+                                                      (host_device_ptr<const KeyType>)m_keys,
+                                                      (host_device_ptr<const ValueType>)m_values,
                                                       m_len) ;
 
             // Free the original key value pairs
@@ -562,8 +562,8 @@ class KeyValueSorter<T, RAJADeviceExec> {
    private:
       size_t m_len = 0;
       bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
-      host_device_ptr<size_t> m_keys = nullptr;
-      host_device_ptr<T> m_values = nullptr;
+      host_device_ptr<KeyType> m_keys = nullptr;
+      host_device_ptr<ValueType> m_values = nullptr;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
@@ -596,8 +596,8 @@ class KeyValueSorter<T, RAJADeviceExec> {
 /// @param right - right _kv to compare
 /// @return true if left's value is less than right's value, false otherwise
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-inline bool operator <(_kv<T> const & left, _kv<T> const & right)
+template <typename KeyValueType>
+inline bool operator <(KeyValueType const & left, KeyValueType const & right)
 {
    return left.value < right.value;
 }
@@ -610,8 +610,8 @@ inline bool operator <(_kv<T> const & left, _kv<T> const & right)
 /// @param right - right _kv to compare
 /// @return true if left's key is less than right's key, false otherwise
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-inline bool cmpKeys(_kv<T> const & left, _kv<T> const & right)
+template <typename KeyValueType>
+inline bool cmpKeys(KeyValueType const & left, KeyValueType const & right)
 {
    return left.key < right.key;
 }
@@ -626,20 +626,20 @@ inline bool cmpKeys(_kv<T> const & left, _kv<T> const & right)
 ///    equal, returns true if left's key is less than right's key.
 ///    Otherwise returns false.
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-inline bool cmpValsStable(_kv<T> const & left, _kv<T> const & right)
+template <typename KeyValueType>
+inline bool cmpValsStable(KeyValueType const & left, KeyValueType const & right)
 {
    if (left.value == right.value) {
-      return cmpKeys(left, right);
+      return cmpKeys<KeyValueType>(left, right);
    }
    else {
       return left < right;
    }
 }
 
-/// cmpValsStable<double> specialization
+/// cmpValsStable<size_t, double> specialization
 template <>
-inline bool cmpValsStable<double>(_kv<double> const & left, _kv<double> const & right)
+inline bool cmpValsStable<_kv<size_t,double>>(_kv<size_t, double> const & left, _kv<size_t, double> const & right)
 {
    if (left < right) {
       return true;
@@ -652,9 +652,39 @@ inline bool cmpValsStable<double>(_kv<double> const & left, _kv<double> const & 
    }
 }
 
-/// cmpValsStable<float> specialization
+/// cmpValsStable<size_t, float> specialization
 template <>
-inline bool cmpValsStable<float>(_kv<float> const & left, _kv<float> const & right)
+inline bool cmpValsStable<_kv<size_t, float>>(_kv<size_t, float> const & left, _kv<size_t, float> const & right)
+{
+   if (left < right) {
+      return true;
+   }
+   else if (left.value > right.value) {
+      return false;
+   }
+   else {
+      return cmpKeys(left, right);
+   }
+}
+
+/// cmpValsStable<int, double> specialization
+template <>
+inline bool cmpValsStable<_kv<int,double>>(_kv<int, double> const & left, _kv<int, double> const & right)
+{
+   if (left < right) {
+      return true;
+   }
+   else if (left.value > right.value) {
+      return false;
+   }
+   else {
+      return cmpKeys(left, right);
+   }
+}
+
+/// cmpValsStable<int, float> specialization
+template <>
+inline bool cmpValsStable<_kv<int, float>>(_kv<int, float> const & left, _kv<int, float> const & right)
 {
    if (left < right) {
       return true;
@@ -675,9 +705,9 @@ inline bool cmpValsStable<float>(_kv<float> const & left, _kv<float> const & rig
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
-                                const size_t len, const T* arr) ;
+template <typename KeyType, typename ValueType>
+void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
+                                const size_t len, const ValueType* arr) ;
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -688,9 +718,9 @@ void setKeyValueArraysFromArray(host_device_ptr<_kv<T> > & keyValues,
 /// @param[in] arr - An array to copy elements from
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
-                                       const size_t len, const host_device_ptr<const T>& arr) ;
+template <typename KeyType, typename ValueType>
+void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
+                                       const size_t len, const host_device_ptr<const ValueType>& arr) ;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -701,8 +731,8 @@ void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<T> > & keyValues,
 /// @param[in/out] len - original length of key value array
 /// @return new length of array
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const size_t len) ;
+template <typename KeyType, typename ValueType>
+size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, ValueType>> & keyValues, const size_t len) ;
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Alan Dayton
@@ -714,8 +744,8 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<T> > & keyValues, const s
 /// @param[in/out] len - length of key value array
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<const _kv<T> >& keyValues, const size_t len) ;
+template <typename KeyType, typename ValueType>
+void initializeKeyArray(host_device_ptr<KeyType>& keys, const host_device_ptr<const _kv<KeyType, ValueType>>& keyValues, const size_t len) ;
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Alan Dayton
@@ -727,8 +757,8 @@ void initializeKeyArray(host_device_ptr<size_t>& keys, const host_device_ptr<con
 /// @param[in/out] len - length of key value array
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<const _kv<T> >& keyValues, const size_t len);
+template <typename KeyType, typename ValueType>
+void initializeValueArray(host_device_ptr<ValueType>& values, const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len);
 
 ///////////////////////////////////////////////////////////////////////////
 /// Sequential partial specialization of KeyValueSorter
@@ -740,8 +770,8 @@ void initializeValueArray(host_device_ptr<T>& values, const host_device_ptr<cons
 /// and values as the GPU version of the code, which in many instances removes
 /// the need for copying the keys and values into separate arrays after the sort.
 ///////////////////////////////////////////////////////////////////////////
-template <typename T>
-class KeyValueSorter<T, RAJA::seq_exec> {
+template <typename KeyType, typename ValueType>
+class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
    public:
 
       ///////////////////////////////////////////////////////////////////////////
@@ -749,7 +779,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Default constructor
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>() {}
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>() {}
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
@@ -758,7 +788,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] len - The number of elements to allocate space for
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<T, RAJA::seq_exec>(size_t len)
+      explicit KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(size_t len)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -776,7 +806,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] arr - The raw array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const T* arr)
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const ValueType* arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -795,7 +825,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<const T> & arr)
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const host_device_ptr<const ValueType> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -824,8 +854,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @return a KeyValueSorter instance
       ///
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec>(const size_t len, const host_device_ptr<T> & arr)
-      : KeyValueSorter<T, RAJA::seq_exec>(len, host_device_ptr<const T>(arr))
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const host_device_ptr<ValueType> & arr)
+      : KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(len, host_device_ptr<const ValueType>(arr))
       {
       }
 
@@ -841,7 +871,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<T, RAJA::seq_exec>(const KeyValueSorter<T, RAJA::seq_exec> &other)
+      CARE_HOST_DEVICE KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> &other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
@@ -855,7 +885,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Destructor
       /// Frees the underlying memory if this is the owner.
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<T, RAJA::seq_exec>()
+      CARE_HOST_DEVICE ~KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>()
       {
 #ifndef CARE_DEVICE_COMPILE
          free();
@@ -870,7 +900,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec> & operator=(KeyValueSorter<T, RAJA::seq_exec> & other)
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & operator=(KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & other)
       {
          if (this != &other) {
             free();
@@ -893,7 +923,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to move from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<T, RAJA::seq_exec> & operator=(KeyValueSorter<T, RAJA::seq_exec> && other)
+      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & operator=(KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> && other)
       {
          if (this != &other) {
             free();
@@ -921,8 +951,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] index - The index at which to get the key
       /// @return the key at the given index
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE size_t key(const size_t index) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
+      CARE_HOST_DEVICE KeyType key(const size_t index) const {
+         local_ptr<_kv<KeyType,ValueType> > local_keyValues = m_keyValues;
          return local_keyValues[index].key;
       }
 
@@ -934,8 +964,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] key   - The new key
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setKey(const size_t index, const size_t key) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
+      CARE_HOST_DEVICE void setKey(const size_t index, const KeyType key) const {
+         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
          local_keyValues[index].key = key;
       }
 
@@ -946,8 +976,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] index - The index at which to get the value
       /// @return the value at the given index
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE T value(const size_t index) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
+      CARE_HOST_DEVICE ValueType value(const size_t index) const {
+         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
          return local_keyValues[index].value;
       }
 
@@ -959,8 +989,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @param[in] value - The new value
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE void setValue(const size_t index, const T value) const {
-         local_ptr<_kv<T> > local_keyValues = m_keyValues;
+      CARE_HOST_DEVICE void setValue(const size_t index, const ValueType value) const {
+         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
          local_keyValues[index].value = value;
       }
 
@@ -969,7 +999,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Gets the keys contained in the KeyValueSorter
       /// @return the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      host_device_ptr<size_t> & keys() {
+      host_device_ptr<KeyType> & keys() {
          initializeKeys();
          return m_keys;
       }
@@ -979,7 +1009,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Gets a const copy of the keys contained in the KeyValueSorter
       /// @return a const copy of the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      const host_device_ptr<size_t> & keys() const {
+      const host_device_ptr<KeyType> & keys() const {
          initializeKeys();
          return m_keys;
       }
@@ -989,7 +1019,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Gets the values contained in the KeyValueSorter
       /// @return the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      host_device_ptr<T> & values() {
+      host_device_ptr<ValueType> & values() {
          initializeValues();
          return m_values;
       }
@@ -999,7 +1029,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// @brief Gets a const copy of the values contained in the KeyValueSorter
       /// @return a const copy of the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
-      const host_device_ptr<T> & values() const {
+      const host_device_ptr<ValueType> & values() const {
          initializeValues();
          return m_values;
       }
@@ -1023,8 +1053,8 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sort(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
+         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
+         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::sort(rawData, rawData + len);
       }
 
@@ -1058,9 +1088,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sortByKey(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpKeys<T>);
+         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
+         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
+         std::sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1092,9 +1122,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void stableSort(const size_t start, const size_t len) {
-         CHAIDataGetter<_kv<T>, RAJA::seq_exec> getter {};
-         _kv<T> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpValsStable<T>);
+         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
+         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
+         std::sort(rawData, rawData + len, cmpValsStable<_kv<KeyType,ValueType>>);
          // TODO: investigate performance of std::stable_sort
          //std::stable_sort(rawData, rawData + len);
       }
@@ -1153,7 +1183,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          if (!m_keys) {
             m_keys.alloc(m_len);
             m_keys.namePointer("m_keys");
-            initializeKeyArray(m_keys, (host_device_ptr<const _kv<T> >)m_keyValues, m_len);
+            initializeKeyArray(m_keys, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
          }
 
          return;
@@ -1170,7 +1200,7 @@ class KeyValueSorter<T, RAJA::seq_exec> {
          if (!m_values) {
             m_values.alloc(m_len);
             m_values.namePointer("m_values");
-            initializeValueArray(m_values, (host_device_ptr<const _kv<T> >)m_keyValues, m_len);
+            initializeValueArray(m_values, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
          }
 
          return;
@@ -1234,9 +1264,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
    private:
       size_t m_len = 0;
       bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
-      mutable host_device_ptr<size_t> m_keys = nullptr;
-      mutable host_device_ptr<T> m_values = nullptr;
-      host_device_ptr<_kv<T> > m_keyValues = nullptr;
+      mutable host_device_ptr<KeyType> m_keys = nullptr;
+      mutable host_device_ptr<ValueType> m_values = nullptr;
+      host_device_ptr<_kv<KeyType, ValueType> > m_keyValues = nullptr;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
@@ -1263,9 +1293,9 @@ class KeyValueSorter<T, RAJA::seq_exec> {
 
 
 #ifdef CARE_GPUCC
-template <typename T>
-void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceExec> sorter1, int size1,
-                              KeyValueSorter<T, RAJADeviceExec> sorter2, int size2,
+template <typename KeyType, typename ValueType>
+void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
+                              KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
                               host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
                               int & numMatches) ;
 #endif // defined(CARE_GPUCC)
@@ -1274,10 +1304,10 @@ void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<T, RAJADeviceE
 // and CPU versions may have different behaviors (the index they match to may be different, 
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
 
-template <typename T>
+template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJA::seq_exec exec, 
-                              KeyValueSorter<T, RAJA::seq_exec> sorter1, int size1,
-                              KeyValueSorter<T, RAJA::seq_exec> sorter2, int size2,
+                              KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
+                              KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
                               host_device_ptr<int> &matches1, host_device_ptr<int>& matches2, int & numMatches) ;
 
 } // namespace care

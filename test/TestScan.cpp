@@ -14,21 +14,17 @@
 #include "care/host_device_ptr.h"
 #include "care/scan.h"
 #include "care/Setup.h"
+#include "care/detail/test_utils.h"
 
-// This makes it so we can use device lambdas from within a GPU_TEST
-#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
-   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
-   static void gpu_test_ ## X_ ## Y()
 
-using int_ptr = chai::ManagedArray<int>;
+
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing Scan\n");
+}
 
 GPU_TEST(Scan, test_scan_offset) {
-#if defined(CARE_GPUCC)
-   int poolSize = 128*1024*1024; // 128 MB
-   care::initialize_pool("PINNED", "PINNED_POOL", chai::PINNED, poolSize, poolSize ,true);
-   care::initialize_pool("DEVICE", "DEVICE_POOL", chai::GPU, poolSize, poolSize, true);
-#endif
-
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;

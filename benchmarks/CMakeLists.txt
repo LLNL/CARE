@@ -36,3 +36,15 @@ target_include_directories(BenchmarkNumeric
 blt_add_benchmark(NAME BenchmarkNumeric
                   COMMAND BenchmarkNumeric)
 
+blt_add_executable(NAME BenchmarkHostDeviceMap
+                   SOURCES BenchmarkHostDeviceMap.cpp
+                   DEPENDS_ON ${care_benchmark_depends})
+
+target_include_directories(BenchmarkHostDeviceMap
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(BenchmarkHostDeviceMap
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_benchmark(NAME BenchmarkHostDeviceMap
+                  COMMAND BenchmarkHostDeviceMap)

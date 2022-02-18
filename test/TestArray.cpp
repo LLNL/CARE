@@ -22,6 +22,15 @@
 #include "care/array.h"
 #include "care/DefaultMacros.h"
 #include "care/policies.h"
+#include "care/detail/test_utils.h"
+
+#if defined(CARE_GPUCC)
+GPU_TEST(array, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing care::array\n");
+}
+#endif
 
 TEST(array, constructor)
 {
@@ -196,12 +205,6 @@ TEST(array, greater_than_or_equal_to)
 }
 
 #if defined(CARE_GPUCC)
-
-// Adapted from CHAI
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
 
 GPU_TEST(array, constructor)
 {

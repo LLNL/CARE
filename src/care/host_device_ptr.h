@@ -30,10 +30,10 @@ namespace care {
    /// @brief The key value pair struct used by the sequential version of
    ///    KeyValueSorter
    ///////////////////////////////////////////////////////////////////////////
-   template <typename T>
+   template <typename KeyType, typename ValueType>
    struct _kv {
-      size_t key;
-      T value;
+      KeyType key;
+      ValueType value;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -55,8 +55,8 @@ namespace care {
    ///
    /// @return   The output stream for chaining of operations
    ///
-   template <typename T>
-   inline std::ostream& operator<<(std::ostream& os, const _kv<T>& kv) {
+   template <typename KeyType, typename ValueType>
+   inline std::ostream& operator<<(std::ostream& os, const _kv<KeyType, ValueType>& kv) {
       os << kv.key << ": " << kv.value;
       return os;
    }
