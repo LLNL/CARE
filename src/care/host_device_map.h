@@ -115,7 +115,7 @@ namespace care {
         // release any heap data.
         void free() {
            m_size.free();
-            // KeyValueSorter will free its data during destruction.
+           // KeyValueSorter will free its data during destruction.
         }
 
       private:
