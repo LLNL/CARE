@@ -23,7 +23,7 @@ namespace care {
    ///
    /// Restrictions when compared to std::map:
    ///   1. Total capacity must be declared up front.
-   ///   2. a call to sort() must be performed before any lookoups are done.
+   ///   2. a call to sort() must be performed before any lookups are done.
    ///   3. Insertions can only be done via an emplace(Key,Value).
    ///   4. Lookups can only be done via an at(Key)
    ///
