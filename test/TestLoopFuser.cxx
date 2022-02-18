@@ -26,7 +26,7 @@
 GPU_TEST(forall, Initialization) {
    printf("Initializing\n");
    init_care_for_testing();
-   printf("Initialized... Benchmarking Loop Fusion\n");
+   printf("Initialized... Testing Loop Fusion\n");
 }
 #endif
 

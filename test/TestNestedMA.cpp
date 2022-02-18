@@ -31,7 +31,7 @@ void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
 GPU_TEST(nestedMA, gpu_initialization) {
    printf("Initializing\n");
    init_care_for_testing();
-   printf("Initialized... Benchmarking Loop Fusion\n");
+   printf("Initialized... testing nested care::host_device_ptr patterns\n");
 }
 
 // This initialization pattern works fine

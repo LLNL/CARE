@@ -140,7 +140,7 @@ class DerivedClass : public BaseClass {
 GPU_TEST(ManagedPtr, gpu_initialization) {
    printf("Initializing\n");
    init_care_for_testing();
-   printf("Initialized... Benchmarking Loop Fusion\n");
+   printf("Initialized... Testing care::managed_ptr\n");
 }
 #endif
 

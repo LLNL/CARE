@@ -23,7 +23,7 @@
 GPU_TEST(algorithm, gpu_initialization) {
    printf("Initializing\n");
    init_care_for_testing();
-   printf("Initialized... Benchmarking Loop Fusion\n");
+   printf("Initialized... Testing care::algorithm\n");
 }
 #endif
 
