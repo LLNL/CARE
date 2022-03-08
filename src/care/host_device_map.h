@@ -9,7 +9,7 @@
 #include "care/config.h"
 #include "care/atomic.h"
 
-#include <unordered_map>
+#include <map>
 #include <care/KeyValueSorter.h>
 
 namespace care {
@@ -18,7 +18,7 @@ namespace care {
    /// @author Peter Robinson
    ///
    /// @class host_device_map is a rudimentary associative map. On the host,
-   /// it is backed by a std::unordered_map, and on the device it uses a
+   /// it is backed by a std::map, and on the device it uses a
    /// care::KeyValueSorter.
    ///
    /// Restrictions when compared to std::map:
@@ -58,7 +58,7 @@ namespace care {
       public:
          // constructor
          host_device_map(size_t /*max_entries*/, mapped_type miss_signal) : m_map(), m_signal(miss_signal)  {
-            m_map = new std::unordered_map<key_type, mapped_type>{};
+            m_map = new std::map<key_type, mapped_type>{};
             m_size = new int();
             *m_size = 0;
          }
@@ -95,13 +95,13 @@ namespace care {
         int size() const { return *m_size; }
 
         // iteration - meant to only be called by the CARE_MAP_LOOP macros
-        inline typename std::unordered_map<key_type, mapped_type>::iterator begin () const { return m_map->begin(); }
-        inline typename std::unordered_map<key_type, mapped_type>::iterator end () const { return m_map->end(); }
+        inline typename std::map<key_type, mapped_type>::iterator begin () const { return m_map->begin(); }
+        inline typename std::map<key_type, mapped_type>::iterator end () const { return m_map->end(); }
         
 
       private:
          // we do a heap allocated map to ensure no deep copies occur during lambda capture
-         std::unordered_map<key_type, mapped_type> * m_map = nullptr;
+         std::map<key_type, mapped_type> * m_map = nullptr;
          int * m_size = nullptr;
          mapped_type m_signal;
    };
@@ -218,9 +218,9 @@ namespace care {
 #endif // end CARE_GPUCC
 
    // this implementation is used for benchmarking - may be appropriate choice depending on performance
-   // of unordered_map on your system / compiler.
+   // of map on your system / compiler.
 
-   // force the use of a key value sorter on the backend instead of std::unordered_map
+   // force the use of a key value sorter on the backend instead of std::map
    struct force_keyvaluesorter {};
 
 // ********************************************************************************
