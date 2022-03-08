@@ -47,6 +47,8 @@ namespace care {
          CARE_HOST_DEVICE inline mapped_type at(key_type key) const;
          void sort();
          void free();
+         void clear();
+         void reserve(int size);
          int size() const;
    };
 
@@ -93,6 +95,12 @@ namespace care {
 
         // return the number of inserted elements
         int size() const { return *m_size; }
+
+        // clear any added elements
+        void clear() { m_map->clear();}
+        
+        // preallocate buffers for adding up to size elements
+        void reserve(int) { }
 
         // iteration - meant to only be called by the CARE_MAP_LOOP macros
         inline typename std::map<key_type, mapped_type>::iterator begin () const { return m_map->begin(); }
@@ -169,6 +177,12 @@ namespace care {
         
         // return the number of inserted elements
         int size() const {  return m_length; }
+        
+        // clear any added elements
+        inline void clear() { reset_size(); }
+        
+        // preallocate buffers for adding up to size elements
+        void reserve(int size) { m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{size}); }
         
         // iteration - only to be used by macro layer */ 
         struct iterator { 
@@ -287,6 +301,12 @@ namespace care {
            *m_size = 0;
            m_length = 0;
         }
+        
+        // clear any added elements
+        inline void clear() { reset_size(); }
+        
+        // preallocate buffers for adding up to size elements
+        void reserve(int size) { m_map = std::move(KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{size}); }
 
       private:
          mutable int * m_size = nullptr;
