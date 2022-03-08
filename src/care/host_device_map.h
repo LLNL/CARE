@@ -211,7 +211,7 @@ namespace care {
 #else
 #define CARE_STREAM_MAP_LOOP(INDEX, START, ITER, MAP) \
   int INDEX = START; \
-  for (auto ITER = MAP.begin(); ITER != MAP.begin(); ++ITER, ++INDEX) { \
+  for (auto ITER = MAP.begin(); ITER != MAP.end(); ++ITER, ++INDEX) { \
      
 #define CARE_STREAM_MAP_LOOP_END }
    
