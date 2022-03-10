@@ -573,6 +573,7 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       ///////////////////////////////////////////////////////////////////////////
       inline void free() {
          if (m_ownsPointers) {
+            printf(" I AM NOW FREEING MY DATA!!!\n");
             if (m_keys) {
                m_keys.free();
             }

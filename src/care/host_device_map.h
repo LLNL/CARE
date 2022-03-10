@@ -126,7 +126,7 @@ namespace care {
       public:
          using int_ptr = care::host_device_ptr<int>;
          // constructor
-         host_device_map(size_t max_entries, mapped_type miss_signal) : m_signal(miss_signal), m_gpu_map{max_entries}   {
+         host_device_map(size_t max_entries, mapped_type miss_signal) : m_max_size(max_entries), m_signal(miss_signal), m_gpu_map{max_entries}   {
             // m_size will be atomically incremented as elements are emplaced into the map
             m_size = int_ptr(1, "map_size");
             // set size to 0
@@ -137,7 +137,9 @@ namespace care {
         inline CARE_DEVICE void emplace(key_type key, mapped_type val) const {
            int index = ATOMIC_ADD(m_size[0], 1);
            LocalKeyValueSorter<key_type, mapped_type, RAJADeviceExec> const & local_map = m_gpu_map;
+           printf("device setting key at index %i to %i\n", index, (int) key);
            local_map.setKey(index, key);
+           printf("device setting value at index %i to %i\n", index, (int) val);
            local_map.setValue(index, val);
         }
 
@@ -156,8 +158,9 @@ namespace care {
 
         // call sort() after emplaces are all done and before lookups are needed
         void sort() {
-           m_gpu_map.sortByKey();
            m_length = m_size.pick(0);
+           // only sort on the subset of values added so far
+           m_gpu_map.sortByKey(m_length);
         }
 
 
@@ -173,6 +176,7 @@ namespace care {
            CARE_PARALLEL_KERNEL{
               size[0] = 0;
            } CARE_PARALLEL_KERNEL_END
+           m_length = 0;
         }
         
         // return the number of inserted elements
@@ -182,7 +186,24 @@ namespace care {
         inline void clear() { reset_size(); }
         
         // preallocate buffers for adding up to size elements
-        void reserve(int size) { m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{size}); }
+        void reserve(int max_size) { 
+           if (m_max_size != max_size) {
+              if (m_length == 0) {
+                 m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{max_size}); 
+              }
+              else {
+                 // copy existing state into new map
+                 KeyValueSorter<key_type, mapped_type, RAJADeviceExec> new_map{max_size};
+                 auto & map = m_gpu_map;
+                 CARE_STREAM_LOOP(i, 0, m_length) {
+                    new_map.setKey(i, map.key(i));
+                    new_map.setValue(i, map.value(i));
+                 } CARE_STREAM_LOOP_END
+                 m_gpu_map = std::move(new_map);
+              }
+           }
+           m_max_size = max_size;
+        }
         
         // iteration - only to be used by macro layer */ 
         struct iterator { 
@@ -212,6 +233,7 @@ namespace care {
       private:
          int_ptr m_size = nullptr;
          int m_length = 0;
+         int m_max_size;
          int m_signal;
          KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map;
    };
@@ -246,7 +268,7 @@ namespace care {
       public:
 
          // constructor
-         host_device_map(size_t max_entries, mapped_type signal) : m_signal(signal) {
+         host_device_map(size_t max_entries, mapped_type signal) : m_max_size(max_entries), m_signal(signal) {
             
             // m_size will be atomically incremented as elements are emplaced into the map
             m_size = new int();
@@ -306,11 +328,29 @@ namespace care {
         inline void clear() { reset_size(); }
         
         // preallocate buffers for adding up to size elements
-        void reserve(int size) { m_map = std::move(KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{size}); }
+        void reserve(int max_size) { 
+           if (m_max_size != max_size) {
+              if (m_length == 0) {
+                 m_map = std::move(KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{max_size}); 
+              }
+              else {
+                 // copy existing state into new map
+                 KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> new_map{max_size};
+                 auto & map = m_map;
+                 CARE_SEQUENTIAL_LOOP(i, 0, m_length) {
+                    new_map.setKey(i, map.key(i));
+                    new_map.setValue(i, map.value(i));
+                 } CARE_SEQUENTIAL_LOOP_END
+                 m_map = std::move(new_map);
+              }
+              m_max_size = max_size;
+           }
+        }
 
       private:
          mutable int * m_size = nullptr;
          mutable int  m_length = 0;
+         mutable int m_max_size;
          KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> m_map;
          /* hasBeenSorted may be used in the future to enable an implicit sort on lambda capture */
          bool hasBeenSorted = false;
