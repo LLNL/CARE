@@ -137,9 +137,7 @@ namespace care {
         inline CARE_DEVICE void emplace(key_type key, mapped_type val) const {
            int index = ATOMIC_ADD(m_size[0], 1);
            LocalKeyValueSorter<key_type, mapped_type, RAJADeviceExec> const & local_map = m_gpu_map;
-           printf("device setting key at index %i to %i\n", index, (int) key);
            local_map.setKey(index, key);
-           printf("device setting value at index %i to %i\n", index, (int) val);
            local_map.setValue(index, val);
         }
 
