@@ -78,9 +78,9 @@ static void benchmark_seq_unordered_map(benchmark::State& state) {
    for (auto _ : state) {
       size_t length = state.range(0);
       PUSH_RANGE("createDeviceObject")
-      care_std_map<int, int> data{length};
+      care_std_map<int, int> data{length, -1};
       POP_RANGE
-      care::host_device_ptr<int> answer(length);
+      care::host_device_ptr<int> answer{length};
       PUSH_RANGE("insertions")
       CARE_SEQUENTIAL_LOOP(i,0,length) {
          data.emplace(length*10-2*i,i);
@@ -110,7 +110,7 @@ static void benchmark_host_device_map(benchmark::State& state) {
    for (auto _ : state) {
       size_t length = state.range(0);
       PUSH_RANGE("createDeviceObject")
-      care_kv_map<int, int> data{length};
+      care_kv_map<int, int> data{length, -1};
       POP_RANGE
       care::host_device_ptr<int> answer(length);
       PUSH_RANGE("insertions")
@@ -142,7 +142,7 @@ static void benchmark_seq_force_kvs_unordered_map(benchmark::State& state) {
    for (auto _ : state) {
       size_t length = state.range(0);
       PUSH_RANGE("createDeviceObject")
-      care_seq_kv_map<int, int> data{length};
+      care_seq_kv_map<int, int> data{length, -1};
       POP_RANGE
       care::host_device_ptr<int> answer(length);
       PUSH_RANGE("insertions")
@@ -169,6 +169,35 @@ static void benchmark_seq_force_kvs_unordered_map(benchmark::State& state) {
 // Register the function as a benchmark
 BENCHMARK(benchmark_seq_force_kvs_unordered_map)->Range(1, 1<<23);
 
+// Test Iteration through a map 
+static void benchmark_host_device_map_iteration(benchmark::State& state) {
+   for (auto _ : state) {
+      size_t length = state.range(0);
+      PUSH_RANGE("createDeviceObject")
+      care_kv_map<int, int> data{length, -1};
+      POP_RANGE
+      care::host_device_ptr<int> answer{length};
+      PUSH_RANGE("insertions")
+      CARE_STREAM_LOOP(i,0,length) {
+         data.emplace(length*10-2*i,i);
+      } CARE_STREAM_LOOP_END
+      POP_RANGE
+      PUSH_RANGE("sort");
+      data.sort();
+      POP_RANGE
+      PUSH_RANGE("lookups")
+      CARE_STREAM_MAP_LOOP(i, 0, it, data) {
+         answer[i] = it->second;
+      } CARE_STREAM_MAP_LOOP_END
+      POP_RANGE
+      PUSH_RANGE("cleanup")
+      answer.free();
+      data.free();
+      POP_RANGE
+   }
+}
+// Register the function as a benchmark
+BENCHMARK(benchmark_host_device_map_iteration)->Range(1, 1<<23);
 
 // Run the benchmarks
 BENCHMARK_MAIN();
