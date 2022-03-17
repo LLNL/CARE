@@ -41,6 +41,10 @@
 #define CARE_TEMPLATE_KEY_TYPE int
 #define CARE_TEMPLATE_ARRAY_TYPE globalID
 #include "care/KeyValueSorter_inst.h"
+
+#define CARE_TEMPLATE_KEY_TYPE GIDTYPE
+#define CARE_TEMPLATE_ARRAY_TYPE int
+#include "care/KeyValueSorter_inst.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -153,6 +157,8 @@ CARE_HOST_DEVICE int BinarySearch(const size_t *, const int, const int, const si
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const globalID *, const int, const int, const globalID, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const GIDTYPE *, const int, const int, const GIDTYPE, bool) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -162,6 +168,8 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<size_t>&, const in
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<globalID>&, const int, const int, const globalID, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -171,6 +179,8 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const size_t>&, co
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const globalID>&, const int, const int, const globalID, bool) ;
+CARE_EXTERN template CARE_DLL_API
+CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
