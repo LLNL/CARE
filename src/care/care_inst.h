@@ -159,10 +159,14 @@ CARE_HOST_DEVICE int BinarySearch(const int *, const int, const int, const int, 
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const size_t *, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
+
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const globalID *, const int, const int, const globalID, bool) ;
+#if GLOBALID_IS_64BIT
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const GIDTYPE *, const int, const int, const GIDTYPE, bool) ;
+#endif
+
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -170,10 +174,14 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<int>&, const int, 
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<size_t>&, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
+
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<globalID>&, const int, const int, const globalID, bool) ;
+#if GLOBALID_IS_64BIT
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
+#endif
+
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -181,10 +189,14 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const int>&, const
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const size_t>&, const int, const int, const size_t, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
+
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const globalID>&, const int, const int, const globalID, bool) ;
+#if GLOBALID_IS_64BIT
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
+#endif
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
