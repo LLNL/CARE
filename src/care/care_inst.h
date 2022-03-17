@@ -38,13 +38,17 @@
 #include "care/KeyValueSorter_inst.h"
 
 #if CARE_HAVE_LLNL_GLOBALID
+
 #define CARE_TEMPLATE_KEY_TYPE int
 #define CARE_TEMPLATE_ARRAY_TYPE globalID
 #include "care/KeyValueSorter_inst.h"
 
+#if GLOBALID_IS_64BIT
 #define CARE_TEMPLATE_KEY_TYPE GIDTYPE
 #define CARE_TEMPLATE_ARRAY_TYPE int
 #include "care/KeyValueSorter_inst.h"
+#endif
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
