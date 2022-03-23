@@ -60,6 +60,16 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                     const size_t start, const size_t len,
                                     const bool noCopy)
 {
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
+
+   CARE_STREAM_LOOP(i, 0, (int) len) {
+      keyValues[i].key = keys[i];
+      keyValues[i].value = values[i];
+   } CARE_STREAM_LOOP_END
+
+#else // CARE_ENABLE_GPU_SIMULATION_MODE
+
    // Allocate space for the result
    host_device_ptr<KeyT> keyResult{len};
    host_device_ptr<ValueT> valueResult{len};
@@ -74,15 +84,6 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
    auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
 
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-   host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
-
-   CARE_STREAM_LOOP(i, 0, (int) len) {
-      keyValues[i].key = keys[i];
-      keyValues[i].value = values[i];
-   } CARE_STREAM_LOOP_END
-
-#else // CARE_ENABLE_GPU_SIMULATION_MODE
 
    // Get the temp storage length
    char * d_temp_storage = nullptr;
