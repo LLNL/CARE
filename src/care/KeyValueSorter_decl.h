@@ -40,7 +40,7 @@ using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 
 
 // TODO openMP parallel implementation
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -288,7 +288,8 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return the key at the given index
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE KeyType key(const size_t index) const {
-         return m_keys[index];
+         local_ptr<const KeyType> keys = m_keys;
+         return keys[index];
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -300,7 +301,8 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE void setKey(const size_t index, const KeyType key) const {
-         m_keys[index] = key;
+         local_ptr<KeyType> keys = m_keys;
+         keys[index] = key;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -311,7 +313,8 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return the value at the given index
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE ValueType value(const size_t index) const {
-         return m_values[index];
+         local_ptr<const ValueType> values = m_values;
+         return values[index];
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -323,7 +326,8 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE void setValue(const size_t index, const ValueType value) const {
-         m_values[index] = value;
+         local_ptr<ValueType> values = m_values;
+         values[index] = value;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -584,7 +588,7 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       }
 };
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 
 
@@ -614,6 +618,27 @@ template <typename KeyValueType>
 inline bool cmpKeys(KeyValueType const & left, KeyValueType const & right)
 {
    return left.key < right.key;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// @author Benjamin Liu
+/// @brief Less than comparison operator for keys first and values second
+/// Used as a comparator in the STL
+/// @param left  - left _kv to compare
+/// @param right - right _kv to compare
+/// @return true if left's key is less than right's key. If they are
+///    equal, returns true if left's value is less than right's value.
+///    Otherwise returns false.
+///////////////////////////////////////////////////////////////////////////
+template <typename KeyValueType>
+inline bool cmpKeysStable(KeyValueType const & left, KeyValueType const & right)
+{
+   if (left.key == right.key) {
+      return left < right;
+   }
+   else {
+      return cmpKeys<KeyValueType>(left, right);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -760,6 +785,7 @@ void initializeKeyArray(host_device_ptr<KeyType>& keys, const host_device_ptr<co
 template <typename KeyType, typename ValueType>
 void initializeValueArray(host_device_ptr<ValueType>& values, const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len);
 
+#if !CARE_ENABLE_GPU_SIMULATION_MODE
 ///////////////////////////////////////////////////////////////////////////
 /// Sequential partial specialization of KeyValueSorter
 /// The CPU implementation relies on routines that use the < operator on
@@ -1290,6 +1316,8 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
          }
       }
 };
+
+#endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
 
 #ifdef CARE_GPUCC
