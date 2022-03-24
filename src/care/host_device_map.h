@@ -70,6 +70,7 @@ namespace care {
         // emplace a key value pair
         inline void emplace(key_type key, mapped_type val) const {
            m_map->emplace(key, val);
+           // TODO Add control for this check
            if (m_map->size() > m_max_size) {
               printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", (int)m_map->size(), m_max_size);
            }
@@ -145,6 +146,7 @@ namespace care {
         inline CARE_DEVICE void emplace(key_type key, mapped_type val) const {
            care::local_ptr<int> size_ptr = m_size_ptr;
            int index = ATOMIC_ADD(size_ptr[0], 1);
+           // TODO Add control for this check
            if (size_ptr[0] > m_max_size) {
               printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", size_ptr[0], m_max_size);
            }
