@@ -356,9 +356,7 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, Valu
 
       // First do a stable sort by value (preserve the original order
       // in the case of a tie)
-      std::sort(rawData, rawData + len, cmpValsStable<_kv<KeyType,ValueType>>);
-      // TODO: investigate performance of std::stable_sort
-      // std::stable_sort(rawData, rawData + len);
+      std::stable_sort(rawData, rawData + len);
 
       // Then eliminate duplicates
       size_t lsize = len - 1;  /* adjust search range */

@@ -617,87 +617,6 @@ inline bool cmpKeys(KeyValueType const & left, KeyValueType const & right)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Less than comparison operator for values first and keys second
-/// Used as a comparator in the STL
-/// @param left  - left _kv to compare
-/// @param right - right _kv to compare
-/// @return true if left's value is less than right's value. If they are
-///    equal, returns true if left's key is less than right's key.
-///    Otherwise returns false.
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyValueType>
-inline bool cmpValsStable(KeyValueType const & left, KeyValueType const & right)
-{
-   if (left.value == right.value) {
-      return cmpKeys<KeyValueType>(left, right);
-   }
-   else {
-      return left < right;
-   }
-}
-
-/// cmpValsStable<size_t, double> specialization
-template <>
-inline bool cmpValsStable<_kv<size_t,double>>(_kv<size_t, double> const & left, _kv<size_t, double> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-/// cmpValsStable<size_t, float> specialization
-template <>
-inline bool cmpValsStable<_kv<size_t, float>>(_kv<size_t, float> const & left, _kv<size_t, float> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-/// cmpValsStable<int, double> specialization
-template <>
-inline bool cmpValsStable<_kv<int,double>>(_kv<int, double> const & left, _kv<int, double> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-/// cmpValsStable<int, float> specialization
-template <>
-inline bool cmpValsStable<_kv<int, float>>(_kv<int, float> const & left, _kv<int, float> const & right)
-{
-   if (left < right) {
-      return true;
-   }
-   else if (left.value > right.value) {
-      return false;
-   }
-   else {
-      return cmpKeys(left, right);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
 /// @brief Initializes keys and values by copying elements from the array
 /// @param[out] keyValues - The key value array to set
@@ -1046,7 +965,8 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief Sorts "len" elements starting at "start" by value
-      /// Calls std::sort, which uses _kv::operator< to do the comparisons
+      /// Calls std::stable_sort, which uses _kv::operator< to do the comparisons
+      /// @note stable_sort is used for consistency with GPU implementation
       /// @param[in] start - The index to start at
       /// @param[in] len   - The number of elements to sort
       /// @return void
@@ -1055,7 +975,7 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       void sort(const size_t start, const size_t len) const {
          CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len);
+         std::stable_sort(rawData, rawData + len);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1080,8 +1000,9 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief Sorts "len" elements starting at "start" by key
-      /// Calls std::sort, which uses _kv::cmpKeys to do the comparisons (this
+      /// Calls std::stable_sort, which uses _kv::cmpKeys to do the comparisons (this
       ///    is an unsort when the keys stored constitute the original ordering)
+      /// @note stable_sort is used for consistency with GPU implementation
       /// @param[in] start - The index to start at
       /// @param[in] len   - The number of elements to unsort
       /// @return void
@@ -1090,7 +1011,7 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       void sortByKey(const size_t start, const size_t len) const {
          CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
+         std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1115,18 +1036,13 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       /// @brief Does a stable sort on "len" elements starting at "start" by value
-      /// Calls std::sort, which uses _kv::cmpValsStable to do the comparisons
       /// @param[in] start - The index to start at
       /// @param[in] len   - The number of elements to sort
       /// @return void
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void stableSort(const size_t start, const size_t len) {
-         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
-         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::sort(rawData, rawData + len, cmpValsStable<_kv<KeyType,ValueType>>);
-         // TODO: investigate performance of std::stable_sort
-         //std::stable_sort(rawData, rawData + len);
+         sort(start, len);
       }
 
       ///////////////////////////////////////////////////////////////////////////
