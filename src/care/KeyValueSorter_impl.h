@@ -126,7 +126,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
    _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
-   std::sort(rawData, rawData + len, cmpKeysStable<_kv<KeyT,ValueT>>);
+   std::stable_sort(rawData, rawData + len);
 
    CARE_STREAM_LOOP(i, 0, (int) len) {
       keys[i] = keyValues[i].key;
