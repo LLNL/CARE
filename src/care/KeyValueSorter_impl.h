@@ -60,6 +60,14 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                     const size_t start, const size_t len,
                                     const bool noCopy)
 {
+   bool _noCopy ;
+   if (noCopy && start > 0) {
+      printf("[CARE] Warning: sortKeyValueArrays. noCopy should not be set if start > 0 (%d)\n", (int)start);
+      _noCopy = false;
+   }
+   else {
+      _noCopy = noCopy;
+   }
 #if CARE_ENABLE_GPU_SIMULATION_MODE
    host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
 
@@ -146,7 +154,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    }
 
    // Get the result
-   if (noCopy) {
+   if (_noCopy) {
       if (len > 0) {
          keys.free(); 
          values.free();
@@ -156,9 +164,9 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       values = valueResult;
    }
    else {
-      CARE_STREAM_LOOP(i, start, start + len) {
-         keys[i] = keyResult[i];
-         values[i] = valueResult[i];
+      CARE_STREAM_LOOP(i, 0, len) {
+         keys[i+start] = keyResult[i];
+         values[i+start] = valueResult[i];
       } CARE_STREAM_LOOP_END
 
       if (len > 0) {
@@ -386,9 +394,7 @@ CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, Valu
 
       // First do a stable sort by value (preserve the original order
       // in the case of a tie)
-      std::sort(rawData, rawData + len, cmpValsStable<_kv<KeyType,ValueType>>);
-      // TODO: investigate performance of std::stable_sort
-      // std::stable_sort(rawData, rawData + len);
+      std::stable_sort(rawData, rawData + len);
 
       // Then eliminate duplicates
       size_t lsize = len - 1;  /* adjust search range */

@@ -122,6 +122,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        The legacy version uses a "continue" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE continue
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a call to forall with the given execution policy.
 ///        The legacy version uses a raw for loop.
 ///
@@ -341,6 +352,17 @@
 /// together for OpenMP, OpenACC, and GPU
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        In a lambda, this is done with a "return" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE return
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
