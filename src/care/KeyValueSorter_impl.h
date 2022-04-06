@@ -68,12 +68,13 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    else {
       _noCopy = noCopy;
    }
+
 #if CARE_ENABLE_GPU_SIMULATION_MODE
    host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
 
    CARE_STREAM_LOOP(i, 0, (int) len) {
-      keyValues[i].key = keys[i];
-      keyValues[i].value = values[i];
+      keyValues[i].key = keys[i+start];
+      keyValues[i].value = values[i+start];
    } CARE_STREAM_LOOP_END
 
 #else // CARE_ENABLE_GPU_SIMULATION_MODE
@@ -126,11 +127,11 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
    _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
-   std::stable_sort(rawData, rawData + len);
+   std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyT,ValueT>>);
 
    CARE_STREAM_LOOP(i, 0, (int) len) {
-      keys[i] = keyValues[i].key;
-      values[i] = keyValues[i].value;
+      keys[i+start] = keyValues[i].key;
+      values[i+start] = keyValues[i].value;
    } CARE_STREAM_LOOP_END
 
    keyValues.free();
