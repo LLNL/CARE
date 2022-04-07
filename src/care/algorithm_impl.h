@@ -980,6 +980,20 @@ CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
 }
 
 /************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   CARE_STREAM_LOOP(i, 0, n) {
+      out[i] = in[i];
+   } CARE_STREAM_LOOP_END
+}
+
+/************************************************************************
  * Function  : ArrayMin
  * Author(s) : Peter Robinson
  * Purpose   : Returns the minimum value in a ManagedArray

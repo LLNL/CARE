@@ -28,6 +28,9 @@ namespace care {
 template <class T, class Size, class U>
 void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);
 
+template <class T, class Size, class U>
+void copy_n(care::host_device_ptr<T> in, Size n, care::host_device_ptr<U> out);
+
 template <typename T, typename Exec=RAJAExec>
 T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
 
