@@ -60,6 +60,15 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                     const size_t start, const size_t len,
                                     const bool noCopy)
 {
+   bool _noCopy ;
+   if (noCopy && start > 0) {
+      printf("[CARE] Warning: sortKeyValueArrays. noCopy should not be set if start > 0 (%d)\n", (int)start);
+      _noCopy = false;
+   }
+   else {
+      _noCopy = noCopy;
+   }
+
    // Allocate space for the result
    host_device_ptr<KeyT> keyResult{len};
    host_device_ptr<ValueT> valueResult{len};
@@ -116,7 +125,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    }
 
    // Get the result
-   if (noCopy) {
+   if (_noCopy) {
       if (len > 0) {
          keys.free(); 
          values.free();
@@ -126,9 +135,9 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       values = valueResult;
    }
    else {
-      CARE_STREAM_LOOP(i, start, start + len) {
-         keys[i] = keyResult[i];
-         values[i] = valueResult[i];
+      CARE_STREAM_LOOP(i, 0, len) {
+         keys[i+start] = keyResult[i];
+         values[i+start] = valueResult[i];
       } CARE_STREAM_LOOP_END
 
       if (len > 0) {
