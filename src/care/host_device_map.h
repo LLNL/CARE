@@ -185,7 +185,7 @@ namespace care {
         void reserve(int max_size) { 
            if (m_max_size != max_size) {
               if (m_size == 0) {
-                 m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{static_cast<size_t>(max_size)}); 
+                 m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{static_cast<size_t>(max_size)});
               }
               else {
                  // copy existing state into new map
