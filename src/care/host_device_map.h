@@ -53,14 +53,15 @@ namespace care {
          int size() const;
    };
 
-// ********************************************************************************
-// RAJA::seq_exec specialization.
-// ********************************************************************************
+#if !CARE_ENABLE_GPU_SIMULATION_MODE
+   // ********************************************************************************
+   // RAJA::seq_exec specialization.
+   // ********************************************************************************
    template <typename key_type, typename mapped_type>
    class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
          // constructor
-         host_device_map(size_t /*max_entries*/, mapped_type miss_signal) : m_map(), m_signal(miss_signal)  {
+         host_device_map(size_t max_entries, mapped_type miss_signal) : m_map(), m_max_size(max_entries), m_signal(miss_signal)  {
             m_map = new std::map<key_type, mapped_type>{};
             m_size = new int();
             *m_size = 0;
@@ -69,6 +70,10 @@ namespace care {
         // emplace a key value pair
         inline void emplace(key_type key, mapped_type val) const {
            m_map->emplace(key, val);
+           // TODO Add control for this check
+           if (m_map->size() > m_max_size) {
+              printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", (int)m_map->size(), m_max_size);
+           }
         }
 
         // lookup a value
@@ -101,7 +106,9 @@ namespace care {
         void clear() { m_map->clear();}
         
         // preallocate buffers for adding up to size elements
-        void reserve(int) { }
+        void reserve(int max_size) {
+           m_max_size = max_size;
+        }
 
         // iteration - meant to only be called by the CARE_MAP_LOOP macros
         inline typename std::map<key_type, mapped_type>::iterator begin () const { return m_map->begin(); }
@@ -112,15 +119,16 @@ namespace care {
          // we do a heap allocated map to ensure no deep copies occur during lambda capture
          std::map<key_type, mapped_type> * m_map = nullptr;
          int * m_size = nullptr;
+         int m_max_size;
          mapped_type m_signal;
    };
+#endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
-#ifdef CARE_GPUCC
-
-// ********************************************************************************
-// RAJADeviceExec specialization.
-// ********************************************************************************
+   // ********************************************************************************
+   // RAJADeviceExec specialization.
+   // ********************************************************************************
    template <typename key_type, typename mapped_type>
    class host_device_map<key_type, mapped_type, RAJADeviceExec>
    {
@@ -136,7 +144,12 @@ namespace care {
 
         // emplace a key value pair, using return of atomic increment to provide the initial insertion index
         inline CARE_DEVICE void emplace(key_type key, mapped_type val) const {
-           int index = ATOMIC_ADD(m_size_ptr[0], 1);
+           care::local_ptr<int> size_ptr = m_size_ptr;
+           int index = ATOMIC_ADD(size_ptr[0], 1);
+           // TODO Add control for this check
+           if (size_ptr[0] > m_max_size) {
+              printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", size_ptr[0], m_max_size);
+           }
            LocalKeyValueSorter<key_type, mapped_type, RAJADeviceExec> const & local_map = m_gpu_map;
            local_map.setKey(index, key);
            local_map.setValue(index, val);
@@ -183,7 +196,7 @@ namespace care {
         
         // preallocate buffers for adding up to size elements
         void reserve(int max_size) { 
-           if (m_max_size != max_size) {
+           if (m_max_size < max_size) {
               if (m_size == 0) {
                  m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{static_cast<size_t>(max_size)});
               }
@@ -247,7 +260,7 @@ namespace care {
      
 #define CARE_STREAM_MAP_LOOP_END }
    
-#endif // end CARE_GPUCC
+#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
    // this implementation is used for benchmarking - may be appropriate choice depending on performance
    // of map on your system / compiler.
@@ -255,9 +268,9 @@ namespace care {
    // force the use of a key value sorter on the backend instead of std::map
    struct force_keyvaluesorter {};
 
-// ********************************************************************************
-// force_keyvaluesorter specialization. Host only.
-// ********************************************************************************
+   // ********************************************************************************
+   // force_keyvaluesorter specialization. Host only.
+   // ********************************************************************************
    template <typename key_type, typename mapped_type>
    class host_device_map<key_type, mapped_type, force_keyvaluesorter>
    {
@@ -322,7 +335,7 @@ namespace care {
         
         // preallocate buffers for adding up to size elements
         void reserve(int max_size) { 
-           if (m_max_size != max_size) {
+           if (m_max_size < max_size) {
               if (m_size == 0) {
                  m_map = std::move(KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{max_size}); 
               }
@@ -349,7 +362,6 @@ namespace care {
          bool hasBeenSorted = false;
          int m_signal;
    };
-
 
 }
 
