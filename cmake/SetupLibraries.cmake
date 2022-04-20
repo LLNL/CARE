@@ -16,11 +16,7 @@ endif ()
 # CAMP (required)
 ################################
 if (NOT TARGET camp)
-   if (CAMP_DIR)
-      set(camp_DIR ${CAMP_DIR}/lib/cmake/camp)
-   endif ()
-
-   find_package(camp QUIET)
+   find_package(camp QUIET NO_DEFAULT_PATH HINTS ${CAMP_DIR} ${camp_DIR})
 
    if (camp_FOUND)
       message(STATUS "CARE: Using external CAMP")
@@ -58,11 +54,7 @@ endif ()
 # Umpire (required)
 ################################
 if (NOT TARGET umpire)
-   if (UMPIRE_DIR)
-      set(umpire_DIR ${UMPIRE_DIR}/share/umpire/cmake)
-   endif ()
-
-   find_package(umpire QUIET)
+   find_package(umpire QUIET NO_DEFAULT_PATH HINTS ${UMPIRE_DIR} ${umpire_DIR})
 
    if (umpire_FOUND)
       message(STATUS "CARE: Using external Umpire")
@@ -91,11 +83,7 @@ endif ()
 # RAJA (required)
 ################################
 if (NOT TARGET raja)
-   if (RAJA_DIR)
-      set(raja_DIR ${RAJA_DIR}/share/raja/cmake)
-   endif ()
-
-   find_package(raja QUIET)
+   find_package(raja QUIET NO_DEFAULT_PATH HINTS ${RAJA_DIR} ${raja_DIR})
 
    if (raja_FOUND)
       message(STATUS "CARE: Using external RAJA")
@@ -143,11 +131,7 @@ endif ()
 # CHAI (required)
 ################################
 if (NOT TARGET chai)
-   if (CHAI_DIR)
-      set(chai_DIR ${CHAI_DIR}/share/chai/cmake)
-   endif ()
-
-   find_package(chai QUIET)
+   find_package(chai QUIET NO_DEFAULT_PATH HINTS ${CHAI_DIR} ${chai_DIR})
 
    if (chai_FOUND)
       message(STATUS "CARE: Using external CHAI")
