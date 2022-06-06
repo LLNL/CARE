@@ -1005,7 +1005,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMin(care::local_ptr<const T> arr, int n, T i
 {
    T min = initVal;
    for (int k = startIndex; k < n; ++k) {
-      min = CARE_MIN(min, arr[k]);
+      min = care::min(min, arr[k]);
    }
    return min;
 }
@@ -1076,7 +1076,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T i
 {
    T max = initVal;
    for (int k = startIndex; k < n; ++k) {
-      max = CARE_MAX(max, arr[k]);
+      max = care::max(max, arr[k]);
    }
    return max;
 }
@@ -1245,8 +1245,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       if (mask) {
          for (int i = 0; i < n; ++i) {
             if (mask[i]) {
-               min = CARE_MIN(min, (double)arr[i]);
-               max = CARE_MAX(max, (double)arr[i]);
+               min = care::min(min, (double)arr[i]);
+               max = care::max(max, (double)arr[i]);
             }
          }
          if (min != DBL_MAX ||
@@ -1256,8 +1256,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       }
       else {
          for (int i = 0; i < n; ++i) {
-            min = CARE_MIN(min, (double)arr[i]);
-            max = CARE_MAX(max, (double)arr[i]);
+            min = care::min(min, (double)arr[i]);
+            max = care::max(max, (double)arr[i]);
          }
          result = true;
       }
