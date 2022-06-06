@@ -26,13 +26,13 @@ namespace care {
 template <typename T>
 CARE_HOST_DEVICE CARE_INLINE T max(const T a, const T b)
 {
-   return a > b ? a : b
+   return a > b ? a : b;
 }
 
 template <typename T>
 CARE_HOST_DEVICE CARE_INLINE T min(const T a, const T b)
 {
-   return a < b ? a : b
+   return a < b ? a : b;
 }
 
 template <class T, class Size, class U>
