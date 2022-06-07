@@ -1244,6 +1244,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_PHASE_R(PRIORITY, REGISTER_COUNT) { \
    LOOPFUSER(REGISTER_COUNT) * __fuser__ = FusedActionsObserver::getActiveObserver()->getFusedActions<LOOPFUSER(REGISTER_COUNT)>(PRIORITY); \
+   FUSIBLE_KERNEL_BOOKKEEPING(__fuser__) ; \
    static int __fusible_scan_pos__ ; \
    __fusible_scan_pos__ = 0; \
    __fuser__->registerAction(__FILE__, __LINE__, 0, 1, __fusible_scan_pos__, \
@@ -1254,6 +1255,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_R_END return 0;}); } FUSIBLE_FLUSH_IF_NEEDED
 #define FUSIBLE_KERNEL_PHASE_R_END FUSIBLE_KERNEL_R_END
+#define FUSIBLE_KERNEL_PHASE_END FUSIBLE_KERNEL_R_END
 #define FUSIBLE_KERNEL_END FUSIBLE_KERNEL_R_END
 
 #define FUSIBLE_KERNEL_PHASE(PRIORITY) FUSIBLE_KERNEL_PHASE_R(PRIORITY, CARE_DEFAULT_LOOP_FUSER_REGISTER_COUNT)
@@ -1387,6 +1389,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 #define FUSIBLE_KERNEL_PHASE_R_END CARE_PARALLEL_KERNEL_END
 #define FUSIBLE_KERNEL_R_END CARE_PARALLEL_KERNEL_END
+#define FUSIBLE_KERNEL_PHASE_END CARE_PARALLEL_KERNEL_END
 #define FUSIBLE_KERNEL_END CARE_PARALLEL_KERNEL_END
 
 #define FUSIBLE_LOOPS_FENCEPOST
