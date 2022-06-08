@@ -279,7 +279,7 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 
 } // namespace care
 
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#if defined(CARE_GPUCC) && defined(CARE_DEBUG)
 
 /////////////////////////////////////////////////////////////////////////////////
 ///
@@ -307,7 +307,7 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 /////////////////////////////////////////////////////////////////////////////////
 #define care_gpuErrchk(code) code
 
-#endif // defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CARE_DEBUG)
+#endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
 
 #endif // !defined(_CARE_UTIL_H_)
 

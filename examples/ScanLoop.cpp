@@ -5,14 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-// This macro needs to be defined before including care/care.h,
-// which allows you to port a file at a time. Without this define,
-// LOOP_STREAM will run on the CPU. With this define, LOOP_STREAM
-// will run on the GPU only if you built with CUDA or HIP enabled.
-// Otherwise, if CUDA and HIP are disabled, it will default back to
-// running on the host.
-#define GPU_ACTIVE
-
 // CARE library header
 #include "care/care.h"
 #include "care/scan.h"
@@ -85,13 +77,12 @@ int main(int, char**) {
    // the array can be shrunk if needed.
    data2.reallocate(count);
 
-   // This code illustrates how to check if something ran on the host or the device.
-   // In practice it is not necessary. It really just shows that this example compiles
-   // and runs fine on the host or device without any changes.
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+   // This code illustrates how to write code specifically for the host or device.
+   // This approach should be used sparingly.
+#if defined(CARE_GPUCC)
    std::cout << "GPU count: ";
 #else
-   std::cout << "Fallback to CPU count: ";
+   std::cout << "CPU count: ";
 #endif
 
    // Print out the number of computed values less than the threshhold

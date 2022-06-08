@@ -35,8 +35,8 @@ namespace care {
 
 
 
-// RAJADeviceExec is the device execution policy
-// on this platform, irrespective of whether GPU_ACTIVE is set.
+// RAJADeviceExec is the "device" execution policy
+// on this platform, irrespective of whether a GPU is available.
 #if defined (CARE_GPUCC)
 
 #define CARE_CUDA_BLOCK_SIZE 256
@@ -65,7 +65,7 @@ using RAJADeviceExec = RAJA::seq_exec;
 
 
 
-#if defined (CARE_GPUCC) && defined (GPU_ACTIVE)
+#if defined (CARE_GPUCC)
 
 #if CHAI_GPU_SIM_MODE
 
@@ -123,7 +123,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #endif // CHAI_GPU_SIM_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) && defined(OPENMP_ACTIVE) // CARE_GPUCC and GPU_ACTIVE
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) && defined(OPENMP_ACTIVE) // CARE_GPUCC
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
 template<class T>
@@ -137,7 +137,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::omp_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
 #define RAJA_PARALLEL_ACTIVE
 
-#else // CARE_GPUCC and GPU_ACTIVE
+#else // CARE_GPUCC
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;
