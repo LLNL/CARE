@@ -27,6 +27,44 @@ GPU_TEST(algorithm, gpu_initialization) {
 }
 #endif
 
+// abs/min/max Tests
+TEST(algorithm, careabs)
+{
+   for (int a : {-11, 11}) {
+      int atemp(a) ;
+      int aabs = care::abs(atemp++);
+      EXPECT_EQ(aabs, 11);
+      // Ensure that atemp is only incremented once
+      EXPECT_EQ(atemp, a+1);
+   }
+}
+
+TEST(algorithm, caremax)
+{
+   int a = 11 ;
+   int b = 7 ;
+   int atemp(a) ;
+   int btemp(b) ;
+   int abmax = care::max(atemp++, btemp++);
+   EXPECT_EQ(abmax, 11);
+   // Ensure that atemp, btemp only incremented once
+   EXPECT_EQ(atemp, a+1);
+   EXPECT_EQ(btemp, b+1);
+}
+
+TEST(algorithm, caremin)
+{
+   int a = 11 ;
+   int b = 7 ;
+   int atemp(a) ;
+   int btemp(b) ;
+   int abmin = care::min(atemp++, btemp++);
+   EXPECT_EQ(abmin, 7);
+   // Ensure that atemp, btemp only incremented once
+   EXPECT_EQ(atemp, a+1);
+   EXPECT_EQ(btemp, b+1);
+}
+
 // fill_n Tests
 TEST(algorithm, fill_empty)
 {
