@@ -994,6 +994,18 @@ CARE_INLINE void copy_n(care::host_device_ptr<const T> in, Size n,
 }
 
 /************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another. Non-const overload.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   copy_n(care::host_device_ptr<const T>(in), n, out);
+}
+
+/************************************************************************
  * Function  : ArrayMin
  * Author(s) : Peter Robinson
  * Purpose   : Returns the minimum value in a ManagedArray
