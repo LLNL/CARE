@@ -985,7 +985,7 @@ CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
  * Purpose   : Copies one ManagedArray into another.
  * ************************************************************************/
 template <class T, class Size, class U>
-CARE_INLINE void copy_n(care::host_device_ptr<T> in, Size n,
+CARE_INLINE void copy_n(care::host_device_ptr<const T> in, Size n,
                         care::host_device_ptr<U> out)
 {
    CARE_STREAM_LOOP(i, 0, n) {
