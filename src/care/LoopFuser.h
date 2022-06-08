@@ -14,7 +14,6 @@
 
 // Other CARE headers
 #include "care/DefaultMacros.h"
-#include "care/host_device_map.h"
 #include "care/host_device_ptr.h"
 #include "care/host_ptr.h"
 #include "care/scan.h"
