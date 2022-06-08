@@ -38,7 +38,7 @@
 namespace care {
 
 // TODO openMP parallel implementation
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -69,6 +69,16 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       _noCopy = noCopy;
    }
 
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
+
+   CARE_STREAM_LOOP(i, 0, (int) len) {
+      keyValues[i].key = keys[i+start];
+      keyValues[i].value = values[i+start];
+   } CARE_STREAM_LOOP_END
+
+#else // CARE_ENABLE_GPU_SIMULATION_MODE
+
    // Allocate space for the result
    host_device_ptr<KeyT> keyResult{len};
    host_device_ptr<ValueT> valueResult{len};
@@ -82,6 +92,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
    auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
+
 
    // Get the temp storage length
    char * d_temp_storage = nullptr;
@@ -109,7 +120,24 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    CHAIDataGetter<char, Exec> charGetter {};
    d_temp_storage = charGetter.getRawArrayData(tmpManaged);
 
+#endif // else CARE_ENABLE_GPU_SIMULATION_MODE
+
    // Now sort
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+
+   CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
+   _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
+   std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyT,ValueT>>);
+
+   CARE_STREAM_LOOP(i, 0, (int) len) {
+      keys[i+start] = keyValues[i].key;
+      values[i+start] = keyValues[i].value;
+   } CARE_STREAM_LOOP_END
+
+   keyValues.free();
+
+#else // CARE_ENABLE_GPU_SIMULATION_MODE
+
    if (len > 0) {
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
@@ -122,6 +150,8 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                       rawValueData, rawValueResult,
                                       len);
 #endif
+
+      tmpManaged.free();
    }
 
    // Get the result
@@ -146,9 +176,8 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       }
    }
 
-   if (len > 0) {
-      tmpManaged.free();
-   }
+#endif // else CARE_ENABLE_GPU_SIMULATION_MODE
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -308,7 +337,8 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
    }
 
 }
-#endif // defined(CARE_GPUCC)
+
+#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -454,6 +484,7 @@ CARE_INLINE void initializeValueArray(host_device_ptr<ValueType>& values,
 
 
 
+#if !CARE_ENABLE_GPU_SIMULATION_MODE
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different, 
 // with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
@@ -558,6 +589,7 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
       sorter2.freeValues() ;
    }
 }
+#endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
 } // namespace care
 
