@@ -980,6 +980,32 @@ CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
 }
 
 /************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<const T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   CARE_STREAM_LOOP(i, 0, n) {
+      out[i] = in[i];
+   } CARE_STREAM_LOOP_END
+}
+
+/************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another. Non-const overload.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   copy_n(care::host_device_ptr<const T>(in), n, out);
+}
+
+/************************************************************************
  * Function  : ArrayMin
  * Author(s) : Peter Robinson
  * Purpose   : Returns the minimum value in a ManagedArray
@@ -1005,7 +1031,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMin(care::local_ptr<const T> arr, int n, T i
 {
    T min = initVal;
    for (int k = startIndex; k < n; ++k) {
-      min = CARE_MIN(min, arr[k]);
+      min = care::min(min, arr[k]);
    }
    return min;
 }
@@ -1076,7 +1102,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T i
 {
    T max = initVal;
    for (int k = startIndex; k < n; ++k) {
-      max = CARE_MAX(max, arr[k]);
+      max = care::max(max, arr[k]);
    }
    return max;
 }
@@ -1245,8 +1271,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       if (mask) {
          for (int i = 0; i < n; ++i) {
             if (mask[i]) {
-               min = CARE_MIN(min, (double)arr[i]);
-               max = CARE_MAX(max, (double)arr[i]);
+               min = care::min(min, (double)arr[i]);
+               max = care::max(max, (double)arr[i]);
             }
          }
          if (min != DBL_MAX ||
@@ -1256,8 +1282,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       }
       else {
          for (int i = 0; i < n; ++i) {
-            min = CARE_MIN(min, (double)arr[i]);
-            max = CARE_MAX(max, (double)arr[i]);
+            min = care::min(min, (double)arr[i]);
+            max = care::max(max, (double)arr[i]);
          }
          result = true;
       }

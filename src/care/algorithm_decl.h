@@ -21,12 +21,34 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#define CARE_MAX(a,b) a > b ? a : b
-#define CARE_MIN(a,b) a < b ? a : b
-
 namespace care {
+
+template <typename T>
+CARE_HOST_DEVICE CARE_INLINE T abs(const T a)
+{
+   return a > 0 ? a : -a ;
+}
+
+template <typename T>
+CARE_HOST_DEVICE CARE_INLINE const T& max(const T& a, const T& b)
+{
+   return a > b ? a : b;
+}
+
+template <typename T>
+CARE_HOST_DEVICE CARE_INLINE const T& min(const T& a, const T& b)
+{
+   return a < b ? a : b;
+}
+
 template <class T, class Size, class U>
 void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);
+
+template <class T, class Size, class U>
+void copy_n(care::host_device_ptr<const T> in, Size n, care::host_device_ptr<U> out);
+
+template <class T, class Size, class U>
+void copy_n(care::host_device_ptr<T> in, Size n, care::host_device_ptr<U> out);
 
 template <typename T, typename Exec=RAJAExec>
 T ArrayMin(care::host_device_ptr<const T> arr, int endIndex, T initVal, int startIndex = 0);
