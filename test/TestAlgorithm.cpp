@@ -28,18 +28,10 @@ GPU_TEST(algorithm, gpu_initialization) {
 #endif
 
 // fill_n Tests
-TEST(algorithm, fill_empty)
-{
-   int size = 0;
-   care::host_device_ptr<int> a = nullptr;
-   care::fill_n(a, size, -12);
-   EXPECT_EQ(a, nullptr);
-   a.free();
-}
 
-TEST(algorithm, fill_one)
+TEST(algorithm, fill_n)
 {
-   int size = 1;
+   int size = 10;
    care::host_device_ptr<int> a(size, "a");
 
    CARE_SEQUENTIAL_LOOP(i, 0, size) {
@@ -55,22 +47,42 @@ TEST(algorithm, fill_one)
    a.free();
 }
 
-TEST(algorithm, fill_three)
+TEST(algorithm, fill_n_empty)
 {
-   int size = 3;
+   int size = 0;
+   care::host_device_ptr<int> a = nullptr;
+   care::fill_n(a, size, -12);
+   EXPECT_EQ(a, nullptr);
+}
+
+// copy_n tests
+TEST(algorithm, copy_n)
+{
+   int size = 10;
    care::host_device_ptr<int> a(size, "a");
 
    CARE_SEQUENTIAL_LOOP(i, 0, size) {
       a[i] = i;
    } CARE_SEQUENTIAL_LOOP_END
 
-   care::fill_n(a, size, 7);
+   care::host_device_ptr<int> b(size, "b");
+   care::copy_n(a, size, b);
 
    CARE_SEQUENTIAL_LOOP(i, 0, size) {
-      EXPECT_EQ(a[i], 7);
+      EXPECT_EQ(b[i], i);
    } CARE_SEQUENTIAL_LOOP_END
 
+   b.free();
    a.free();
+}
+
+TEST(algorithm, copy_n_empty)
+{
+   int size = 0;
+   care::host_device_ptr<int> a = nullptr;
+   care::host_device_ptr<int> b = nullptr;
+   care::copy_n(a, size, b);
+   EXPECT_EQ(b, nullptr);
 }
 
 // NOTE: if an array is not sorted, the checkSorted function will print out an error message.
