@@ -497,6 +497,60 @@ void fill_n(care::host_device_ptr<globalID>, size_t, const globalID&) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const bool>, int, care::host_device_ptr<bool>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const int>, int, care::host_device_ptr<int>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const float>, int, care::host_device_ptr<float>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const double>, int, care::host_device_ptr<double>) ;
+#if CARE_HAVE_LLNL_GLOBALID
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const globalID>, int, care::host_device_ptr<globalID>) ;
+#endif
+
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const bool>, size_t, care::host_device_ptr<bool>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const int>, size_t, care::host_device_ptr<int>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const float>, size_t, care::host_device_ptr<float>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const double>, size_t, care::host_device_ptr<double>) ;
+#if CARE_HAVE_LLNL_GLOBALID
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<const globalID>, size_t, care::host_device_ptr<globalID>) ;
+#endif
+
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<bool>, int, care::host_device_ptr<bool>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<int>, int, care::host_device_ptr<int>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<float>, int, care::host_device_ptr<float>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<double>, int, care::host_device_ptr<double>) ;
+#if CARE_HAVE_LLNL_GLOBALID
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<globalID>, int, care::host_device_ptr<globalID>) ;
+#endif
+
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<bool>, size_t, care::host_device_ptr<bool>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<int>, size_t, care::host_device_ptr<int>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<float>, size_t, care::host_device_ptr<float>) ;
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<double>, size_t, care::host_device_ptr<double>) ;
+#if CARE_HAVE_LLNL_GLOBALID
+CARE_EXTERN template CARE_DLL_API
+void copy_n(care::host_device_ptr<globalID>, size_t, care::host_device_ptr<globalID>) ;
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
 #ifdef CARE_GPUCC
 
 CARE_EXTERN template CARE_DLL_API
