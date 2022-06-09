@@ -5,13 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-// This macro needs to be defined before including care/care.h,
-// which allows you to port a file at a time. Without this define,
-// CARE_STREAM_LOOP will run on the CPU. With this define, CARE_STREAM_LOOP
-// will run on the GPU only if you built with CUDA or HIP enabled. Otherwise,
-// if CUDA and HIP are disabled, it will default back to running on the host.
-#define GPU_ACTIVE
-
 // CARE library header
 #include "care/care.h"
 #include "care/algorithm.h"
@@ -57,7 +50,7 @@ int main(int, char**) {
    care::host_device_ptr<int> data2(size2);
 
    // Fill the memory on the host or the device depending on whether the code
-   // is compiled with nvcc and if GPU_ACTIVE is defined.
+   // is compiled with nvcc.
    CARE_STREAM_LOOP(i, 0, size2) {
       data2[i] = i * i;
    } CARE_STREAM_LOOP_END
@@ -69,13 +62,12 @@ int main(int, char**) {
    // Use a CARE algorithm to fine the max element
    int max2 = care::ArrayMax(data3, size2, std::numeric_limits<int>::lowest());
 
-   // This code illustrates how to check if something ran on the host or the device.
-   // In practice it is not necessary. It really just shows that this example compiles
-   // and runs fine on the host or device without any changes.
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+   // This code illustrates how to write code specifically for the host or device.
+   // This approach should be used sparingly.
+#if defined(CARE_GPUCC)
    std::cout << "GPU max: ";
 #else
-   std::cout << "Fallback to CPU max: ";
+   std::cout << "CPU max: ";
 #endif
 
    // Print out the max element

@@ -24,7 +24,7 @@
 
 // This makes sure the lambdas get decorated with the right __host__ and or
 // __device__ specifiers
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+#if defined(CARE_GPUCC)
 #define CARE_HOST_DEVICE_ACTIVE __host__ __device__
 #define CARE_DEVICE_ACTIVE __device__
 #define CARE_HOST_ACTIVE __host__
@@ -36,7 +36,7 @@
 #define CARE_GLOBAL_ACTIVE
 #endif // defined CARE_GPUCC
 
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
 #define CARE_MANAGED_PTR_DEVICE_ACTIVE __device__
 #else
 #define CARE_MANAGED_PTR_DEVICE_ACTIVE
@@ -602,12 +602,8 @@
 ///
 /// @brief Macros for updating/initializing managed_ptrs.
 ///        Will start and end a sequential loop of length one.
-///        If GPU is available, also executes on the device.
-///
-/// @note This should execute on the device even if GPU_ACTIVE is not defined.
-///       The reason for this is that managed_ptrs are always constructed on
-///       both the host and device, and this macro is used to update both the
-///       host and device objects to keep them in sync.
+///        If GPU is available, also executes on the device to
+///        keep both the host and device objects in sync.
 ///
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///

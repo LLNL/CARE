@@ -7,7 +7,6 @@
 
 #include "care/config.h"
 
-#define GPU_ACTIVE
 // always have DEBUG on to force the packer to be on for CPU builds.
 #ifndef CARE_DEBUG
 #define CARE_DEBUG

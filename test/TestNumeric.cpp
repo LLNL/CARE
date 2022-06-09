@@ -7,11 +7,6 @@
 
 #include "care/config.h"
 
-// Makes LOOP_REDUCE run on the device
-#if defined(CARE_GPUCC)
-#define GPU_ACTIVE
-#endif
-
 // other library headers
 #include "gtest/gtest.h"
 

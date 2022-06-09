@@ -7,11 +7,6 @@
 
 #include "care/config.h"
 
-// Makes CARE_REDUCE_LOOP run on the device
-#if defined(CARE_GPUCC)
-#define GPU_ACTIVE
-#endif
-
 // std library headers
 #include <array>
 

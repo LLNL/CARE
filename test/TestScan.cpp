@@ -7,7 +7,6 @@
 
 #include "care/config.h"
 
-#define GPU_ACTIVE
 #include "gtest/gtest.h"
 
 #include "care/DefaultMacros.h"

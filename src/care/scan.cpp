@@ -8,8 +8,6 @@
 #include "care/DefaultMacros.h"
 #include "care/scan.h"
 
-#define GPU_ACTIVE
-
 #if CARE_HAVE_LLNL_GLOBALID
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID

@@ -33,7 +33,7 @@ constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 #include <iostream>
 #include <vector>
 
-#if defined CARE_GPUCC && defined GPU_ACTIVE
+#if defined CARE_GPUCC
 #define FUSIBLE_DEVICE CARE_DEVICE
 #else
 #define FUSIBLE_DEVICE CARE_HOST
@@ -529,7 +529,7 @@ class LoopFuser : public FusedActions {
       using conditional_xargs = RAJA::xargs<index_type * /*scan_var*/, index_type const * /*scan_offsets*/,  int /*total length */, XARGS...>;
 
       // TODO - explore varying policy block execution based off of register binning types
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
+#if defined(CARE_GPUCC)
 #if defined(__CUDACC__)
       using gpu_work_async_policy = RAJA::cuda_work_async<fusible_registers::GPU_WORKGROUP_BLOCK_SIZE>;
       using unordered_gpu_loop_y_block_iter_x_threadblock_average = RAJA::unordered_cuda_loop_y_block_iter_x_threadblock_average;
@@ -935,7 +935,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
          }
          switch(scan_type) {
             case 0:
-#if defined CARE_GPUCC && defined GPU_ACTIVE
+#if defined CARE_GPUCC
                care::forall(care::raja_fusible {}, 0, length, action, fileName, lineNumber, XARGS{}...);
 #else
                care::forall(care::raja_fusible_seq {}, 0, length, action, XARGS{}...); 
@@ -944,9 +944,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             case 1:
                {
                   m_scan_pos_starts[m_action_count] = start_pos;
-#if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
+#if defined CARE_GPUCC || defined CARE_ALWAYS_USE_RAJA_SCAN
                   if (verbose) {
-                     printf("calling GPU_ACTIVE scan with start_pos %i action_count %i\n", start_pos, m_action_count);
+                     printf("calling RAJA scan with start_pos %i action_count %i\n", start_pos, m_action_count);
                   }
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      conditional(i, scanvar, nullptr, global_end, XARGS{}...);
@@ -960,7 +960,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                   pos_store += start_pos_before_scan;
 #else
                   if (verbose) {
-                     printf("calling not GPU_ACTIVE scan\n");
+                     printf("calling not RAJA scan\n");
                   }
                   auto conditional_wrapper = [=] FUSIBLE_DEVICE(index_type i, int * scanvar, int global_end) -> bool {
                      // pass scanvar twice so that the lambda knows to treat scanvar as an address to a scalar
@@ -970,7 +970,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                   // need to store a copy of start_pos, as start_pos and pos_store are aliased by design
                   int start_pos_before_scan = start_pos;
                   SCAN_LOOP(i, 0, length, pos, 0, conditional_wrapper(i,&SCANVARNAME(pos),length)) {
-                     // when !(GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN), SCANVARNAME evaluates to a scalar, 
+                     // when !(CARE_GPUCC || CARE_ALWAYS_USE_RAJA_SCAN), SCANVARNAME evaluates to a scalar, 
                      // but action will look at the ith entry of an array, so we take the address and subtract
                      // off i to land back at the scalar
                      action(i, &SCANVARNAME(pos)-i, XARGS{}... );

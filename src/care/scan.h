@@ -241,7 +241,7 @@ void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE&
 #define SCANVARENDNAME(SCANVAR) SCANVAR ## _end
 #define SCANVARSTARTNAME(SCANVAR) SCANVAR ## _start
 
-#if defined GPU_ACTIVE || defined CARE_ALWAYS_USE_RAJA_SCAN
+#if defined CARE_GPUCC || defined CARE_ALWAYS_USE_RAJA_SCAN
 // scan var is an managed array of ints
 
 using ScanVar = chai::ManagedArray<int>;
@@ -417,7 +417,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
    SCANVARLENGTHNAME(SCANINDX).free(); \
    }
 
-#else // GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN
+#else // CARE_GPUCC || CARE_ALWAYS_USE_RAJA_SCAN
 
 // CPU version of scan idiom. Designed to look like we're doing a scan, but
 // does the CPU efficient all in one pass idiom
@@ -480,7 +480,7 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 #define MANAGED_PTR_SCAN_LOOP_END(END, SCANINDX, SCANLENGTH) \
    SCAN_LOOP_P_END(END, SCANINDX, SCANLENGTH)
 
-#endif // GPU_ACTIVE || CARE_ALWAYS_USE_RAJA_SCAN
+#endif // CARE_GPUCC || CARE_ALWAYS_USE_RAJA_SCAN
 
 #endif // !defined(_CARE_SCAN_H_)
 

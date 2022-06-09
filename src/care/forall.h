@@ -175,12 +175,12 @@ namespace care {
       s_reverseLoopOrder = true;
 #endif
 
-#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
+#if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__CUDACC__)
+#elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__HIPCC__)
+#elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
 #else
@@ -215,12 +215,12 @@ namespace care {
       s_reverseLoopOrder = true;
 #endif
 
-#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
+#if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__CUDACC__)
+#elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__HIPCC__)
+#elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
 #elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
@@ -254,12 +254,12 @@ namespace care {
    template <typename LB>
    void forall(managed_ptr_read, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#if CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#elif defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#elif defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
 #elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
