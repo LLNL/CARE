@@ -37,6 +37,7 @@ option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template f
 # if the resource manager is disabled (CHAI_DISABLE_RM defined).
 option(CARE_ENABLE_BOUNDS_CHECKING "Enable bounds checking for host_device_ptr on the host" OFF)
 option(CARE_ENABLE_GPU_SIMULATION_MODE "Enable GPU simulation mode." OFF )
+option(CARE_NEVER_USE_RAJA_PARALLEL_SCAN "Disable RAJA parallel scans in SCAN loops." OFF )
 #  Known to not compile for Debug configurations, have low probability of working in 
 #  practice for Release / RelWithDebInfo configurations.
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
