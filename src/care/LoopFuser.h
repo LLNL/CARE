@@ -944,7 +944,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
             case 1:
                {
                   m_scan_pos_starts[m_action_count] = start_pos;
-#if defined CARE_GPUCC || defined CARE_ALWAYS_USE_RAJA_SCAN
+#if !defined(CARE_NEVER_USE_RAJA_PARALLEL_SCAN)
                   if (verbose) {
                      printf("calling RAJA scan with start_pos %i action_count %i\n", start_pos, m_action_count);
                   }
@@ -958,7 +958,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                      action(i, SCANVARNAME(pos).data(), XARGS{}... );
                   } SCAN_LOOP_END(length, pos, pos_store)
                   pos_store += start_pos_before_scan;
-#else
+#else // !defined(CARE_NEVER_USE_RAJA_PARALLEL_SCAN)
                   if (verbose) {
                      printf("calling not RAJA scan\n");
                   }
@@ -970,13 +970,13 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                   // need to store a copy of start_pos, as start_pos and pos_store are aliased by design
                   int start_pos_before_scan = start_pos;
                   SCAN_LOOP(i, 0, length, pos, 0, conditional_wrapper(i,&SCANVARNAME(pos),length)) {
-                     // when !(CARE_GPUCC || CARE_ALWAYS_USE_RAJA_SCAN), SCANVARNAME evaluates to a scalar, 
+                     // when !defined(CARE_NEVER_USE_RAJA_PARALLEL_SCAN), SCANVARNAME evaluates to a scalar,
                      // but action will look at the ith entry of an array, so we take the address and subtract
                      // off i to land back at the scalar
                      action(i, &SCANVARNAME(pos)-i, XARGS{}... );
                   } SCAN_LOOP_END(length, pos, pos_store)
                   pos_store += start_pos_before_scan;
-#endif
+#endif // !defined(CARE_NEVER_USE_RAJA_PARALLEL_SCAN)
                }
                break;
             case 2:
