@@ -17,13 +17,11 @@ Another policy of note is raja_chai_everywhere. This runs the code on both the h
 
 Finally, there are fusible policies. Loops can be "fused" together into a single kernel to reduce kernel launch overhead. More details will be forthcoming on this.
 
-These policies can be used with care::forall, which then forwards the arguments to RAJA::forall. CARE also provides convenient macros that can fall back to vanilla for loops if CARE is configured with -DENABLE_LEGACY_CARE=ON. These macros generally start with CARE and end with LOOP. For example, CARE_SEQUENTIAL_LOOP always executes sequentially. CARE_STREAM_LOOP executes on the GPU if configured with -DENABLE_CUDA=ON or -DENABLE_HIP=ON and nvcc or hip is used to compile the code, otherwise it falls back to executing using OpenMP on the host if OPENMP_ACTIVE is defined in the compilation unit and the correct OpenMP flags are passed to the compiler, otherwise it falls back to running sequentially on the host.
+These policies can be used with care::forall, which then forwards the arguments to RAJA::forall. CARE also provides convenient macros that can fall back to vanilla for loops if CARE is configured with -DENABLE_LEGACY_CARE=ON. These macros generally start with CARE and end with LOOP. For example, CARE_SEQUENTIAL_LOOP always executes sequentially. CARE_STREAM_LOOP executes on the GPU if configured with -DENABLE_CUDA=ON or -DENABLE_HIP=ON and nvcc or hip is used to compile the code, otherwise it falls back to executing using OpenMP on the host if configured with -DENABLE_OPENMP=ON and the correct OpenMP flags are passed to the compiler, otherwise it falls back to running sequentially on the host.
 
-Some sample code is provided below to demonstrate the CARE concepts described above. Please note that the library must be configured with -DENABLE_CUDA=ON and/or -DENABLE_OPENMP=ON to run with CUDA or OpenMP. Also note that ``#define OPENMP_ACTIVE`` must be present for the code to run using OpenMP on the host.
+Some sample code is provided below to demonstrate the CARE concepts described above. Please note that the library must be configured with -DENABLE_CUDA=ON and/or -DENABLE_OPENMP=ON to run with CUDA or OpenMP.
 
 .. code-block:: c++
-
-   #define OPENMP_ACTIVE // If this is not defined in the compilation unit, will not run with OpenMP
 
    #include "care/care.h"
 

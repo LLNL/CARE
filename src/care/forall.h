@@ -142,7 +142,7 @@ namespace care {
       s_reverseLoopOrder = true;
 #endif
 
-#if defined(_OPENMP) && defined(OPENMP_ACTIVE)
+#if defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
@@ -223,7 +223,7 @@ namespace care {
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
@@ -262,7 +262,7 @@ namespace care {
 #elif defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
              fileName, lineNumber, start, end, body);
-#elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
       forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);

@@ -123,7 +123,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #endif // CARE_ENABLE_GPU_SIMULATION_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) && defined(OPENMP_ACTIVE) // CARE_GPUCC
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
 template<class T>
