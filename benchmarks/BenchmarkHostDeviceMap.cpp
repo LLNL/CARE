@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define OPENMP_ACTIVE
-
 // Other library headers
 #include <benchmark/benchmark.h>
 
