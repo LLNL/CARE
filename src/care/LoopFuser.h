@@ -211,8 +211,11 @@ public:
    ///        be gathered up until flushed either by filling up our buffer or via
    ///        a flush call.
    ///////////////////////////////////////////////////////////////////////////
-   virtual void startRecording() {
-      m_recording = true; warnIfNotFlushed();
+   virtual void startRecording(bool warn = true) {
+      m_recording = true;
+      if (warn) {
+         warnIfNotFlushed();
+      }
    }
 
    ///////////////////////////////////////////////////////////////////////////
@@ -331,9 +334,9 @@ public:
        }
     }
 
-   void startRecording() {
+   void startRecording(bool warn = true) {
       for (auto & priority_action: m_fused_action_order) {
-         priority_action.second->startRecording();
+         priority_action.second->startRecording(warn);
       }
       m_recording = true;
    }
@@ -635,7 +638,7 @@ class LoopFuser : public FusedActions {
       ///        be gathered up until flushed either by filling up our buffer or via
       ///        a flush call.
       ///////////////////////////////////////////////////////////////////////////
-      void startRecording();
+      void startRecording(bool warn = true);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -999,9 +1002,9 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
 #endif
 #if defined(CARE_FUSIBLE_LOOPS_DISABLE)
-#define START_RECORDING(FUSER)
+#define START_RECORDING(FUSER,WARN)
 #else
-#define START_RECORDING(FUSER) FUSER->startRecording()
+#define START_RECORDING(FUSER,WARN) FUSER->startRecording(WARN)
 #endif
 
 #define LOOPFUSER(REGISTER_COUNT) LoopFuser<REGISTER_COUNT, FUSIBLE_REGISTERS(REGISTER_COUNT)>
@@ -1027,7 +1030,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
                                     FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
-      START_RECORDING(__fuser__); \
+      START_RECORDING(__fuser__, true); \
       __fuser__->preserveOrder(false); \
       __fuser__->setScan(false); \
    } \
@@ -1043,7 +1046,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
                                     FUSED_ACTION_INSTANCE_32 FUSED_INSTANCE_COMMA \
                                     static_cast<FusedActions *>(__phase_observer)}) { \
-      START_RECORDING(__fuser__); \
+      START_RECORDING(__fuser__, true); \
       __fuser__->preserveOrder(true); \
       __fuser__->setScan(false); \
    } \
@@ -1096,10 +1099,10 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                     static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
                                     FUSED_ACTION_INSTANCE_32 \
                                     }) { \
-      START_RECORDING(__fuser__); \
+      START_RECORDING(__fuser__, false); \
    } \
    FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
-   START_RECORDING(__fuser__); \
+   START_RECORDING(__fuser__, false); \
 }
 
 
