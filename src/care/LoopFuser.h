@@ -1075,6 +1075,33 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 // Execute asynchronously, then stop recording
 #define FUSIBLE_LOOPS_STOP_ASYNC _FUSIBLE_LOOPS_STOP(true)
 
+// Pause recording
+#define FUSIBLE_LOOPS_PAUSE { \
+   for ( FusedActions *__fuser__ : {\
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
+                                    }) { \
+      __fuser__->stopRecording(); \
+   } \
+   FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
+   __fuser__->stopRecording(); \
+}
+
+#define FUSIBLE_LOOPS_RESUME { \
+   for ( FusedActions *__fuser__ : {\
+                                    static_cast<FusedActions *> (LOOPFUSER(256)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(128)::getInstance()),\
+                                    static_cast<FusedActions *> (LOOPFUSER(64)::getInstance()),\
+                                    FUSED_ACTION_INSTANCE_32 \
+                                    }) { \
+      START_RECORDING(__fuser__); \
+   } \
+   FusedActions * __fuser__ = static_cast<FusedActions *>(FusedActionsObserver::getActiveObserver()); \
+   START_RECORDING(__fuser__); \
+}
+
 
 // frees
 #define FUSIBLE_FREE(A) FusedActionsObserver::getActiveObserver()->registerFree(A);
@@ -1429,6 +1456,8 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START
 #define FUSIBLE_LOOPS_STOP
 #define FUSIBLE_LOOPS_STOP_ASYNC
+#define FUSIBLE_LOOPS_PAUSE
+#define FUSIBLE_LOOPS_RESUME
 
 #define FUSIBLE_LOOP_SCAN_R(INDEX, START, END, POS, INIT_POS, BOOL_EXPR, REGISTER_COUNT) SCAN_LOOP(INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
 #define FUSIBLE_LOOP_SCAN(INDEX, START, END, POS, INIT_POS, BOOL_EXPR) SCAN_LOOP(INDEX, START, END, POS, INIT_POS, BOOL_EXPR)
