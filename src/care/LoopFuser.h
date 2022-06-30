@@ -1134,10 +1134,12 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOPS_PRESERVE_ORDER_START
 #define FUSIBLE_LOOPS_STOP FusedActionsObserver::setActiveObserver(nullptr);
 #define FUSIBLE_LOOPS_STOP_ASYNC FusedActionsObserver::setActiveObserver(nullptr);
+#define FUSIBLE_LOOPS_PAUSE
+#define FUSIBLE_LOOPS_RESUME
 #define FUSIBLE_FREE(A) A.free();
 #define FUSIBLE_FREE_DEVICE(A) A.freeDeviceMemory();
 
-#endif // defined(CARE_DEBUG) || defined(CARE_GPUCC)
+#endif // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 #define FUSIBLE_KERNEL_BOOKKEEPING(FUSER) \
    auto __fusible_offset__ = FUSER->getOffset(); \
