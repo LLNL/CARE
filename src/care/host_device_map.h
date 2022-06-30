@@ -65,6 +65,10 @@ namespace care {
             m_map = new std::map<key_type, mapped_type>{};
             m_size = new int();
             *m_size = 0;
+            m_iterator = new typename std::map<key_type, mapped_type>::iterator{};
+            *m_iterator = m_map->begin();
+            m_next_iterator_index = new int();
+            *m_next_iterator_index = 0;
          }
 
         // emplace a key value pair
@@ -90,6 +94,8 @@ namespace care {
         // prepare for lookups, update our size from the map size
         void sort() {
            *m_size = m_map->size();
+           *m_iterator = m_map->begin();
+           *m_next_iterator_index = 0;
         } 
         
 
@@ -97,13 +103,20 @@ namespace care {
         void free() {
            delete m_map;
            delete m_size;
+           delete m_iterator;
+           delete m_next_iterator_index;
         }
 
         // return the number of inserted elements
         int size() const { return *m_size; }
 
         // clear any added elements
-        void clear() { m_map->clear();}
+        void clear() { 
+           m_map->clear();
+           *m_size = 0;
+           *m_iterator = m_map->begin();
+           *m_next_iterator_index = 0;
+        }
         
         // preallocate buffers for adding up to size elements
         void reserve(int max_size) {
@@ -111,13 +124,22 @@ namespace care {
         }
 
         // iteration - meant to only be called by the CARE_MAP_LOOP macros
-        inline typename std::map<key_type, mapped_type>::iterator begin () const { return m_map->begin(); }
-        inline typename std::map<key_type, mapped_type>::iterator end () const { return m_map->end(); }
-        
+        inline typename std::map<key_type, mapped_type>::iterator iterator_at(int index) const {
+           if (index != *m_next_iterator_index) {
+              *m_iterator = m_map->begin();
+              for (*m_next_iterator_index = 0; *m_next_iterator_index < index ; ++(*m_next_iterator_index)) {
+                 ++(*m_iterator);
+              }
+           }
+           ++(*m_next_iterator_index);
+           return (*m_iterator)++;
+        }
 
       private:
          // we do a heap allocated map to ensure no deep copies occur during lambda capture
          std::map<key_type, mapped_type> * m_map = nullptr;
+         typename std::map<key_type, mapped_type>::iterator * m_iterator = nullptr;
+         int * m_next_iterator_index = nullptr;
          int * m_size = nullptr;
          int m_max_size;
          mapped_type m_signal;
@@ -247,21 +269,14 @@ namespace care {
          KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map;
    };
 
-#define CARE_STREAM_MAP_LOOP(INDX, START, ITER, MAP) \
-   CARE_STREAM_LOOP(INDX,START,MAP.size()) { \
-       auto ITER = MAP.iterator_at(INDX-START);
+#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+
+#define CARE_STREAM_MAP_LOOP(INDX, ITER, MAP) \
+   CARE_STREAM_LOOP(INDX,0,MAP.size()) { \
+       auto ITER = MAP.iterator_at(INDX);
 
 #define CARE_STREAM_MAP_LOOP_END } CARE_STREAM_LOOP_END
    
-#else
-#define CARE_STREAM_MAP_LOOP(INDEX, START, ITER, MAP) \
-  int INDEX = START; \
-  for (auto ITER = MAP.begin(); ITER != MAP.end(); ++ITER, ++INDEX) { \
-     
-#define CARE_STREAM_MAP_LOOP_END }
-   
-#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
-
    // this implementation is used for benchmarking - may be appropriate choice depending on performance
    // of map on your system / compiler.
 

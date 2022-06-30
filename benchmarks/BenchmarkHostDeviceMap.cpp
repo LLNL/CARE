@@ -182,7 +182,7 @@ static void benchmark_host_device_map_iteration(benchmark::State& state) {
       data.sort();
       POP_RANGE
       PUSH_RANGE("lookups")
-      CARE_STREAM_MAP_LOOP(i, 0, it, data) {
+      CARE_STREAM_MAP_LOOP(i, it, data) {
          answer[i] = it->second;
       } CARE_STREAM_MAP_LOOP_END
       POP_RANGE
