@@ -138,8 +138,8 @@ namespace care {
       private:
          // we do a heap allocated map to ensure no deep copies occur during lambda capture
          std::map<key_type, mapped_type> * m_map = nullptr;
-         mutable typename std::map<key_type, mapped_type>::iterator * m_iterator = nullptr;
-         mutable int * m_next_iterator_index = nullptr;
+         typename std::map<key_type, mapped_type>::iterator * m_iterator = nullptr;
+         int * m_next_iterator_index = nullptr;
          int * m_size = nullptr;
          int m_max_size;
          mapped_type m_signal;
