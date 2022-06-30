@@ -98,8 +98,11 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...> * LoopFuser<REGISTER_COUNT,XARGS
 }
 
 template<int REGISTER_COUNT, typename...XARGS>
-void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording() {
-   m_recording = true;  warnIfNotFlushed();
+void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording(bool warn) {
+   m_recording = true;
+   if (warn) {
+      warnIfNotFlushed();
+   }
 }
 
 template<int REGISTER_COUNT, typename...XARGS>
