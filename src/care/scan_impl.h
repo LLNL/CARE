@@ -65,8 +65,17 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
       if (size > 1) {
          // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
          // reliable if it is cast to a different template type.
-         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(chai::ExecutionSpace::CPU, false));
-         int dataSize = dataRecord->m_size/sizeof(T);
+         void* dataPtr = data.data(chai::ExecutionSpace::CPU, false);
+         size_t offset = 0;
+         if (data.isSlice()) {
+            offset = (char*)data.getActivePointer() - (char*)data.getActiveBasePointer();
+            // The pointer record is associated with the base pointer for slices.
+            // Note that the bounds check will check against overrunning the base pointer, not the slice (again because
+            // size() is not reliable if cast to a different template type).
+            dataPtr = (char*)dataPtr - offset;
+         }
+         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord(dataPtr);
+         int dataSize = (dataRecord->m_size-offset)/sizeof(T);
          bool warned = false;
 
          if (dataSize < size) {
@@ -153,8 +162,17 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
 #if !defined(CHAI_DISABLE_RM)
       // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
       // reliable if it is cast to a different template type.
-      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)data.data(chai::ExecutionSpace::CPU, false));
-      int dataSize = dataRecord->m_size/sizeof(T);
+      void* dataPtr = data.data(chai::ExecutionSpace::CPU, false);
+      size_t offset = 0;
+      if (data.isSlice()) {
+         offset = (char*)data.getActivePointer() - (char*)data.getActiveBasePointer();
+         // The pointer record is associated with the base pointer for slices.
+         // Note that the bounds check will check against overrunning the base pointer, not the slice (again because
+         // size() is not reliable if cast to a different template type).
+         dataPtr = (char*)dataPtr - offset;
+      }
+      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord(dataPtr);
+      int dataSize = (dataRecord->m_size-offset)/sizeof(T);
       bool warned = false;
 
       if (dataSize < size) {

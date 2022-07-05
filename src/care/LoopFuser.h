@@ -1364,7 +1364,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_SCAN_PHASE_R_END(LENGTH, POS, POS_STORE_DESTINATION) _FUSIBLE_LOOP_SCAN_R_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 
-// note - FUSED_SCANVAR will be nullptr if m_call_as_packed is set in registerAction, as there will be no need for an intermediate
+// note - FUSED_SCANVAR will be nullptr if we are not recording, as there will be no need for an intermediate
 // FUSED_SCANVAR, so we won't need to write to it in the action or store into it in the conditional
 #define _FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(FUSER,INDEX,START,END,SCANVAR, REGISTER_COUNT)  { \
    auto __fuser__ = FUSER; \
