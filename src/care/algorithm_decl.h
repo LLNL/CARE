@@ -383,6 +383,33 @@ CARE_HOST_DEVICE inline void InsertionSort(care::local_ptr<T> array, int len)
    }
 }
 
+template <typename T, typename mapT>
+CARE_HOST_DEVICE void InsertionSortWithMap(care::local_ptr<T> array, care::local_ptr<mapT const> map, int len);
+
+/************************************************************************
+ * Function  : InsertionSortWithMap
+ * Author(s) : Benjamin Liu
+ * Purpose   : Simple insertion sort function with map.  Should only be used on
+ *             small arrays - otherwise use the qsort function from the
+ *             standard C library.  Sorts in ascending order by map.
+ ************************************************************************/
+template <typename T, typename mapT>
+CARE_HOST_DEVICE inline void InsertionSortWithMap(care::local_ptr<T > array, care::local_ptr<mapT const> map, int len)
+{
+   if (len <= 1) {
+      return;
+   }
+
+   for (int i=1 ; i<len ; ++i) {
+      T tmp = array[i] ;
+      int j ;
+      for (j=i-1 ; (j >= 0) && (map[array[j]] > map[tmp]) ; --j) {
+         array[j+1] = array[j];
+      }
+      array[j+1] = tmp ;
+   }
+}
+
 template <typename T>
 CARE_HOST_DEVICE void sortLocal(care::local_ptr<T> array, int len);
 
