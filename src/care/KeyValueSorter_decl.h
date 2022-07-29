@@ -39,8 +39,7 @@ template <typename KeyType, typename ValueType, typename Exec>
 using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 
 
-// TODO openMP parallel implementation
-#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -588,7 +587,7 @@ class KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       }
 };
 
-#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#endif // defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 
 
@@ -1215,13 +1214,13 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
                               KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
                               host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
                               int & numMatches) ;
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different, 

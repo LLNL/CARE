@@ -263,7 +263,7 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType> & map, co
                                   const int mapSize, const mapType num,
                                   bool returnUpperBound = false) ;
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 void IntersectArrays(RAJADeviceExec exec,
                      care::host_device_ptr<const T> arr1, int size1, int start1,
@@ -277,7 +277,7 @@ void IntersectArrays(RAJADeviceExec exec,
                      care::host_device_ptr<T> arr2, int size2, int start2,
                      care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                      int *numMatches);
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 template <typename T>
 void IntersectArrays(RAJA::seq_exec,
@@ -313,31 +313,32 @@ void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int
 template <typename T>
 void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len) ;
 
-// TODO openMP parallel implementation
-#if defined(CARE_GPUCC)
+#ifdef CARE_PARALLEL_DEVICE
 
 template <typename T>
 void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy) ;
 
+#ifdef CARE_GPUCC
 template <typename T>
 void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
+#endif // defined(CARE_GPUCC)
 
 template <typename T>
 void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len);
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 // TODO should this have an unused noCopy parameter?
 template <typename T>
 void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_t len, care::host_device_ptr<T> & outArray, int & newLen);
 template <typename T>
 int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size_t len, care::host_device_ptr<T> & outArray, int & outLen, bool noCopy=false);
 template <typename T>
 int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 template <typename T, typename Exec>
 void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy = false);
@@ -347,11 +348,11 @@ enum class compress_array { removed_list, mapping_list };
 template <typename T>
 void CompressArray(RAJA::seq_exec, care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 template <typename T>
 void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
                    care::host_device_ptr<int const> list, const int listLen, const care::compress_array listType, bool realloc=false);
@@ -416,10 +417,10 @@ CARE_HOST_DEVICE void uniqLocal(care::local_ptr<T> array, int& len);
 
 template <typename T>
 void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> array, care::host_device_ptr<int const> indexSet, int length);
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> array, care::host_device_ptr<int const> indexSet, int length);
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 } // end namespace care
 

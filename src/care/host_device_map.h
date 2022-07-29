@@ -146,7 +146,7 @@ namespace care {
    };
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
-#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
    // ********************************************************************************
    // RAJADeviceExec specialization.
@@ -269,7 +269,7 @@ namespace care {
          KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map;
    };
 
-#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#endif // defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 #define CARE_STREAM_MAP_LOOP(INDX, ITER, MAP) \
    CARE_STREAM_LOOP(INDX,0,MAP.size()) { \

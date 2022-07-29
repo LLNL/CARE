@@ -106,7 +106,7 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<globalID>&, const 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void IntersectArrays(RAJADeviceExec, care::host_device_ptr<const int>, int, int, care::host_device_ptr<const int>, int, int, care::host_device_ptr<int> &, care::host_device_ptr<int> &, int *) ;
@@ -122,7 +122,7 @@ CARE_EXTERN template CARE_DLL_API
 void IntersectArrays(RAJADeviceExec, care::host_device_ptr<globalID>, int, int, care::host_device_ptr<globalID>, int, int, care::host_device_ptr<int> &, care::host_device_ptr<int> &, int *) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void IntersectArrays(RAJA::seq_exec, care::host_ptr<const int>, int, int, care::host_ptr<const int>, int, int, care::host_ptr<int> &, care::host_ptr<int> &, int *) ;
@@ -201,7 +201,7 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, c
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void uniqArray(RAJADeviceExec, care::host_device_ptr<int>, size_t, care::host_device_ptr<int> &, int &, bool) ;
@@ -225,7 +225,7 @@ CARE_EXTERN template CARE_DLL_API
 int uniqArray(RAJADeviceExec, care::host_device_ptr<globalID> &, size_t, bool) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void uniqArray(RAJA::seq_exec, care::host_device_ptr<int>, size_t, care::host_device_ptr<int> &, int &) ;
@@ -251,8 +251,7 @@ int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<globalID> &, size_t, bo
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// TODO openMP parallel implementation
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void sortArray(RAJADeviceExec, care::host_device_ptr<int> &, size_t, int, bool) ;
@@ -276,6 +275,7 @@ CARE_EXTERN template CARE_DLL_API
 void sortArray(RAJADeviceExec, care::host_device_ptr<globalID> &, size_t) ;
 #endif
 
+#ifdef CARE_GPUCC
 CARE_EXTERN template CARE_DLL_API
 void radixSortArray(care::host_device_ptr<int> &, size_t, int, bool) ;
 CARE_EXTERN template CARE_DLL_API
@@ -286,8 +286,9 @@ void radixSortArray(care::host_device_ptr<double> &, size_t, int, bool) ;
 CARE_EXTERN template CARE_DLL_API
 void radixSortArray(care::host_device_ptr<globalID> &, size_t, int, bool) ;
 #endif
-
 #endif // defined(CARE_GPUCC)
+
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void sortArray(RAJA::seq_exec, care::host_device_ptr<int> &, size_t, int, bool) ;
@@ -313,7 +314,7 @@ void sortArray(RAJA::seq_exec, care::host_device_ptr<globalID> &, size_t) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void sort_uniq(RAJADeviceExec, care::host_device_ptr<int> *, int *, bool) ;
@@ -326,7 +327,7 @@ CARE_EXTERN template CARE_DLL_API
 void sort_uniq(RAJADeviceExec, care::host_device_ptr<globalID> *, int *, bool) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void sort_uniq(RAJA::seq_exec, care::host_device_ptr<int> *, int *, bool) ;
@@ -341,7 +342,7 @@ void sort_uniq(RAJA::seq_exec, care::host_device_ptr<globalID> *, int *, bool) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void CompressArray(RAJADeviceExec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
@@ -356,7 +357,7 @@ CARE_EXTERN template CARE_DLL_API
 void CompressArray(RAJADeviceExec, care::host_device_ptr<globalID> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void CompressArray(RAJA::seq_exec, care::host_device_ptr<bool> &, const int, care::host_device_ptr<int const>, const int, const care::compress_array, bool) ;
@@ -425,7 +426,7 @@ CARE_HOST_DEVICE void uniqLocal(care::local_ptr<globalID>, int&) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<bool>, care::host_device_ptr<int const>, int) ;
@@ -440,7 +441,7 @@ CARE_EXTERN template CARE_DLL_API
 void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<globalID>, care::host_device_ptr<int const>, int) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<bool>, care::host_device_ptr<int const>, int) ;
@@ -551,7 +552,7 @@ void copy_n(care::host_device_ptr<globalID>, size_t, care::host_device_ptr<globa
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMin<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int, bool, int) ;
@@ -573,7 +574,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMin<double, RAJADeviceExec>(care::host_device_ptr<double>, int, double, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMin<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int, bool, int) ;
@@ -623,7 +624,7 @@ CARE_HOST_DEVICE globalID ArrayMin(care::local_ptr<globalID>, int, globalID, int
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMinLoc<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int, bool, int &) ;
@@ -635,7 +636,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMinLoc<double, RAJADeviceExec>(care::host_device_ptr<const double>, int, double, int &) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMinLoc<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int, bool, int &) ;
@@ -649,7 +650,7 @@ double ArrayMinLoc<double, RAJA::seq_exec>(care::host_device_ptr<const double>, 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMaxLoc<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int, bool, int &) ;
@@ -661,7 +662,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMaxLoc<double, RAJADeviceExec>(care::host_device_ptr<const double>, int, double, int &) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMaxLoc<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int, bool, int &) ;
@@ -675,7 +676,7 @@ double ArrayMaxLoc<double, RAJA::seq_exec>(care::host_device_ptr<const double>, 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMax<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int, bool, int) ;
@@ -697,7 +698,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMax<double, RAJADeviceExec>(care::host_device_ptr<double>, int, double, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 bool ArrayMax<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int, bool, int) ;
@@ -772,7 +773,7 @@ int ArrayFind(care::host_device_ptr<const globalID>, const int, const globalID, 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMinMax<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, double *, double *) ;
@@ -798,7 +799,7 @@ CARE_EXTERN template CARE_DLL_API
 int ArrayMinMax<globalID, GIDTYPE, RAJADeviceExec>(care::host_device_ptr<globalID>, care::host_device_ptr<int>, int, double *, double *) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMinMax<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, double *, double *) ;
@@ -848,7 +849,7 @@ CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<globalID>, care::local_ptr<int>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayCount<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int, bool) ;
@@ -863,7 +864,7 @@ CARE_EXTERN template CARE_DLL_API
 int ArrayCount<globalID, RAJADeviceExec>(care::host_device_ptr<const globalID>, int, globalID) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayCount<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int, bool) ;
@@ -880,7 +881,7 @@ int ArrayCount<globalID, RAJA::seq_exec>(care::host_device_ptr<const globalID>, 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArraySum<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, int, int) ;
@@ -890,7 +891,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArraySum<double, double, RAJADeviceExec>(care::host_device_ptr<const double>, int, double) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArraySum<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, int, int) ;
@@ -902,7 +903,7 @@ double ArraySum<double, double, RAJA::seq_exec>(care::host_device_ptr<const doub
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArraySumSubset<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, int) ;
@@ -912,7 +913,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArraySumSubset<double, double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int, double) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArraySumSubset<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, int) ;
@@ -924,7 +925,7 @@ double ArraySumSubset<double, double, RAJA::seq_exec>(care::host_device_ptr<cons
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMaskedSumSubset<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, int) ;
@@ -934,7 +935,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMaskedSumSubset<double, double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, double) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMaskedSumSubset<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, int) ;
@@ -946,7 +947,7 @@ double ArrayMaskedSumSubset<double, double, RAJA::seq_exec>(care::host_device_pt
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMaskedSum<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, int) ;
@@ -956,7 +957,7 @@ CARE_EXTERN template CARE_DLL_API
 double ArrayMaskedSum<double, double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int, double) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int ArrayMaskedSum<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, int) ;
@@ -968,7 +969,7 @@ double ArrayMaskedSum<double, double, RAJA::seq_exec>(care::host_device_ptr<cons
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexGT<int, RAJADeviceExec>(care::host_device_ptr<const int>, int, int) ;
@@ -981,7 +982,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexGT<globalID, RAJADeviceExec>(care::host_device_ptr<const globalID>, int, globalID) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexGT<int, RAJA::seq_exec>(care::host_device_ptr<const int>, int, int) ;
@@ -996,7 +997,7 @@ int FindIndexGT<globalID, RAJA::seq_exec>(care::host_device_ptr<const globalID>,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMax<int, RAJADeviceExec>(care::host_device_ptr<const int>, int) ;
@@ -1006,7 +1007,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMax<double, RAJADeviceExec>(care::host_device_ptr<const double>, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMax<int, RAJA::seq_exec>(care::host_device_ptr<const int>, int) ;
@@ -1018,7 +1019,7 @@ int FindIndexMax<double, RAJA::seq_exec>(care::host_device_ptr<const double>, in
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 void ArrayCopy(RAJADeviceExec, care::host_device_ptr<bool>, care::host_device_ptr<const bool>, int, int, int) ;
@@ -1033,7 +1034,7 @@ CARE_EXTERN template CARE_DLL_API
 void ArrayCopy(RAJADeviceExec, care::host_device_ptr<globalID>, care::host_device_ptr<const globalID>, int, int, int) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 void ArrayCopy(RAJA::seq_exec, care::host_device_ptr<bool>, care::host_device_ptr<const bool>, int, int, int) ;
@@ -1063,7 +1064,7 @@ void ArrayCopy(care::host_device_ptr<globalID>, care::host_device_ptr<const glob
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 care::host_device_ptr<bool> ArrayDup<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int) ;
@@ -1078,7 +1079,7 @@ CARE_EXTERN template CARE_DLL_API
 care::host_device_ptr<globalID> ArrayDup<globalID, RAJADeviceExec>(care::host_device_ptr<const globalID>, int) ;
 #endif
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 care::host_device_ptr<bool> ArrayDup<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int) ;
@@ -1095,7 +1096,7 @@ care::host_device_ptr<globalID> ArrayDup<globalID, RAJA::seq_exec>(care::host_de
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int SumArrayOrArraySubset<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1105,7 +1106,7 @@ CARE_EXTERN template CARE_DLL_API
 double SumArrayOrArraySubset<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int SumArrayOrArraySubset<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1117,7 +1118,7 @@ double SumArrayOrArraySubset<double, RAJA::seq_exec>(care::host_device_ptr<const
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformSum<int, int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int) ;
@@ -1127,7 +1128,7 @@ CARE_EXTERN template CARE_DLL_API
 double PickAndPerformSum<double, double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformSum<int, int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int) ;
@@ -1139,7 +1140,7 @@ double PickAndPerformSum<double, double, RAJA::seq_exec>(care::host_device_ptr<c
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinAboveThresholds<int, RAJADeviceExec>(care::host_device_ptr<const int>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1149,7 +1150,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMinAboveThresholds<double, RAJADeviceExec>(care::host_device_ptr<const double>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinAboveThresholds<int, RAJA::seq_exec>(care::host_device_ptr<const int>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1161,7 +1162,7 @@ int FindIndexMinAboveThresholds<double, RAJA::seq_exec>(care::host_device_ptr<co
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubset<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1171,7 +1172,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubset<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubset<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1183,7 +1184,7 @@ int FindIndexMinSubset<double, RAJA::seq_exec>(care::host_device_ptr<const doubl
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubsetAboveThresholds<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1193,7 +1194,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubsetAboveThresholds<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMinSubsetAboveThresholds<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1205,7 +1206,7 @@ int FindIndexMinSubsetAboveThresholds<double, RAJA::seq_exec>(care::host_device_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMinIndex<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1215,7 +1216,7 @@ CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMinIndex<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMinIndex<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1227,7 +1228,7 @@ int PickAndPerformFindMinIndex<double, RAJA::seq_exec>(care::host_device_ptr<con
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxAboveThresholds<int, RAJADeviceExec>(care::host_device_ptr<const int>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1237,7 +1238,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxAboveThresholds<double, RAJADeviceExec>(care::host_device_ptr<const double>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxAboveThresholds<int, RAJA::seq_exec>(care::host_device_ptr<const int>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1249,7 +1250,7 @@ int FindIndexMaxAboveThresholds<double, RAJA::seq_exec>(care::host_device_ptr<co
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubset<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1259,7 +1260,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubset<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubset<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int) ;
@@ -1271,7 +1272,7 @@ int FindIndexMaxSubset<double, RAJA::seq_exec>(care::host_device_ptr<const doubl
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubsetAboveThresholds<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1281,7 +1282,7 @@ CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubsetAboveThresholds<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int FindIndexMaxSubsetAboveThresholds<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1293,7 +1294,7 @@ int FindIndexMaxSubsetAboveThresholds<double, RAJA::seq_exec>(care::host_device_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMaxIndex<int, RAJADeviceExec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
@@ -1303,7 +1304,7 @@ CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMaxIndex<double, RAJADeviceExec>(care::host_device_ptr<const double>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
 // TODO GID not implemented
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
 int PickAndPerformFindMaxIndex<int, RAJA::seq_exec>(care::host_device_ptr<const int>, care::host_device_ptr<int const>, care::host_device_ptr<int const>, int, care::host_device_ptr<double const>, double, int *) ;
