@@ -18,7 +18,7 @@ using namespace care;
 GPU_TEST(TestPacker, gpu_initialization) {
    printf("Initializing\n");
    init_care_for_testing();
-   printf("Initialized... Testng care::SortFuser\n");
+   printf("Initialized... Testing care::SortFuser\n");
 }
 
 GPU_TEST(TestPacker, testFuseSort) {

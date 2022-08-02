@@ -47,14 +47,17 @@ using RAJADeviceExec = RAJA::seq_exec;
 #else // CARE_ENABLE_GPU_SIMULATION_MODE
 #if defined (__CUDACC__)
 using RAJADeviceExec = RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#define CARE_PARALLEL_DEVICE
 #elif defined(__HIPCC__)
 using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#define CARE_PARALLEL_DEVICE
 #endif // __CUDACC__
 #endif // CARE_ENABLE_GPU_SIMULATION_MODE
 
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
+#define CARE_PARALLEL_DEVICE
 
 #else // CARE_GPUCC
 

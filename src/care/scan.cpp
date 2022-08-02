@@ -15,10 +15,10 @@
 #define CARE_SCAN_EXEC RAJA::seq_exec
 #include "care/scan_impl.h"
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 #define CARE_SCAN_EXEC RAJADeviceExec
 #include "care/scan_impl.h"
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALEL_DEVICE)
 
 namespace care {
 

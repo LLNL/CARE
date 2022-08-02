@@ -39,7 +39,7 @@ CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
@@ -49,7 +49,7 @@ CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
@@ -59,7 +59,7 @@ CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size, float val);
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
@@ -69,7 +69,7 @@ CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size, float val);
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
@@ -79,7 +79,7 @@ CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size, double val);
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
@@ -89,7 +89,7 @@ CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size, double val);
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 #if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
@@ -101,7 +101,7 @@ CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val);
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
@@ -111,7 +111,7 @@ CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size, GIDTYPE val);
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 #endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
@@ -126,7 +126,7 @@ CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
@@ -136,7 +136,7 @@ CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size) ;
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
@@ -146,7 +146,7 @@ CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size) ;
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
@@ -156,7 +156,7 @@ CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size) ;
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
@@ -166,7 +166,7 @@ CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size) ;
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<double> data, chai::ManagedArray<double> outData,
@@ -176,7 +176,7 @@ CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size) ;
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 #if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
@@ -188,7 +188,7 @@ CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
@@ -198,7 +198,7 @@ CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
                     int size) ;
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 #endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
