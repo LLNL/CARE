@@ -89,9 +89,9 @@ namespace care {
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(rangeSegment, body);
+         RAJA::forall<RAJA::seq_exec>(rangeSegment, std::forward<LB>(body));
 #else
-         RAJA::forall<ExecutionPolicy>(rangeSegment, body);
+         RAJA::forall<ExecutionPolicy>(rangeSegment, std::forward<LB>(body));
 #endif
 
 #ifndef CARE_DISABLE_RAJAPLUGIN
@@ -117,7 +117,7 @@ namespace care {
    template <typename LB>
    void forall(sequential, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -143,9 +143,9 @@ namespace care {
 #endif
 
 #if defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -176,15 +176,15 @@ namespace care {
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -216,17 +216,17 @@ namespace care {
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -255,17 +255,17 @@ namespace care {
    void forall(managed_ptr_read, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
 #if CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
    }
 
@@ -445,22 +445,22 @@ namespace care {
                const int start, const int end, LB&& body) {
       switch (policy) {
          case Policy::sequential:
-            forall(sequential{}, fileName, lineNumber, start, end, body);
+            forall(sequential{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          case Policy::openmp:
-            forall(openmp{}, fileName, lineNumber, start, end, body);
+            forall(openmp{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          case Policy::gpu:
-            forall(gpu{}, fileName, lineNumber, start, end, body);
+            forall(gpu{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          case Policy::parallel:
-            forall(parallel{}, fileName, lineNumber, start, end, body);
+            forall(parallel{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          case Policy::managed_ptr_read:
-            forall(managed_ptr_read{}, fileName, lineNumber, start, end, body);
+            forall(managed_ptr_read{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          case Policy::managed_ptr_write:
-            forall(managed_ptr_write{}, fileName, lineNumber, start, end, body);
+            forall(managed_ptr_write{}, fileName, lineNumber, start, end, std::forward<LB>(body));
             break;
          default:
             std::cout << "[CARE] Error: Invalid policy!" << std::endl;

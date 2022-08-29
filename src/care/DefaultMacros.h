@@ -22,26 +22,6 @@
 #include "care/GPUMacros.h"
 #include "care/policies.h"
 
-// This makes sure the lambdas get decorated with the right __host__ and or
-// __device__ specifiers
-#if defined(CARE_GPUCC)
-#define CARE_HOST_DEVICE_ACTIVE __host__ __device__
-#define CARE_DEVICE_ACTIVE __device__
-#define CARE_HOST_ACTIVE __host__
-#define CARE_GLOBAL_ACTIVE __global__
-#else // defined CARE_GPUCC
-#define CARE_HOST_DEVICE_ACTIVE
-#define CARE_DEVICE_ACTIVE
-#define CARE_HOST_ACTIVE
-#define CARE_GLOBAL_ACTIVE
-#endif // defined CARE_GPUCC
-
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
-#define CARE_MANAGED_PTR_DEVICE_ACTIVE __device__
-#else
-#define CARE_MANAGED_PTR_DEVICE_ACTIVE
-#endif
-
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
 #define CARE_NEST_BEGIN(x) { int x ;
@@ -519,7 +499,7 @@
 #define CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_GPU_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -534,7 +514,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_GPU_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_GPU_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -555,7 +535,7 @@
 #define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -570,7 +550,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_PARALLEL_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_PARALLEL_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -593,7 +573,7 @@
 #define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
