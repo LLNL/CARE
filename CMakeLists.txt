@@ -159,7 +159,6 @@ option(ENABLE_CMAKEFORMAT  "Enables CMakeFormat support" OFF)
 option(ENABLE_UNCRUSTIFY   "Enables Uncrustify support" OFF)
 option(ENABLE_YAPF         "Enables Yapf support" OFF)
 
-set(BLT_EXPORT_THIRDPARTY ON CACHE BOOL "")
 set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
 if (BLT_SOURCE_DIR)
