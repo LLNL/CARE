@@ -17,6 +17,11 @@
 // Std library headers
 #include <cstddef>
 
+#if defined(CARE_ENABLE_STALE_DATA_CHECK) && !defined(CHAI_DISABLE_RM) && (defined(CHAI_ENABLE_CUDA) || defined(CHAI_ENABLE_HIP) || defined(CHAI_ENABLE_GPU_SIMULATION_MODE))
+#include <cstdlib>
+#include <iostream>
+#endif
+
 namespace care {
    ///
    /// @author Peter Robinson
@@ -95,7 +100,28 @@ namespace care {
          ///
          /// Return the element at the given index
          ///
-         inline T & operator[](int index) const { return m_ptr[index]; }
+         inline T & operator[](int index) const {
+#if defined(CARE_ENABLE_STALE_DATA_CHECK) && !defined(CHAI_DISABLE_RM) && (defined(CHAI_ENABLE_CUDA) || defined(CHAI_ENABLE_HIP) || defined(CHAI_ENABLE_GPU_SIMULATION_MODE))
+            chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();
+            chai::PointerRecord* record = arrayManager->getPointerRecord((void*) m_ptr);
+
+            if (record != &chai::ArrayManager::s_null_record &&
+                record->m_touched[chai::ExecutionSpace::GPU]) {
+               const char* name = CHAICallback::getName(record);
+
+               if (name) {
+                  std::cout << "[CARE] Error: Found stale data! "
+                            << std::string(name) << std::endl;
+               }
+               else {
+                  std::cout << "[CARE] Error: Found stale data!";
+               }
+
+               std::abort();
+            }
+#endif
+            return m_ptr[index];
+         }
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
          ///
