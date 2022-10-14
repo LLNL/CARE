@@ -42,7 +42,7 @@ option(CARE_NEVER_USE_RAJA_PARALLEL_SCAN "Disable RAJA parallel scans in SCAN lo
 #  practice for Release / RelWithDebInfo configurations.
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
 option(CARE_ENABLE_PARALLEL_LOOP_BACKWARDS "Reverse the start and end for parallel loops." OFF)
-option(CARE_ENABLE_STALE_DATA_CHECK "Enable checking for stale data." OFF)
+option(CARE_ENABLE_STALE_DATA_CHECK "Enable checking for stale host data. Only applicable for GPU (or GPU simulation) builds." OFF)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)
