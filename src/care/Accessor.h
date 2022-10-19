@@ -50,13 +50,16 @@ class RaceConditionAccessor {
    public:
 
    RaceConditionAccessor<T>() = default;
-   RaceConditionAccessor<T>(size_t elems) {m_size_in_bytes = elems*sizeof(T);}
+   RaceConditionAccessor<T>(size_t elems) : m_shallow_copy_of_cpu_data(nullptr), m_deep_copy_of_previous_state_of_cpu_data(nullptr), m_accesses(nullptr), m_size_in_bytes(elems) {} 
 
 
    CARE_HOST_DEVICE RaceConditionAccessor<T>(RaceConditionAccessor<T> const & other ) {
+      printf("in copy constructor\n");
       if (RAJAPlugin::isParallelContext()) {
+         printf("in parallel context\n");
          auto data = m_shallow_copy_of_cpu_data;
          if (!RAJAPlugin::post_parallel_forall_action_registered((void *)data)) {
+            printf("registering action\n");
             auto len = m_size_in_bytes / sizeof(T);
             m_deep_copy_of_previous_state_of_cpu_data = new std::remove_const_t<T>[len];
             std::copy_n(data, len, m_deep_copy_of_previous_state_of_cpu_data);
@@ -73,7 +76,9 @@ class RaceConditionAccessor {
    inline CARE_HOST_DEVICE void operator[](const Idx i)
    const
    {
-      (*m_accesses)[i].insert(RAJAPlugin::threadID);
+      if (m_accesses && RAJAPlugin::isParallelContext()) {
+         (*m_accesses)[i].insert(RAJAPlugin::threadID);
+      }
    }
 
    void set_size(size_t elems) {

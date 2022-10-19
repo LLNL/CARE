@@ -536,7 +536,7 @@
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
       care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) { \
-         RAJAPlugin::threadID = INDEX ; 
+         care::RAJAPlugin::threadID = INDEX ; 
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}

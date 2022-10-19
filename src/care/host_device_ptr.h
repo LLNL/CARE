@@ -119,6 +119,7 @@ namespace care {
       /// Copy constructor
       ///
       CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>(host_device_ptr<T> const & other) : MA (other) , Accessor<T>(other) {
+         printf("in host_device copy construction\n");
          Accessor<T>::m_shallow_copy_of_cpu_data = MA::data(chai::CPU,false);
       }
 

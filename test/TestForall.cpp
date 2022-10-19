@@ -58,6 +58,7 @@ CPU_TEST(forall, dynamic_policy)
 
 CPU_TEST(forall, race_condition_detection)
 {
+   printf("in cpu_test race_condition_detection\n");
    const int length = 10;
    care::host_device_ptr<int, care::RaceConditionAccessor> temp(length, "temp");
 
