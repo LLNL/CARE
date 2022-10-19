@@ -35,6 +35,7 @@ set(care_headers
     FOREACHMACRO.h
     GPUMacros.h
     host_device_ptr.h
+    host_device_race_detection_ptr.h
     host_ptr.h
     KeyValueSorter.h
     KeyValueSorter_decl.h

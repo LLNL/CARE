@@ -65,7 +65,7 @@ namespace care {
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
    template <typename T>
-   class host_device_ptr : public chai::ManagedArray<T> {
+   class _host_device_ptr : public chai::ManagedArray<T> {
      private:
       using T_non_const = typename std::remove_const<T>::type;
       using MA = chai::ManagedArray<T>;
@@ -79,14 +79,14 @@ namespace care {
       ///
       /// Default constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>() noexcept : chai::ManagedArray<T>() {}
+      CARE_HOST_DEVICE _host_device_ptr<T>() noexcept : chai::ManagedArray<T>() {}
 
       ///
       /// @author Peter Robinson
       ///
       /// nullptr constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
+      CARE_HOST_DEVICE _host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
 
 #if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
       ///
@@ -97,7 +97,7 @@ namespace care {
       /// @note Only safe if the raw pointer is already registered with CHAI
       ///
       template <bool Q = 0>
-      CARE_HOST_DEVICE host_device_ptr<T>(
+      CARE_HOST_DEVICE _host_device_ptr<T>(
          T * from, //!< Raw pointer to construct from
          chai::CHAIDISAMBIGUATE name=chai::CHAIDISAMBIGUATE(), //!< Used to disambiguate this constructor
          bool foo=Q) //!< Used to disambiguate this constructor
@@ -109,14 +109,14 @@ namespace care {
       ///
       /// Copy constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(host_device_ptr<T> const & other) : MA (other) {}
+      CARE_HOST_DEVICE _host_device_ptr<T>(_host_device_ptr<T> const & other) : MA (other) {}
 
       ///
       /// @author Peter Robinson
       ///
       /// Construct from a chai::ManagedArray
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(MA const & other) : MA (other) {}
+      CARE_HOST_DEVICE _host_device_ptr<T>(MA const & other) : MA (other) {}
 
       ///
       /// @author Peter Robinson
@@ -127,7 +127,7 @@ namespace care {
       ///
       template <bool B = std::is_const<T>::value,
                 typename std::enable_if<B, int>::type = 1>
-      host_device_ptr<T>(MAU const & other) : MA (other) {}
+      _host_device_ptr<T>(MAU const & other) : MA (other) {}
 
 #if defined (CHAI_DISABLE_RM)
       ///
@@ -136,7 +136,7 @@ namespace care {
       /// Construct from a raw pointer, size, and name
       /// This is defined when the CHAI resource manager is disabled
       ///
-      host_device_ptr<T>(T* from, size_t size, const char * name)
+      _host_device_ptr<T>(T* from, size_t size, const char * name)
          : MA(from, nullptr, size, nullptr)
       {
       }
@@ -147,7 +147,7 @@ namespace care {
       /// Construct from a raw pointer, size, and name
       /// This is defined when the CHAI resource manager is enabled
       ///
-      host_device_ptr<T>(T* from, size_t size, const char * name)
+      _host_device_ptr<T>(T* from, size_t size, const char * name)
          : MA(size == 0 ? nullptr : from,
               chai::ArrayManager::getInstance(),
               size,
@@ -170,7 +170,7 @@ namespace care {
       ///
       /// Construct from a size and name
       ///
-      host_device_ptr<T>(size_t size, const char * name) : MA (size) {
+      _host_device_ptr<T>(size_t size, const char * name) : MA (size) {
          registerCallbacks(name);
       }
 
@@ -180,7 +180,7 @@ namespace care {
       /// Construct from a size, initial value, and name
       /// Optionally inititialize on device rather than the host
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size) { 
+      CARE_HOST_DEVICE _host_device_ptr<T>(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size) { 
          registerPointerName(name); 
          initialize(size, initial, 0, initOnDevice);
       }
@@ -188,12 +188,12 @@ namespace care {
       ///
       /// @author Peter Robinson
       ///
-      /// Convert to a host_device_ptr containing const elements
+      /// Convert to a _host_device_ptr containing const elements
       ///
       template<bool B = std::is_const<T>::value,
                typename std::enable_if<!B, int>::type = 0>
-      CARE_HOST_DEVICE operator host_device_ptr<const T> () const {
-         return *reinterpret_cast<host_device_ptr<const T> const *> (this);
+      CARE_HOST_DEVICE operator _host_device_ptr<const T> () const {
+         return *reinterpret_cast<_host_device_ptr<const T> const *> (this);
       }
 
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
@@ -219,7 +219,7 @@ namespace care {
       ///
       /// Copy assignment operator
       ///
-      host_device_ptr& operator=(const host_device_ptr& other) = default;
+      _host_device_ptr& operator=(const _host_device_ptr& other) = default;
 
       ///
       /// @author Peter Robinson
@@ -234,7 +234,7 @@ namespace care {
          return MA::operator[](i);
       }
 
-      host_device_ptr<T> & realloc(size_t elems) {
+      _host_device_ptr<T> & realloc(size_t elems) {
          // If the managed array is empty, we register the callback on reallocation.
          bool doRegisterCallback = (MA::m_elems == 0 && MA::m_active_base_pointer == nullptr);
          MA::reallocate(elems);
@@ -370,7 +370,7 @@ namespace care {
             MA::m_elems = MA::m_pointer_record->m_size / sizeof(T);
 
             if (MA::m_elems * sizeof(T) != MA::m_pointer_record->m_size) {
-               fprintf(stderr, "[CARE] host_device_ptr<T>::namePointer performed an unsafe cast to a different underlying type. Expect errors!\n");
+               fprintf(stderr, "[CARE] _host_device_ptr<T>::namePointer performed an unsafe cast to a different underlying type. Expect errors!\n");
             }
          }
 #endif
@@ -434,6 +434,14 @@ namespace care {
       }
    }; // class host_device_ptr
 } // namespace care
+#if defined(CARE_ENABLE_RACE_DETECTION)
+   template <typename T>
+   using care::host_device_ptr<T> = care::host_device_race_detection_ptr<T>;
+#else
+   template <typename T>
+   using care::host_device_ptr<T> = care::_host_device_ptr<T>;
+#endif
+
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 
