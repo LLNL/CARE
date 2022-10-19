@@ -216,7 +216,7 @@ namespace care {
 #endif
 
       RAJAPlugin::setParallelContext(true);
-#elif CARE_ENABLE_GPU_SIMULATION_MODE
+#if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},

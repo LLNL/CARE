@@ -65,8 +65,8 @@ namespace care {
    ///
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
-   template <typename T, typename <class> Accessor=DefaultAccessor >
-   class host_device_ptr : public chai::ManagedArray<T>, Accessor<T><T> {
+   template <typename T, template <class Anyfoo> class Accessor=DefaultAccessor >
+   class host_device_ptr : public chai::ManagedArray<T>, Accessor<T> {
      private:
       using T_non_const = typename std::remove_const<T>::type;
       using MA = chai::ManagedArray<T>;
@@ -80,7 +80,7 @@ namespace care {
       ///
       /// Default constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>() noexcept : MA(), Accessor<T>(), {}
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>() noexcept : MA(), Accessor<T>() {}
 
       ///
       /// @author Peter Robinson
@@ -194,8 +194,8 @@ namespace care {
       ///
       template<bool B = std::is_const<T>::value,
                typename std::enable_if<!B, int>::type = 0>
-      CARE_HOST_DEVICE operator host_device_ptr<const T, Accessor<const T>> () const {
-         return *reinterpret_cast<host_device_ptr<const T, Accessor<const T>> const *> (this);
+      CARE_HOST_DEVICE operator host_device_ptr<const T, Accessor> () const {
+         return *reinterpret_cast<host_device_ptr<const T, Accessor> const *> (this);
       }
 
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
@@ -241,7 +241,7 @@ namespace care {
          // If the managed array is empty, we register the callback on reallocation.
          bool doRegisterCallback = (MA::m_elems == 0 && MA::m_active_base_pointer == nullptr);
          MA::reallocate(elems);
-         Accessor<T>::reallocate(elems)
+         Accessor<T>::set_size(elems);
          if (doRegisterCallback) {
             registerCallbacks();
          }
@@ -250,7 +250,7 @@ namespace care {
 
       void alloc(size_t elems) {
          MA::allocate(elems);
-         Accessor<T>::allocate(elems);
+         Accessor<T>::set_size(elems);
          registerCallbacks();
       }
 
