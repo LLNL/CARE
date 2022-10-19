@@ -41,7 +41,8 @@ namespace care {
    int RAJAPlugin::s_current_loop_line_number = -1;
 
    std::vector<const chai::PointerRecord*> RAJAPlugin::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
-
+   std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> RAJAPlugin::s_post_parallel_forall_actions = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>{};
+   int RAJAPlugin::threadID = -1;
    /////////////////////////////////////////////////////////////////////////////////
    ///
    /// @brief Set up to be done before executing a RAJA loop.
@@ -218,10 +219,13 @@ namespace care {
          arrayManager->setExecutionSpace(chai::NONE);
       }
 #endif // !defined(CHAI_DISABLE_RM)
-       // LOOP OVER REGISTRIES
-          // LOOP OVER REGISTERED POINTERS
-            // DETECT DIFFERENCES / RACE CONDITION
-            // remove record from registry
+
+      if (s_parallel_context) {
+         for (auto const & it : s_post_parallel_forall_actions) {
+            it.second(space, fileName, lineNumber);
+         }
+         s_post_parallel_forall_actions.clear();
+      }
    }
 
    std::string RAJAPlugin::getCurrentLoopFileName() {
@@ -255,5 +259,14 @@ namespace care {
    bool RAJAPlugin::isParallelContext(){
       return s_parallel_context;
    }
+   void RAJAPlugin::register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action) { 
+      s_post_parallel_forall_actions[key] = action;
+   }
+   bool RAJAPlugin::post_parallel_forall_action_registered(void * key) {
+      return s_post_parallel_forall_actions.count(key) > 0;
+   }
+
+
+   
 } // namespace care
 

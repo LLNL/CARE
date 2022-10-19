@@ -44,6 +44,14 @@ namespace care {
       /// @return true if this value is less than right's value, false otherwise
       ///////////////////////////////////////////////////////////////////////////
       inline bool operator <(_kv const && right) { return value < right.value; };
+      ///////////////////////////////////////////////////////////////////////////
+      /// @author Peter Robinson
+      /// @brief Equality operator
+      /// Used as a comparator care/Accessor.h::detectRaceCondition
+      /// @param right - right _kv to compare
+      /// @return true if this value is less than right's value, false otherwise
+      ///////////////////////////////////////////////////////////////////////////
+      inline bool operator ==(_kv const & right) const { return value == right.value && key == right.key;  };
    };
 
    ///
@@ -65,7 +73,7 @@ namespace care {
    ///
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
-   template <typename T, template <class Anyfoo> class Accessor=DefaultAccessor >
+   template <typename T, template <class Anyfoo> class Accessor=RaceConditionAccessor>
    class host_device_ptr : public chai::ManagedArray<T>, Accessor<T> {
      private:
       using T_non_const = typename std::remove_const<T>::type;
@@ -110,7 +118,9 @@ namespace care {
       ///
       /// Copy constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>(host_device_ptr<T> const & other) : MA (other) , Accessor<T>(other) {}
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>(host_device_ptr<T> const & other) : MA (other) , Accessor<T>(other) {
+         Accessor<T>::m_shallow_copy_of_cpu_data = MA::data(chai::CPU,false);
+      }
 
       ///
       /// @author Peter Robinson
