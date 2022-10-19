@@ -45,6 +45,8 @@ namespace care {
          CARE_DLL_API static void setSynchronization(bool synchronizeBefore,
                                                      bool synchronizeAfter);
 
+         CARE_DLL_API static void setParallelContext(bool isParallel);
+         CARE_DLL_API static bool isParallelContext();
       private:
          static void writeLoopData(chai::ExecutionSpace space,
                                    const char * fileName,
@@ -55,6 +57,7 @@ namespace care {
          static bool s_profile_host_loops;
          static bool s_synchronize_before;
          static bool s_synchronize_after;
+         static bool s_parallel_context;
 
          static uint32_t s_colors[7];
          static int s_num_colors;

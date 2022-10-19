@@ -31,6 +31,7 @@ namespace care {
    bool RAJAPlugin::s_profile_host_loops = true;
    bool RAJAPlugin::s_synchronize_before = false;
    bool RAJAPlugin::s_synchronize_after = false;
+   bool RAJAPlugin::s_parallel_context = false;
 
    uint32_t RAJAPlugin::s_colors[7] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
    int RAJAPlugin::s_num_colors = sizeof(s_colors) / sizeof(uint32_t);
@@ -217,6 +218,10 @@ namespace care {
          arrayManager->setExecutionSpace(chai::NONE);
       }
 #endif // !defined(CHAI_DISABLE_RM)
+       // LOOP OVER REGISTRIES
+          // LOOP OVER REGISTERED POINTERS
+            // DETECT DIFFERENCES / RACE CONDITION
+            // remove record from registry
    }
 
    std::string RAJAPlugin::getCurrentLoopFileName() {
@@ -243,6 +248,12 @@ namespace care {
                                        bool synchronizeAfter) {
       s_synchronize_before = synchronizeBefore;
       s_synchronize_after = synchronizeAfter;
+   }
+   void RAJAPlugin::setParallelContext(bool isParallel) {
+      s_parallel_context = isParallel;
+   }
+   bool RAJAPlugin::isParallelContext(){
+      return s_parallel_context;
    }
 } // namespace care
 
