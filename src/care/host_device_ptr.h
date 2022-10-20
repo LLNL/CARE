@@ -226,37 +226,13 @@ namespace care {
       ///
       /// Return the value at the given index
       ///
-      template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx i)
-#if !CARE_LEGACY_COMPATIBILITY_MODE
-      const
-#endif
-      {
+     template<typename Idx>
+     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
 #if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
          boundsCheck(i);
 #endif
          return MA::operator[](i);
       }
-
-#if CARE_LEGACY_COMPATIBILITY_MODE
-     template<typename Idx>
-     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
-#if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
-        boundsCheck(i);
-#endif
-        return MA::operator[](i);
-     }
-#endif
-
-#if !CARE_LEGACY_COMPATIBILITY_MODE
-#ifdef CARE_ERROR_ON_HOSTDEV_USAGE_OUTSIDE_OF_RAJA_LOOP
-      // The whole point of this wrapper is to make the non-const decorated operator[] invalid. 
-      // This will trigger a compiler error if used on a  non-captured-by-value (const) host_device_ptr
-      //template<typename Idx, bool B = std::is_base_of<chai::CHAICopyable,T>::value, typename std::enable_if<B,int>::type = 0 >
-      template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx) { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
-#endif
-#endif
 
       host_device_ptr<T> & realloc(size_t elems) {
          // If the managed array is empty, we register the callback on reallocation.
@@ -457,10 +433,6 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
    }; // class host_device_ptr
-
-   /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
-   template< typename T>
-   void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
