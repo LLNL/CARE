@@ -9,6 +9,6 @@
 
 mkdir build-cuda
 cd build-cuda
-cmake -C ../configs/lc/blueos/nvcc10.1.243_clang8.0.1.cmake ../
+cmake -C ../configs/lc/blueos/nvcc10_clang12.cmake ../
 make -j
 rm -rf build-cuda

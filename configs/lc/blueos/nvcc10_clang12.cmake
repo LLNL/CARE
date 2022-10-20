@@ -5,4 +5,4 @@ set(CUDA_CODE "compute_70" CACHE STRING "Set the CUDA actual architecture")
 
 set(NVTOOLSEXT_DIR "${CUDA_TOOLKIT_ROOT_DIR}" CACHE PATH "Path to NVTOOLSEXT")
 
-set(CMAKE_CXX_COMPILER "/usr/tce/packages/clang/clang-ibm-11.0.1/bin/clang++" CACHE FILEPATH "Path to clang++")
+set(CMAKE_CXX_COMPILER "/usr/tce/packages/clang/clang-ibm-12.0.1/bin/clang++" CACHE FILEPATH "Path to clang++")
