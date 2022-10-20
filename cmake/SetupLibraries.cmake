@@ -103,7 +103,7 @@ if (NOT TARGET raja)
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
 
             # Use external CUB
-            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
+            set(RAJA_ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
          endif ()
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
