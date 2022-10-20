@@ -93,11 +93,6 @@ if (NOT TARGET raja)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/raja/CMakeLists.txt)
          message(FATAL_ERROR "CARE: RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR or RAJA_DIR to use an external build of RAJA.")
       else ()
-         # TODO: Remove when these fixes are in RAJA
-         # The current patch includes fixes for integrating CUB as a neighbor submodule.
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/SetupPackages.cmake
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja/cmake)
-
          set(RAJA_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable RAJA tests")
          set(RAJA_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable RAJA benchmarks")
          set(RAJA_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable RAJA examples")
