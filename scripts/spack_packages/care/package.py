@@ -19,6 +19,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main', branch='main', submodules='True')
+    version('0.7.11', tag='v0.7.11', submodules='True')
     version('0.3.0', tag='v0.3.0', submodules='True')
     version('0.2.0', tag='v0.2.0', submodules='True')
 
@@ -32,15 +33,23 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
     variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
 
+    depends_on('blt@0.5.2:', type='build', when='@0.7.11:')
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
     depends_on('cmake@3.14.5', when="+cuda")
 
-    depends_on('camp@0.2.2')
-    depends_on('umpire@6.0.0')
-    depends_on('raja@0.14.0')
-    depends_on('chai+enable_pick@2.4.0')
+    depends_on('camp@2022.03.2', when='@0.7.11:')
+    depends_on('camp@0.2.2', when='@:0.7.11')
+
+    depends_on('umpire@2022.03.1', when='@0.7.11:')
+    depends_on('umpire@6.0.0', when='@:0.7.11')
+
+    depends_on('raja@2022.03.0', when='@0.7.11:')
+    depends_on('raja@0.14.0', when='@:0.7.11')
+
+    depends_on('chai+enable_pick@2022.03.0', when='@0.7.11:')
+    depends_on('chai+enable_pick@2.4.0', when='@:0.7.11')
 
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
