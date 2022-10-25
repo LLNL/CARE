@@ -8,8 +8,6 @@
 // CARE config header
 #include "care/config.h"
 
-#define GPU_ACTIVE
-
 #include "care/algorithm_impl.h"
 #include "care/KeyValueSorter_impl.h"
 

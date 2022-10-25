@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define GPU_ACTIVE
-
 // CARE headers
 #include "care/host_device_ptr.h"
 #include "care/numeric.h"

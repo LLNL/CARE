@@ -33,12 +33,16 @@ option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
 option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)
+# Bounds checking only checks for negative indices
+# if the resource manager is disabled (CHAI_DISABLE_RM defined).
 option(CARE_ENABLE_BOUNDS_CHECKING "Enable bounds checking for host_device_ptr on the host" OFF)
 option(CARE_ENABLE_GPU_SIMULATION_MODE "Enable GPU simulation mode." OFF )
+option(CARE_NEVER_USE_RAJA_PARALLEL_SCAN "Disable RAJA parallel scans in SCAN loops." OFF )
 #  Known to not compile for Debug configurations, have low probability of working in 
 #  practice for Release / RelWithDebInfo configurations.
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
 option(CARE_ENABLE_PARALLEL_LOOP_BACKWARDS "Reverse the start and end for parallel loops." OFF)
+option(CARE_ENABLE_STALE_DATA_CHECK "Enable checking for stale host data. Only applicable for GPU (or GPU simulation) builds." OFF)
 
 # Extra components
 option(CARE_ENABLE_TESTS "Build CARE tests" ON)

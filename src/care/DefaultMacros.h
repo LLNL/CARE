@@ -22,26 +22,6 @@
 #include "care/GPUMacros.h"
 #include "care/policies.h"
 
-// This makes sure the lambdas get decorated with the right __host__ and or
-// __device__ specifiers
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE)
-#define CARE_HOST_DEVICE_ACTIVE __host__ __device__
-#define CARE_DEVICE_ACTIVE __device__
-#define CARE_HOST_ACTIVE __host__
-#define CARE_GLOBAL_ACTIVE __global__
-#else // defined CARE_GPUCC
-#define CARE_HOST_DEVICE_ACTIVE
-#define CARE_DEVICE_ACTIVE
-#define CARE_HOST_ACTIVE
-#define CARE_GLOBAL_ACTIVE
-#endif // defined CARE_GPUCC
-
-#if defined(CARE_GPUCC) && defined(GPU_ACTIVE) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
-#define CARE_MANAGED_PTR_DEVICE_ACTIVE __device__
-#else
-#define CARE_MANAGED_PTR_DEVICE_ACTIVE
-#endif
-
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
 #define CARE_NEST_BEGIN(x) { int x ;
@@ -119,6 +99,17 @@
 /// It also make for easier debugging.
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        The legacy version uses a "continue" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE continue
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -344,6 +335,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        In a lambda, this is done with a "return" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE return
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a call to forall with the given execution policy.
 ///
 /// @arg[in] POLICY The execution policy
@@ -497,7 +499,7 @@
 #define CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_GPU_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -512,7 +514,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_GPU_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_GPU_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -533,7 +535,7 @@
 #define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -548,7 +550,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_PARALLEL_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_PARALLEL_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -571,7 +573,7 @@
 #define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -580,12 +582,8 @@
 ///
 /// @brief Macros for updating/initializing managed_ptrs.
 ///        Will start and end a sequential loop of length one.
-///        If GPU is available, also executes on the device.
-///
-/// @note This should execute on the device even if GPU_ACTIVE is not defined.
-///       The reason for this is that managed_ptrs are always constructed on
-///       both the host and device, and this macro is used to update both the
-///       host and device objects to keep them in sync.
+///        If GPU is available, also executes on the device to
+///        keep both the host and device objects in sync.
 ///
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///

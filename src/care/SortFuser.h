@@ -189,7 +189,7 @@ namespace care {
       m_offsets.push_back(m_total_length);
       ++m_num_arrays;
       m_total_length += len;
-      m_max_range = CARE_MAX(m_max_range,range);
+      m_max_range = care::max(m_max_range,range);
    }
    
    template <typename T>
@@ -200,7 +200,7 @@ namespace care {
       m_offsets.push_back(m_total_length);
       ++m_num_arrays;
       m_total_length += len;
-      m_max_range = CARE_MAX(m_max_range,range);
+      m_max_range = care::max(m_max_range,range);
       m_out_arrays.push_back(&out_array); 
       m_out_lengths.push_back(&out_len);
    }

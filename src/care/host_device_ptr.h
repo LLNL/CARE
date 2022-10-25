@@ -30,10 +30,10 @@ namespace care {
    /// @brief The key value pair struct used by the sequential version of
    ///    KeyValueSorter
    ///////////////////////////////////////////////////////////////////////////
-   template <typename T>
+   template <typename KeyType, typename ValueType>
    struct _kv {
-      size_t key;
-      T value;
+      KeyType key;
+      ValueType value;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -55,8 +55,8 @@ namespace care {
    ///
    /// @return   The output stream for chaining of operations
    ///
-   template <typename T>
-   inline std::ostream& operator<<(std::ostream& os, const _kv<T>& kv) {
+   template <typename KeyType, typename ValueType>
+   inline std::ostream& operator<<(std::ostream& os, const _kv<KeyType, ValueType>& kv) {
       os << kv.key << ": " << kv.value;
       return os;
    }
@@ -199,7 +199,11 @@ namespace care {
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
       template <class Index>
       inline void boundsCheck(const Index i) const {
-         if (i < 0 || i >= (Index) (MA::m_pointer_record->m_size / sizeof(T))) {
+         if (i < 0
+#if !defined (CHAI_DISABLE_RM)
+             || i >= (Index) (MA::m_pointer_record->m_size / sizeof(T))
+#endif
+            ) {
             const char* name = CHAICallback::getName(MA::m_pointer_record);
 
             if (name) {
@@ -222,37 +226,13 @@ namespace care {
       ///
       /// Return the value at the given index
       ///
-      template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx i)
-#if !CARE_LEGACY_COMPATIBILITY_MODE
-      const
-#endif
-      {
+     template<typename Idx>
+     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
 #if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
          boundsCheck(i);
 #endif
          return MA::operator[](i);
       }
-
-#if CARE_LEGACY_COMPATIBILITY_MODE
-     template<typename Idx>
-     inline CARE_HOST_DEVICE T& operator[](const Idx i) const {
-#if !defined(CARE_DEVICE_COMPILE) && defined(CARE_ENABLE_BOUNDS_CHECKING)
-        boundsCheck(i);
-#endif
-        return MA::operator[](i);
-     }
-#endif
-
-#if !CARE_LEGACY_COMPATIBILITY_MODE
-#ifdef CARE_ERROR_ON_HOSTDEV_USAGE_OUTSIDE_OF_RAJA_LOOP
-      // The whole point of this wrapper is to make the non-const decorated operator[] invalid. 
-      // This will trigger a compiler error if used on a  non-captured-by-value (const) host_device_ptr
-      //template<typename Idx, bool B = std::is_base_of<chai::CHAICopyable,T>::value, typename std::enable_if<B,int>::type = 0 >
-      template<typename Idx>
-      inline CARE_HOST_DEVICE T& operator[](const Idx) { using_host_device_ptr_outside_of_raja_loop_not_allowed(T()); }
-#endif
-#endif
 
       host_device_ptr<T> & realloc(size_t elems) {
          // If the managed array is empty, we register the callback on reallocation.
@@ -453,48 +433,7 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
    }; // class host_device_ptr
-
-   /* This is intentionally declared after the use above, which will cause a compiler error if the non const [] is used on host_device pointers */
-   template< typename T>
-   void using_host_device_ptr_outside_of_raja_loop_not_allowed(T foo); 
 } // namespace care
-
-#if defined(CARE_ENABLE_MANAGED_PTR)
-#if !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-// TODO: Declaring these functions causes problems with a project that depends on CARE
-//       and has not eliminated implicit casts. Having this macro guard around these
-//       functions is a temporary workaround. A better solution needs to be found.
-//       Perhaps having an object wrapper like chai::ManagedDataSplitter would be
-//       a good way to indicate to chai::make_managed that raw pointers actually
-//       should be extracted. Basically, we break if a constructor takes both
-//       c-style arrays and ManagedArrays/host_device_ptrs. There is a reproducer
-//       of this issue in the reproducers directory.
-
-///
-/// @author Danny Taller
-///
-/// This implementation of getRawPointers handles the CARE host_device_ptr type.
-/// Note that without this function, care host_device_ptrs will go to the The non-CHAI type
-/// version of this function (NOT the ManagedArray version), so the make managed paradigm
-/// will fail unless implicit conversions are allowed. See also similar getRawPointers
-/// functions within CHAI managed_ptr header.
-///
-/// @param[in] arg The host_device_ptr from which to extract a raw pointer
-///
-/// @return arg cast to a raw pointer
-/// 
-namespace chai {
-   namespace detail {
-      template <typename T>
-      CARE_HOST_DEVICE T* getRawPointers(care::host_device_ptr<T> arg) {
-         return arg.data();
-      }
-   } // namespace detail
-} // namespace chai
-
-#endif // !defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-#endif // defined(CARE_ENABLE_MANAGED_PTR)
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
 

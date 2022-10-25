@@ -35,26 +35,29 @@ namespace care {
 
 
 
-// RAJADeviceExec is the device execution policy
-// on this platform, irrespective of whether GPU_ACTIVE is set.
+// RAJADeviceExec is the "device" execution policy
+// on this platform, irrespective of whether a GPU is available.
 #if defined (CARE_GPUCC)
 
 #define CARE_CUDA_BLOCK_SIZE 256
 #define CARE_CUDA_ASYNC true
 
-#if CHAI_GPU_SIM_MODE
+#if CARE_ENABLE_GPU_SIMULATION_MODE
 using RAJADeviceExec = RAJA::seq_exec;
-#else // CHAI_GPU_SIM_MODE
+#else // CARE_ENABLE_GPU_SIMULATION_MODE
 #if defined (__CUDACC__)
 using RAJADeviceExec = RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#define CARE_PARALLEL_DEVICE
 #elif defined(__HIPCC__)
 using RAJADeviceExec = RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC> ;
+#define CARE_PARALLEL_DEVICE
 #endif // __CUDACC__
-#endif // CHAI_GPU_SIM_MDOE
+#endif // CARE_ENABLE_GPU_SIMULATION_MODE
 
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
 
 using RAJADeviceExec = RAJA::omp_parallel_for_exec ;
+#define CARE_PARALLEL_DEVICE
 
 #else // CARE_GPUCC
 
@@ -65,9 +68,9 @@ using RAJADeviceExec = RAJA::seq_exec;
 
 
 
-#if defined (CARE_GPUCC) && defined (GPU_ACTIVE)
+#if defined (CARE_GPUCC)
 
-#if CHAI_GPU_SIM_MODE
+#if CARE_ENABLE_GPU_SIMULATION_MODE
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;
@@ -82,7 +85,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
 #define RAJA_PARALLEL_ACTIVE
 
-#elif defined(__CUDACC__) // CHAI_GPU_SIM_MODE
+#elif defined(__CUDACC__) // CARE_ENABLE_GPU_SIMULATION_MODE
 
 using RAJACudaReduce = RAJA::cuda_reduce ;
 
@@ -101,7 +104,7 @@ using RAJAExec = RAJADeviceExec ;
 
 #define RAJA_PARALLEL_ACTIVE
 
-#else // CHAI_GPU_SIM_MODE
+#else // CARE_ENABLE_GPU_SIMULATION_MODE
 
 // The defined(__HIPCC__) case is here:
 using RAJAHipReduce = RAJA::hip_reduce ;
@@ -121,9 +124,9 @@ using RAJAExec = RAJADeviceExec ;
 
 #define RAJA_PARALLEL_ACTIVE
 
-#endif // CHAI_GPU_SIM_MODE
+#endif // CARE_ENABLE_GPU_SIMULATION_MODE
 
-#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) && defined(OPENMP_ACTIVE) // CARE_GPUCC and GPU_ACTIVE
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::omp_reduce, T>  ;
 template<class T>
@@ -137,7 +140,7 @@ using RAJAReduceSum = RAJA::ReduceSum< RAJA::omp_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
 #define RAJA_PARALLEL_ACTIVE
 
-#else // CARE_GPUCC and GPU_ACTIVE
+#else // CARE_GPUCC
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax< RAJA::seq_reduce, T>  ;

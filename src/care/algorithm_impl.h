@@ -130,7 +130,7 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<T>& ar
  * Note      : matches are given as offsets from start1 and start2. So, if a match occurs at arr1[2] with
  *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 CARE_INLINE void IntersectArrays(RAJADeviceExec,
                                  care::host_device_ptr<const T> arr1, int size1, int start1,
@@ -248,7 +248,7 @@ CARE_INLINE void IntersectArrays(RAJADeviceExec exec,
                       numMatches);
 }
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
@@ -511,7 +511,7 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
    return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
 }
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 /************************************************************************
  * Function  : uniqArray
  * Author(s) : Peter Robinson
@@ -566,7 +566,7 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array,
    return newLen;
 }
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
  * Function  : uniqArray
@@ -631,7 +631,8 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
    return newLength;
 }
 
-// TODO openMP parallel implementation
+#ifdef CARE_PARALLEL_DEVICE
+
 #ifdef CARE_GPUCC
 
 /************************************************************************
@@ -706,8 +707,24 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
       tmpManaged.free();
    }
 }
+#else // defined(CARE_GPUCC)
+
+// TODO openMP parallel implementation
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+{
+   sortArray(RAJA::seq_exec{}, Array, len, start, noCopy);
+}
+
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len)
+{
+   sortArray(RAJA::seq_exec{}, Array, len);
+}
 
 #endif // defined(CARE_GPUCC)
+
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
  * Function  : sortArray
@@ -767,7 +784,7 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
 *             Note that thread safe version only requires list to be sorted,
 *             and only if listType == removed_list is true.
 **************************************************************************/
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & arr, const int arrLen,
                                care::host_device_ptr<int const> list, const int listLen,
@@ -811,7 +828,7 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
    }
 }
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
 * Function  : CompressArray<T>
@@ -902,7 +919,7 @@ CARE_INLINE void CompressArray(care::host_device_ptr<T> & arr, const int arrLen,
 {
 #ifdef CARE_DEBUG
    checkSorted<T>(arr, arrLen, "CompressArray", "arr") ;
-   checkSorted<T>(list, listLen, "CompressArray", "list") ;
+   checkSorted<int>(list, listLen, "CompressArray", "list") ;
 #endif
    return CompressArray(RAJAExec(), arr, arrLen, list, listLen, listType, realloc);
 }
@@ -948,7 +965,7 @@ CARE_INLINE void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> arr
    }
 }
 
-#ifdef CARE_GPUCC
+#ifdef CARE_PARALLEL_DEVICE
 template <typename T>
 CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> array,
                                     care::host_device_ptr<int const> indexSet, int length)
@@ -964,7 +981,7 @@ CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> arr
    }
 }
 
-#endif // defined(CARE_GPUCC)
+#endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
  * Function  : fill_n
@@ -977,6 +994,32 @@ CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
    } CARE_STREAM_LOOP_END
+}
+
+/************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<const T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   CARE_STREAM_LOOP(i, 0, n) {
+      out[i] = in[i];
+   } CARE_STREAM_LOOP_END
+}
+
+/************************************************************************
+ * Function  : copy_n
+ * Author(s) : Alan Dayton
+ * Purpose   : Copies one ManagedArray into another. Non-const overload.
+ * ************************************************************************/
+template <class T, class Size, class U>
+CARE_INLINE void copy_n(care::host_device_ptr<T> in, Size n,
+                        care::host_device_ptr<U> out)
+{
+   copy_n(care::host_device_ptr<const T>(in), n, out);
 }
 
 /************************************************************************
@@ -1005,7 +1048,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMin(care::local_ptr<const T> arr, int n, T i
 {
    T min = initVal;
    for (int k = startIndex; k < n; ++k) {
-      min = CARE_MIN(min, arr[k]);
+      min = care::min(min, arr[k]);
    }
    return min;
 }
@@ -1076,7 +1119,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T i
 {
    T max = initVal;
    for (int k = startIndex; k < n; ++k) {
-      max = CARE_MAX(max, arr[k]);
+      max = care::max(max, arr[k]);
    }
    return max;
 }
@@ -1245,8 +1288,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       if (mask) {
          for (int i = 0; i < n; ++i) {
             if (mask[i]) {
-               min = CARE_MIN(min, (double)arr[i]);
-               max = CARE_MAX(max, (double)arr[i]);
+               min = care::min(min, (double)arr[i]);
+               max = care::max(max, (double)arr[i]);
             }
          }
          if (min != DBL_MAX ||
@@ -1256,8 +1299,8 @@ CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
       }
       else {
          for (int i = 0; i < n; ++i) {
-            min = CARE_MIN(min, (double)arr[i]);
-            max = CARE_MAX(max, (double)arr[i]);
+            min = care::min(min, (double)arr[i]);
+            max = care::max(max, (double)arr[i]);
          }
          result = true;
       }

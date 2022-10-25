@@ -17,8 +17,6 @@
 // deduction.
 //
 
-#define GPU_ACTIVE
-
 // CARE library headers
 #include "care/config.h"
 #include "care/care.h"

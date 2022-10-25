@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define GPU_ACTIVE
-
 #include "care/config.h"
 
 // other library headers
@@ -15,6 +13,15 @@
 // care headers
 #include "care/array.h"
 #include "care/KeyValueSorter.h"
+#include "care/detail/test_utils.h"
+
+#if defined(CARE_GPUCC)
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing KeyValueSorter\n");
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 ///
@@ -26,7 +33,7 @@ TEST(KeyValueSorter, SizeConstructor)
 {
    int length = 5;
    int data[5] = {4, 1, 2, 0, 3};
-   care::KeyValueSorter<int, RAJA::seq_exec> sorter(length);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length);
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       sorter.setKey(i, i);
@@ -65,7 +72,7 @@ TEST(KeyValueSorter, RawArrayConstructor)
 {
    int length = 5;
    int data[5] = {4, 1, 2, 0, 3};
-   care::KeyValueSorter<int, RAJA::seq_exec> sorter(length, data);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length, data);
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
@@ -108,7 +115,7 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
       data[4] = 3;
    } CARE_HOST_KERNEL_END
 
-   care::KeyValueSorter<int, RAJA::seq_exec> sorter(length, data);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length, data);
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
@@ -136,23 +143,6 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
 
 /////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macro that allows extended __host__ __device__ lambdas (i.e.
-///        CARE_STREAM_LOOP) to be used in google tests. Essentially,
-///        extended __host__ __device__ lambdas cannot be used in
-///        private or protected members, and the TEST macro creates a
-///        protected member function. We get around this by creating a
-///        function that the TEST macro then calls.
-///
-/// @note  Adapted from CHAI
-///
-/////////////////////////////////////////////////////////////////////////
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
-
-/////////////////////////////////////////////////////////////////////////
-///
 /// @brief GPU test case that checks that the size constructor and
 ///        manually filling in the keys and values behaves correctly.
 ///
@@ -161,7 +151,7 @@ GPU_TEST(KeyValueSorter, SizeConstructor)
 {
    int length = 5;
    care::array<int, 5> data{{4, 1, 2, 0, 3}};
-   care::KeyValueSorter<int, RAJAExec> sorter(length);
+   care::KeyValueSorter<size_t, int, RAJAExec> sorter(length);
 
    CARE_STREAM_LOOP(i, 0, length) {
       sorter.setKey(i, i);
@@ -200,7 +190,7 @@ GPU_TEST(KeyValueSorter, RawArrayConstructor)
 {
    int length = 5;
    care::array<int, 5> data{{4, 1, 2, 0, 3}};
-   care::KeyValueSorter<int, RAJAExec> sorter(length, data.data());
+   care::KeyValueSorter<size_t, int, RAJAExec> sorter(length, data.data());
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
@@ -243,7 +233,7 @@ GPU_TEST(KeyValueSorter, host_device_ptr_Constructor)
       data[4] = 3;
    } CARE_GPU_KERNEL_END
 
-   care::KeyValueSorter<int, RAJAExec> sorter(length, data);
+   care::KeyValueSorter<size_t, int, RAJAExec> sorter(length, data);
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);

@@ -13,8 +13,6 @@ Some applications launch so many small kernels that kernel launch overhead becom
 
 .. code-block:: c++
 
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, will not run on the device
-
    #include "care/care.h"
    #include "care/LoopFuser.h"
 

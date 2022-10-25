@@ -5,9 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define GPU_ACTIVE
-
-
 // Loop Fuser uses the CUDA/HIP default stream and wants to enqueue events in the default stream
 #define CAMP_USE_PLATFORM_DEFAULT_STREAM 1
 
@@ -101,8 +98,11 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...> * LoopFuser<REGISTER_COUNT,XARGS
 }
 
 template<int REGISTER_COUNT, typename...XARGS>
-void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording() {
-   m_recording = true;  warnIfNotFlushed();
+void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording(bool warn) {
+   m_recording = true;
+   if (warn) {
+      warnIfNotFlushed();
+   }
 }
 
 template<int REGISTER_COUNT, typename...XARGS>

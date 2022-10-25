@@ -25,7 +25,7 @@ namespace care {
    ///
    /// @author Peter Robinson
    ///
-   /// Designed to be used only on the device. If GPU_ACTIVE is defined and
+   /// Designed to be used only on the device. If CARE_GPUCC is defined and
    /// this is dereferenced in a host context, it will produce a compile time error.
    ///
    template <typename T>
@@ -106,7 +106,7 @@ namespace care {
          ///
          /// Return the element at the given index
          ///
-#ifdef GPU_ACTIVE
+#ifdef CARE_GPUCC
          CARE_DEVICE 
 #else
          CARE_HOST_DEVICE 
@@ -118,7 +118,7 @@ namespace care {
          ///
          /// Convert to a raw pointer
          ///
-#ifdef GPU_ACTIVE
+#ifdef CARE_GPUCC
          CARE_DEVICE 
 #else
          CARE_HOST_DEVICE 

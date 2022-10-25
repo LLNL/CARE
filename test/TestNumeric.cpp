@@ -7,16 +7,20 @@
 
 #include "care/config.h"
 
-// Makes LOOP_REDUCE run on the device
-#if defined(CARE_GPUCC)
-#define GPU_ACTIVE
-#endif
-
 // other library headers
 #include "gtest/gtest.h"
 
 // care headers
 #include "care/numeric.h"
+#include "care/detail/test_utils.h"
+
+#if defined(CARE_GPUCC)
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing care::numeric\n");
+}
+#endif
 
 TEST(numeric, iota)
 {
@@ -50,12 +54,6 @@ TEST(numeric, iota)
 }
 
 #if defined(CARE_GPUCC)
-
-// Adapted from CHAI
-#define GPU_TEST(X, Y) \
-   static void gpu_test_##X##Y(); \
-   TEST(X, gpu_test_##Y) { gpu_test_##X##Y(); } \
-   static void gpu_test_##X##Y()
 
 GPU_TEST(numeric, iota)
 {

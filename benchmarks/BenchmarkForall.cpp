@@ -5,9 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define GPU_ACTIVE
-#define OPENMP_ACTIVE
-
 // CARE headers
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"

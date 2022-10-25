@@ -24,8 +24,6 @@ Some sample code is provided below for proper use of care::host_device_ptr.
 
 .. code-block:: c++
 
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
-
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
       ptr = care::host_device_ptr<T>(length, name.c_str());
@@ -77,8 +75,6 @@ Some sample code is provided below for proper use of care::host_ptr.
 
 .. code-block:: c++
 
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
-
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
       ptr = care::host_device_ptr<T>(length, name.c_str());
@@ -115,8 +111,6 @@ This type is a lightweight wrapper for a raw device array that prevents the devi
 Some sample code is provided below for proper use of care::device_ptr.
 
 .. code-block:: c++
-
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
 
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
@@ -166,8 +160,6 @@ Some sample code is provided below for proper use of care::local_ptr.
 
 .. code-block:: c++
 
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
-
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
       ptr = care::host_device_ptr<T>(length, name.c_str());
@@ -215,8 +207,6 @@ Some sample code is provided below for proper use of care::array.
 
 .. code-block:: c++
 
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
-
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {
       ptr = care::host_device_ptr<T>(length, name.c_str());
@@ -259,8 +249,6 @@ This type is an alias for chai::managed_ptr, which is used to provide a portable
 Some sample code is provided below for proper use of care::managed_ptr.
 
 .. code-block:: c++
-
-   #define GPU_ACTIVE // If this is not defined in the compilation unit, CARE loop macros will not run on the device
 
    template <typename T>
    void allocatePtr(int length, care::host_device_ptr<T>& ptr, std::string name) {

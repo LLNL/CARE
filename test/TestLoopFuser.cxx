@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////////////
 
-#define GPU_ACTIVE
-
 #include "care/config.h"
 
 #if CARE_ENABLE_LOOP_FUSER
@@ -20,10 +18,15 @@
 
 #include "gtest/gtest.h"
 
-// This makes it so we can use device lambdas from within a GPU_TEST
-#define GPU_TEST(X, Y) static void gpu_test_ ## X_ ## Y(); \
-   TEST(X, Y) { gpu_test_ ## X_ ## Y(); } \
-   static void gpu_test_ ## X_ ## Y()
+#include "care/detail/test_utils.h"
+
+#if defined(CARE_GPUCC)
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing Loop Fusion\n");
+}
+#endif
 
 TEST(UpperBound_binarySearch, checkOffsets) {
    // These come from a segfault that occurred during development
