@@ -38,7 +38,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
     depends_on('cmake@3.14.5:', when="+cuda")
-    depends_on('cmake@3.23.1:', when="+rocm")
+    depends_on('cmake@3.21.1:', when="+rocm")
 
     depends_on('camp@2022.03.2', when='@0.7.11:')
     depends_on('camp@0.2.2', when='@:0.7.11')
@@ -63,10 +63,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda~shared~disable_rm', when='+cuda')
 
-    depends_on('camp+allow-unsupported-compilers', when='+allow-unsupported-compilers')
-    depends_on('umpire+allow-unsupported-compilers', when='+allow-unsupported-compilers')
-    depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
-    depends_on('chai+allow-unsupported-compilers', when='+allow-unsupported-compilers')
+    depends_on('cuda+allow-unsupported-compilers', when='+cuda+allow-unsupported-compilers')
 
     with when('+rocm'):
        # variants +rocm and amdgpu_targets are not automatically passed to
