@@ -23,7 +23,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     version('0.3.0', tag='v0.3.0', submodules='True')
     version('0.2.0', tag='v0.2.0', submodules='True')
 
-    variant('openmp', default=False, description='Build Shared Libs')
+    variant('openmp', default=False, description='Build with OpenMP support')
     variant('implicit_conversions', default=True, description='Enable implicit'
             'conversions to/from raw pointers')
     variant('benchmarks', default=True, description='Build benchmarks.')
@@ -37,7 +37,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
-    depends_on('cmake@3.14.5', when="+cuda")
+    depends_on('cmake@3.14.5:', when="+cuda")
+    depends_on('cmake@3.23.1:', when="+rocm")
 
     depends_on('camp@2022.03.2', when='@0.7.11:')
     depends_on('camp@0.2.2', when='@:0.7.11')
@@ -61,6 +62,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('umpire+cuda~shared', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda~shared~disable_rm', when='+cuda')
+
     depends_on('camp+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('umpire+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
@@ -117,54 +119,35 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super(Care, self).initconfig_hardware_entries()
 
-        if "+cuda" in spec:
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
+
+        if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
-                                              True))
+            entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
             entries.append(cmake_cache_string("CUDA_TOOLKIT_ROOT_DIR",spec['cuda'].prefix))
             entries.append(cmake_cache_string("NVTOOLSEXT_DIR",spec['cuda'].prefix))
             entries.append(cmake_cache_string("CUB_DIR",spec['cub'].prefix))
 
-            # CUDA_FLAGS
-            cudaflags  = "-restrict --expt-extended-lambda "
-
             if not spec.satisfies('cuda_arch=none'):
-                cuda_arch = spec.variants['cuda_arch'].value[0]
+                cuda_arch = spec.variants['cuda_arch'].value
                 entries.append(cmake_cache_string(
-                    "CMAKE_CUDA_ARCHITECTURES",
-                    cuda_arch))
-                cudaflags += '-arch compute_${CMAKE_CUDA_ARCHITECTURES} -code sm_${CMAKE_CUDA_ARCHITECTURES} '
-            else:
-                entries.append(
-                    "# cuda_arch could not be determined\n\n")
+                    "CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_ARCHITECTURES", '{0}'.format(cuda_arch[0])))
+        else:
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-            if "+cpp14" in spec:
-                cudaflags += " -std=c++14"
-            else:
-                cudaflags += " -std=c++11"
-            entries.append(
-                cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
-
-            entries.append(
-                "# nvcc does not like gtest's 'pthreads' flag\n")
-            entries.append(
-                cmake_cache_option("gtest_disable_pthreads", True))
-
-        if '+hip' in spec:
+        if '+rocm' in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_string("HIP_ROOT_DIR", spec['hip'].prefix))
-            
+            entries.append(cmake_cache_path(
+                "HIP_ROOT_DIR", '{0}'.format(spec['hip'].prefix)))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
-                entries.append(cmake_cache_string("HIP_HIPCC_FLAGS","--amdgpu-target={0}".format(arch_str)))
-
-        entries.append("#------------------{0}".format("-" * 30))
-        entries.append("# Hardware Specifics")
-        entries.append("#------------------{0}\n".format("-" * 30))
-
-        # OpenMP
-        entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies('+openmp')))
+                entries.append(cmake_cache_string(
+                    "HIP_HIPCC_FLAGS", '--amdgpu-target={0}'.format(arch_str)))
+        else:
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
 
         # Enable death tests
         entries.append(cmake_cache_option(
@@ -183,10 +166,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = []
 
         # TPL locations
-        entries.append("#------------------{0}".format("-" * 60))
-        entries.append("# TPLs")
-        entries.append("#------------------{0}\n".format("-" * 60))
-        
         entries.append(cmake_cache_path('BLT_SOURCE_DIR', spec['blt'].prefix))
 
         entries.append(cmake_cache_option('CARE_ENABLE_IMPLICIT_CONVERSIONS', spec.satisfies('+implicit_conversions')))
