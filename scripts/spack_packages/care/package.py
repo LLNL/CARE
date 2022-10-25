@@ -53,7 +53,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('chai+enable_pick@2022.03.0', when='@0.7.11:')
     depends_on('chai+enable_pick@2.4.0', when='@:0.7.11')
 
-    with when('+rocm'):
+    with when('+cuda'):
        # WARNING: this package currently only supports an internal cub
        # package. This will cause a race condition if compiled with another
        # package that uses cub. TODO: have all packages point to the same external
