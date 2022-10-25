@@ -1,0 +1,29 @@
+._batch:
+  tags: &batch batch
+
+._shell:
+  tags: &shell shell
+
+._corona:
+  tags: &corona corona
+
+._lassen:
+  tags: &lassen lassen
+
+._ruby:
+  tags: &ruby ruby
+
+.corona_shell:
+  tags:
+    - *corona
+    - *shell
+
+.lassen_shell:
+  tags:
+    - *lassen
+    - *shell
+
+.ruby_shell:
+  tags:
+    - *ruby
+    - *shell

@@ -10,21 +10,14 @@
 # See the COPYRIGHT file for details.
 ###############################################################################
 
+# ruby templates (originally)
 ####
 # This is the share configuration of jobs for ruby
 
 ####
 # In pre-build phase, allocate a node for builds
 .on_ruby:
-  tags:
-    - shell
-    - ruby 
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /_qnone/ || $ON_RUBY == "OFF"' #run except if ...
-      when: never
-    - if: '$CI_JOB_NAME =~ /release_resources/'
-      when: always
-    - when: on_success
+  extends: [.ruby_shell, .ruby_rules]
 
 ####
 # In pre-build phase, allocate a node for builds
@@ -56,4 +49,32 @@ release_resources (on ruby):
 
 .build_and_test_on_ruby_advanced:
   extends: [.build_and_test_on_ruby, .advanced_pipeline]
+
+# ruby jobs
+clang_10:
+  variables:
+    SPEC: "%clang@10.0.1+tests"
+  extends: .build_and_test_on_ruby
+
+clang_9:
+  variables:
+    SPEC: "%clang@9.0.0+tests"
+  extends: .build_and_test_on_ruby
+
+gcc_8_1_0:
+  variables:
+    SPEC: "%gcc@8.1.0+tests"
+  extends: .build_and_test_on_ruby
+
+#intel takes  a long time to link Loop Fuser tests, so we disable tests for this compiler
+icpc_19_0_4:
+  variables:
+    SPEC: " %intel@19.0.4"
+  extends: .build_and_test_on_ruby
+
+
+gcc_4_9_3:
+  variables:
+    SPEC: "%gcc@4.9.3+tests"
+  extends: .build_and_test_on_ruby
 
