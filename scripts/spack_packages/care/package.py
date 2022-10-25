@@ -40,7 +40,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.14.5:', when="+cuda")
     depends_on('cmake@3.21.1:', when="+rocm")
 
-    depends_on('camp@2022.03.2', when='@0.7.11:')
+    depends_on('camp@2022.03.0', when='@0.7.11:')
     depends_on('camp@0.2.2', when='@:0.7.11')
 
     depends_on('umpire@2022.03.1', when='@0.7.11:')
