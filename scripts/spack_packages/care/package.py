@@ -68,19 +68,21 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+allow-unsupported-compilers', when='+allow-unsupported-compilers')
     depends_on('chai+allow-unsupported-compilers', when='+allow-unsupported-compilers')
 
-    # variants +hip and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    depends_on('camp+hip', when='+hip')
-    depends_on('umpire+hip', when='+hip')
-    depends_on('raja+hip~openmp', when='+hip')
-    depends_on('chai+hip~disable_rm', when='+hip')
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-        depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-        depends_on('raja amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-        depends_on('chai amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    with when('+rocm'):
+       # variants +rocm and amdgpu_targets are not automatically passed to
+       # dependencies, so do it manually.
+       for arch in ROCmPackage.amdgpu_targets:
+          depends_on('camp+rocm amdgpu_target={0}'.format(arch),
+                     when='amdgpu_target={0}'.format(arch))
+          depends_on('umpire+rocm amdgpu_target={0}'.format(arch),
+                     when='amdgpu_target={0}'.format(arch))
+          depends_on('raja+rocm amdgpu_target={0}'.format(arch),
+                     when='amdgpu_target={0}'.format(arch))
+          depends_on('chai+rocm~disable_rm amdgpu_target={0}'.format(arch),
+                     when='amdgpu_target={0}'.format(arch))
 
-    conflicts('+openmp', when='+hip')
+          conflicts('+openmp')
+
     conflicts('+openmp', when='+cuda')
 
     def flag_handler(self, name, flags):
