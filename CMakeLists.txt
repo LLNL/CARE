@@ -26,7 +26,7 @@ option(CHAI_ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(CHAI_ENABLE_PINNED "Enable pinned memory space" ON)
 option(CARE_ENABLE_PINNED_MEMORY_FOR_SCANS "Use pinned memory for scan lengths" ON)
 # Option to disable implicit conversion between host_device_ptr and raw arrays in CARE.
-option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
+option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" OFF)
 # CHAI must also be configured with the same settings for implicit conversions.
 set(CHAI_ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
 option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
