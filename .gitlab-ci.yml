@@ -50,11 +50,6 @@ stages:
   - l_build_and_test
   - c_build_and_test
 
-# This is the rules that drives the activation of "advanced" jobs. All advanced
-# jobs will share this through a template mechanism.
-.advanced_pipeline:
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop" || $ALL_TARGETS == "ON"' #run only if ...
 
 # These are also templates (.name) that define project specific build commands.
 # If an allocation exist with the name defined in this pipeline, the job will
@@ -93,9 +88,8 @@ stages:
 
 # This is where jobs are included.
 include:
-  - local: .gitlab/ruby-templates.yml
-  - local: .gitlab/ruby-jobs.yml
-  - local: .gitlab/lassen-templates.yml
-  - local: .gitlab/lassen-jobs.yml
-  - local: .gitlab/corona-templates.yml
-  - local: .gitlab/corona-jobs.yml
+  - local: .gitlab/corona.yml
+  - local: .gitlab/lassen.yml
+  - local: .gitlab/ruby.yml
+  - local: .gitlab/rules.yml
+  - local: .gitlab/runners.yml
