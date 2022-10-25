@@ -24,7 +24,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     version('0.2.0', tag='v0.2.0', submodules='True')
 
     variant('openmp', default=False, description='Build with OpenMP support')
-    variant('implicit_conversions', default=False, description='Enable implicit'
+    variant('implicit_conversions', default=True, description='Enable implicit'
             'conversions to/from raw pointers')
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
