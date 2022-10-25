@@ -52,18 +52,19 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('chai+enable_pick@2022.03.0', when='@0.7.11:')
     depends_on('chai+enable_pick@2.4.0', when='@:0.7.11')
 
-    # WARNING: this package currently only supports an internal cub
-    # package. This will cause a race condition if compiled with another
-    # package that uses cub. TODO: have all packages point to the same external
-    # cub package.
-    depends_on('cub', when='+cuda')
+    with when('+rocm'):
+       # WARNING: this package currently only supports an internal cub
+       # package. This will cause a race condition if compiled with another
+       # package that uses cub. TODO: have all packages point to the same external
+       # cub package.
+       depends_on('cub')
 
-    depends_on('camp+cuda', when='+cuda')
-    depends_on('umpire+cuda~shared', when='+cuda')
-    depends_on('raja+cuda~openmp', when='+cuda')
-    depends_on('chai+cuda~shared~disable_rm', when='+cuda')
+       depends_on('camp+cuda')
+       depends_on('umpire+cuda~shared')
+       depends_on('raja+cuda~openmp')
+       depends_on('chai+cuda~shared')
 
-    depends_on('cuda+allow-unsupported-compilers', when='+cuda+allow-unsupported-compilers')
+       depends_on('cuda+allow-unsupported-compilers', when='+allow-unsupported-compilers')
 
     with when('+rocm'):
        # variants +rocm and amdgpu_targets are not automatically passed to
@@ -75,7 +76,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
                      when='amdgpu_target={0}'.format(arch))
           depends_on('raja+rocm amdgpu_target={0}'.format(arch),
                      when='amdgpu_target={0}'.format(arch))
-          depends_on('chai+rocm~disable_rm amdgpu_target={0}'.format(arch),
+          depends_on('chai+rocm amdgpu_target={0}'.format(arch),
                      when='amdgpu_target={0}'.format(arch))
 
           conflicts('+openmp')
