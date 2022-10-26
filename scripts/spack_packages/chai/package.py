@@ -35,6 +35,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     version('1.0', tag='v1.0', submodules=True)
 
     variant('enable_pick', default=False, description='Enable pick method')
+    variant('enable_pinned', default=False, description='Enable pinned memory')
     variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=False, description='Build benchmarks.')
@@ -43,6 +44,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
+    variant('implicit_conversions', default=False, description='Enable implicit'
+            'conversions to/from raw pointers')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
@@ -161,13 +164,16 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_path("RAJA_DIR", spec['raja'].prefix))
         entries.append(cmake_cache_option(
             "{}ENABLE_PICK".format(option_prefix), '+enable_pick' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_PINNED".format(option_prefix), spec.satisfies('+enable_pinned')))
         entries.append(cmake_cache_path(
             "umpire_DIR", spec['umpire'].prefix.share.umpire.cmake))
-        entries.append(cmake_cache_option("ENABLE_TESTS", '+tests' in spec))
-        entries.append(cmake_cache_option("ENABLE_BENCHMARKS", '+benchmarks' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_TESTS".format(option_prefix), '+tests' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_BENCHMARKS".format(option_prefix), '+benchmarks' in spec))
         entries.append(cmake_cache_option(
             "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
+        entries.append(cmake_cache_option('{}ENABLE_IMPLICIT_CONVERSIONS'.format(option_prefix), spec.satisfies('+implicit_conversions')))
 
         return entries
 
