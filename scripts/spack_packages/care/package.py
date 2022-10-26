@@ -50,8 +50,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja@2022.03.0', when='@0.7.11:')
     depends_on('raja@0.14.0', when='@:0.7.11')
 
-    depends_on('chai+enable_pick@2022.03.0', when='@0.7.11:')
-    depends_on('chai+enable_pick@2.4.0', when='@:0.7.11')
+    depends_on('chai+enable_pick+enable_pinned~implicit_conversions@2022.03.0', when='@0.7.11:')
+    depends_on('chai+enable_pick+enable_pinned~implicit_conversions@2.4.0', when='@:0.7.11')
 
     with when('+cuda'):
        # WARNING: this package currently only supports an internal cub
