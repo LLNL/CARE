@@ -52,22 +52,22 @@ gcc_8_3_1:
 
 ibm_clang_9_cuda:
   variables:
-#    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 +tests %clang@ibm.9.0.0^cuda@10.1.168 ^cmake@3.14.5"
-    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 %clang@ibm.9.0.0^cuda@10.1.168 ^cmake@3.14.5"
+#    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 +tests %clang@ibm.9.0.0^cuda@10.1.168 ^cmake@3.14.5:"
+    SPEC: "+cuda +allow-unsupported-compilers cuda_arch=70 %clang@ibm.9.0.0^cuda@10.1.168 ^cmake@3.14.5:"
   extends: .build_and_test_on_lassen
 
 #TODO - this is getting a linking error (The link line is getting -L/path/to/4.9.3 libraries in tests for chai)
 ibm_clang_9_gcc_8_cuda:
   variables:
-#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %clang@ibm.9.0.0 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
-    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %clang@ibm.9.0.0 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %clang@ibm.9.0.0 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5:"
+    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %clang@ibm.9.0.0 cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 ^cuda@10.1.168 ^cmake@3.14.5:"
   allow_failure: true
   extends: .build_and_test_on_lassen
 
 gcc_8_3_1_cuda:
   variables:
-#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
-    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
+#    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5:"
+    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5:"
   extends: .build_and_test_on_lassen
 
 
