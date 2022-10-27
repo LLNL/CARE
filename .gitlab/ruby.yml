@@ -61,6 +61,11 @@ clang_9:
     SPEC: "%clang@9.0.0+tests"
   extends: .build_and_test_on_ruby
 
+gcc_10_2_1:
+  variables:
+    SPEC: "%gcc@10.2.1+tests"
+  extends: .build_and_test_on_ruby
+
 gcc_8_1_0:
   variables:
     SPEC: "%gcc@8.1.0+tests"
