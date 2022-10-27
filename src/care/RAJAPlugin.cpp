@@ -225,6 +225,7 @@ namespace care {
             it.second(space, fileName, lineNumber);
          }
          s_post_parallel_forall_actions.clear();
+         threadID = -1; 
       }
    }
 

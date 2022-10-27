@@ -41,8 +41,8 @@ CARE_HOST_DEVICE CARE_INLINE const T& min(const T& a, const T& b)
    return a < b ? a : b;
 }
 
-template <class T, class Size, class U>
-void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);
+template <class T, template<class A> class Accessor, class Size, class U>
+void fill_n(care::host_device_ptr<T, Accessor> arr, Size n, const U& val);
 
 template <class T, class Size, class U>
 void copy_n(care::host_device_ptr<const T> in, Size n, care::host_device_ptr<U> out);
@@ -68,11 +68,13 @@ T ArrayMin(care::host_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 template <typename T>
 T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
-template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex = 0);
+//TODO: change default to DefaultAccessor
+template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::RaceConditionAccessor >
+T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex = 0);
 
-template <typename T, typename Exec=RAJAExec>
-T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex = 0);
+//TODO: change default to DefaultAccessor
+template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::RaceConditionAccessor >
+T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
 CARE_HOST_DEVICE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal, int startIndex = 0);

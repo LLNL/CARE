@@ -74,7 +74,7 @@ namespace care {
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
    template <typename T, template <class Anyfoo> class Accessor=RaceConditionAccessor>
-   class host_device_ptr : public chai::ManagedArray<T>, Accessor<T> {
+   class host_device_ptr : public chai::ManagedArray<T>, public Accessor<T> {
      private:
       using T_non_const = typename std::remove_const<T>::type;
       using MA = chai::ManagedArray<T>;
@@ -146,7 +146,7 @@ namespace care {
       /// This is defined when the CHAI resource manager is disabled
       ///
       host_device_ptr<T, Accessor<T>>(T* from, size_t size, const char * name)
-         : MA(from, nullptr, size, nullptr), Accessor<T>(size)
+         : MA(from, nullptr, size, nullptr), Accessor<T>(size, name)
       {
          Accessor<T>::set_data(MA::data(chai::CPU, false));
       }
@@ -162,7 +162,7 @@ namespace care {
               chai::ArrayManager::getInstance(),
               size,
               chai::ArrayManager::getInstance()->getPointerRecord((void *) (size == 0 ? nullptr : from))),
-           Accessor<T>(size)
+           Accessor<T>(size, name)
       {
          registerCallbacks(name);
          sanityCheckRecords((void *) from, MA::m_pointer_record);
@@ -181,7 +181,7 @@ namespace care {
       ///
       /// Construct from a size and name
       ///
-      host_device_ptr<T, Accessor<T>>(size_t size, const char * name) : MA (size), Accessor<T>(size){
+      host_device_ptr<T, Accessor<T>>(size_t size, const char * name) : MA (size), Accessor<T>(size, name){
          registerCallbacks(name);
          Accessor<T>::set_data(MA::data(chai::CPU,false));
       }
@@ -192,7 +192,7 @@ namespace care {
       /// Construct from a size, initial value, and name
       /// Optionally inititialize on device rather than the host
       ///
-      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size), Accessor<T>(size) { 
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor<T>>(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size), Accessor<T>(size, name) { 
          registerPointerName(name); 
          initialize(size, initial, 0, initOnDevice);
          Accessor<T>::set_data(MA::data(chai::CPU,false));
@@ -317,6 +317,7 @@ namespace care {
 #if !defined(CHAI_DISABLE_RM)
          if (CHAICallback::isActive()) {
             registerPointerName(name);
+            Accessor<T>::set_name(name);
 
             /* we capture the pointers instead of the values so that it is runtime
              * conditions that determine behavior instead of instantiation time
@@ -392,6 +393,7 @@ namespace care {
             }
          }
 #endif
+         Accessor<T>::set_name(name);
       }
 
       void initialize(const size_t N, const T initial,
@@ -450,6 +452,8 @@ namespace care {
       CARE_HOST void move(ExecutionSpace space) {
          MA::move(chai::ExecutionSpace((int) space));
       }
+      
+      inline bool operator ==(host_device_ptr<T> const & right) const { return MA::data(chai::CPU,false) == right.data(chai::CPU,false);}
    }; // class host_device_ptr
 } // namespace care
 

@@ -988,8 +988,8 @@ CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> arr
  * Author(s) : Peter Robinson
  * Purpose   : Fills a ManagedArray with the value given.
  * ************************************************************************/
-template <class T, class Size, class U>
-CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
+template <class T, template<class A> class Accessor, class Size, class U>
+CARE_INLINE void fill_n(care::host_device_ptr<T, Accessor> arr, Size n, const U& val)
 {
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
@@ -1098,8 +1098,8 @@ CARE_INLINE T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, 
  * Author(s) : Peter Robinson
  * Purpose   : Returns the maximum value in a ManagedArray
  * ************************************************************************/
-template <typename T, typename Exec>
-CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec, template<class A> class Accessor>
+CARE_INLINE T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex)
 {
    RAJAReduceMax<T> max { initVal };
    CARE_REDUCE_LOOP(k, startIndex, n) {
@@ -1108,10 +1108,10 @@ CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int
    return (T)max;
 }
 
-template <typename T, typename Exec>
-CARE_INLINE T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec, template<class A> class Accessor>
+CARE_INLINE T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
+   return ArrayMax<T, Exec, Accessor>((care::host_device_ptr<const T, Accessor>)arr, n, initVal, startIndex);
 }
 
 template <typename T>
@@ -1139,7 +1139,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal
 template <typename T>
 CARE_INLINE T ArrayMax(care::host_ptr<const T> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
+   return ArrayMax<T,RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
 }
 
 template <typename T>
