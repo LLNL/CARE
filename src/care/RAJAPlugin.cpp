@@ -264,7 +264,8 @@ namespace care {
       s_post_parallel_forall_actions[key] = action;
    }
    bool RAJAPlugin::post_parallel_forall_action_registered(void * key) {
-      return s_post_parallel_forall_actions.count(key) > 0;
+      bool registered = s_post_parallel_forall_actions.count(key) > 0;
+      return registered;
    }
 
 

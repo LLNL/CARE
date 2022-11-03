@@ -233,6 +233,11 @@ namespace care {
       /// Copy assignment operator
       ///
       host_device_ptr& operator=(const host_device_ptr& other) = default;
+/*      host_device_ptr& operator=(const host_device_ptr& other) {
+         MA::operator=(other);
+         Accessor<T>::operator=(other);
+      }
+*/
 
       ///
       /// @author Peter Robinson
@@ -453,7 +458,7 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
       
-      inline bool operator ==(host_device_ptr<T> const & right) const { return MA::data(chai::CPU,false) == right.data(chai::CPU,false);}
+      inline bool operator ==(host_device_ptr<T, Accessor> const & right) const { return MA::data(chai::CPU,false) == right.data(chai::CPU,false);}
    }; // class host_device_ptr
 } // namespace care
 

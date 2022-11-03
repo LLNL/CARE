@@ -1376,6 +1376,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
                                  if (FUSED_SCANVAR != nullptr) { \
                                     FUSIBLE_INDEX_ADJUST(INDEX) ; \
                                     int __offset = __fusible_action_index__ == 0 ? 0 : SCANVAR_OFFSET[__fusible_action_index__-1]; \
+                                    printf("MACRO LAYER: writing %i to scanvar at index %i\n", FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset], INDEX); \
                                     SCANVAR[INDEX] = FUSED_SCANVAR[__fusible_global_index__] - FUSED_SCANVAR[__offset]; \
                                  } \
                               },  \
