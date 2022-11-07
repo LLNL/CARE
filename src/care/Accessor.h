@@ -15,10 +15,10 @@
 namespace care {
 
 template <typename T>
-class DefaultAccessor {
+class NoOpAccessor {
    public:
-   DefaultAccessor<T>() = default;
-   DefaultAccessor<T>(size_t , const char * ) {}
+   NoOpAccessor<T>() = default;
+   NoOpAccessor<T>(size_t , const char * ) {}
    
    template<typename Idx> inline CARE_HOST_DEVICE void operator[](const Idx i) const {}
    void set_size(size_t) {}
@@ -52,7 +52,7 @@ void detectRaceCondition(T* data, T* prev_data, std::unordered_map<int, std::set
 }
 
 template <typename T>
-class RaceConditionAccessor : public DefaultAccessor<T> {
+class RaceConditionAccessor : public NoOpAccessor<T> {
    public:
 
    RaceConditionAccessor<T>() = default;
@@ -132,6 +132,11 @@ protected:
    std::function<void(int)> m_callback; 
 };
 
+#ifdef CARE_ENABLE_RACE_DETECTION
+#define CARE_DEFAULT_ACCESSOR RaceConditionAccessor
+#else
+#define CARE_DEFAULT_ACCESSOR NoOpAccessor
+#endif
 
 
 

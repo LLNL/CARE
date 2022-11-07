@@ -459,41 +459,41 @@ void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<globalID>, care::h
 ///////////////////////////////////////////////////////////////////////////////
 
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<bool, care::DefaultAccessor>, int, const bool&) ;
+void fill_n(care::host_device_ptr<bool, care::NoOpAccessor>, int, const bool&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<int, care::DefaultAccessor>, int, const int&) ;
+void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<float, care::DefaultAccessor>, int, const int&) ;
+void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<float, care::DefaultAccessor>, int, const float&) ;
+void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, int, const float&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, int, const int&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, int, const float&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, int, const float&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, int, const double&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, int, const double&) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<globalID, care::DefaultAccessor>, int, const globalID&) ;
+void fill_n(care::host_device_ptr<globalID, care::NoOpAccessor>, int, const globalID&) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<bool, care::DefaultAccessor>, size_t, const bool&) ;
+void fill_n(care::host_device_ptr<bool, care::NoOpAccessor>, size_t, const bool&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<int, care::DefaultAccessor>, size_t, const int&) ;
+void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, size_t, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<float, care::DefaultAccessor>, size_t, const int&) ;
+void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, size_t, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<float, care::DefaultAccessor>, size_t, const float&) ;
+void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, size_t, const float&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, size_t, const int&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, size_t, const int&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, size_t, const float&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, size_t, const float&) ;
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<double, care::DefaultAccessor>, size_t, const double&) ;
+void fill_n(care::host_device_ptr<double, care::NoOpAccessor>, size_t, const double&) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void fill_n(care::host_device_ptr<globalID, care::DefaultAccessor>, size_t, const globalID&) ;
+void fill_n(care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, const globalID&) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -717,45 +717,45 @@ double ArrayMaxLoc<double, RAJA::seq_exec>(care::host_device_ptr<const double>, 
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
-bool ArrayMax<bool, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<const bool, care::DefaultAccessor>, int, bool, int) ;
+bool ArrayMax<bool, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<const bool, care::NoOpAccessor>, int, bool, int) ;
 CARE_EXTERN template CARE_DLL_API
-int ArrayMax<int, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<const int, care::DefaultAccessor>, int, int, int) ;
+int ArrayMax<int, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<const int, care::NoOpAccessor>, int, int, int) ;
 CARE_EXTERN template CARE_DLL_API
-float ArrayMax<float, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<const float, care::DefaultAccessor>, int, float, int) ;
+float ArrayMax<float, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<const float, care::NoOpAccessor>, int, float, int) ;
 CARE_EXTERN template CARE_DLL_API
-double ArrayMax<double, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<const double, care::DefaultAccessor>, int, double, int) ;
+double ArrayMax<double, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<const double, care::NoOpAccessor>, int, double, int) ;
 // TODO GID not implemented
 
 CARE_EXTERN template CARE_DLL_API
-bool ArrayMax<bool, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<bool, care::DefaultAccessor>, int, bool, int) ;
+bool ArrayMax<bool, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<bool, care::NoOpAccessor>, int, bool, int) ;
 CARE_EXTERN template CARE_DLL_API
-int ArrayMax<int, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<int, care::DefaultAccessor>, int, int, int) ;
+int ArrayMax<int, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<int, care::NoOpAccessor>, int, int, int) ;
 CARE_EXTERN template CARE_DLL_API
-float ArrayMax<float, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<float, care::DefaultAccessor>, int, float, int) ;
+float ArrayMax<float, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<float, care::NoOpAccessor>, int, float, int) ;
 CARE_EXTERN template CARE_DLL_API
-double ArrayMax<double, RAJADeviceExec, care::DefaultAccessor>(care::host_device_ptr<double, care::DefaultAccessor>, int, double, int) ;
+double ArrayMax<double, RAJADeviceExec, care::NoOpAccessor>(care::host_device_ptr<double, care::NoOpAccessor>, int, double, int) ;
 // TODO GID not implemented
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
-bool ArrayMax<bool, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const bool, care::DefaultAccessor>, int, bool, int) ;
+bool ArrayMax<bool, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const bool, care::NoOpAccessor>, int, bool, int) ;
 CARE_EXTERN template CARE_DLL_API
-int ArrayMax<int, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const int, care::DefaultAccessor>, int, int, int) ;
+int ArrayMax<int, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const int, care::NoOpAccessor>, int, int, int) ;
 CARE_EXTERN template CARE_DLL_API
-float ArrayMax<float, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const float, care::DefaultAccessor>, int, float, int) ;
+float ArrayMax<float, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const float, care::NoOpAccessor>, int, float, int) ;
 CARE_EXTERN template CARE_DLL_API
-double ArrayMax<double, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const double, care::DefaultAccessor>, int, double, int) ;
+double ArrayMax<double, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const double, care::NoOpAccessor>, int, double, int) ;
 // TODO GID not implemented
 
 CARE_EXTERN template CARE_DLL_API
-bool ArrayMax<bool, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<bool, care::DefaultAccessor>, int, bool, int) ;
+bool ArrayMax<bool, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<bool, care::NoOpAccessor>, int, bool, int) ;
 CARE_EXTERN template CARE_DLL_API
-int ArrayMax<int, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<int, care::DefaultAccessor>, int, int, int) ;
+int ArrayMax<int, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<int, care::NoOpAccessor>, int, int, int) ;
 CARE_EXTERN template CARE_DLL_API
-float ArrayMax<float, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<float, care::DefaultAccessor>, int, float, int) ;
+float ArrayMax<float, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<float, care::NoOpAccessor>, int, float, int) ;
 CARE_EXTERN template CARE_DLL_API
-double ArrayMax<double, RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<double, care::DefaultAccessor>, int, double, int) ;
+double ArrayMax<double, RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<double, care::NoOpAccessor>, int, double, int) ;
 // TODO GID not implemented
 
 #ifdef CARE_PARALLEL_DEVICE

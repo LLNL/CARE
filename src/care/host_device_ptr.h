@@ -73,7 +73,7 @@ namespace care {
    ///
    /// @author Peter Robinson, Ben Liu, Alan Dayton, Arlie Capps
    ///
-   template <typename T, template <class Anyfoo> class Accessor=RaceConditionAccessor>
+   template <typename T, template <class A> class Accessor=CARE_DEFAULT_ACCESSOR>
    class host_device_ptr : public chai::ManagedArray<T>, public Accessor<T> {
      private:
       using T_non_const = typename std::remove_const<T>::type;

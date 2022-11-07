@@ -1139,7 +1139,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal
 template <typename T>
 CARE_INLINE T ArrayMax(care::host_ptr<const T> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T,RAJA::seq_exec, care::DefaultAccessor>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
+   return ArrayMax<T,RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
 }
 
 template <typename T>
@@ -1473,9 +1473,9 @@ CARE_INLINE int FindIndexMax(care::host_device_ptr<const T> arr, int n)
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T>
-CARE_INLINE void ArrayCopy(care::host_device_ptr<T> into,
-                           care::host_device_ptr<const T> from,
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void ArrayCopy(care::host_device_ptr<T, Accessor> into,
+                           care::host_device_ptr<const T, Accessor> from,
                            int n, int start1, int start2)
 {
    ArrayCopy(RAJAExec {}, into, from, n, start1, start2);

@@ -15,7 +15,6 @@ namespace care {
    struct openmp {};
    struct gpu {};
    struct parallel {};
-   struct race_detection {};
    struct raja_fusible {};
    struct raja_fusible_seq {};
    struct managed_ptr_read {};
@@ -30,7 +29,6 @@ namespace care {
       parallel,
       managed_ptr_read,
       managed_ptr_write,
-      race_detection
    };
 } // namespace care
 

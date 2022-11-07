@@ -68,12 +68,10 @@ T ArrayMin(care::host_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 template <typename T>
 T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
-//TODO: change default to DefaultAccessor
-template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::RaceConditionAccessor >
+template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
 T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex = 0);
 
-//TODO: change default to DefaultAccessor
-template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::RaceConditionAccessor >
+template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
 T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
@@ -188,8 +186,8 @@ int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit);
 template <typename T, typename Exec=RAJAExec >
 care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len);
 
-template <typename T>
-void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from, int n,
+template <typename T, template <class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void ArrayCopy(care::host_device_ptr<T, Accessor> into, care::host_device_ptr<const T, Accessor> from, int n,
                int start1=0, int start2=0);
 
 template <typename T, typename Exec>
