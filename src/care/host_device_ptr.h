@@ -253,7 +253,7 @@ namespace care {
          return MA::operator[](i);
       }
 
-      host_device_ptr<T> & realloc(size_t elems) {
+      host_device_ptr<T,Accessor> & realloc(size_t elems) {
          // If the managed array is empty, we register the callback on reallocation.
          bool doRegisterCallback = (MA::m_elems == 0 && MA::m_active_base_pointer == nullptr);
          MA::reallocate(elems);

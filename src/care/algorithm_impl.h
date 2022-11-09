@@ -518,9 +518,9 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T>
-CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size_t len,
-                           care::host_device_ptr<T> & outArray, int & outLen, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T, Accessor>  Array, size_t len,
+                           care::host_device_ptr<T, Accessor> & outArray, int & outLen, bool noCopy)
 {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
    fill_n(uniq, len+1, 0);
@@ -549,10 +549,10 @@ CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T>
-CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
 {
-   care::host_device_ptr<T> tmp;
+   care::host_device_ptr<T, Accessor> tmp;
    int newLen;
    uniqArray(exec, Array, len, tmp, newLen);
    if (noCopy) {
@@ -560,7 +560,7 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array,
       Array = tmp;
    }
    else {
-      ArrayCopy<T>(Array, tmp, newLen);
+      ArrayCopy<T, Accessor>(Array, tmp, newLen);
       tmp.free();
    }
    return newLen;
@@ -573,9 +573,9 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array,
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of uniqArray.
   ************************************************************************/
-template <typename T>
-CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_t len,
-                           care::host_device_ptr<T> & outArray, int & newLen)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> Array, size_t len,
+                           care::host_device_ptr<T, Accessor> & outArray, int & newLen)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array);
@@ -587,7 +587,7 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
       size_t i=0  ;
 
       /* alloc some space, we realloc later */
-      outArray = care::host_device_ptr<T>(len,"uniq_outArray");
+      outArray = care::host_device_ptr<T, Accessor>(len,"uniq_outArray");
       arrout = outArray;
 
       while (i < len) {
@@ -612,13 +612,13 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
  * Purpose   : CPU version of uniqArray, with in-place semantics. Set noCopy to true
  *             if you don't care about data left at the end of the array after the uniq.
   ************************************************************************/
-template <typename T>
-CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
 {
    int newLength = 0;
    if (len > 0) {
-      care::host_device_ptr<T> tmp;
-      uniqArray(exec, Array, len, tmp, newLength);
+      care::host_device_ptr<T, Accessor> tmp;
+      uniqArray<T, Accessor>(exec, Array, len, tmp, newLength);
       if (noCopy) {
          Array.free();
          Array = tmp;

@@ -204,14 +204,14 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, c
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &, bool) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &, bool) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &, bool) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -250,14 +250,14 @@ int uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::RaceConditio
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
