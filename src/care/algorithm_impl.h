@@ -641,14 +641,14 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
  * Purpose   : GPU version of sortArray.
   ************************************************************************/
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    radixSortArray(Array, len, start, noCopy);
 }
 
 template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len)
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len)
 {
    radixSortArray(Array, len, 0, false);
 }
@@ -659,7 +659,7 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, siz
  * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
   ************************************************************************/
 template <typename T>
-CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
@@ -710,14 +710,14 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
 #else // defined(CARE_GPUCC)
 
 // TODO openMP parallel implementation
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    sortArray(RAJA::seq_exec{}, Array, len, start, noCopy);
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len)
 {
    sortArray(RAJA::seq_exec{}, Array, len);
 }
@@ -731,8 +731,8 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of sortArray. Calls std::sort
   ************************************************************************/
-template <typename T>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array)+start;
@@ -740,8 +740,8 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, siz
    (void) noCopy;
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> &Array, size_t len)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array);

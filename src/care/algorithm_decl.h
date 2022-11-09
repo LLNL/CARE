@@ -307,24 +307,24 @@ void IntersectArrays(RAJA::seq_exec exec,
                      care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                      int *numMatches);
 
-template <typename T>
-void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy) ;
+template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy) ;
 
-template <typename T>
-void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len) ;
+template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> &Array, size_t len) ;
 
 #ifdef CARE_PARALLEL_DEVICE
 
-template <typename T>
-void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy) ;
+template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len, int start, bool noCopy) ;
 
 #ifdef CARE_GPUCC
-template <typename T>
-void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
+template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy);
 #endif // defined(CARE_GPUCC)
 
-template <typename T>
-void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len);
+template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
+void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len);
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
