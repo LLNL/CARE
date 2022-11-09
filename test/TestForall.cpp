@@ -56,6 +56,7 @@ CPU_TEST(forall, dynamic_policy)
    temp.free();
 }
 
+#if defined(CARE_ENABLE_RACE_DETECTION)
 CPU_TEST(forall, race_condition_detection)
 {
    printf("in cpu_test race_condition_detection\n");
@@ -81,6 +82,7 @@ CPU_TEST(forall, race_condition_detection)
 
    temp.free();
 }
+#endif
 
 #if defined(CARE_GPUCC)
 

@@ -28,7 +28,7 @@ namespace care {
       gpu,
       parallel,
       managed_ptr_read,
-      managed_ptr_write,
+      managed_ptr_write
    };
 } // namespace care
 
