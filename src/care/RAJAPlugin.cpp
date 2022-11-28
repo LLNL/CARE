@@ -42,7 +42,7 @@ namespace care {
 
    std::vector<const chai::PointerRecord*> RAJAPlugin::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
    std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> RAJAPlugin::s_post_parallel_forall_actions = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>{};
-   int RAJAPlugin::threadID = -1;
+   int RAJAPlugin::s_threadID = -1;
    /////////////////////////////////////////////////////////////////////////////////
    ///
    /// @brief Set up to be done before executing a RAJA loop.
@@ -225,7 +225,7 @@ namespace care {
             it.second(space, fileName, lineNumber);
          }
          s_post_parallel_forall_actions.clear();
-         threadID = -1; 
+         s_threadID = -1;
       }
    }
 

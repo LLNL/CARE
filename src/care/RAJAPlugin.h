@@ -52,7 +52,7 @@ namespace care {
          CARE_DLL_API static bool isParallelContext();
          CARE_DLL_API static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
          CARE_DLL_API static bool post_parallel_forall_action_registered(void * key);
-         CARE_DLL_API static int threadID;
+         CARE_DLL_API static int s_threadID;
          
 
       private:

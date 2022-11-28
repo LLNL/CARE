@@ -534,7 +534,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef CARE_ENABLE_RACE_DETECTION
-#define CARE_SET_THREAD_ID(INDEX) care::RAJAPlugin::threadID = INDEX ; 
+#define CARE_SET_THREAD_ID(INDEX) care::RAJAPlugin::s_threadID = INDEX ;
 #else
 #define CARE_SET_THREAD_ID(INDEX)
 #endif

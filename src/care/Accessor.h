@@ -29,13 +29,8 @@ class NoOpAccessor {
 template <typename T>
 void detectRaceCondition(T* data, T* prev_data, std::unordered_map<int, std::set<int>> * accesses, size_t len, const char * fieldName,
                          chai::ExecutionSpace space, const char * fileName, int lineNumber) {
-/* printf("checking for race condition, loop in execution space %i, fileName: %s, lineNumber %i\n", (int) space, fileName, lineNumber);
-   printf("accesses size is %lu\n", accesses->size());
-*/
    for (size_t i = 0; i < len; ++i) {
       if (!(data[i] == prev_data[i])) {
-    //     printf("data at %zu changed\n", i);
-         // then a write occurred
          if ((*accesses)[i].size() > 1) {
             printf("RACE CONDITION DETECTED, loop in execution space %i, fileName: %s, lineNumber %i\n", (int) space, fileName, lineNumber);
             printf("DATA %p NAMED %s at index %zu changed and accessed by following threads\n\t", data, fieldName, i);
@@ -81,7 +76,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
    const
    {
       if (m_accesses && RAJAPlugin::isParallelContext()) {
-         (*m_accesses)[i].insert(RAJAPlugin::threadID);
+         (*m_accesses)[i].insert(RAJAPlugin::s_threadID);
       }
    }
 
@@ -118,7 +113,7 @@ class RaceConditionAccessorWithCallback : public RaceConditionAccessor<T> {
    {
       m_callback(i);
       if (RaceConditionAccessor<T>::m_accesses && RAJAPlugin::isParallelContext()) {
-         printf("inserting %i into (%p) accesses[%i] for pointer %p\n", RAJAPlugin::threadID, (void *) RaceConditionAccessor<T>::m_accesses, i, RaceConditionAccessor<T>::m_shallow_copy_of_cpu_data);
+         printf("inserting %i into (%p) accesses[%i] for pointer %p\n", RAJAPlugin::s_threadID, (void *) RaceConditionAccessor<T>::m_accesses, i, RaceConditionAccessor<T>::m_shallow_copy_of_cpu_data);
          printf("size of accesses before insert %lu\n", RaceConditionAccessor<T>::m_accesses->size());
       }
       RaceConditionAccessor<T>::operator[](i);

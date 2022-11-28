@@ -233,11 +233,6 @@ namespace care {
       /// Copy assignment operator
       ///
       host_device_ptr& operator=(const host_device_ptr& other) = default;
-/*      host_device_ptr& operator=(const host_device_ptr& other) {
-         MA::operator=(other);
-         Accessor<T>::operator=(other);
-      }
-*/
 
       ///
       /// @author Peter Robinson
