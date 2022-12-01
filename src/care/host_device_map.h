@@ -75,7 +75,7 @@ namespace care {
         inline void emplace(key_type key, mapped_type val) const {
            m_map->emplace(key, val);
            // TODO Add control for this check
-           if (m_map->size() > m_max_size) {
+           if (m_map->size() > (size_t)m_max_size) {
               printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", (int)m_map->size(), m_max_size);
            }
         }
