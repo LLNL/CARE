@@ -647,7 +647,7 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & 
    radixSortArray(Array, len, start, noCopy);
 }
 
-template <typename T>
+template <typename T, template <class A> class Accessor>
 CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len)
 {
    radixSortArray(Array, len, 0, false);
@@ -658,7 +658,7 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & 
  * Author(s) : Peter Robinson
  * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
   ************************************************************************/
-template <typename T>
+template <typename T, template <class A> class Accessor>
 CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
