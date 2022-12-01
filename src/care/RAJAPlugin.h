@@ -15,7 +15,9 @@
 #include "chai/ExecutionSpaces.hpp"
 
 // Std library headers
+#include <functional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // Forward declarations
@@ -44,6 +46,14 @@ namespace care {
 
          CARE_DLL_API static void setSynchronization(bool synchronizeBefore,
                                                      bool synchronizeAfter);
+          
+         // custom parallel context actions
+         CARE_DLL_API static void setParallelContext(bool isParallel);
+         CARE_DLL_API static bool isParallelContext();
+         CARE_DLL_API static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
+         CARE_DLL_API static bool post_parallel_forall_action_registered(void * key);
+         CARE_DLL_API static int s_threadID;
+         
 
       private:
          static void writeLoopData(chai::ExecutionSpace space,
@@ -55,6 +65,7 @@ namespace care {
          static bool s_profile_host_loops;
          static bool s_synchronize_before;
          static bool s_synchronize_after;
+         static bool s_parallel_context;
 
          static uint32_t s_colors[7];
          static int s_num_colors;
@@ -64,6 +75,8 @@ namespace care {
          static int s_current_loop_line_number;
 
          static std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
+
+         static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> s_post_parallel_forall_actions;
    }; // class RAJAPlugin
 } // namespace care
 
