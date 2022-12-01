@@ -59,7 +59,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
          auto data = m_shallow_copy_of_cpu_data;
          if (!RAJAPlugin::post_parallel_forall_action_registered((void *)data)) {
             auto len = m_size_in_bytes / sizeof(T);
-            m_deep_copy_of_previous_state_of_cpu_data = new std::remove_const<T>::type[len];
+            m_deep_copy_of_previous_state_of_cpu_data = new typename std::remove_const<T>::type[len];
             std::copy_n(data, len, m_deep_copy_of_previous_state_of_cpu_data);
             auto prev_data = m_deep_copy_of_previous_state_of_cpu_data;
             m_accesses = new std::unordered_map<int, std::set<int>> {};
@@ -90,7 +90,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
    void set_name(char const * name) { m_name = name;}
 protected:
    T* m_shallow_copy_of_cpu_data;
-   std::remove_const<T>::type * m_deep_copy_of_previous_state_of_cpu_data;
+   typename std::remove_const<T>::type * m_deep_copy_of_previous_state_of_cpu_data;
    std::unordered_map<int, std::set<int>> * m_accesses;
    size_t m_size_in_bytes;
    char const* m_name;
