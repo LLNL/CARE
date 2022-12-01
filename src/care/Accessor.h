@@ -20,7 +20,7 @@ class NoOpAccessor {
    NoOpAccessor<T>() = default;
    NoOpAccessor<T>(size_t , const char * ) {}
    
-   template<typename Idx> inline CARE_HOST_DEVICE void operator[](const Idx i) const {}
+   template<typename Idx> inline CARE_HOST_DEVICE void operator[](const Idx) const {}
    void set_size(size_t) {}
    void set_data(T *) {}
    void set_name(char const *) {}
