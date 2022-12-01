@@ -376,7 +376,6 @@ namespace care {
    void CHAICallback::operator()(chai::PointerRecord const * record, chai::Action action, chai::ExecutionSpace space) {
       if (s_active) {
          NameMap& s_names = getNameMap();
-         TypeMap& s_types = getTypeMap();
 
          if (s_logging_enabled) {
             size_t size = record->m_size;
