@@ -31,6 +31,7 @@ namespace care {
    bool RAJAPlugin::s_profile_host_loops = true;
    bool RAJAPlugin::s_synchronize_before = false;
    bool RAJAPlugin::s_synchronize_after = false;
+   bool RAJAPlugin::s_parallel_context = false;
 
    uint32_t RAJAPlugin::s_colors[7] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
    int RAJAPlugin::s_num_colors = sizeof(s_colors) / sizeof(uint32_t);
@@ -40,7 +41,8 @@ namespace care {
    int RAJAPlugin::s_current_loop_line_number = -1;
 
    std::vector<const chai::PointerRecord*> RAJAPlugin::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
-
+   std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> RAJAPlugin::s_post_parallel_forall_actions = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>{};
+   int RAJAPlugin::s_threadID = -1;
    /////////////////////////////////////////////////////////////////////////////////
    ///
    /// @brief Set up to be done before executing a RAJA loop.
@@ -217,6 +219,14 @@ namespace care {
          arrayManager->setExecutionSpace(chai::NONE);
       }
 #endif // !defined(CHAI_DISABLE_RM)
+
+      if (s_parallel_context) {
+         for (auto const & it : s_post_parallel_forall_actions) {
+            it.second(space, fileName, lineNumber);
+         }
+         s_post_parallel_forall_actions.clear();
+         s_threadID = -1;
+      }
    }
 
    std::string RAJAPlugin::getCurrentLoopFileName() {
@@ -244,5 +254,21 @@ namespace care {
       s_synchronize_before = synchronizeBefore;
       s_synchronize_after = synchronizeAfter;
    }
+   void RAJAPlugin::setParallelContext(bool isParallel) {
+      s_parallel_context = isParallel;
+   }
+   bool RAJAPlugin::isParallelContext(){
+      return s_parallel_context;
+   }
+   void RAJAPlugin::register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action) { 
+      s_post_parallel_forall_actions[key] = action;
+   }
+   bool RAJAPlugin::post_parallel_forall_action_registered(void * key) {
+      bool registered = s_post_parallel_forall_actions.count(key) > 0;
+      return registered;
+   }
+
+
+   
 } // namespace care
 

@@ -518,9 +518,9 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T>
-CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size_t len,
-                           care::host_device_ptr<T> & outArray, int & outLen, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T, Accessor>  Array, size_t len,
+                           care::host_device_ptr<T, Accessor> & outArray, int & outLen, bool noCopy)
 {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
    fill_n(uniq, len+1, 0);
@@ -549,10 +549,10 @@ CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T>  Array, size
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T>
-CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
 {
-   care::host_device_ptr<T> tmp;
+   care::host_device_ptr<T, Accessor> tmp;
    int newLen;
    uniqArray(exec, Array, len, tmp, newLen);
    if (noCopy) {
@@ -560,7 +560,7 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array,
       Array = tmp;
    }
    else {
-      ArrayCopy<T>(Array, tmp, newLen);
+      ArrayCopy<T, Accessor>(Array, tmp, newLen);
       tmp.free();
    }
    return newLen;
@@ -573,9 +573,9 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array,
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of uniqArray.
   ************************************************************************/
-template <typename T>
-CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_t len,
-                           care::host_device_ptr<T> & outArray, int & newLen)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> Array, size_t len,
+                           care::host_device_ptr<T, Accessor> & outArray, int & newLen)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array);
@@ -587,7 +587,7 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
       size_t i=0  ;
 
       /* alloc some space, we realloc later */
-      outArray = care::host_device_ptr<T>(len,"uniq_outArray");
+      outArray = care::host_device_ptr<T, Accessor>(len,"uniq_outArray");
       arrout = outArray;
 
       while (i < len) {
@@ -612,13 +612,13 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T> Array, size_
  * Purpose   : CPU version of uniqArray, with in-place semantics. Set noCopy to true
  *             if you don't care about data left at the end of the array after the uniq.
   ************************************************************************/
-template <typename T>
-CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
 {
    int newLength = 0;
    if (len > 0) {
-      care::host_device_ptr<T> tmp;
-      uniqArray(exec, Array, len, tmp, newLength);
+      care::host_device_ptr<T, Accessor> tmp;
+      uniqArray<T, Accessor>(exec, Array, len, tmp, newLength);
       if (noCopy) {
          Array.free();
          Array = tmp;
@@ -641,14 +641,14 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
  * Purpose   : GPU version of sortArray.
   ************************************************************************/
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    radixSortArray(Array, len, start, noCopy);
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len)
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len)
 {
    radixSortArray(Array, len, 0, false);
 }
@@ -658,8 +658,8 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, siz
  * Author(s) : Peter Robinson
  * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
   ************************************************************************/
-template <typename T>
-CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
@@ -710,14 +710,14 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
 #else // defined(CARE_GPUCC)
 
 // TODO openMP parallel implementation
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    sortArray(RAJA::seq_exec{}, Array, len, start, noCopy);
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len)
 {
    sortArray(RAJA::seq_exec{}, Array, len);
 }
@@ -731,8 +731,8 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of sortArray. Calls std::sort
   ************************************************************************/
-template <typename T>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array)+start;
@@ -740,8 +740,8 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, siz
    (void) noCopy;
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len)
+template <typename T, template<class A> class Accessor>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> &Array, size_t len)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array);
@@ -988,8 +988,8 @@ CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> arr
  * Author(s) : Peter Robinson
  * Purpose   : Fills a ManagedArray with the value given.
  * ************************************************************************/
-template <class T, class Size, class U>
-CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
+template <class T, template<class A> class Accessor, class Size, class U>
+CARE_INLINE void fill_n(care::host_device_ptr<T, Accessor> arr, Size n, const U& val)
 {
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
@@ -1098,8 +1098,8 @@ CARE_INLINE T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, 
  * Author(s) : Peter Robinson
  * Purpose   : Returns the maximum value in a ManagedArray
  * ************************************************************************/
-template <typename T, typename Exec>
-CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec, template<class A> class Accessor>
+CARE_INLINE T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex)
 {
    RAJAReduceMax<T> max { initVal };
    CARE_REDUCE_LOOP(k, startIndex, n) {
@@ -1108,10 +1108,10 @@ CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int
    return (T)max;
 }
 
-template <typename T, typename Exec>
-CARE_INLINE T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec, template<class A> class Accessor>
+CARE_INLINE T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
+   return ArrayMax<T, Exec, Accessor>((care::host_device_ptr<const T, Accessor>)arr, n, initVal, startIndex);
 }
 
 template <typename T>
@@ -1139,7 +1139,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal
 template <typename T>
 CARE_INLINE T ArrayMax(care::host_ptr<const T> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T, RAJA::seq_exec>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
+   return ArrayMax<T,RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
 }
 
 template <typename T>
@@ -1473,9 +1473,9 @@ CARE_INLINE int FindIndexMax(care::host_device_ptr<const T> arr, int n)
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T>
-CARE_INLINE void ArrayCopy(care::host_device_ptr<T> into,
-                           care::host_device_ptr<const T> from,
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void ArrayCopy(care::host_device_ptr<T, Accessor> into,
+                           care::host_device_ptr<const T, Accessor> from,
                            int n, int start1, int start2)
 {
    ArrayCopy(RAJAExec {}, into, from, n, start1, start2);

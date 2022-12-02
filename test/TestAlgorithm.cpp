@@ -88,7 +88,7 @@ TEST(algorithm, fill_n_empty)
    int size = 0;
    care::host_device_ptr<int> a = nullptr;
    care::fill_n(a, size, -12);
-   EXPECT_EQ(a, nullptr);
+   EXPECT_EQ(a, care::host_device_ptr<int>(nullptr));
 }
 
 // copy_n tests
@@ -118,7 +118,7 @@ TEST(algorithm, copy_n_empty)
    care::host_device_ptr<int> a = nullptr;
    care::host_device_ptr<int> b = nullptr;
    care::copy_n(a, size, b);
-   EXPECT_EQ(b, nullptr);
+   EXPECT_EQ(b, care::host_device_ptr<int>(nullptr));
 }
 
 // NOTE: if an array is not sorted, the checkSorted function will print out an error message.
@@ -1798,7 +1798,7 @@ GPU_TEST(algorithm, dup_and_copy) {
 
   // duplicating nullptr should give nullptr
   care::host_device_ptr<int> dupnil = care::ArrayDup<int>(nil, 0);
-  EXPECT_EQ(dupnil, nullptr);
+  EXPECT_EQ(dupnil, care::host_device_ptr<int>(nullptr));
 
   // copy and check that elements are the same
   care::ArrayCopy<int>(to1, from, size);

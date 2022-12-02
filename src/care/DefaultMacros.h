@@ -532,10 +532,18 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef CARE_ENABLE_RACE_DETECTION
+#define CARE_SET_THREAD_ID(INDEX) care::RAJAPlugin::s_threadID = INDEX ;
+#else
+#define CARE_SET_THREAD_ID(INDEX)
+#endif
+
 #define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
+      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) { \
+         CARE_SET_THREAD_ID(INDEX)
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}

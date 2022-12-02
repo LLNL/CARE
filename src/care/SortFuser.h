@@ -301,7 +301,9 @@ namespace care {
          FUSIBLE_LOOP_STREAM(i,0,len) {
             result[i+offset] -= max_range*a;
             array[i] = result[i+offset];
-            concatenated_lengths[a] = len;
+            if (i == 0) {
+               concatenated_lengths[a] = len;
+            }
          } FUSIBLE_LOOP_STREAM_END
       }
       FUSIBLE_LOOPS_STOP

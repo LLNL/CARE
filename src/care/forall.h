@@ -215,6 +215,7 @@ namespace care {
       s_reverseLoopOrder = true;
 #endif
 
+      RAJAPlugin::setParallelContext(true);
 #if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
@@ -229,6 +230,7 @@ namespace care {
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
 
+      RAJAPlugin::setParallelContext(false);
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = false;
 #endif
