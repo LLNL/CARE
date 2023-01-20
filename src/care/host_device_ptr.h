@@ -201,7 +201,7 @@ namespace care {
       ///
       /// @author Peter Robinson
       ///
-      /// Convert to a host_device_ptr containing const elements
+      /// Convert to a host_device_ptr<const T, Accessor>
       ///
       template<bool B = std::is_const<T>::value,
                typename std::enable_if<!B, int>::type = 0>

@@ -17,13 +17,17 @@ namespace care {
 template <typename T>
 class NoOpAccessor {
    public:
-   NoOpAccessor<T>() = default;
-   NoOpAccessor<T>(size_t , const char * ) {}
-   
+   CARE_HOST_DEVICE NoOpAccessor<T>() {};
+   CARE_HOST_DEVICE NoOpAccessor<T>(size_t , const char * ) {}
+
    template<typename Idx> inline CARE_HOST_DEVICE void operator[](const Idx) const {}
    void set_size(size_t) {}
    void set_data(T *) {}
    void set_name(char const *) {}
+
+   protected:
+   CARE_HOST_DEVICE ~NoOpAccessor<T>() {};
+
 };
 
 template <typename T>

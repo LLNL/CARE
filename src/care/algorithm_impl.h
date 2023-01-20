@@ -695,7 +695,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
       if (len > 0) {
          Array.free();
       }
-      Array = result;
+      Array = care::host_device_ptr<T,Accessor>(chai::ManagedArray<T>(result));
    }
    else {
       ArrayCopy<T>(Array, result, len, start, 0);
