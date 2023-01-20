@@ -1,7 +1,6 @@
 [submodule "blt"]
 	path = blt
 	url = https://github.com/LLNL/blt
-	ignore = all
 [submodule "tpl/camp"]
 	path = tpl/camp
 	url = https://github.com/LLNL/camp
