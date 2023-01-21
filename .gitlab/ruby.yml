@@ -72,9 +72,3 @@ icpc_19_0_4:
     SPEC: " %intel@19.0.4"
   extends: .build_and_test_on_ruby
 
-
-gcc_4_9_3:
-  variables:
-    SPEC: "%gcc@4.9.3+tests"
-  extends: .build_and_test_on_ruby
-
