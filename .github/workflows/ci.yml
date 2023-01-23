@@ -16,7 +16,11 @@ jobs:
       run: git submodule update --init
     - name: Make build directory
       run: mkdir build
-    - name: Run cmake
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1.13.1
+      with:
+        cmake-version: '3.18.x'
+    - name: Run CMake
       run: cmake ../ -DCMAKE_BUILD_TYPE=Debug
       working-directory: build
     - name: Run make
