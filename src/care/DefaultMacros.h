@@ -25,7 +25,7 @@
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
 #define CARE_NEST_BEGIN(x) { int x ;
-#define CARE_NEST_END(x) x = 1 ; (void) ++x ; }
+#define CARE_NEST_END(x) x = 1 ; (void) ++x ; x = x;}
 #else // !NDEBUG
 #define CARE_NEST_BEGIN(x) {
 #define CARE_NEST_END(x) }

@@ -125,7 +125,11 @@ namespace care {
       ///
       /// Construct from a chai::ManagedArray
       ///
-      CARE_HOST_DEVICE host_device_ptr<T, Accessor>(MA const & other) : MA (other) , Accessor<T>() {Accessor<T>::set_data(MA::data(chai::CPU, false));}
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor>(MA const & other) : MA (other) , Accessor<T>() {
+#ifndef CARE_GPUCC
+         Accessor<T>::set_data(MA::data(chai::CPU, false));
+#endif
+      }
 
       ///
       /// @author Peter Robinson
@@ -201,7 +205,7 @@ namespace care {
       ///
       /// @author Peter Robinson
       ///
-      /// Convert to a host_device_ptr containing const elements
+      /// Convert to a host_device_ptr<const T, Accessor>
       ///
       template<bool B = std::is_const<T>::value,
                typename std::enable_if<!B, int>::type = 0>
@@ -453,8 +457,15 @@ namespace care {
          MA::move(chai::ExecutionSpace((int) space));
       }
       
-      inline bool operator ==(host_device_ptr<T, Accessor> const & right) const { return MA::data(chai::CPU,false) == right.data(chai::CPU,false);}
+      CARE_HOST_DEVICE inline bool operator ==(host_device_ptr<T, Accessor> const & right) const {
+#if !defined (CARE_DEVICE_COMPILE)
+       return MA::data(chai::CPU,false) == right.data(chai::CPU,false);
+#else
+       return MA::m_active_pointer == right.m_active_pointer;
+#endif
+      }
    }; // class host_device_ptr
+
 } // namespace care
 
 

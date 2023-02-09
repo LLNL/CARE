@@ -12,7 +12,7 @@ if (ENABLE_CUDA)
 endif()
 
 if (ENABLE_HIP)
-  set (care_test_dependencies ${care_test_dependencies} hip)
+  set (care_test_dependencies ${care_test_dependencies} blt::hip)
 endif ()
 
 if (ENABLE_OPENMP)

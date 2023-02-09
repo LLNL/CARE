@@ -10,6 +10,7 @@
 #include <functional>
 #include <set>
 #include <unordered_map>
+#include <math.h>
 
 
 namespace care {
@@ -17,20 +18,56 @@ namespace care {
 template <typename T>
 class NoOpAccessor {
    public:
-   NoOpAccessor<T>() = default;
-   NoOpAccessor<T>(size_t , const char * ) {}
+   CARE_HOST_DEVICE NoOpAccessor<T>() {};
+   CARE_HOST_DEVICE NoOpAccessor<T>(size_t , const char * ) {}
    
    template<typename Idx> inline CARE_HOST_DEVICE void operator[](const Idx) const {}
    void set_size(size_t) {}
    void set_data(T *) {}
    void set_name(char const *) {}
+
+   protected:
+   CARE_HOST_DEVICE ~NoOpAccessor<T>() {};
+
 };
+
+template <typename T>
+inline bool isDifferent(T & val1, T & val2) {
+   return !(val1 == val2);
+}
+// avoid possible FPE from comparing NAN floating point values
+inline bool isDifferent(float & val1, float & val2) {
+   if (isnan(val1) && !isnan(val2)) {
+      return true;
+   }
+   if (!isnan(val1) && isnan(val2)) {
+      return true;
+   }
+   if (isnan(val1) && isnan(val2)) {
+      return false;
+   }
+   return !(val1 == val2);
+}
+
+// avoid possible FPE from comparing NAN floating point values
+inline bool isDifferent(double & val1, double & val2) {
+   if (isnan(val1) && !isnan(val2)) {
+      return true;
+   }
+   if (!isnan(val1) && isnan(val2)) {
+      return true;
+   }
+   if (isnan(val1) && isnan(val2)) {
+      return false;
+   }
+   return !(val1 == val2);
+}
 
 template <typename T>
 void detectRaceCondition(T* data, T* prev_data, std::unordered_map<int, std::set<int>> * accesses, size_t len, const char * fieldName,
                          chai::ExecutionSpace space, const char * fileName, int lineNumber) {
    for (size_t i = 0; i < len; ++i) {
-      if (!(data[i] == prev_data[i])) {
+      if (isDifferent(data[i], prev_data[i])) {
          if ((*accesses)[i].size() > 1) {
             printf("RACE CONDITION DETECTED, loop in execution space %i, fileName: %s, lineNumber %i\n", (int) space, fileName, lineNumber);
             printf("DATA %p NAMED %s at index %zu changed and accessed by following threads\n\t", data, fieldName, i);
@@ -55,6 +92,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
 
 
    CARE_HOST_DEVICE RaceConditionAccessor<T>(RaceConditionAccessor<T> const & other ) : m_shallow_copy_of_cpu_data(other.m_shallow_copy_of_cpu_data), m_deep_copy_of_previous_state_of_cpu_data(other.m_deep_copy_of_previous_state_of_cpu_data), m_accesses(other.m_accesses), m_size_in_bytes(other.m_size_in_bytes), m_name(other.m_name) {
+#ifndef CARE_GPUCC
       if (RAJAPlugin::isParallelContext()) {
          auto data = m_shallow_copy_of_cpu_data;
          if (!RAJAPlugin::post_parallel_forall_action_registered((void *)data)) {
@@ -68,6 +106,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
             RAJAPlugin::register_post_parallel_forall_action((void *)data, std::bind(detectRaceCondition<T>, data, prev_data, accesses, len, name, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
          }
       }
+#endif
    }
 
 
@@ -75,9 +114,11 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
    inline CARE_HOST_DEVICE void operator[](const Idx i)
    const
    {
+#ifndef CARE_GPUCC
       if (m_accesses && RAJAPlugin::isParallelContext()) {
          (*m_accesses)[i].insert(RAJAPlugin::s_threadID);
       }
+#endif
    }
 
    void set_size(size_t elems) {

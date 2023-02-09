@@ -531,7 +531,7 @@ CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T, Accessor>  A
    care::exclusive_scan(RAJADeviceExec{}, uniq, nullptr, len+1, 0, true);
    int numUniq;
    uniq.pick(len, numUniq);
-   care::host_device_ptr<T> & tmp = outArray;
+   care::host_device_ptr<T, Accessor> & tmp = outArray;
    tmp.alloc(numUniq);
    CARE_STREAM_LOOP(i, 0, len) {
       if ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) {
@@ -560,7 +560,7 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor
       Array = tmp;
    }
    else {
-      ArrayCopy<T, Accessor>(Array, tmp, newLen);
+      ArrayCopy<T>(exec, Array, tmp, newLen);
       tmp.free();
    }
    return newLen;
@@ -624,7 +624,7 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor
          Array = tmp;
       }
       else {
-         ArrayCopy<T>(RAJA::seq_exec {}, Array, tmp, newLength);
+         ArrayCopy<T>(RAJA::seq_exec {}, Array, reinterpret_cast<care::host_device_ptr<const T, Accessor> &>(tmp), newLength);
          tmp.free();
       }
    }
@@ -695,10 +695,10 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
       if (len > 0) {
          Array.free();
       }
-      Array = result;
+      Array = care::host_device_ptr<T,Accessor>(chai::ManagedArray<T>(result));
    }
    else {
-      ArrayCopy<T>(Array, result, len, start, 0);
+      ArrayCopy<T>(RAJADeviceExec{}, care::host_device_ptr<T>(Array), result, len, start, 0);
       if (len > 0) {
          result.free();
       }
@@ -810,7 +810,7 @@ CARE_INLINE void CompressArray(RAJADeviceExec exec, care::host_device_ptr<T> & a
          arr = tmp;
       }
       else {
-         ArrayCopy<T>(exec, arr, tmp, numKept);
+         ArrayCopy(exec, arr, reinterpret_cast<care::host_device_ptr<const T> &>(tmp), numKept);
          tmp.free();
       }
    }
@@ -1473,9 +1473,9 @@ CARE_INLINE int FindIndexMax(care::host_device_ptr<const T> arr, int n)
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template <typename T, template <class A> class Accessor>
-CARE_INLINE void ArrayCopy(care::host_device_ptr<T, Accessor> into,
-                           care::host_device_ptr<const T, Accessor> from,
+template <typename T>
+CARE_INLINE void ArrayCopy(care::host_device_ptr<T> into,
+                           care::host_device_ptr<const T> from,
                            int n, int start1, int start2)
 {
    ArrayCopy(RAJAExec {}, into, from, n, start1, start2);
@@ -1487,7 +1487,7 @@ CARE_INLINE void ArrayCopy(care::host_device_ptr<T, Accessor> into,
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T, typename Exec>
+template <typename T, typename Exec>
 CARE_INLINE void ArrayCopy(Exec,
                            care::host_device_ptr<T> into,
                            care::host_device_ptr<const T> from,
@@ -1504,7 +1504,7 @@ CARE_INLINE void ArrayCopy(Exec,
  * Purpose   : Copies from one ManagedArray into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T>
+template <typename T>
 CARE_INLINE void ArrayCopy(RAJA::seq_exec,
                            care::host_device_ptr<T> into,
                            care::host_device_ptr<const T> from,
