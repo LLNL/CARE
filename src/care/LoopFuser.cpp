@@ -25,7 +25,7 @@
 CARE_DLL_API int FusedActions::non_scan_store = 0;
 CARE_DLL_API bool FusedActions::verbose = false;
 CARE_DLL_API bool FusedActions::very_verbose = false;
-// set flush length to 8M by default (default value is defined in imports/care/CMakeLists.txt)
+// set flush length to 8M by default (default value is defined in CMakeLists.txt)
 CARE_DLL_API int FusedActions::flush_length = CARE_LOOP_FUSER_FLUSH_LENGTH; 
 CARE_DLL_API bool FusedActions::flush_now = false;
 
