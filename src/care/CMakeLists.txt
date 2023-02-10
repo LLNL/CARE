@@ -97,7 +97,7 @@ if (ENABLE_OPENMP)
 endif()
 
 if (ENABLE_HIP)
-  list(APPEND care_depends hip)
+  list(APPEND care_depends blt::hip)
 endif ()
 
 blt_add_library(NAME care
@@ -119,7 +119,10 @@ install(FILES       ${care_headers}
         DESTINATION include/care
         )
 
+
 install(EXPORT ${PROJECT_NAME}-targets DESTINATION share/care/cmake)
+
+blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
 
 configure_file(
   ${PROJECT_SOURCE_DIR}/src/care/care-config.cmake.in

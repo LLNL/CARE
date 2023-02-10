@@ -13,7 +13,7 @@ if (ENABLE_CUDA)
 endif()
 
 if (ENABLE_HIP)
-   list(APPEND care_depends hip)
+   list(APPEND care_depends blt::hip)
 endif ()
 
 if (ENABLE_OPENMP)

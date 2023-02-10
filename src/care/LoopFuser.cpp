@@ -25,8 +25,8 @@
 CARE_DLL_API int FusedActions::non_scan_store = 0;
 CARE_DLL_API bool FusedActions::verbose = false;
 CARE_DLL_API bool FusedActions::very_verbose = false;
-// set flush length to 8M by default
-CARE_DLL_API int FusedActions::flush_length = 8388608; 
+// set flush length to 8M by default (default value is defined in CMakeLists.txt)
+CARE_DLL_API int FusedActions::flush_length = CARE_LOOP_FUSER_FLUSH_LENGTH; 
 CARE_DLL_API bool FusedActions::flush_now = false;
 
 CARE_DLL_API std::vector<FusedActionsObserver *> FusedActionsObserver::allObservers{};
@@ -99,9 +99,11 @@ CARE_DLL_API LoopFuser<REGISTER_COUNT,XARGS...> * LoopFuser<REGISTER_COUNT,XARGS
 
 template<int REGISTER_COUNT, typename...XARGS>
 void LoopFuser<REGISTER_COUNT,XARGS...>::startRecording(bool warn) {
-   m_recording = true;
-   if (warn) {
-      warnIfNotFlushed();
+   if (FusedActions::flush_length > 1) {
+      m_recording = true;
+      if (warn) {
+         warnIfNotFlushed();
+      }
    }
 }
 

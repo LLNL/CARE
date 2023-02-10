@@ -8,7 +8,7 @@
 set (care_benchmark_depends care gbenchmark)
 blt_list_append(TO care_benchmark_depends ELEMENTS openmp IF ${ENABLE_OPENMP})
 blt_list_append(TO care_benchmark_depends ELEMENTS cuda IF ${ENABLE_CUDA})
-blt_list_append(TO care_benchmark_depends ELEMENTS hip IF ${ENABLE_HIP})
+blt_list_append(TO care_benchmark_depends ELEMENTS blt::hip IF ${ENABLE_HIP})
 
 blt_add_executable(NAME BenchmarkForall
                    SOURCES BenchmarkForall.cpp

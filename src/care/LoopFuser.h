@@ -212,9 +212,11 @@ public:
    ///        a flush call.
    ///////////////////////////////////////////////////////////////////////////
    virtual void startRecording(bool warn = true) {
-      m_recording = true;
-      if (warn) {
-         warnIfNotFlushed();
+      if (flush_length > 1) {
+         m_recording = true;
+         if (warn) {
+            warnIfNotFlushed();
+         }
       }
    }
 
