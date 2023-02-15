@@ -4,9 +4,6 @@ build
 build-*
 build_*/*
 hc-*
-*.vcxproj.user
-*/x64/*/
-*.aps
 *.orig
 *.vscode
 spack-*.txt
