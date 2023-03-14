@@ -4,7 +4,6 @@
 [submodule "tpl/camp"]
 	path = tpl/camp
 	url = https://github.com/LLNL/camp
-	ignore = all
 [submodule "tpl/umpire"]
 	path = tpl/umpire
 	url = https://github.com/LLNL/umpire

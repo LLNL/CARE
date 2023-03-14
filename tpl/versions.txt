@@ -1,5 +1,5 @@
 BLT: 0.5.2
-CAMP: 0.2.2
+CAMP: v2022.10.1
 CHAI: 2.4.0
 RAJA: 0.14.0
 Umpire: 6.0.0
