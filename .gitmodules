@@ -10,14 +10,12 @@
 [submodule "tpl/chai"]
 	path = tpl/chai
 	url = https://github.com/LLNL/chai
-	ignore = all
 [submodule "tpl/raja"]
 	path = tpl/raja
 	url = https://github.com/LLNL/raja
 [submodule "tpl/cub"]
 	path = tpl/cub
 	url = https://github.com/NVlabs/cub
-	ignore = all
 [submodule ".radiuss-ci"]
 	path = .radiuss-ci
 	url = https://github.com/LLNL/radiuss-ci
