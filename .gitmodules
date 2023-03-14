@@ -7,7 +7,6 @@
 [submodule "tpl/umpire"]
 	path = tpl/umpire
 	url = https://github.com/LLNL/umpire
-	ignore = all
 [submodule "tpl/chai"]
 	path = tpl/chai
 	url = https://github.com/LLNL/chai
