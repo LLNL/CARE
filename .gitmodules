@@ -14,7 +14,6 @@
 [submodule "tpl/raja"]
 	path = tpl/raja
 	url = https://github.com/LLNL/raja
-	ignore = all
 [submodule "tpl/cub"]
 	path = tpl/cub
 	url = https://github.com/NVlabs/cub
