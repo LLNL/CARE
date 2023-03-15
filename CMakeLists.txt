@@ -28,7 +28,7 @@ option(CARE_ENABLE_PINNED_MEMORY_FOR_SCANS "Use pinned memory for scan lengths" 
 # Option to disable implicit conversion between host_device_ptr and raw arrays in CARE.
 option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
 # CHAI must also be configured with the same settings for implicit conversions.
-set(ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
+set(CHAI_ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
 option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
@@ -133,14 +133,9 @@ if (ENABLE_CUDA)
    set(CARE_ENABLE_LOOP_FUSER ON CACHE STRING "Enable the loop fuser")
 
    # This is needed for the loop fuser to work
-   option(ENABLE_RAJA_PLUGIN "Build plugin to set RAJA execution spaces" ON)
+   option(CHAI_ENABLE_RAJA_PLUGIN "Build plugin to set RAJA execution spaces" ON)
 else()
    set(CARE_ENABLE_LOOP_FUSER OFF CACHE STRING "Enable the loop fuser")
-endif()
-
-# HIP specific options
-if (ENABLE_HIP)
-   option(RAJA_ENABLE_HIP_INDIRECT_FUNCTION_CALL "Enable use of device function pointers in hip backend" OFF)
 endif()
 
 set(CARE_LOOP_FUSER_FLUSH_LENGTH "838608" CACHE STRING "Loop fuser flush length")

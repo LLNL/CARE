@@ -105,7 +105,7 @@ if (NOT TARGET raja)
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
 
             # Use external CUB
-            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
+            set(RAJA_ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
          endif ()
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
@@ -139,6 +139,7 @@ if (NOT TARGET chai)
          message(FATAL_ERROR "CARE: CHAI submodule not initialized. Run 'git submodule update --init' in the git repository or set chai_DIR or CHAI_DIR to use an external build of CHAI.")
       else ()
          set(CHAI_ENABLE_PICK ${ENABLE_PICK} CACHE BOOL "Enable picks/sets in chai::ManagedArray")
+         set(CHAI_ENABLE_PINNED ${ENABLE_PINNED} CACHE BOOL "Enable pinned memory support in CHAI")
 
          set(CHAI_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable CHAI tests")
          set(CHAI_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable CHAI benchmarks")
