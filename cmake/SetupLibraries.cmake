@@ -64,6 +64,8 @@ if (NOT TARGET umpire)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/umpire/CMakeLists.txt)
          message(FATAL_ERROR "CARE: Umpire submodule not initialized. Run 'git submodule update --init' in the git repository or set umpire_DIR or UMPIRE_DIR to use an external build of Umpire.")
       else ()
+         set(UMPIRE_ENABLE_PINNED ${ENABLE_PINNED} CACHE BOOL "Enable pinned memory")
+
          set(UMPIRE_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable Umpire tests")
          set(UMPIRE_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable Umpire examples")
          set(UMPIRE_ENABLE_DOCS ${CARE_ENABLE_SUBMODULE_DOCS} CACHE BOOL "Enable Umpire documentation")
@@ -93,11 +95,6 @@ if (NOT TARGET raja)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/raja/CMakeLists.txt)
          message(FATAL_ERROR "CARE: RAJA submodule not initialized. Run 'git submodule update --init' in the git repository or set raja_DIR or RAJA_DIR to use an external build of RAJA.")
       else ()
-         # TODO: Remove when these fixes are in RAJA
-         # The current patch includes fixes for integrating CUB as a neighbor submodule.
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/raja/SetupPackages.cmake
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/raja/cmake)
-
          set(RAJA_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable RAJA tests")
          set(RAJA_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable RAJA benchmarks")
          set(RAJA_ENABLE_EXAMPLES ${CARE_ENABLE_SUBMODULE_EXAMPLES} CACHE BOOL "Enable RAJA examples")
@@ -108,7 +105,7 @@ if (NOT TARGET raja)
             set(CMAKE_CUDA_FLAGS "${RAJA_CMAKE_CUDA_FLAGS}")
 
             # Use external CUB
-            set(ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
+            set(RAJA_ENABLE_EXTERNAL_CUB ON CACHE BOOL "Use external CUB in RAJA")
          endif ()
 
          add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/raja)
@@ -141,9 +138,8 @@ if (NOT TARGET chai)
       if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/chai/CMakeLists.txt)
          message(FATAL_ERROR "CARE: CHAI submodule not initialized. Run 'git submodule update --init' in the git repository or set chai_DIR or CHAI_DIR to use an external build of CHAI.")
       else ()
-         # TODO: Put these changes back into umpire
-         file(COPY ${PROJECT_SOURCE_DIR}/tpl/patches/chai/CMakeLists.txt
-              DESTINATION ${PROJECT_SOURCE_DIR}/tpl/chai)
+         set(CHAI_ENABLE_PICK ${ENABLE_PICK} CACHE BOOL "Enable picks/sets in chai::ManagedArray")
+         set(CHAI_ENABLE_PINNED ${ENABLE_PINNED} CACHE BOOL "Enable pinned memory support in CHAI")
 
          set(CHAI_ENABLE_TESTS ${CARE_ENABLE_SUBMODULE_TESTS} CACHE BOOL "Enable CHAI tests")
          set(CHAI_ENABLE_BENCHMARKS ${CARE_ENABLE_SUBMODULE_BENCHMARKS} CACHE BOOL "Enable CHAI benchmarks")

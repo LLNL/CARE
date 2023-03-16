@@ -31,6 +31,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('tests', default=False, description='Build tests')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
     variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
+    variant('cpp14', default=True, description="Build with c++14")
 
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
