@@ -15,14 +15,15 @@
 #include <climits>
 
 static void benchmark_array_view_2d(benchmark::State& state) {
-   const int size = state.range(0);
-   care::host_device_ptr<int> data(3*size, "data");
+   const int extent1 = 2;
+   const int extent2 = state.range(0);
+   care::host_device_ptr<int> data(extent1*extent2, "data");
 
    for (auto _ : state) {
-      care::ArrayView2D<int> view = care::makeArrayView2D(data, 3, size);
+      care::ArrayView2D<int> view = care::makeArrayView2D(data, extent1, extent2);
 
-      CARE_STREAM_LOOP(i, 0, size) {
-         for (int j = 0; j < 3; ++j) {
+      CARE_STREAM_LOOP(i, 0, extent2) {
+         for (int j = 0; j < extent1; ++j) {
             view(j, i) = i*j;
          }
       } CARE_STREAM_LOOP_END
@@ -32,7 +33,7 @@ static void benchmark_array_view_2d(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_array_view_2d)->Range(1, INT_MAX);
+BENCHMARK(benchmark_array_view_2d)->Range(32, INT_MAX/2);
 
 // Run the benchmark
 BENCHMARK_MAIN();
