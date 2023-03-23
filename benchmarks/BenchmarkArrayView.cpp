@@ -19,7 +19,7 @@ static void benchmark_array_view_2d(benchmark::State& state) {
    care::host_device_ptr<int> data(3*size, "data");
 
    for (auto _ : state) {
-      care::ArrayView2D view = care::makeArrayView2D(data, 3, size);
+      care::ArrayView2D<int> view = care::makeArrayView2D(data, 3, size);
 
       CARE_STREAM_LOOP(i, 0, size) {
          for (int j = 0; j < 3; ++j) {
