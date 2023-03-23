@@ -456,14 +456,6 @@ namespace care {
       CARE_HOST void move(ExecutionSpace space) {
          MA::move(chai::ExecutionSpace((int) space));
       }
-      
-      CARE_HOST_DEVICE inline bool operator ==(host_device_ptr<T, Accessor> const & right) const {
-#if !defined (CARE_DEVICE_COMPILE)
-       return MA::data(chai::CPU,false) == right.data(chai::CPU,false);
-#else
-       return MA::m_active_pointer == right.m_active_pointer;
-#endif
-      }
    }; // class host_device_ptr
 
 } // namespace care
