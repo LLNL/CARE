@@ -11,4 +11,6 @@ set(GCC_HOME "/usr/tce/packages/gcc/gcc-8.3.1" CACHE PATH "")
 set(CMAKE_CXX_COMPILER "/usr/tce/packages/clang/clang-ibm-14.0.5/bin/clang++" CACHE FILEPATH "Path to clang++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --gcc-toolchain=${GCC_HOME}" CACHE STRING "C++ compiler flags")
 
+set(BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE "/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/lib64" CACHE STRING "")
+
 set(BLT_EXPORT_THIRDPARTY OFF CACHE BOOL "")
