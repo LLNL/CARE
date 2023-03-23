@@ -10,6 +10,19 @@ blt_list_append(TO care_benchmark_depends ELEMENTS openmp IF ${ENABLE_OPENMP})
 blt_list_append(TO care_benchmark_depends ELEMENTS cuda IF ${ENABLE_CUDA})
 blt_list_append(TO care_benchmark_depends ELEMENTS blt::hip IF ${ENABLE_HIP})
 
+blt_add_executable(NAME BenchmarkArrayView
+                   SOURCES BenchmarkArrayView.cpp
+                   DEPENDS_ON ${care_benchmark_depends})
+
+target_include_directories(BenchmarkArrayView
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(BenchmarkArrayView
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_benchmark(NAME BenchmarkArrayView
+                  COMMAND BenchmarkArrayView)
+
 blt_add_executable(NAME BenchmarkForall
                    SOURCES BenchmarkForall.cpp
                    DEPENDS_ON ${care_benchmark_depends})
