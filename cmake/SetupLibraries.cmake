@@ -6,13 +6,6 @@
 ######################################################################################
 
 ################################
-# CUB (required for CUDA build)
-################################
-if (ENABLE_CUDA)
-   include(cmake/libraries/FindCUB.cmake)
-endif ()
-
-################################
 # CAMP (required)
 ################################
 if (NOT TARGET camp)
@@ -199,4 +192,11 @@ else()
     message(STATUS "CARE: LLNL_GlobalID disabled")
     set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
 endif()
+
+################################
+# CUB (required for CUDA build)
+################################
+if (ENABLE_CUDA AND NOT TARGET cub)
+   include(cmake/libraries/FindCUB.cmake)
+endif ()
 
