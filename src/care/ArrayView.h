@@ -9,11 +9,11 @@ namespace care {
 #if defined(CARE_GPUCC)
    constexpr chai::ExecutionSpace DefaultExecutionSpace = chai::GPU;
 
-   using Layout2D = RAJA::Layout<2, int, 1>;
+   using Layout2D = RAJA::Layout<2, int, 0>;
 #else
    constexpr chai::ExecutionSpace DefaultExecutionSpace = chai::CPU;
 
-   using Layout2D = RAJA::Layout<2, int, 0>;
+   using Layout2D = RAJA::Layout<2, int, 1>;
 #endif
 
    template <class T>
@@ -40,13 +40,13 @@ namespace care {
    ArrayView2D<T> makeArrayView2D(care::host_device_ptr<T> data,
                                   int extent1, int extent2) {
 #if defined(CARE_GPUCC)
+      return ArrayView2D<T>(data.data(DefaultExecutionSpace), extent1, extent2);
+#else
       std::array< RAJA::idx_t, 2> perm {{1, 0}};
       RAJA::Layout<2> layout =
          RAJA::make_permuted_layout( {{extent1, extent2}}, perm );
 
       return ArrayView2D<T>(data.data(DefaultExecutionSpace), layout);
-#else
-      return ArrayView2D<T>(data.data(DefaultExecutionSpace), extent1, extent2);
 #endif
    }
 } // namespace care
