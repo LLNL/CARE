@@ -10,7 +10,7 @@ namespace care {
    /// Creates a 1D view on top of a flat allocation (non-owning semantics)
    ///
    /// Moves the data to the default execution space (determined at
-   /// configuration time) and wraps it in a RAJA::View.
+   /// compile time) and wraps it in a RAJA::View.
    ///
    /// @param[in] data Container for the allocation
    /// @param[in] extent Length of the view
@@ -25,8 +25,8 @@ namespace care {
    /// Creates a 2D view on top of a flat allocation (non-owning semantics)
    ///
    /// Moves the data to the default execution space (determined at
-   /// configuration time) and wraps it in a RAJA::View. When using with
-   /// a RAJA loop, extent2 should correspond to the length of the RAJA
+   /// compile time) and wraps it in a RAJA::View. When using with a
+   /// RAJA loop, extent2 should correspond to the length of the RAJA
    /// loop for optimal performance.
    ///
    /// @param[in] data Container for the allocation
