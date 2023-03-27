@@ -15,16 +15,20 @@
 #include <climits>
 
 static void benchmark_array_view_2d(benchmark::State& state) {
-   const int extent1 = state.range(0);
-   const int extent2 = 2;
+   const int extent1 = 2;
+   const int extent2 = state.range(0);
    care::host_device_ptr<int> data(extent1*extent2, "data");
 
-   for (auto _ : state) {
-      care::ArrayView2D<int> view = care::makeArrayView2D(data, extent1, extent2);
+   // Make sure memory transfers are not considered
+   auto temp = care::makeArrayView2D(data, extent1, extent2);
+   (void) temp;
 
-      CARE_STREAM_LOOP(i, 0, extent1) {
-         for (int j = 0; j < extent2; ++j) {
-            view(i, j) = i*j;
+   for (auto _ : state) {
+      auto view = care::makeArrayView2D(data, extent1, extent2);
+
+      CARE_STREAM_LOOP(i, 0, extent2) {
+         for (int j = 0; j < extent1; ++j) {
+            view(j, i) = i*j;
          }
       } CARE_STREAM_LOOP_END
    }
