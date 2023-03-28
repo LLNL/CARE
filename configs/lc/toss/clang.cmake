@@ -1,3 +1,10 @@
-set(CMAKE_C_COMPILER "/usr/tce/packages/clang/clang-11.0.1/bin/clang" CACHE FILEPATH "Path to C compiler")
-set(CMAKE_CXX_COMPILER "/usr/tce/packages/clang/clang-11.0.1/bin/clang++" CACHE FILEPATH "Path to C++ compiler")
+set(COMPILER_BASE "/usr/tce/packages/clang/clang-14.0.4" CACHE PATH "")
+set(CMAKE_C_COMPILER "${COMPILER_BASE}/bin/clang" CACHE PATH "")
+set(CMAKE_CXX_COMPILER "${COMPILER_BASE}/bin/clang++" CACHE PATH "")
+
+set(GCC_HOME "/usr/tce/packages/gcc/gcc-8.3.1" CACHE PATH "")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --gcc-toolchain=${GCC_HOME}" CACHE STRING "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --gcc-toolchain=${GCC_HOME}" CACHE STRING "")
+
+set(BLT_EXPORT_THIRDPARTY OFF CACHE BOOL "")
 

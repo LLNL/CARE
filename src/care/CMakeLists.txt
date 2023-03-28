@@ -22,6 +22,7 @@ set(care_headers
     algorithm_decl.h
     algorithm_impl.h
     array.h
+    ArrayView.h
     atomic.h
     care_inst.h
     CHAICallback.h
