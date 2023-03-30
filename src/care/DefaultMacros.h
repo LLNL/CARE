@@ -876,5 +876,16 @@
 
 #define CARE_MANAGED_PTR_UPDATE_KERNEL_END CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(care_managed_ptr_write_kernel_check) }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros for launching a 2D kernel with fixed y dimension and varying x dimension
+///        If GPU is available, executes on the device.
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_2D_STREAM_X_LENGTHS(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
+   launch_2D_jagged_lengths(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::GPU, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
+#define CARE_LOOP_2D_STREAM_X_LENGTHS_END });
+
+
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 
