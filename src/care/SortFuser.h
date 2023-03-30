@@ -1,6 +1,7 @@
 #ifndef CARE_SORT_FUSER_H
 #define CARE_SORT_FUSER_H
 
+#include "care/device_ptr.h"
 #include "care/host_ptr.h"
 #include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
@@ -301,10 +302,10 @@ namespace care {
          len = host_out_offsets[a+1]-host_out_offsets[a];
          pinned_lengths[a]= len;
          maxLength = care::max(len, maxLength);
-         pinned_out_arrays[a] = *m_out_arrays[a];
          if (realloc) {
-            pinned_out_arrays[a].realloc(len);
+            m_out_arrays[a]->realloc(len);
          }
+         pinned_out_arrays[a] = *m_out_arrays[a];
       }
       // subtract out the offset, copy the result into individual arrays
       // (use of device pointer is to avoid clang-query rules that prevent capture of raw pointer)
