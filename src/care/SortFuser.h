@@ -290,10 +290,10 @@ namespace care {
       host_device_ptr<T> result = concatenated_out;
       
       // set up a 2D kernel, put per-array meta-data in pinned memory to eliminate cudaMemcpy's of the smaller dimension of data
-      host_device_ptr<int> lengths(chai::ManagedArray<int>(m_num_arrays, chai::PINNED));
-      host_device_ptr<host_device_ptr<int> > out_arrays(chai::ManagedArray<host_device_ptr<int>>(m_num_arrays, chai::PINNED));
-      host_ptr<int> pinned_lengths = lengths.getPointer(PINNED, false);
-      host_ptr<host_device_ptr<int>>  pinned_out_arrays = out_arrays.getPointer(PINNED, false);
+      host_device_ptr<int> lengths(chai::ManagedArray<int>(m_num_arrays, ZERO_COPY));
+      host_device_ptr<host_device_ptr<int> > out_arrays(chai::ManagedArray<host_device_ptr<int>>(m_num_arrays, ZERO_COPY));
+      host_ptr<int> pinned_lengths = lengths.getPointer(ZERO_COPY, false);
+      host_ptr<host_device_ptr<int>>  pinned_out_arrays = out_arrays.getPointer(ZERO_COPY, false);
       // initialized lengths, maxLength, and array of arrays for the 2D kernel
       int maxLength = 0;
       for (int a = 0; a < m_num_arrays; ++a ) {
@@ -309,8 +309,8 @@ namespace care {
       }
       // subtract out the offset, copy the result into individual arrays
       // (use of device pointer is to avoid clang-query rules that prevent capture of raw pointer)
-      device_ptr<int> dev_pinned_lengths = lengths.getPointer(PINNED, false);
-      device_ptr<host_device_ptr<int>> dev_pinned_out_arrays = out_arrays.getPointer(PINNED, false);
+      device_ptr<int> dev_pinned_lengths = lengths.getPointer(ZERO_COPY, false);
+      device_ptr<host_device_ptr<int>> dev_pinned_out_arrays = out_arrays.getPointer(ZERO_COPY, false);
       CARE_LOOP_2D_STREAM_X_LENGTHS(i, 0, maxLength, lengths, a, 0, m_num_arrays, iFlattened)  {
          result[i+out_offsets[a]] -= max_range*a;
          dev_pinned_out_arrays[a][i] = result[i+out_offsets[a]];
