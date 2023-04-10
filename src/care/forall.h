@@ -490,11 +490,13 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename Exec>
-   void launch_2D_jagged_lengths(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+   void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
       care::RAJAPlugin::pre_forall_hook(chai::CPU, fileName, lineNumber);
+      // intentional trigger of copy constructor for CHAI correctness
+      LB body_to_call{body};
       for (int y = ystart; y < ylength; ++y) {
          for (int x = xstart ; x < host_lengths[y]; ++x) {
-            body(x, y);
+            body_to_call(x, y);
          }
       }
       care::RAJAPlugin::post_forall_hook(chai::CPU, fileName, lineNumber);
@@ -505,7 +507,7 @@ namespace care {
    ///
    /// @author Peter Robinson
    ///
-   /// @brief the GPU kernel to call from a care::gpu specialization of launch_2D_jagged_lengths
+   /// @brief the GPU kernel to call from a care::gpu specialization of launch_2D_jagged
    ///
    /// @arg[in] loopBody The loop body to execute at each (x,y) index
    /// @arg[in] lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
@@ -540,7 +542,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void launch_2D_jagged_lengths(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
        if (xend > 0 && ylength > 0) {
           // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
           care::RAJAPlugin::pre_forall_hook(chai::GPU, fileName, lineNumber);

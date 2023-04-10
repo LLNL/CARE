@@ -882,9 +882,9 @@
 ///        If GPU is available, executes on the device.
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_LOOP_2D_STREAM_X_LENGTHS(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
-   launch_2D_jagged_lengths(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::GPU, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
-#define CARE_LOOP_2D_STREAM_X_LENGTHS_END });
+#define CARE_LOOP_2D_STREAM_JAGGED(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
+   launch_2D_jagged(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::GPU, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
+#define CARE_LOOP_2D_STREAM_JAGGED_END });
 
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
