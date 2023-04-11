@@ -62,7 +62,7 @@ namespace care {
          ///
          /// Copy constructor
          ///
-         CARE_HOST_DEVICE device_ptr(device_ptr const &ptr) noexcept : m_ptr(ptr) {}
+         CARE_HOST_DEVICE device_ptr(device_ptr const &ptr) noexcept : m_ptr(ptr.m_ptr) {}
 
          ///
          /// @author Peter Robinson
