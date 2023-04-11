@@ -290,10 +290,10 @@ namespace care {
       host_device_ptr<T> result = concatenated_out;
       
       // set up a 2D kernel, put per-array meta-data in pinned memory to eliminate cudaMemcpy's of the smaller dimension of data
-      host_device_ptr<int> lengths(chai::ManagedArray<int>(m_num_arrays, ZERO_COPY));
-      host_device_ptr<host_device_ptr<int> > out_arrays(chai::ManagedArray<host_device_ptr<int>>(m_num_arrays, ZERO_COPY));
-      host_ptr<int> pinned_lengths = lengths.getPointer(ZERO_COPY, false);
-      host_ptr<host_device_ptr<int>>  pinned_out_arrays = out_arrays.getPointer(ZERO_COPY, false);
+      host_device_ptr<int> lengths(chai::ManagedArray<int>(m_num_arrays, chai::ZERO_COPY));
+      host_device_ptr<host_device_ptr<int> > out_arrays(chai::ManagedArray<host_device_ptr<int>>(m_num_arrays, chai::ZERO_COPY));
+      host_ptr<int> pinned_lengths = lengths.getPointer(care::ZERO_COPY, false);
+      host_ptr<host_device_ptr<int>>  pinned_out_arrays = out_arrays.getPointer(care::ZERO_COPY, false);
       // initialized lengths, maxLength, and array of arrays for the 2D kernel
       int maxLength = 0;
       for (int a = 0; a < m_num_arrays; ++a ) {
