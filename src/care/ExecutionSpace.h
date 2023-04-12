@@ -27,7 +27,7 @@ namespace care {
    // the  PAGEABLE memory space. Typically UM, but may be a different space depending on how
    // CHAI and CARE are configured.
    extern care::ExecutionSpace PAGEABLE;
-   // the  DEFAULT memory space. Typically GPU for GPU platforms and CPU for CPU platfurms, but may be a different space depending on how
+   // the  DEFAULT memory space. Typically GPU for GPU platforms and CPU for CPU platforms, but may be a different space depending on how
    // CHAI and CARE are configured.
    extern care::ExecutionSpace DEFAULT;
 } // namespace care
@@ -39,7 +39,7 @@ namespace chai {
    // the  PAGEABLE memory space. Typically UM, but may be a different space depending on how
    // CHAI and CARE are configured.
    extern chai::ExecutionSpace PAGEABLE;
-   // the  DEFAULT memory space. Typically GPU for GPU platforms and CPU for CPU platfurms, but may be a different space depending on how
+   // the  DEFAULT memory space. Typically GPU for GPU platforms and CPU for CPU platforms, but may be a different space depending on how
    // CHAI and CARE are configured.
    extern chai::ExecutionSpace DEFAULT;
 
