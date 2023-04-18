@@ -31,7 +31,7 @@ namespace chai {
    chai::ExecutionSpace PAGEABLE = chai::CPU;
 #endif
 
-#if defined(CARE_GPUCC) || defined(CARE_ENABLE_GPU_SIMULATION_MODE)
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
    chai::ExecutionSpace DEFAULT = chai::GPU;
 #else
    chai::ExecutionSpace DEFAULT = chai::CPU;
@@ -58,7 +58,7 @@ namespace care {
    care::ExecutionSpace PAGEABLE = care::CPU;
 #endif
 
-#if defined(CARE_GPUCC) || defined(CARE_ENABLE_GPU_SIMULATION_MODE)
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
    care::ExecutionSpace DEFAULT = care::GPU;
 #else
    care::ExecutionSpace DEFAULT = care::CPU;
