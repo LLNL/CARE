@@ -25,6 +25,7 @@ option(ENABLE_HIP "Build HIP support" OFF)
 option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space" ON)
 option(CARE_ENABLE_PINNED_MEMORY_FOR_SCANS "Use pinned memory for scan lengths" ON)
+option(CARE_GPU_MEMORY_IS_ACCESSIBLE_ON_CPU "Allows default memory spaces for ZERO_COPY and PAGEABLE to be the GPU memory space" OFF)
 # Option to disable implicit conversion between host_device_ptr and raw arrays in CARE.
 option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
 # CHAI must also be configured with the same settings for implicit conversions.

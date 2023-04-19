@@ -63,6 +63,7 @@ set(care_headers
 set(care_sources
     care.cpp
     CHAICallback.cpp
+    ExecutionSpace.cpp
     LoopFuser.cpp
     RAJAPlugin.cpp
     scan.cpp

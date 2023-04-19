@@ -470,6 +470,92 @@ namespace care {
             break;
       }
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Loops over a 2 dimensional index space with varying lengths in the second dimension. 
+   ///
+   /// @arg[in] policy Compile time execution space to select the backend to execute on.
+   /// @arg[in] xstart X dimension starting index (inclusive)
+   /// @arg[in] xend  X dimension upper bound of ending index (exclusive)
+   /// @arg[in] host_lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for the Exec type
+   /// @arg[in] ystart The starting index in the y dimension (inclusive)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] body The loop body to execute at each (x,y) index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB, typename Exec>
+   void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+      care::RAJAPlugin::pre_forall_hook(chai::CPU, fileName, lineNumber);
+      // intentional trigger of copy constructor for CHAI correctness
+      LB body_to_call{body};
+      for (int y = ystart; y < ylength; ++y) {
+         for (int x = xstart ; x < host_lengths[y]; ++x) {
+            body_to_call(x, y);
+         }
+      }
+      care::RAJAPlugin::post_forall_hook(chai::CPU, fileName, lineNumber);
+   }
+
+#ifdef CARE_GPUCC
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief the GPU kernel to call from a care::gpu specialization of launch_2D_jagged
+   ///
+   /// @arg[in] loopBody The loop body to execute at each (x,y) index
+   /// @arg[in] lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for executing on the GPU, recommend PINNED memory so long as bulk of data is in the x dimension (that is sum(lengths) >> ylength)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   CARE_GLOBAL void care_kernel_2D(LB loopBody, int const * lengths, int ylength) {
+     int x = threadIdx.x + blockIdx.x * blockDim.x; 
+     int y = threadIdx.y + blockIdx.y * blockDim.y; 
+     if (x < lengths[y] && y < ylength) {
+        loopBody(x,y);
+     }
+   }
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Loops over a 2 dimensional index space with varying lengths in the second dimension. 
+   ///
+   /// @arg[in] policy Compile time execution space to select the backend to execute on.
+   /// @arg[in] xstart X dimension starting index (inclusive)
+   /// @arg[in] xend  X dimension upper bound of ending index (exclusive)
+   /// @arg[in] host_lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for the Exec type
+   /// @arg[in] ystart The starting index in the y dimension (inclusive)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] body The loop body to execute at each (x,y) index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+       if (xend > 0 && ylength > 0) {
+          // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
+          care::RAJAPlugin::pre_forall_hook(chai::GPU, fileName, lineNumber);
+          dim3 dimBlock(CARE_CUDA_BLOCK_SIZE, 1);
+          dim3 dimGrid;
+          dimGrid.x  = (xend/CARE_CUDA_BLOCK_SIZE)+(xend%CARE_CUDA_BLOCK_SIZE==0?0:1);
+          dimGrid.y = ylength;
+          care_kernel_2D<<<dimGrid, dimBlock>>>( body, gpu_lengths, ylength);
+          care::RAJAPlugin::post_forall_hook(chai::GPU, fileName, lineNumber);
+       }
+   }
+#endif
+
 } // namespace care
 
 #endif // !defined(_CARE_FORALL_H_)
