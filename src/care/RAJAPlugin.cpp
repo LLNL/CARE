@@ -25,8 +25,6 @@
 
 #include <unordered_set>
 
-using namespace std;
-
 namespace care {
    bool RAJAPlugin::s_update_chai_execution_space = true;
    bool RAJAPlugin::s_debug_chai_data = true;
