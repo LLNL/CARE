@@ -121,20 +121,6 @@ namespace care {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   void forall(sequential, const char * fileName, const int lineNumber,
-	       const int start, const int end, LB&& body, RAJA::resources::Host res){
-      RAJA::forall<RAJA::seq_exec>(res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
-   }
-
-	template <typename LB>
-   void forall(gpu, RAJA::resources::Host res, const char * fileName, const int lineNumber,
-	       const int start, const int end, LB&& body){
-      RAJA::forall<RAJA::cuda_exec_async<CARE_CUDA_BLOCK_SIZE>>(res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
-   }
-
-
-   ////////////////////////////////////////////////////////////////////////////////
    ///
    /// @author Alan Dayton
    ///
@@ -182,7 +168,7 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB> //neela make streams version
+   template <typename LB>
    void forall(gpu, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -205,13 +191,6 @@ namespace care {
       s_reverseLoopOrder = false;
 #endif
    }
-
-	template <typename LB> 
-   void forall_with_streams(gpu, RAJA::resources::Cuda res, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
-     		RAJA::resources::Event e = forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-													res, RAJA::RangeSegment(start, end), std::forward<LB>(body));	   
-	}
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
