@@ -8,11 +8,6 @@
 
 #include "care/RAJAPlugin.h"
 
-/* CUDA profiling macros */
-#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
-#include "nvToolsExt.h"
-#endif
-
 // Std library headers
 #if defined(CARE_DEBUG) && !defined(_WIN32)
 #include <execinfo.h>
@@ -20,12 +15,10 @@
 
 #include <unordered_set>
 
-using namespace care;
+namespace care{
 
-namespace chai{
-
-	std::string s_current_loop_file_name = "N/A";
-   int s_current_loop_line_number = -1;
+	std::string fileName = RAJAPlugin::getCurrentLoopFileName();
+   int lineNumber = RAJAPlugin::getCurrentLoopLineNumber();
    std::vector<const chai::PointerRecord*> s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
 
 DebugPlugin::DebugPlugin() {}
@@ -80,7 +73,7 @@ DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
   			}
 
 		if (CHAICallback::isActive()) {			
-			writeLoopData(space, fileName, lineNumber);
+			writeLoopData(space, fileName.c_str(), lineNumber);
 	
          // Clear out the captured arrays
          s_active_pointers_in_loop.clear();

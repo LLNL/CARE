@@ -7,24 +7,12 @@
 #include "care/CHAICallback.h"
 #include "care/RAJAPlugin.h"
 
-using namespace care;
-
 namespace care{
-
-class RAJAPlugin;
-
-}
-
-namespace chai{
 
 	class ProfilePlugin : public RAJA::util::PluginStrategy
 	{
 		public:
 			ProfilePlugin();
-
-			char * fileName;
-
-			int lineNumber;
 						
 			void preLaunch(const RAJA::util::PluginContext& p) override;
 

@@ -13,21 +13,9 @@
 #include "nvToolsExt.h"
 #endif
 
-// Std library headers
-#if defined(CARE_DEBUG) && !defined(_WIN32)
-#include <execinfo.h>
-#endif // defined(CARE_DEBUG) && !defined(_WIN32)
-
-#include <unordered_set>
-
-using namespace care;
-
-namespace chai{
+namespace care{
 
 	bool s_profile_host_loops = true;
-	static uint32_t s_colors[7];
-   static int s_num_colors;
-   static unsigned int s_current_color;
 
 ProfilePlugin::ProfilePlugin() {}
 
@@ -47,7 +35,7 @@ ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
       // Profile the host loops
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
-            std::string name = fileName + std::to_string(lineNumber);
+            std::string name = RAJAPlugin::getCurrentLoopFileName() + std::to_string(RAJAPlugin::getCurrentLoopLineNumber());
 
             int color_id = s_current_color + 1;
             color_id = color_id % s_num_colors;
@@ -81,6 +69,6 @@ ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
 }
 }
 
-static RAJA::util::PluginRegistry::add<chai::ProfilePlugin> L ("Care profile plugin", "test");
+static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Care profile plugin", "test");
 
 

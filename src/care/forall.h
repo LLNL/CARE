@@ -76,7 +76,7 @@ namespace care {
 
       if (length != 0) {
 #ifndef CARE_DISABLE_RAJAPLUGIN
-         RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+         //RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -95,7 +95,7 @@ namespace care {
 #endif
 
 #ifndef CARE_DISABLE_RAJAPLUGIN
-         RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+         //RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
       }
    }

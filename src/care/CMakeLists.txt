@@ -53,6 +53,8 @@ set(care_headers
     policies.h
     care.h
     RAJAPlugin.h
+    DebugPlugin.h
+    ProfilePlugin.h
     scan.h
     scan_impl.h
     Setup.h
@@ -66,6 +68,8 @@ set(care_sources
     ExecutionSpace.cpp
     LoopFuser.cpp
     RAJAPlugin.cpp
+    DebugPlugin.cpp
+    ProfilePlugin.cpp
     scan.cpp
     )
 

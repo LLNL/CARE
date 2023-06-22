@@ -59,8 +59,7 @@ namespace care {
          static void writeLoopData(chai::ExecutionSpace space,
                                    const char * fileName,
                                    int lineNumber);
-		//private:
-         static bool s_update_chai_execution_space;
+		   static bool s_update_chai_execution_space;
          static bool s_debug_chai_data;
          static bool s_profile_host_loops;
          static bool s_synchronize_before;
