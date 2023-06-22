@@ -28,6 +28,7 @@ namespace chai {
 namespace care {
    class RAJAPlugin {
       public:
+
          CARE_DLL_API static void pre_forall_hook(chai::ExecutionSpace space,
                                                   const char * fileName,
                                                   int lineNumber);
@@ -52,14 +53,13 @@ namespace care {
          CARE_DLL_API static bool isParallelContext();
          CARE_DLL_API static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
          CARE_DLL_API static bool post_parallel_forall_action_registered(void * key);
-         CARE_DLL_API static int s_threadID;
-         
-
+         CARE_DLL_API static int s_threadID;     
+		
       private:
          static void writeLoopData(chai::ExecutionSpace space,
                                    const char * fileName,
                                    int lineNumber);
-
+		//private:
          static bool s_update_chai_execution_space;
          static bool s_debug_chai_data;
          static bool s_profile_host_loops;
@@ -81,4 +81,3 @@ namespace care {
 } // namespace care
 
 #endif // !defined(_CARE_RAJA_PLUGIN_H_)
-
