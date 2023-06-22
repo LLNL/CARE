@@ -158,5 +158,5 @@ DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, in
    }
 }
 
-static RAJA::util::PluginRegistry::add<chai::DebugPlugin> L ("Debug plugin", "test");
+static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "test");
 
