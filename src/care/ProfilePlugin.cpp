@@ -17,29 +17,19 @@ namespace care{
 
 	bool s_profile_host_loops = true;
 
-ProfilePlugin::ProfilePlugin() {}
+   ProfilePlugin::ProfilePlugin() {}
 
-   /////////////////////////////////////////////////////////////////////////////////
-   ///
-   /// @brief Set up to be done before executing a RAJA loop.
-   ///
-   /// @arg[in] space The execution space
-   /// @arg[in] name The name of the loop
-   ///
-   /////////////////////////////////////////////////////////////////////////////////
 
-void 
-ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
+   void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if CARE_HAVE_NVTOOLSEXT
 #if defined(CARE_GPUCC)
       // Profile the host loops
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
             std::string name = RAJAPlugin::getCurrentLoopFileName() + std::to_string(RAJAPlugin::getCurrentLoopLineNumber());
-
             int color_id = s_current_color + 1;
             color_id = color_id % s_num_colors;
-
+         
             // TODO: Add error checking
             nvtxEventAttributes_t eventAttrib = { 0 };
             eventAttrib.version = NVTX_VERSION;
@@ -55,8 +45,8 @@ ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #endif // defined(CARE_GPUCC)
    }
 
-void 
-ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
+
+   void ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
 #if defined(CARE_GPUCC)
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
@@ -66,8 +56,9 @@ ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
       }
 #endif
 
+   }
 }
-}
+
 
 static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Care profile plugin", "test");
 

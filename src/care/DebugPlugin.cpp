@@ -21,19 +21,10 @@ namespace care{
    int lineNumber = RAJAPlugin::getCurrentLoopLineNumber();
    std::vector<const chai::PointerRecord*> s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
 
-DebugPlugin::DebugPlugin() {}
+   DebugPlugin::DebugPlugin() {}
 
-   /////////////////////////////////////////////////////////////////////////////////
-   ///
-   /// @brief Set up to be done before executing a RAJA loop.
-   ///
-   /// @arg[in] space The execution space
-   /// @arg[in] name The name of the loop
-   ///
-   /////////////////////////////////////////////////////////////////////////////////
 
-void 
-DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
+   void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
       // Prepare to record CHAI data
       if (CHAICallback::isActive()) {
@@ -46,15 +37,11 @@ DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 #endif // !defined(CHAI_DISABLE_RM)
-
    }
 
 
-
-void 
-DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
+   void DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
-
 		chai::ExecutionSpace space;
 
 		switch (p.platform) {
@@ -82,12 +69,11 @@ DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
          GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
-
 #endif // !defined(CHAI_DISABLE_RM)
    }
 
-void 
-DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber) {
+
+   void DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber) {
       if (CHAICallback::loggingIsEnabled()) {
          const int s_log_data = CHAICallback::getLogData();
 
@@ -157,6 +143,7 @@ DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, in
       }
    }
 }
+
 
 static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "test");
 
