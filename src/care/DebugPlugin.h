@@ -6,6 +6,10 @@
 #include "care/config.h"
 #include "care/CHAICallback.h"
 
+namespace chai {
+   struct PointerRecord;
+}
+
 namespace care{
 
 	class DebugPlugin : public RAJA::util::PluginStrategy
