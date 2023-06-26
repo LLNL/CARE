@@ -11,7 +11,8 @@
 // CARE headers
 #include "care/config.h"
 #include "care/CHAICallback.h"
-#include "care/RAJAPlugin.h"
+#include "care/ProfilePlugin.h"
+#include "care/DebugPlugin.h"
 
 // Other library headers
 #include "chai/ExecutionSpaces.hpp"
@@ -134,7 +135,7 @@ namespace care {
    }
 
    inline void setSynchronization(bool before, bool after) {
-      RAJAPlugin::setSynchronization(before, after);
+      DebugPlugin::setSynchronization(before, after);
    }
    
    // does a GPU device synchronize if there has been a kernel launch through care

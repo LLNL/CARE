@@ -5,7 +5,6 @@
 #include "chai/ExecutionSpaces.hpp"
 #include "care/config.h"
 #include "care/CHAICallback.h"
-#include "care/RAJAPlugin.h"
 
 namespace care{
 
@@ -13,20 +12,39 @@ namespace care{
 	{
 		public:
 			DebugPlugin();
+
+         static void setFileName(const char * name);
+
+         static void setLineNumber(int num);
 						
 			void preLaunch(const RAJA::util::PluginContext& p) override;
 
 			void postLaunch(const RAJA::util::PluginContext& p) override;
 
-			void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
+			static void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
+
+         static void addActivePointer(const chai::PointerRecord* record);
+
+         static void removeActivePointer(const chai::PointerRecord* record);
+
+         static void setSynchronization(bool synchronizeBefore, bool synchronizeAfter);
+
+         static int s_threadID;
 
 		private:
+         static const char * fileName;
 
-			std::string s_current_loop_file_name;
+         static int lineNumber;
 
-         int s_current_loop_line_number;
+			static std::string s_current_loop_file_name;
 
-			std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
+         static int s_current_loop_line_number;
+
+			static std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
+
+         static bool s_synchronize_before;
+         
+         static bool s_synchronize_after;
 	};
 }
 

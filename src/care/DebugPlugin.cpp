@@ -6,8 +6,6 @@
 
 #include "care/CHAICallback.h"
 
-#include "care/RAJAPlugin.h"
-
 // Std library headers
 #if defined(CARE_DEBUG) && !defined(_WIN32)
 #include <execinfo.h>
@@ -16,12 +14,21 @@
 #include <unordered_set>
 
 namespace care{
-
-	std::string fileName = RAJAPlugin::getCurrentLoopFileName();
-   int lineNumber = RAJAPlugin::getCurrentLoopLineNumber();
-   std::vector<const chai::PointerRecord*> s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
+   const char * DebugPlugin::fileName = "N/A";
+   int DebugPlugin::lineNumber = -1;
+	std::string DebugPlugin::s_current_loop_file_name = "N/A";
+   int DebugPlugin::s_current_loop_line_number = -1;
+   std::vector<const chai::PointerRecord*> DebugPlugin::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
+   bool DebugPlugin::s_synchronize_before = false; 
+   bool DebugPlugin::s_synchronize_after = false;
+   int DebugPlugin::s_threadID = -1;
 
    DebugPlugin::DebugPlugin() {}
+
+   void DebugPlugin::setFileName(const char * name) {DebugPlugin::fileName = name;}
+
+   
+   void DebugPlugin::setLineNumber(int num) {DebugPlugin::lineNumber = num;}
 
 
    void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
@@ -60,7 +67,7 @@ namespace care{
   			}
 
 		if (CHAICallback::isActive()) {			
-			writeLoopData(space, fileName.c_str(), lineNumber);
+			writeLoopData(space, fileName, lineNumber);
 	
          // Clear out the captured arrays
          s_active_pointers_in_loop.clear();
@@ -139,6 +146,24 @@ namespace care{
             fprintf(callback_output_file, "[CARE] [CHAI] -logchaidata is not supported in this build\n");
             fflush(callback_output_file);
 #endif // CARE_DEBUG
+         }
+      }
+   }
+
+void DebugPlugin::setSynchronization(bool synchronizeBefore,
+                                       bool synchronizeAfter) {
+      s_synchronize_before = synchronizeBefore;
+      s_synchronize_after = synchronizeAfter;
+   }   
+
+   void DebugPlugin::addActivePointer(const chai::PointerRecord* record) {
+      s_active_pointers_in_loop.emplace_back(record);
+   }
+
+   void DebugPlugin::removeActivePointer(const chai::PointerRecord* record) {
+      for (size_t i = 0; i < s_active_pointers_in_loop.size(); ++i) {
+         if (s_active_pointers_in_loop[i] == record) {
+            s_active_pointers_in_loop[i] = nullptr;
          }
       }
    }

@@ -51,8 +51,7 @@ set(care_headers
     numeric.h
     PointerTypes.h
     policies.h
-    care.h
-    RAJAPlugin.h
+    care.h 
     DebugPlugin.h
     ProfilePlugin.h
     scan.h
@@ -67,7 +66,6 @@ set(care_sources
     CHAICallback.cpp
     ExecutionSpace.cpp
     LoopFuser.cpp
-    RAJAPlugin.cpp
     DebugPlugin.cpp
     ProfilePlugin.cpp
     scan.cpp
