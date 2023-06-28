@@ -5,6 +5,7 @@
 #include "chai/ExecutionSpaces.hpp"
 #include "care/config.h"
 #include "care/CHAICallback.h"
+#include <vector>
 
 namespace chai {
    struct PointerRecord;
