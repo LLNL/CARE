@@ -3,8 +3,7 @@
 #define CHAI_Accessor__HPP
 
 #include "care/config.h"
-#include "care/ProfilePlugin.h"
-#include "care/DebugPlugin.h"
+#include "care/PluginData.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -94,9 +93,9 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
 
    CARE_HOST_DEVICE RaceConditionAccessor<T>(RaceConditionAccessor<T> const & other ) : m_shallow_copy_of_cpu_data(other.m_shallow_copy_of_cpu_data), m_deep_copy_of_previous_state_of_cpu_data(other.m_deep_copy_of_previous_state_of_cpu_data), m_accesses(other.m_accesses), m_size_in_bytes(other.m_size_in_bytes), m_name(other.m_name) {
 #ifndef CARE_GPUCC
-      if (ProfilePlugin::isParallelContext()) {
+      if (PluginData::isParallelContext()) {
          auto data = m_shallow_copy_of_cpu_data;
-         if (!ProfilePlugin::post_parallel_forall_action_registered((void *)data)) {
+         if (!PluginData::post_parallel_forall_action_registered((void *)data)) {
             auto len = m_size_in_bytes / sizeof(T);
             m_deep_copy_of_previous_state_of_cpu_data = new typename std::remove_const<T>::type[len];
             std::copy_n(data, len, m_deep_copy_of_previous_state_of_cpu_data);
@@ -104,7 +103,7 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
             m_accesses = new std::unordered_map<int, std::set<int>> {};
             auto accesses = m_accesses;
             const char * name = m_name;
-            ProfilePlugin::register_post_parallel_forall_action((void *)data, std::bind(detectRaceCondition<T>, data, prev_data, accesses, len, name, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+            PluginData::register_post_parallel_forall_action((void *)data, std::bind(detectRaceCondition<T>, data, prev_data, accesses, len, name, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
          }
       }
 #endif
@@ -116,8 +115,8 @@ class RaceConditionAccessor : public NoOpAccessor<T> {
    const
    {
 #ifndef CARE_GPUCC
-      if (m_accesses && ProfilePlugin::isParallelContext()) {
-         (*m_accesses)[i].insert(DebugPlugin::s_threadID);
+      if (m_accesses && PluginData::isParallelContext()) {
+         (*m_accesses)[i].insert(PluginData::s_threadID);
       }
 #endif
    }
@@ -154,12 +153,12 @@ class RaceConditionAccessorWithCallback : public RaceConditionAccessor<T> {
    const
    {
       m_callback(i);
-      if (RaceConditionAccessor<T>::m_accesses && ProfilePlugin::isParallelContext()) {
-         printf("inserting %i into (%p) accesses[%i] for pointer %p\n", DebugPlugin::s_threadID, (void *) RaceConditionAccessor<T>::m_accesses, i, RaceConditionAccessor<T>::m_shallow_copy_of_cpu_data);
+      if (RaceConditionAccessor<T>::m_accesses && PluginData::isParallelContext()) {
+         printf("inserting %i into (%p) accesses[%i] for pointer %p\n", PluginData::s_threadID, (void *) RaceConditionAccessor<T>::m_accesses, i, RaceConditionAccessor<T>::m_shallow_copy_of_cpu_data);
          printf("size of accesses before insert %lu\n", RaceConditionAccessor<T>::m_accesses->size());
       }
       RaceConditionAccessor<T>::operator[](i);
-      if (RaceConditionAccessor<T>::m_accesses && ProfilePlugin::isParallelContext()) {
+      if (RaceConditionAccessor<T>::m_accesses && PluginData::isParallelContext()) {
          printf("size of accesses after insert %lu\n", RaceConditionAccessor<T>::m_accesses->size());
          printf("size of accesses[%i] after insert %lu\n", i, (*RaceConditionAccessor<T>::m_accesses)[i].size());
       }

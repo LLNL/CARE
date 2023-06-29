@@ -8,8 +8,7 @@
 // CARE headers
 #include "care/CHAICallback.h"
 #ifndef CARE_DISABLE_RAJAPLUGIN
-#include "care/ProfilePlugin.h"
-#include "care/DebugPlugin.h"
+#include "care/PluginData.h"
 #endif
 
 // Other library headers
@@ -302,7 +301,7 @@ namespace care {
    void CHAICallback::deregisterRecord(const chai::PointerRecord* record) {
 #ifndef CARE_DISABLE_RAJAPLUGIN
       if (s_log_data > 0) {
-         DebugPlugin::removeActivePointer(record);
+         PluginData::removeActivePointer(record);
       }
 #endif
       NameMap& s_names = getNameMap();
@@ -434,16 +433,16 @@ namespace care {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Moved %lu bytes to space %i at %s:%i\n",
                                 name.c_str(), size, (int) space,
-                                ProfilePlugin::getCurrentLoopFileName(),
-                                ProfilePlugin::getCurrentLoopLineNumber());
+                                PluginData::getCurrentLoopFileName(),
+                                PluginData::getCurrentLoopLineNumber());
                      }
                      else {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s (%p): Moved %lu bytes to space %i (%p) at %s:%i\n",
                                 name.c_str(), m_record, size, (int) space,
                                 m_record->m_pointers[space],
-                                ProfilePlugin::getCurrentLoopFileName(),
-                                ProfilePlugin::getCurrentLoopLineNumber());
+                                PluginData::getCurrentLoopFileName(),
+                                PluginData::getCurrentLoopLineNumber());
                      }
 #endif
                   }
@@ -457,20 +456,20 @@ namespace care {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Captured %lu bytes to space %i at %s:%i\n",
                                 name.c_str(), size, (int) space,
-                                ProfilePlugin::getCurrentLoopFileName(),
-                                ProfilePlugin::getCurrentLoopLineNumber());
+                                PluginData::getCurrentLoopFileName(),
+                                PluginData::getCurrentLoopLineNumber());
                      }
                      else {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s (%p): Captured %lu bytes to space %i (%p) at %s:%i\n",
                                 name.c_str(), m_record, size, (int) space,
                                 m_record->m_pointers[space],
-                                ProfilePlugin::getCurrentLoopFileName(),
-                                ProfilePlugin::getCurrentLoopLineNumber());
+                                PluginData::getCurrentLoopFileName(),
+                                PluginData::getCurrentLoopLineNumber());
                      }
                   }
                   if (s_log_data > 0) {
-                     DebugPlugin::addActivePointer(m_record);
+                     PluginData::addActivePointer(m_record);
                   }
 #endif
                   break;
@@ -523,7 +522,7 @@ namespace care {
                case chai::ACTION_CAPTURED:
 #ifndef CARE_DISABLE_RAJAPLUGIN
                   if (s_log_data > 0) {
-                     DebugPlugin::addActivePointer(m_record);
+                     PluginData::addActivePointer(m_record);
                   }
 #endif
                   break;

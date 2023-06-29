@@ -52,6 +52,7 @@ set(care_headers
     PointerTypes.h
     policies.h
     care.h 
+    PluginData.h
     DebugPlugin.h
     ProfilePlugin.h
     scan.h
@@ -66,6 +67,7 @@ set(care_sources
     CHAICallback.cpp
     ExecutionSpace.cpp
     LoopFuser.cpp
+    PluginData.cpp
     DebugPlugin.cpp
     ProfilePlugin.cpp
     scan.cpp

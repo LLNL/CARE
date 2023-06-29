@@ -19,8 +19,7 @@
 // CARE headers
 #include "care/policies.h"
 #include "care/util.h"
-#include "care/DebugPlugin.h"
-#include "care/ProfilePlugin.h"
+#include "care/PluginData.h"
 
 // other library headers
 #include "chai/ArrayManager.hpp"
@@ -76,10 +75,8 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
-         ProfilePlugin::setFileName(fileName);
-         DebugPlugin::setFileName(fileName);
-         ProfilePlugin::setLineNumber(lineNumber);
-         DebugPlugin::setLineNumber(lineNumber);
+         PluginData::setFileName(fileName);
+         PluginData::setLineNumber(lineNumber);
 
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -488,10 +485,8 @@ namespace care {
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename Exec>
    void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
-      ProfilePlugin::setFileName(fileName);
-      DebugPlugin::setFileName(fileName);
-      ProfilePlugin::setLineNumber(lineNumber);
-      DebugPlugin::setLineNumber(lineNumber);
+      PluginData::setFileName(fileName);
+      PluginData::setLineNumber(lineNumber);
 
       // intentional trigger of copy constructor for CHAI correctness
       LB body_to_call{body};
@@ -545,10 +540,8 @@ namespace care {
    void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
        if (xend > 0 && ylength > 0) {
           // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
-          ProfilePlugin::setFileName(fileName);
-          DebugPlugin::setFileName(fileName);
-          ProfilePlugin::setLineNumber(lineNumber);
-          DebugPlugin::setLineNumber(lineNumber);
+          PluginData::setFileName(fileName);
+          PluginData::setLineNumber(lineNumber);
 
           dim3 dimBlock(CARE_CUDA_BLOCK_SIZE, 1);
           dim3 dimGrid;

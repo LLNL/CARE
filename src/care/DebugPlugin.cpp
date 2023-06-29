@@ -6,6 +6,8 @@
 
 #include "care/CHAICallback.h"
 
+#include "care/PluginData.h"
+
 // Std library headers
 #if defined(CARE_DEBUG) && !defined(_WIN32)
 #include <execinfo.h>
@@ -14,30 +16,15 @@
 #include <unordered_set>
 
 namespace care{
-   const char * DebugPlugin::fileName = "N/A";
-   int DebugPlugin::lineNumber = -1;
-	std::string DebugPlugin::s_current_loop_file_name = "N/A";
-   int DebugPlugin::s_current_loop_line_number = -1;
-   std::vector<const chai::PointerRecord*> DebugPlugin::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
-   bool DebugPlugin::s_synchronize_before = false; 
-   bool DebugPlugin::s_synchronize_after = false;
-   int DebugPlugin::s_threadID = -1;
-
    DebugPlugin::DebugPlugin() {}
-
-   void DebugPlugin::setFileName(const char * name) {DebugPlugin::fileName = name;}
-
-   
-   void DebugPlugin::setLineNumber(int num) {DebugPlugin::lineNumber = num;}
-
 
    void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
       // Prepare to record CHAI data
       if (CHAICallback::isActive()) {
-         s_current_loop_file_name = fileName;
-         s_current_loop_line_number = lineNumber;
-         s_active_pointers_in_loop.clear();
+         PluginData::s_current_loop_file_name = PluginData::fileName;
+         PluginData::s_current_loop_line_number = PluginData::lineNumber;
+         PluginData::s_active_pointers_in_loop.clear();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          GPUWatchpoint::setOrCheckWatchpoint<int>();
@@ -67,10 +54,10 @@ namespace care{
   			}
 
 		if (CHAICallback::isActive()) {			
-			writeLoopData(space, fileName, lineNumber);
+			writeLoopData(space, PluginData::fileName, PluginData::lineNumber);
 	
          // Clear out the captured arrays
-         s_active_pointers_in_loop.clear();
+         PluginData::s_active_pointers_in_loop.clear();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          GPUWatchpoint::setOrCheckWatchpoint<int>();
@@ -93,7 +80,7 @@ namespace care{
             int numArrays = 0;
             std::unordered_set<const chai::PointerRecord*> usedRecords;
 
-            for (const chai::PointerRecord* record : s_active_pointers_in_loop) {
+            for (const chai::PointerRecord* record : PluginData::s_active_pointers_in_loop) {
                if (usedRecords.count(record) > 0) {
                   continue;
                }
@@ -150,23 +137,6 @@ namespace care{
       }
    }
 
-void DebugPlugin::setSynchronization(bool synchronizeBefore,
-                                       bool synchronizeAfter) {
-      s_synchronize_before = synchronizeBefore;
-      s_synchronize_after = synchronizeAfter;
-   }   
-
-   void DebugPlugin::addActivePointer(const chai::PointerRecord* record) {
-      s_active_pointers_in_loop.emplace_back(record);
-   }
-
-   void DebugPlugin::removeActivePointer(const chai::PointerRecord* record) {
-      for (size_t i = 0; i < s_active_pointers_in_loop.size(); ++i) {
-         if (s_active_pointers_in_loop[i] == record) {
-            s_active_pointers_in_loop[i] = nullptr;
-         }
-      }
-   }
 }
 
 
