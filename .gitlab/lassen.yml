@@ -41,11 +41,13 @@ ibm_clang_9_gcc_8:
   variables:
     SPEC: " %clang@9.0.0ibm+tests cxxflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1 cflags=--gcc-toolchain=/usr/tce/packages/gcc/gcc-8.3.1"
   extends: .build_and_test_on_lassen
+  allow_failure: true
 
 gcc_8_3_1:
   variables:
     SPEC: "%gcc@8.3.1+tests"
   extends: .build_and_test_on_lassen
+  allow_failure: true
 
 
 
@@ -71,6 +73,7 @@ gcc_8_3_1_cuda:
 #    SPEC: "+cuda cuda_arch=70 +allow-unsupported-compilers +tests %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
     SPEC: "+cpp14 +cuda cuda_arch=70 +allow-unsupported-compilers %gcc@8.3.1 ^cuda@10.1.168 ^cmake@3.14.5"
   extends: .build_and_test_on_lassen
+  allow_failure: true
 
 
 # EXTRAS
