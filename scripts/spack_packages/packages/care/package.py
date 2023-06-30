@@ -154,7 +154,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super(Care, self).initconfig_hardware_entries()
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies('+openmp')))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
 
         if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -164,7 +164,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CUB_DIR", spec['cub'].prefix))
 
             cuda_for_radiuss_projects(entries, spec)
-        else
+        else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if '+rocm' in spec:
@@ -172,7 +172,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("HIP_ROOT_DIR", spec['hip'].prefix))
 
             hip_for_radiuss_projects(entries, spec, compiler)
-        else
+        else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
         return entries
