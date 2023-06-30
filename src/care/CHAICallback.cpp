@@ -9,8 +9,6 @@
 #include "care/CHAICallback.h"
 #ifndef CARE_DISABLE_RAJAPLUGIN
 #include "care/PluginData.h"
-#include "care/ProfilePlugin.h"
-#include "care/DebugPlugin.h"
 #endif
 
 // Other library headers
