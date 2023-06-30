@@ -1,293 +1,250 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-from spack import *
-
-import socket
 import os
-
-from os import environ as env
-from os.path import join as pjoin
-
+import socket
 import re
 
-def cmake_cache_entry(name, value, comment=""):
-    """Generate a string for a cmake cache variable"""
-
-    return 'set(%s "%s" CACHE PATH "%s")\n\n' % (name,value,comment)
-
-
-def cmake_cache_string(name, string, comment=""):
-    """Generate a string for a cmake cache variable"""
-
-    return 'set(%s "%s" CACHE STRING "%s")\n\n' % (name,string,comment)
+from spack.package import *
+from .camp import hip_for_radiuss_projects
+from .camp import cuda_for_radiuss_projects
+from .camp import blt_link_helpers
 
 
-def cmake_cache_option(name, boolean_value, comment=""):
-    """Generate a string for a cmake configuration option"""
 
-    value = "ON" if boolean_value else "OFF"
-    return 'set(%s %s CACHE BOOL "%s")\n\n' % (name,value,comment)
-
-
-def get_spec_path(spec, package_name, path_replacements = {}, use_bin = False) :
-    """Extracts the prefix path for the given spack package
-       path_replacements is a dictionary with string replacements for the path.
-    """
-
-    if not use_bin:
-        path = spec[package_name].prefix
-    else:
-        path = spec[package_name].prefix.bin
-
-    path = os.path.realpath(path)
-
-    for key in path_replacements:
-        path = path.replace(key, path_replacements[key])
-
-    return path
-
-
-class Chai(CMakePackage, CudaPackage):
+class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     """
     Copy-hiding array interface for data migration between memory spaces
     """
 
     homepage = "https://github.com/LLNL/CHAI"
-    git      = "https://github.com/LLNL/CHAI.git"
+    git = "https://github.com/LLNL/CHAI.git"
+    tags = ["ecp", "e4s", "radiuss"]
 
-    version('develop', branch='develop', submodules='True')
-    version('main', branch='main', submodules='True')
-    version('2.4.0', tag='v2.4.0', submodules='True')
-    version('2.3.0', tag='v2.3.0', submodules='True')
-    version('2.2.2', tag='v2.2.2', submodules='True')
-    version('2.2.1', tag='v2.2.1', submodules='True')
-    version('2.2.0', tag='v2.2.0', submodules='True')
-    version('2.1.1', tag='v2.1.1', submodules='True')
-    version('2.1.0', tag='v2.1.0', submodules='True')
-    version('2.0.0', tag='v2.0.0', submodules='True')
-    version('1.2.0', tag='v1.2.0', submodules='True')
-    version('1.1.0', tag='v1.1.0', submodules='True')
-    version('1.0', tag='v1.0', submodules='True')
+    maintainers = ["davidbeckingsale"]
 
-    variant('shared', default=False, description='Build Shared Libs')
-    variant('raja', default=True, description='Build plugin for RAJA')
-    variant('tests', default='basic', values=('none', 'basic', 'benchmarks'),
-            multi=False, description='Tests to run')
-    variant('libcpp', default=False, description='Use libc++')
-    variant('enable_pick', default=False, description=' enable pick API')
-    variant('disable_rm', default=True, description='disable the resource manager')
+    version("develop", branch="develop", submodules=False)
+    version("main", branch="main", submodules=False)
+    version("2022.10.0", tag="v2022.10.0", submodules=False)
+    version("2022.03.0", tag="v2022.03.0", submodules=False)
+    version("2.4.0", tag="v2.4.0", submodules=True)
+    version("2.3.0", tag="v2.3.0", submodules=True)
+    version("2.2.2", tag="v2.2.2", submodules=True)
+    version("2.2.1", tag="v2.2.1", submodules=True)
+    version("2.2.0", tag="v2.2.0", submodules=True)
+    version("2.1.1", tag="v2.1.1", submodules=True)
+    version("2.1.0", tag="v2.1.0", submodules=True)
+    version("2.0.0", tag="v2.0.0", submodules=True)
+    version("1.2.0", tag="v1.2.0", submodules=True)
+    version("1.1.0", tag="v1.1.0", submodules=True)
+    version("1.0", tag="v1.0", submodules=True)
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('umpire')
-    depends_on('raja', when="+raja")
+    variant("enable_pick", default=False, description="Enable pick method")
+    variant("shared", default=True, description="Build Shared Libs")
+    variant("raja", default=False, description="Build plugin for RAJA")
+    variant("examples", default=True, description="Build examples.")
+    variant("openmp", default=False, description="Build using OpenMP")
+    # TODO: figure out gtest dependency and then set this default True
+    # and remove the +tests conflict below.
+    variant(
+        "tests",
+        default="none",
+        values=("none", "basic", "benchmarks"),
+        multi=False,
+        description="Tests to run",
+    )
 
-    depends_on('cmake@3.9:', type='build', when="+cuda")
-    depends_on('umpire+cuda', when="+cuda")
-    depends_on('raja+cuda', when="+raja+cuda")
-    depends_on('umpire+cuda+allow-unsupported-compilers', when="+cuda+allow-unsupported-compilers")
-    depends_on('raja+cuda+allow-unsupported-compilers', when="+raja+cuda+allow-unsupported-compilers")
-    depends_on('umpire+libcpp', when='+libcpp')
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
-    phases = ['hostconfig', 'cmake', 'build', 'install']
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
+    depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
+    depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
+    depends_on("blt@0.4.0:", type="build", when="@2.3.0")
+    depends_on("blt@0.3.6:", type="build", when="@:2.2.2")
+
+    depends_on("umpire")
+    depends_on("umpire@2022.10.0:", when="@2022.10.0:")
+    depends_on("umpire@2022.03.0:", when="@2022.03.0:")
+    depends_on("umpire@6.0.0", when="@2.4.0")
+    depends_on("umpire@4.1.2", when="@2.2.0:2.3.0")
+    depends_on("umpire@main", when="@main")
+
+    with when("+cuda"):
+        depends_on("umpire+cuda")
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on("umpire+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+
+    with when("+rocm"):
+        depends_on("umpire+rocm")
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "umpire+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+            )
+
+    with when("+raja"):
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@0.14.0", when="@2.4.0")
+        depends_on("raja@0.13.0", when="@2.3.0")
+        depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
+        depends_on("raja@2022.03.0:", when="@2022.03.0:")
+        depends_on("raja@2022.10.0:", when="@2022.10.0:")
+        depends_on("raja@main", when="@main")
+
+        with when("+cuda"):
+            depends_on("raja+cuda")
+            for sm_ in CudaPackage.cuda_arch_values:
+                depends_on("raja+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+        with when("+rocm"):
+            depends_on("raja+rocm")
+            for arch in ROCmPackage.amdgpu_targets:
+                depends_on(
+                    "raja+rocm amdgpu_target={0}".format(arch),
+                    when="amdgpu_target={0}".format(arch),
+                )
 
     def _get_sys_type(self, spec):
-        sys_type = str(spec.architecture)
-        # if on llnl systems, we can use the SYS_TYPE
+        sys_type = spec.architecture
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
 
-    def _get_host_config_path(self, spec):
-        var=''
-        if '+cuda' in spec:
-            var= '-'.join([var,'cuda'])
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip("1234567890")
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version,
+            self.spec.dag_hash(8)
+        )
 
-        host_config_path = "hc-%s-%s-%s%s-%s.cmake" % (socket.gethostname().rstrip('1234567890'),
-                                               self._get_sys_type(spec),
-                                               spec.compiler,
-                                               var,
-                                               spec.dag_hash())
-        dest_dir = self.stage.source_path
-        host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
-        return host_config_path
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        compiler = self.compiler
+        entries = super(Chai, self).initconfig_compiler_entries()
 
-    def hostconfig(self, spec, prefix, py_site_pkgs_dir=None):
-        """
-        This method creates a 'host-config' file that specifies
-        all of the options used to configure and build CHAI.
+        # adrienbernede-22-11:
+        #   This was in upstream Spack raja package, but it’s causing the follwing failure Umpire:
+        #     CMake Error in src/umpire/CMakeLists.txt:
+        #     No known features for CXX compiler
+        #
+        #   In CHAI, we see another error:
+        #       [ 15%] Linking C executable ../../../tests/blt_hip_runtime_c_smoke
+        #       clang (LLVM option parsing): for the --amdgpu-early-inline-all option: may only occur zero or one times!
+        #       clang (LLVM option parsing): for the --amdgpu-function-calls option: may only occur zero or one times!
+        #   We suspect this error comes from the use of hip compiler here, so we comment it:
+        #
+        #if "+rocm" in spec:
+        #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
-        For more details about 'host-config' files see:
-            http://software.llnl.gov/conduit/building.html
-
-        Note:
-          The `py_site_pkgs_dir` arg exists to allow a package that
-          subclasses this package provide a specific site packages
-          dir when calling this function. `py_site_pkgs_dir` should
-          be an absolute path or `None`.
-
-          This is necessary because the spack `site_packages_dir`
-          var will not exist in the base class. For more details
-          on this issue see: https://github.com/spack/spack/issues/6261
-        """
-
-        #######################
-        # Compiler Info
-        #######################
-        c_compiler = env["SPACK_CC"]
-        cpp_compiler = env["SPACK_CXX"]
-
-        # Even though we don't have fortran code in our project we sometimes
-        # use the Fortran compiler to determine which libstdc++ to use
-        f_compiler = ""
-        if "SPACK_FC" in env.keys():
-            # even if this is set, it may not exist
-            # do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
-
-        #######################################################################
-        # By directly fetching the names of the actual compilers we appear
-        # to doing something evil here, but this is necessary to create a
-        # 'host config' file that works outside of the spack install env.
-        #######################################################################
-
-        sys_type = self._get_sys_type(spec)
-
-        ##############################################
-        # Find and record what CMake is used
-        ##############################################
-
-        cmake_exe = spec['cmake'].command.path
-        cmake_exe = os.path.realpath(cmake_exe)
-
-        host_config_path = self._get_host_config_path(spec)
-        cfg = open(host_config_path, "w")
-        cfg.write("###################\n".format("#" * 60))
-        cfg.write("# Generated host-config - Edit at own risk!\n")
-        cfg.write("###################\n".format("#" * 60))
-        cfg.write("# Copyright (c) 2020, Lawrence Livermore National Security, LLC and\n")
-        cfg.write("# other CHAI Project Developers. See the top-level LICENSE file for\n")
-        cfg.write("# details.\n")
-        cfg.write("#\n")
-        cfg.write("# SPDX-License-Identifier: (BSD-3-Clause) \n")
-        cfg.write("###################\n\n".format("#" * 60))
-
-        cfg.write("#------------------\n".format("-" * 60))
-        cfg.write("# SYS_TYPE: {0}\n".format(sys_type))
-        cfg.write("# Compiler Spec: {0}\n".format(spec.compiler))
-        cfg.write("# CMake executable path: %s\n" % cmake_exe)
-        cfg.write("#------------------\n\n".format("-" * 60))
-
-        #######################
-        # Compiler Settings
-        #######################
-
-        cfg.write("#------------------\n".format("-" * 60))
-        cfg.write("# Compilers\n")
-        cfg.write("#------------------\n\n".format("-" * 60))
-        cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
-        cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
+        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        flags = spec.compiler_flags
 
         # use global spack compiler flags
-        cflags = ' '.join(spec.compiler_flags['cflags'])
+        cppflags = " ".join(flags["cppflags"])
+        if cppflags:
+            # avoid always ending up with " " with no flags defined
+            cppflags += " "
+
+        cflags = cppflags + " ".join(flags["cflags"])
         if cflags:
-            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
 
-        cxxflags = ' '.join(spec.compiler_flags['cxxflags'])
-        if "+libcpp" in spec:
-            cxxflags += ' '.join([cxxflags,"-stdlib=libc++ -DGTEST_HAS_CXXABI_H_=0"])
+        cxxflags = cppflags + " ".join(flags["cxxflags"])
         if cxxflags:
-            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
 
-        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
-            libdir = pjoin(os.path.dirname(
-                           os.path.dirname(f_compiler)), "lib")
-            flags = ""
-            for _libpath in [libdir, libdir + "64"]:
-                if os.path.exists(_libpath):
-                    flags += " -Wl,-rpath,{0}".format(_libpath)
-            description = ("Adds a missing libstdc++ rpath")
-            if flags:
-                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                            description))
+        fflags = " ".join(flags["fflags"])
+        if fflags:
+            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
+        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
-        gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")
-        gcc_name_regex = re.compile(".*gcc-name.*")
+        blt_link_helpers(entries, spec, compiler)
 
-        using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags['cxxflags']))
-        using_gcc_name = list(filter(gcc_name_regex.match, spec.compiler_flags['cxxflags']))
-        compilers_using_toolchain = ["pgi", "xl", "icpc"]
-        if any(compiler in cpp_compiler for compiler in compilers_using_toolchain):
-            if using_toolchain or using_gcc_name:
-                cfg.write(cmake_cache_entry("BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-                "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
+        return entries
+
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        compiler = self.compiler
+        entries = super(Chai, self).initconfig_hardware_entries()
 
         if "+cuda" in spec:
-            cfg.write("#------------------{0}\n".format("-" * 60))
-            cfg.write("# Cuda\n")
-            cfg.write("#------------------{0}\n\n".format("-" * 60))
-
-            cfg.write(cmake_cache_option("ENABLE_CUDA", True))
-
-            cudatoolkitdir = spec['cuda'].prefix
-            cfg.write(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
-                                        cudatoolkitdir))
-            cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
-            cfg.write(cmake_cache_entry("CMAKE_CUDA_COMPILER",
-                                        cudacompiler))
-
-            if not spec.satisfies('cuda_arch=none'):
-                cuda_arch = spec.variants['cuda_arch'].value
-                cuda_arch = "sm_{0}".format(cuda_arch[0])
-                flag = '-arch {0}'.format(cuda_arch)
-                cfg.write(cmake_cache_string("CUDA_ARCH",cuda_arch))
-                cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS", flag))
-            
-            cfg.write(cmake_cache_option("ENABLE_PINNED", True))
-
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
+            cuda_for_radiuss_projects(entries, spec)
         else:
-            cfg.write(cmake_cache_option("ENABLE_CUDA", False))
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
+        if "+rocm" in spec:
+            entries.append(cmake_cache_option("ENABLE_HIP", True))
+            hip_for_radiuss_projects(entries, spec, compiler)
+        else:
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
+
+        return entries
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
+
+        option_prefix = "CHAI_" if spec.satisfies("@2022.03.0:") else ""
+
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_path(
+            "BLT_SOURCE_DIR", spec["blt"].prefix))
         if "+raja" in spec:
-            cfg.write("#------------------{0}\n".format("-" * 60))
-            cfg.write("# RAJA\n")
-            cfg.write("#------------------{0}\n\n".format("-" * 60))
+            entries.append(cmake_cache_option(
+                "{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
+            entries.append(cmake_cache_path(
+                "RAJA_DIR", spec["raja"].prefix))
+        entries.append(cmake_cache_path(
+            "umpire_DIR", spec["umpire"].prefix))
 
-            cfg.write(cmake_cache_option("ENABLE_RAJA_PLUGIN", True))
-            raja_dir = spec['raja'].prefix
-            cfg.write(cmake_cache_entry("RAJA_DIR", raja_dir))
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        # Build options
+        entries.append(cmake_cache_string(
+            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option(
+            "BUILD_SHARED_LIBS", "+shared" in spec))
+
+        # Generic options that have a prefixed equivalent in CHAI CMake
+        entries.append(cmake_cache_option(
+            "ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_DOCS", False))
+        if "tests=benchmarks" in spec:
+            # BLT requires ENABLE_TESTS=True to enable benchmarks
+            entries.append(cmake_cache_option(
+                "ENABLE_BENCHMARKS", True))
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", True))
         else:
-            cfg.write(cmake_cache_option("ENABLE_RAJA_PLUGIN", False))
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", "tests=none" not in spec))
 
-        # shared vs static libs
-        cfg.write(cmake_cache_option("BUILD_SHARED_LIBS","+shared" in spec))
+        # Prefixed options that used to be name without one
+        entries.append(cmake_cache_option(
+            "{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec))
 
-        umpire_conf_path = spec['umpire'].prefix + "/share/umpire/cmake"
-        cfg.write(cmake_cache_entry("umpire_DIR",umpire_conf_path))
-
-        cfg.write(cmake_cache_option("ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
-        cfg.write(cmake_cache_option("ENABLE_TESTS", not 'tests=none' in spec))
-
-        cfg.write(cmake_cache_option("ENABLE_PICK", '+enable_pick' in spec))
-        cfg.write(cmake_cache_option("DISABLE_RM", '+disable_rm' in spec))
-
-        #######################
-        # Close and save
-        #######################
-        cfg.write("\n")
-        cfg.close()
-
-        print("OUT: host-config file {0}".format(host_config_path))
+        return entries
 
     def cmake_args(self):
-        spec = self.spec
-        host_config_path = self._get_host_config_path(spec)
-
         options = []
-        options.extend(['-C', host_config_path])
-
         return options

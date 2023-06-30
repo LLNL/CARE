@@ -1,416 +1,396 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-from spack import *
-
-import socket
 import os
-
-from os import environ as env
-from os.path import join as pjoin
-
+import socket
 import re
 
-def cmake_cache_entry(name, value, comment=""):
-    """Generate a string for a cmake cache variable"""
+import llnl.util.tty as tty
 
-    return 'set(%s "%s" CACHE PATH "%s")\n\n' % (name,value,comment)
-
-
-def cmake_cache_string(name, string, comment=""):
-    """Generate a string for a cmake cache variable"""
-
-    return 'set(%s "%s" CACHE STRING "%s")\n\n' % (name,string,comment)
+from spack.package import *
+from .camp import hip_for_radiuss_projects
+from .camp import cuda_for_radiuss_projects
+from .camp import blt_link_helpers
 
 
-def cmake_cache_option(name, boolean_value, comment=""):
-    """Generate a string for a cmake configuration option"""
 
-    value = "ON" if boolean_value else "OFF"
-    return 'set(%s %s CACHE BOOL "%s")\n\n' % (name,value,comment)
-
-
-def get_spec_path(spec, package_name, path_replacements = {}, use_bin = False) :
-    """Extracts the prefix path for the given spack package
-       path_replacements is a dictionary with string replacements for the path.
-    """
-
-    if not use_bin:
-        path = spec[package_name].prefix
-    else:
-        path = spec[package_name].prefix.bin
-
-    path = os.path.realpath(path)
-
-    for key in path_replacements:
-        path = path.replace(key, path_replacements[key])
-
-    return path
-
-class Umpire(CMakePackage, CudaPackage):
+class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
-    homepage = 'https://github.com/LLNL/Umpire'
-    git      = 'https://github.com/LLNL/Umpire.git'
+    homepage = "https://github.com/LLNL/Umpire"
+    git = "https://github.com/LLNL/Umpire.git"
+    tags = ["radiuss", "e4s"]
 
-    version('develop', branch='develop', submodules='True')
-    version('main', branch='main', submodules='True')
-    version('6.0.0', tag='v6.0.0', submodules='True')
-    version('5.0.1', tag='v5.0.1', submodules='True')
-    version('5.0.0', tag='v5.0.0', submodules='True')
-    version('4.1.2', tag='v4.1.2', submodules='True')
-    version('4.1.1', tag='v4.1.1', submodules='True')
-    version('4.1.0', tag='v4.1.0', submodules='True')
-    version('4.0.1', tag='v4.0.1', submodules='True')
-    version('4.0.0', tag='v4.0.0', submodules='True')
-    version('3.0.0', tag='v3.0.0', submodules='True')
-    version('2.1.0', tag='v2.1.0', submodules='True')
-    version('2.0.0', tag='v2.0.0', submodules='True')
-    version('1.1.0', tag='v1.1.0', submodules='True')
-    version('1.0.1', tag='v1.0.1', submodules='True')
-    version('1.0.0', tag='v1.0.0', submodules='True')
-    version('0.3.5', tag='v0.3.5', submodules='True')
-    version('0.3.4', tag='v0.3.4', submodules='True')
-    version('0.3.3', tag='v0.3.3', submodules='True')
-    version('0.3.2', tag='v0.3.2', submodules='True')
-    version('0.3.1', tag='v0.3.1', submodules='True')
-    version('0.3.0', tag='v0.3.0', submodules='True')
-    version('0.2.4', tag='v0.2.4', submodules='True')
-    version('0.2.3', tag='v0.2.3', submodules='True')
-    version('0.2.2', tag='v0.2.2', submodules='True')
-    version('0.2.1', tag='v0.2.1', submodules='True')
-    version('0.2.0', tag='v0.2.0', submodules='True')
-    version('0.1.4', tag='v0.1.4', submodules='True')
-    version('0.1.3', tag='v0.1.3', submodules='True')
+    maintainers = ["davidbeckingsale"]
 
-    patch('camp_target_umpire_3.0.0.patch', when='@3.0.0')
+    version("develop", branch="develop", submodules=False)
+    version("main", branch="main", submodules=False)
+    version("2022.10.0", tag="v2022.10.0", submodules=False)
+    version("2022.03.1", tag="v2022.03.1", submodules=False)
+    version("2022.03.0", tag="v2022.03.0", submodules=False)
+    version("6.0.0", tag="v6.0.0", submodules=True)
+    version("5.0.1", tag="v5.0.1", submodules=True)
+    version("5.0.0", tag="v5.0.0", submodules=True)
+    version("4.1.2", tag="v4.1.2", submodules=True)
+    version("4.1.1", tag="v4.1.1", submodules=True)
+    version("4.1.0", tag="v4.1.0", submodules=True)
+    version("4.0.1", tag="v4.0.1", submodules=True)
+    version("4.0.0", tag="v4.0.0", submodules=True)
+    version("3.0.0", tag="v3.0.0", submodules=True)
+    version("2.1.0", tag="v2.1.0", submodules=True)
+    version("2.0.0", tag="v2.0.0", submodules=True)
+    version("1.1.0", tag="v1.1.0", submodules=True)
+    version("1.0.1", tag="v1.0.1", submodules=True)
+    version("1.0.0", tag="v1.0.0", submodules=True)
+    version("0.3.5", tag="v0.3.5", submodules=True)
+    version("0.3.4", tag="v0.3.4", submodules=True)
+    version("0.3.3", tag="v0.3.3", submodules=True)
+    version("0.3.2", tag="v0.3.2", submodules=True)
+    version("0.3.1", tag="v0.3.1", submodules=True)
+    version("0.3.0", tag="v0.3.0", submodules=True)
+    version("0.2.4", tag="v0.2.4", submodules=True)
+    version("0.2.3", tag="v0.2.3", submodules=True)
+    version("0.2.2", tag="v0.2.2", submodules=True)
+    version("0.2.1", tag="v0.2.1", submodules=True)
+    version("0.2.0", tag="v0.2.0", submodules=True)
+    version("0.1.4", tag="v0.1.4", submodules=True)
+    version("0.1.3", tag="v0.1.3", submodules=True)
 
-    variant('fortran', default=False, description='Build C/Fortran API')
-    variant('c', default=True, description='Build C API')
-    variant('mpi', default=False, description='Enable MPI support')
-    variant('ipc_shmem', default=False, description='Enable POSIX shared memory')
-    variant('numa', default=False, description='Enable NUMA support')
-    variant('shared', default=False, description='Enable Shared libs')
-    variant('openmp', default=False, description='Build with OpenMP support')
-    variant('openmp_target', default=False, description='Build with OpenMP 4.5 support')
-    variant('deviceconst', default=False,
-            description='Enables support for constant device memory')
-    variant('tests', default='basic', values=('none', 'basic', 'benchmarks'),
-            multi=False, description='Tests to run')
+    patch("std-filesystem-pr784.patch", when="@2022.03.1 +rocm ^blt@0.5.2:")
+    patch("camp_target_umpire_3.0.0.patch", when="@3.0.0")
+    patch("cmake_version_check.patch", when="@4.1")
+    patch("missing_header_for_numeric_limits.patch", when="@4.1:5.0.1")
 
-    variant('libcpp', default=False, description='Uses libc++ instead of libstdc++')
-    variant('hip', default=False, description='Build with HIP support')
-    variant('tools', default=True, description='Enable tools')
-    variant('dev_benchmarks', default=False, description='Enable Developer Benchmarks')
-    variant('werror', default=True, description='Enable warnings as errors')
-    variant('asan', default=False, description='Enable ASAN')
-    variant('sanitizer_tests', default=False, description='Enable address sanitizer tests')
-    variant('allow-unsupported-compilers', default=False, description="Allow untested combinations of cuda and host compilers.")
+    # export targets when building pre-6.0.0 release with BLT 0.4.0+
+    patch(
+        "https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch?full_index=1",
+        sha256="f3b21335ce5cf9c0fecc852a94dfec90fb5703032ac97f9fee104af9408d8899",
+        when="@:5.0.1 ^blt@0.4:",
+    )
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('cmake@3.9:', when='+cuda', type='build')
-    depends_on('mpi', when='+mpi')
-    depends_on('hip', when='+hip')
+    variant("fortran", default=False, description="Build C/Fortran API")
+    variant("c", default=True, description="Build C API")
+    variant("mpi", default=False, description="Enable MPI support")
+    variant("ipc_shmem", default=False, description="Enable POSIX shared memory")
+    variant("sqlite_experimental", default=False, description="Enable sqlite integration with umpire events (Experimental)")
+    variant("numa", default=False, description="Enable NUMA support")
+    variant("shared", default=True, description="Enable Shared libs")
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("openmp_target", default=False, description="Build with OpenMP 4.5 support")
+    variant("deviceconst", default=False, description="Enables support for constant device memory")
+    variant("examples", default=False, description="Build Umpire Examples")
+    variant(
+        "tests",
+        default="none",
+        values=("none", "basic", "benchmarks"),
+        multi=False,
+        description="Tests to run",
+    )
+    variant("tools", default=False, description="Enable tools")
+    variant("backtrace", default=False, description="Enable backtrace tools")
+    variant("dev_benchmarks", default=False, description="Enable Developer Benchmarks")
+    variant("device_alloc", default=False, description="Enable DeviceAllocator")
+    variant("werror", default=True, description="Enable warnings as errors")
+    variant("asan", default=False, description="Enable ASAN")
+    variant("sanitizer_tests", default=False, description="Enable address sanitizer tests")
 
-    conflicts('+numa', when='@:0.3.2')
-    conflicts('~c', when='+fortran', msg='Fortran API requires C API')
-    conflicts('~openmp', when='+openmp_target', msg='OpenMP target requires OpenMP')
-    conflicts('+cuda', when='+hip')
-    conflicts('+openmp', when='+hip')
-    conflicts('+openmp_target', when='+hip')
-    conflicts('+deviceconst', when='~hip~cuda')
-    conflicts('~mpi', when='+ipc_shmem', msg='Shared Memory Allocator requires MPI')
-    conflicts('+ipc_shmem', when='@:5.0.1')
-    conflicts('+sanitizer_tests', when='~asan')
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", when="+cuda", type="build")
+    depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
+    depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
+    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
+    depends_on("cmake@:3.20", when="@2022.03.0:2022.03 +rocm", type="build")
 
-    phases = ['hostconfig', 'cmake', 'build', 'install']
+    depends_on("blt@develop", type="build", when="@develop")
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
+    depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
+    depends_on("blt@0.4.1", type="build", when="@6.0.0")
+    depends_on("blt@0.4.0:", type="build", when="@4.1.3:5.0.1")
+    depends_on("blt@0.3.6:", type="build", when="@:4.1.2")
+
+    depends_on("camp", when="@5.0.0:")
+    depends_on("camp@0.2.2:0.2.3", when="@6.0.0")
+    depends_on("camp@0.1.0", when="@5.0.0:5.0.1")
+    depends_on("camp@2022.03.2:", when="@2022.03.0:")
+    depends_on("camp@2022.10.0:", when="@2022.10.0:")
+    depends_on("camp@main", when="@main")
+    depends_on("camp@main", when="@develop")
+    depends_on("camp+openmp", when="+openmp")
+
+    depends_on("sqlite", when="+sqlite_experimental")
+    depends_on("mpi", when="+mpi")
+
+    with when("@5.0.0:"):
+        with when("+cuda"):
+            depends_on("camp+cuda")
+            for sm_ in CudaPackage.cuda_arch_values:
+                depends_on("camp+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+
+        with when("+rocm"):
+            depends_on("camp+rocm")
+            for arch_ in ROCmPackage.amdgpu_targets:
+                depends_on(
+                    "camp+rocm amdgpu_target={0}".format(arch_),
+                    when="amdgpu_target={0}".format(arch_),
+                )
+
+    conflicts("+numa", when="@:0.3.2")
+    conflicts("~c", when="+fortran", msg="Fortran API requires C API")
+
+    # device allocator must be used with more current umpire versions, rocm 5.4.0 and greater,
+    # and with either rocm or cuda enabled
+    conflicts("+device_alloc", when="@:2022.03.0")
+    conflicts("+device_alloc", when="^hip@:5.3.99")
+    conflicts("+device_alloc", when="~rocm~cuda")
+
+    conflicts("+deviceconst", when="~rocm~cuda")
+    conflicts("~openmp", when="+openmp_target", msg="OpenMP target requires OpenMP")
+    conflicts("+cuda", when="+rocm")
+    conflicts("+tools", when="+rocm")
+    conflicts("+rocm", when="+openmp_target", msg="Cant support both rocm and openmp device backends at once")
+    conflicts("~mpi", when="+ipc_shmem", msg="Shared Memory Allocator requires MPI")
+    conflicts("+ipc_shmem", when="@:5.0.1")
+
+    conflicts("+sqlite_experimental", when="@:6.0.0")
+    conflicts("+sanitizer_tests", when="~asan")
+
+    # device allocator exports device code, which requires static libs
+    # currently only available for cuda.
+    conflicts("+shared", when="+cuda")
+
+    # https://github.com/LLNL/Umpire/issues/653
+    # This range looks weird, but it ensures the concretizer looks at it as a
+    # range, not as a concrete version, so that it also matches 10.3.* versions.
+    conflicts("%gcc@10.3.0:10.3", when="+cuda")
 
     def _get_sys_type(self, spec):
-        sys_type = str(spec.architecture)
-        # if on llnl systems, we can use the SYS_TYPE
+        sys_type = spec.architecture
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
 
-    def _get_host_config_path(self, spec):
-        var=''
-        if '+cuda' in spec:
-            var= '-'.join([var,'cuda'])
-        if '+libcpp' in spec:
-            var='-'.join([var,'libcpp'])
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip("1234567890")
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version,
+            self.spec.dag_hash(8)
+        )
 
-        host_config_path = "hc-%s-%s-%s%s-%s.cmake" % (socket.gethostname().rstrip('1234567890'),
-                                               self._get_sys_type(spec),
-                                               spec.compiler,
-                                               var,
-                                               spec.dag_hash())
-        dest_dir = self.stage.source_path
-        host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
-        return host_config_path
-
-    def hostconfig(self, spec, prefix, py_site_pkgs_dir=None):
-        """
-        This method creates a 'host-config' file that specifies
-        all of the options used to configure and build Umpire.
-
-        For more details about 'host-config' files see:
-            http://software.llnl.gov/conduit/building.html
-
-        Note:
-          The `py_site_pkgs_dir` arg exists to allow a package that
-          subclasses this package provide a specific site packages
-          dir when calling this function. `py_site_pkgs_dir` should
-          be an absolute path or `None`.
-
-          This is necessary because the spack `site_packages_dir`
-          var will not exist in the base class. For more details
-          on this issue see: https://github.com/spack/spack/issues/6261
-        """
-
-        #######################
-        # Compiler Info
-        #######################
-        c_compiler = env["SPACK_CC"]
-        cpp_compiler = env["SPACK_CXX"]
-
-        # Even though we don't have fortran code in our project we sometimes
-        # use the Fortran compiler to determine which libstdc++ to use
-        f_compiler = ""
-        if "SPACK_FC" in env.keys():
-            # even if this is set, it may not exist
-            # do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        compiler = self.compiler
+        # Default entries are already defined in CachedCMakePackage, inherit them:
+        entries = super(Umpire, self).initconfig_compiler_entries()
 
 
-        #######################################################################
-        # By directly fetching the names of the actual compilers we appear
-        # to doing something evil here, but this is necessary to create a
-        # 'host config' file that works outside of the spack install env.
-        #######################################################################
 
-        sys_type = self._get_sys_type(spec)
+        # adrienbernede-22-11:
+        #   This was in upstream Spack raja package, but it’s causing the follwing failure:
+        #     CMake Error in src/umpire/CMakeLists.txt:
+        #     No known features for CXX compiler
+        #
+        #if "+rocm" in spec:
+        #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
-        ##############################################
-        # Find and record what CMake is used
-        ##############################################
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
-        cmake_exe = spec['cmake'].command.path
-        cmake_exe = os.path.realpath(cmake_exe)
+        if "+fortran" in spec and compiler.fc is not None:
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
+        else:
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        host_config_path = self._get_host_config_path(spec)
-        cfg = open(host_config_path, "w")
-        cfg.write("###################\n".format("#" * 60))
-        cfg.write("# Generated host-config - Edit at own risk!\n")
-        cfg.write("###################\n".format("#" * 60))
-        cfg.write("# Copyright (c) 2020, Lawrence Livermore National Security, LLC and\n")
-        cfg.write("# other Umpire Project Developers. See the top-level LICENSE file for\n")
-        cfg.write("# details.\n")
-        cfg.write("#\n")
-        cfg.write("# SPDX-License-Identifier: (BSD-3-Clause) \n")
-        cfg.write("###################\n\n".format("#" * 60))
+        entries.append(cmake_cache_option("{}ENABLE_C".format(option_prefix), "+c" in spec))
 
-        cfg.write("#------------------\n".format("-" * 60))
-        cfg.write("# SYS_TYPE: {0}\n".format(sys_type))
-        cfg.write("# Compiler Spec: {0}\n".format(spec.compiler))
-        cfg.write("# CMake executable path: %s\n" % cmake_exe)
-        cfg.write("#------------------\n\n".format("-" * 60))
-
-        cfg.write(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants['build_type'].value))
-
-        #######################
-        # Compiler Settings
-        #######################
-
-        cfg.write("#------------------\n".format("-" * 60))
-        cfg.write("# Compilers\n")
-        cfg.write("#------------------\n\n".format("-" * 60))
-        cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
-        cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
-        if '+fortran' in spec:
-          cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
+        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        flags = spec.compiler_flags
 
         # use global spack compiler flags
-        cflags = ' '.join(spec.compiler_flags['cflags'])
-        if "+libcpp" in spec:
-            cflags += ' '.join([cflags,"-DGTEST_HAS_CXXABI_H_=0"])
+        cppflags = " ".join(flags["cppflags"])
+        if cppflags:
+            # avoid always ending up with " " with no flags defined
+            cppflags += " "
+
+        cflags = cppflags + " ".join(flags["cflags"])
         if cflags:
-            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
 
-        cxxflags = ' '.join(spec.compiler_flags['cxxflags'])
-        if "+libcpp" in spec:
-            cxxflags += ' '.join([cxxflags,"-stdlib=libc++ -DGTEST_HAS_CXXABI_H_=0"])
+        cxxflags = cppflags + " ".join(flags["cxxflags"])
         if cxxflags:
-            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
 
-        fflags = ' '.join(spec.compiler_flags['fflags'])
-        cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+        fflags = " ".join(flags["fflags"])
+        if fflags:
+            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
+        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
-        fortran_compilers = ["gfortran", "xlf"]
-        if any(compiler in f_compiler for compiler in fortran_compilers) and ("clang" in cpp_compiler):
-            cfg.write(cmake_cache_entry("BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-            "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
+        blt_link_helpers(entries, spec, compiler)
 
-            libdir = pjoin(os.path.dirname(
-                           os.path.dirname(f_compiler)), "lib")
-            flags = ""
-            for _libpath in [libdir, libdir + "64"]:
-                if os.path.exists(_libpath):
-                    flags += " -Wl,-rpath,{0}".format(_libpath)
-            description = ("Adds a missing libstdc++ rpath")
-            if flags:
-                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                            description))
+        #adrienbernede-22-11:
+        #  Specific to Umpire local package, worth sharing?
+        entries = [x for x in entries if not "COMPILER_ID" in x]
 
+        return entries
 
-        gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")
-        gcc_name_regex = re.compile(".*gcc-name.*")
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        compiler = self.compiler
+        entries = super(Umpire, self).initconfig_hardware_entries()
 
-        using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags['cxxflags']))
-        using_gcc_name = list(filter(gcc_name_regex.match, spec.compiler_flags['cxxflags']))
-        compilers_using_toolchain = ["pgi", "xl", "icpc"]
-        if any(compiler in cpp_compiler for compiler in compilers_using_toolchain):
-            if using_toolchain or using_gcc_name:
-                cfg.write(cmake_cache_entry("BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-                "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
-
-        if "toss_3_x86_64_ib" in sys_type:
-            release_flags = "-O3"
-            reldebinf_flags = "-O3 -g"
-            debug_flags = "-O0 -g"
-
-            if "intel" in str(spec.compiler):
-                release_flags = ' '.join([release_flags,'-finline-functions -axCORE-AVX2 -diag-disable cpu-dispatch'])
-                reldebinf_flags = ' '.join([reldebinf_flags,'-finline-functions -axCORE-AVX2 -diag-disable cpu-dispatch'])
-
-            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS_RELEASE", release_flags))
-            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS_RELWITHDEBINFO", reldebinf_flags))
-            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS_DEBUG", debug_flags))
-
-        #Configuration to enable developer benchmarks (i.e. No-Op)
-        if "+dev_benchmarks" in spec:
-            cfg.write("#------------------{0}\n".format("-" * 60))
-            cfg.write("# Developer Benchmarks\n")
-            cfg.write("#------------------{0}\n\n".format("-" * 60))
-            
-            cfg.write(cmake_cache_option("ENABLE_DEVELOPER_BENCHMARKS", True))
-            cfg.write(cmake_cache_option("ENABLE_BENCHMARKS", True)) #Enable BLT GoogleBenchmark support
-        else:
-            cfg.write(cmake_cache_option("ENABLE_DEVELOPER_BENCHMARKS", False))
-            cfg.write(cmake_cache_option("ENABLE_BENCHMARKS", False))
-
-
-        if "+ipc_shmem" in spec:
-            cfg.write(cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", True))
-        else:
-            cfg.write(cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", False))
-
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if "+cuda" in spec:
-            cfg.write("#------------------{0}\n".format("-" * 60))
-            cfg.write("# Cuda\n")
-            cfg.write("#------------------{0}\n\n".format("-" * 60))
-
-            cfg.write(cmake_cache_option("ENABLE_CUDA", True))
-
-            cudatoolkitdir = spec['cuda'].prefix
-            cfg.write(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
-                                        cudatoolkitdir))
-            cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
-            cfg.write(cmake_cache_entry("CMAKE_CUDA_COMPILER",
-                                        cudacompiler))
-
-            cuda_flags = []
-
-            if not spec.satisfies('cuda_arch=none'):
-                cuda_arch = spec.variants['cuda_arch'].value
-                cuda_flags.append('-arch sm_{0}'.format(cuda_arch[0]))
-
-            if '+deviceconst' in spec:
-                cfg.write(cmake_cache_option("ENABLE_DEVICE_CONST", True))
-
-            if using_toolchain:
-                cuda_flags.append("-Xcompiler {}".format(using_toolchain[0]))
-
-            cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS",  ' '.join(cuda_flags)))
-
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
+            cuda_for_radiuss_projects(entries, spec)
         else:
-            cfg.write(cmake_cache_option("ENABLE_CUDA", False))
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-        if "+hip" in spec:
-            cfg.write("#------------------{0}\n".format("-" * 60))
-            cfg.write("# HIP\n")
-            cfg.write("#------------------{0}\n\n".format("-" * 60))
-
-            cfg.write(cmake_cache_option("ENABLE_HIP", True))
-
-#            -DHIP_ROOT_DIR=/opt/rocm-3.6.0/hip -DHIP_CLANG_PATH=/opt/rocm-3.6.0/llvm/bin
-
-            hip_root = spec['hip'].prefix
-            rocm_root = hip_root + "/.."
-            cfg.write(cmake_cache_entry("HIP_ROOT_DIR",
-                                        hip_root))
-            cfg.write(cmake_cache_entry("HIP_CLANG_PATH",
-                                        rocm_root + '/llvm/bin'))
-            cfg.write(cmake_cache_entry("HIP_HIPCC_FLAGS",
-                                        '--amdgpu-target=gfx906'))
-            cfg.write(cmake_cache_entry("HIP_RUNTIME_INCLUDE_DIRS",
-                                        "{0}/include;{0}/../hsa/include".format(hip_root)))
-            hip_link_flags = "-Wl,--disable-new-dtags -L{0}/lib -L{0}/../lib64 -L{0}/../lib -Wl,-rpath,{0}/lib:{0}/../lib:{0}/../lib64 -lamdhip64 -lhsakmt -lhsa-runtime64".format(hip_root)
-            if '%gcc' in spec:
-                gcc_bin = os.path.dirname(self.compiler.cxx)
-                gcc_prefix = join_path(gcc_bin, '..')
-                cfg.write(cmake_cache_entry("HIP_CLANG_FLAGS",
-                "--gcc-toolchain={0}".format(gcc_prefix))) 
-                cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS",
-                hip_link_flags + " -Wl,-rpath {}/lib64".format(gcc_prefix)))
-            else:
-                cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", hip_link_flags))
-
-            if '+deviceconst' in spec:
-                cfg.write(cmake_cache_option("ENABLE_DEVICE_CONST", True))
-
+        if "+rocm" in spec:
+            entries.append(cmake_cache_option("ENABLE_HIP", True))
+            hip_for_radiuss_projects(entries, spec, compiler)
         else:
-            cfg.write(cmake_cache_option("ENABLE_HIP", False))
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        cfg.write(cmake_cache_option("ENABLE_C", '+c' in spec))
-        cfg.write(cmake_cache_option("ENABLE_FORTRAN", '+fortran' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_DEVICE_CONST".format(option_prefix), "+deviceconst" in spec))
 
-        if "+mpi" in spec:
-            cfg.write(cmake_cache_option("ENABLE_MPI", '+mpi' in spec))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicxx))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_OPENMP_TARGET".format(option_prefix), "+openmp_target" in spec))
+        if "+openmp_target" in spec and "%xl" in spec:
+                entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
 
-        cfg.write(cmake_cache_option("ENABLE_NUMA", '+numa' in spec))
-        cfg.write(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
-        if "+openmp_target" in spec:
-            cfg.write(cmake_cache_option("ENABLE_OPENMP_TARGET", True))
-            if ('%xl' in spec):
-                cfg.write(cmake_cache_entry("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
+        return entries
 
-        cfg.write(cmake_cache_option("ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
-        cfg.write(cmake_cache_option("ENABLE_TESTS", not 'tests=none' in spec))
-        cfg.write(cmake_cache_option("ENABLE_TOOLS", '+tools' in spec))
-        cfg.write(cmake_cache_option("ENABLE_WARNINGS_AS_ERRORS", '+werror' in spec))
-        cfg.write(cmake_cache_option("ENABLE_ASAN", '+asan' in spec))
-        cfg.write(cmake_cache_option("ENABLE_SANITIZER_TESTS", '+sanitizer_tests' in spec))
+    def initconfig_mpi_entries(self):
+        spec = self.spec
 
-        #######################
-        # Close and save
-        #######################
-        cfg.write("\n")
-        cfg.close()
+        entries = super(Umpire, self).initconfig_mpi_entries()
+        entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
 
-        print("OUT: host-config file {0}".format(host_config_path))
+        return entries
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
+
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
+
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
+        if spec.satisfies("@5.0.0:"):
+            entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_string(
+            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option(
+            "BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_WARNINGS_AS_ERRORS", "+werror" in spec))
+
+        # Generic options that have a prefixed equivalent in Umpire CMake
+        entries.append(cmake_cache_option(
+            "ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_DOCS", False))
+        if "tests=benchmarks" in spec or "+dev_benchmarks" in spec:
+            # BLT requires ENABLE_TESTS=True to enable benchmarks
+            entries.append(cmake_cache_option(
+                "ENABLE_BENCHMARKS", True))
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", True))
+        else:
+            entries.append(cmake_cache_option(
+                "ENABLE_BENCHMARKS", False))
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", "tests=none" not in spec))
+
+        # Prefixed options that used to be name without one
+        entries.append(cmake_cache_option(
+            "{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_DEVELOPER_BENCHMARKS".format(option_prefix), "+dev_benchmarks" in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_TOOLS".format(option_prefix), "+tools" in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_BACKTRACE".format(option_prefix), "+backtrace" in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_ASAN".format(option_prefix), "+asan" in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_SANITIZER_TESTS".format(option_prefix), "+sanitizer_tests" in spec))
+
+        # Recent options, were never name without prefix
+        entries.append(cmake_cache_option(
+            "UMPIRE_ENABLE_DEVICE_ALLOCATOR", "+device_alloc" in spec))
+        entries.append(cmake_cache_option(
+            "UMPIRE_ENABLE_SQLITE_EXPERIMENTAL", "+sqlite_experimental" in spec))
+        if "+sqlite_experimental" in spec:
+            entries.append(cmake_cache_path(
+                "SQLite3_ROOT" ,spec["sqlite"].prefix))
+
+        # This option was renamed later than the others
+        if spec.satisfies("@2022.10.0:"):
+            entries.append(cmake_cache_option(
+                "UMPIRE_ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
+        else:
+            entries.append(cmake_cache_option(
+                "ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
+
+        return entries
 
     def cmake_args(self):
-        spec = self.spec
-        host_config_path = self._get_host_config_path(spec)
-
         options = []
-        options.extend(['-C', host_config_path])
-
         return options
+
+    def test(self):
+        """Perform stand-alone checks on the installed package."""
+        if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):
+            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
+            return
+
+        # Run a subset of examples PROVIDED installed
+        # tutorials with readily checkable outputs.
+        checks = {
+            "malloc": ["99 should be 99"],
+            "recipe_dynamic_pool_heuristic": ["in the pool", "releas"],
+            "recipe_no_introspection": ["has allocated", "used"],
+            "strategy_example": ["Available allocators", "HOST"],
+            "tut_copy": ["Copied source data"],
+            "tut_introspection": ["Allocator used is HOST", "size of the allocation"],
+            "tut_memset": ["Set data from HOST"],
+            "tut_move": ["Moved source data", "HOST"],
+            "tut_reallocate": ["Reallocated data"],
+            "vector_allocator": [""],
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = "test: checking output from {0}".format(exe)
+            self.run_test(
+                exe,
+                [],
+                expected,
+                0,
+                installed=False,
+                purpose=reason,
+                skip_missing=True,
+                work_dir=self.prefix.bin,
+            )
