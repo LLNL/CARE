@@ -15,16 +15,14 @@
 
 #include <unordered_set>
 
-namespace care{
+namespace care{ 
    DebugPlugin::DebugPlugin() {}
 
    void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
       // Prepare to record CHAI data
       if (CHAICallback::isActive()) {
-         PluginData::s_current_loop_file_name = PluginData::fileName;
-         PluginData::s_current_loop_line_number = PluginData::lineNumber;
-         PluginData::s_active_pointers_in_loop.clear();
+         PluginData::clearActivePointers();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          GPUWatchpoint::setOrCheckWatchpoint<int>();
@@ -54,10 +52,10 @@ namespace care{
   			}
 
 		if (CHAICallback::isActive()) {			
-			writeLoopData(space, PluginData::fileName, PluginData::lineNumber);
+			writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
 	
          // Clear out the captured arrays
-         PluginData::s_active_pointers_in_loop.clear();
+         PluginData::clearActivePointers();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          GPUWatchpoint::setOrCheckWatchpoint<int>();
@@ -80,7 +78,7 @@ namespace care{
             int numArrays = 0;
             std::unordered_set<const chai::PointerRecord*> usedRecords;
 
-            for (const chai::PointerRecord* record : PluginData::s_active_pointers_in_loop) {
+            for (const chai::PointerRecord* record : PluginData::getActivePointers()) {
                if (usedRecords.count(record) > 0) {
                   continue;
                }
@@ -121,7 +119,7 @@ namespace care{
             // Write the arrays captured in the loop
             usedRecords.clear();
 
-            for (const chai::PointerRecord* record : s_active_pointers_in_loop) {
+            for (const chai::PointerRecord* record : PluginData::getActivePointers) {
                if (record && usedRecords.find(record) == usedRecords.end()) {
                   usedRecords.emplace(record);
                   CHAICallback::writeArray(record, space);
@@ -136,7 +134,6 @@ namespace care{
          }
       }
    }
-
 }
 
 

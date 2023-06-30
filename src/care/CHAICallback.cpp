@@ -9,6 +9,8 @@
 #include "care/CHAICallback.h"
 #ifndef CARE_DISABLE_RAJAPLUGIN
 #include "care/PluginData.h"
+#include "care/ProfilePlugin.h"
+#include "care/DebugPlugin.h"
 #endif
 
 // Other library headers
@@ -433,16 +435,16 @@ namespace care {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Moved %lu bytes to space %i at %s:%i\n",
                                 name.c_str(), size, (int) space,
-                                PluginData::getCurrentLoopFileName(),
-                                PluginData::getCurrentLoopLineNumber());
+                                PluginData::getFileName(),
+                                PluginData::getLineNumber());
                      }
                      else {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s (%p): Moved %lu bytes to space %i (%p) at %s:%i\n",
                                 name.c_str(), m_record, size, (int) space,
                                 m_record->m_pointers[space],
-                                PluginData::getCurrentLoopFileName(),
-                                PluginData::getCurrentLoopLineNumber());
+                                PluginData::getFileName(),
+                                PluginData::getLineNumber());
                      }
 #endif
                   }
@@ -456,16 +458,16 @@ namespace care {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s: Captured %lu bytes to space %i at %s:%i\n",
                                 name.c_str(), size, (int) space,
-                                PluginData::getCurrentLoopFileName(),
-                                PluginData::getCurrentLoopLineNumber());
+                                PluginData::getFileName(),
+                                PluginData::getLineNumber());
                      }
                      else {
                         fprintf(s_log_file,
                                 "[CARE] [CHAI] %s (%p): Captured %lu bytes to space %i (%p) at %s:%i\n",
                                 name.c_str(), m_record, size, (int) space,
                                 m_record->m_pointers[space],
-                                PluginData::getCurrentLoopFileName(),
-                                PluginData::getCurrentLoopLineNumber());
+                                PluginData::getFileName(),
+                                PluginData::getLineNumber());
                      }
                   }
                   if (s_log_data > 0) {

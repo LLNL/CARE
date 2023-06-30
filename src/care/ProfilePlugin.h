@@ -2,9 +2,6 @@
 #define _CARE_ProfilePlugin_H_
 
 #include "RAJA/util/PluginStrategy.hpp"
-#include "chai/ExecutionSpaces.hpp"
-#include "care/config.h"
-#include "care/CHAICallback.h"
 
 namespace care{
 
@@ -15,7 +12,19 @@ namespace care{
 						
 			void preLaunch(const RAJA::util::PluginContext& p) override;
 
-			void postLaunch(const RAJA::util::PluginContext& p) override;        
+			void postLaunch(const RAJA::util::PluginContext& p) override;
+
+      private:
+         static unsigned int s_current_color;
+
+         static uint32_t s_colors[7];
+
+			static int s_num_colors;
+         
+			static bool s_profile_host_loops;
+			
+         
+                  
 	};
 }
 

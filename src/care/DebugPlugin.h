@@ -3,13 +3,6 @@
 
 #include "RAJA/util/PluginStrategy.hpp"
 #include "chai/ExecutionSpaces.hpp"
-#include "care/config.h"
-#include "care/CHAICallback.h"
-#include <vector>
-
-namespace chai {
-   struct PointerRecord;
-}
 
 namespace care{
 
@@ -23,7 +16,7 @@ namespace care{
 			void postLaunch(const RAJA::util::PluginContext& p) override;
 
 			static void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
-	};
+   };
 }
 
 #endif
