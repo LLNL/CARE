@@ -9,7 +9,8 @@
 variables:
   INCLUDED_FILE_CANNOT_BE_EMPTY: "True"
 
-clang_14_0_6:
-  variables:
-    SPEC: "%clang@14.0.6"
-  extends: .build_and_test_on_ruby
+## Template for extra jobs defined by the project.
+#<job-name (usually spec or description)>:
+#  variables:
+#    SPEC: "<spack spec without package name>"
+#  extends: .build_and_test_on_ruby
