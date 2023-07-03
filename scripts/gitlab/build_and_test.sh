@@ -84,6 +84,12 @@ then
         mkdir -p ${spack_user_cache}
     fi
 
+
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "prefix_opt: ${prefix_opt}"
+    echo "spack_user_cache: ${spack_user_cache}"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
     ./scripts/uberenv/uberenv.py --spec="${spec}" ${prefix_opt}
 
 fi
