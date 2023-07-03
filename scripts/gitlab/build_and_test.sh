@@ -164,11 +164,19 @@ then
     echo "~~~~~ Building CARE"
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
+    # Map CPU core allocations
+    declare -A core_counts=(["lassen"]=40 ["ruby"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32)
+
     # If building, then delete everything first
+    # NOTE: 'cmake --build . -j core_counts' attempts to reduce individual build resources.
+    #       If core_counts does not contain hostname, then will default to '-j ', which should
+    #       use max cores.
     rm -rf ${build_dir} 2>/dev/null
     mkdir -p ${build_dir} && cd ${build_dir}
 
-    if [[ "${truehostname}" == "corona" ]]
+    date
+
+    if [[ "${truehostname}" == "corona" || "${truehostname}" == "tioga" ]]
     then
         module unload rocm
     fi
@@ -176,14 +184,12 @@ then
       -C ${hostconfig_path} \
       -DCMAKE_INSTALL_PREFIX=${install_dir} \
       ${project_dir}
-    if ! $cmake_exe --build . -j; then
-      echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-      echo "Compilation failed, running make VERBOSE=1"
-      echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-      $cmake_exe --build . --verbose -j 1
+    if ! $cmake_exe --build . -j ${core_counts[$truehostname]}
+    then
+        echo "ERROR: compilation failed, building with verbose output..."
+        $cmake_exe --build . --verbose -j 1
     else
-      # todo this should use cmake --install once we use CMake 3.15+ everywhere
-      make install
+        make install
     fi
 
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
