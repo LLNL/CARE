@@ -82,18 +82,7 @@ then
         export SPACK_DISABLE_LOCAL_CONFIG=""
         export SPACK_USER_CACHE_PATH="${spack_user_cache}"
         mkdir -p ${spack_user_cache}
-
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo "made it somewhere!"
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-
     fi
-
-
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "prefix_opt: ${prefix_opt}"
-    echo "spack_user_cache: ${spack_user_cache}"
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
     ./scripts/uberenv/uberenv.py --spec="${spec}" --spack-debug ${prefix_opt}
 
