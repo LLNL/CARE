@@ -59,3 +59,6 @@ variables:
 .custom_build_and_test:
   variables:
     JOB_TEMPLATE_CANNOT_BE_EMPTY: "True"
+  artifacts:
+    paths:
+      - /var/tmp/dayton8/spack-stage/spack-stage-*/spack-build-out.txt
