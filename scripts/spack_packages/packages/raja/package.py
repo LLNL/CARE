@@ -160,6 +160,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
         #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
+        print(entries)
+        print(spec)
+        print(compiler)
         blt_link_helpers(entries, spec, compiler)
 
         return entries
