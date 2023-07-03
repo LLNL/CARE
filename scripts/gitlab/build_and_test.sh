@@ -7,10 +7,10 @@ then
 fi
 
 ###############################################################################
-# Copyright (c) 2016-23, Lawrence Livermore National Security, LLC and Umpire
+# Copyright (c) 2016-23, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (MIT)
+# SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
 set -o errexit
@@ -60,7 +60,7 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 if [[ "${option}" != "--build-only" && "${option}" != "--test-only" ]]
 then
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ Building Dependencies"
+    echo "~~~~~ Building dependencies"
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
     if [[ -z ${spec} ]]
@@ -88,7 +88,7 @@ then
 
 fi
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "~~~~~ Dependencies Built"
+  echo "~~~~~ Dependencies built"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 date
 
@@ -182,7 +182,7 @@ then
     fi
 
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ CARE Built"
+    echo "~~~~~ CARE built"
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     date
 fi
@@ -228,7 +228,7 @@ then
     fi
 
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ CARE Tests Complete"
+    echo "~~~~~ CARE tests complete"
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     date
 
