@@ -9,8 +9,11 @@ namespace care{
    {
       public:
          ProfilePlugin();
+
+         static void registerPlugin(bool reg);
 						
          void preLaunch(const RAJA::util::PluginContext& p) override;
+
          void postLaunch(const RAJA::util::PluginContext& p) override;
 
       private:
@@ -20,7 +23,9 @@ namespace care{
          
          static int s_num_colors;
          
-         static bool s_profile_host_loops;              
+         static bool s_profile_host_loops; 
+
+         static bool registered;      
    };
 }
 

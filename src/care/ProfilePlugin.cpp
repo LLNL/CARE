@@ -12,8 +12,16 @@ namespace care{
    uint32_t ProfilePlugin::s_colors[7] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
    int ProfilePlugin::s_num_colors = sizeof(s_colors) / sizeof(uint32_t);
    bool ProfilePlugin::s_profile_host_loops = true; 
+   bool ProfilePlugin::registered = false;
    
    ProfilePlugin::ProfilePlugin() {}
+   
+   void ProfilePlugin::registerPlugin(bool reg) {
+      registered = reg;
+      if(registered){
+         static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
+      }
+   }
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if CARE_HAVE_NVTOOLSEXT
@@ -53,8 +61,3 @@ namespace care{
 
    }
 }
-
-
-static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
-
-
