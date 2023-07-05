@@ -84,7 +84,7 @@ then
         mkdir -p ${spack_user_cache}
     fi
 
-    ./scripts/uberenv/uberenv.py --spec="${spec}" --spack-debug ${prefix_opt}
+    ./scripts/uberenv/uberenv.py --spec="${spec}" ${prefix_opt}
 
 fi
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
