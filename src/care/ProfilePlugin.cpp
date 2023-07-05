@@ -1,11 +1,5 @@
 #include "care/ProfilePlugin.h"
 
-#include "chai/ArrayManager.hpp"
-
-#include "chai/ExecutionSpaces.hpp"
-
-#include "care/CHAICallback.h"
-
 #include "care/PluginData.h"
 
 /* CUDA profiling macros */
@@ -23,7 +17,7 @@ namespace care{
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if CARE_HAVE_NVTOOLSEXT
-#if defined(CARE_GPUCC)
+#if defined(__CUDACC__)
       // Profile the host loops
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
@@ -48,7 +42,7 @@ namespace care{
 
 
    void ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
-#if defined(CARE_GPUCC)
+#if defined(__CUDACC__)
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
             // TODO: Add error checking
@@ -61,6 +55,6 @@ namespace care{
 }
 
 
-static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Care profile plugin", "test");
+static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
 
 

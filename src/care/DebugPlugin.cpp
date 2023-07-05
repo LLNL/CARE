@@ -137,5 +137,5 @@ namespace care{
 }
 
 
-static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "test");
+static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "Care plugin for debugging");
 

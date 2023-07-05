@@ -6,16 +6,16 @@
 
 namespace care{
 
-	class DebugPlugin : public RAJA::util::PluginStrategy
-	{
-		public:
-			DebugPlugin();
+   class DebugPlugin : public RAJA::util::PluginStrategy
+   {
+      public:
+         DebugPlugin();
 						
-			void preLaunch(const RAJA::util::PluginContext& p) override;
+         void preLaunch(const RAJA::util::PluginContext& p) override;
 
-			void postLaunch(const RAJA::util::PluginContext& p) override;
+         void postLaunch(const RAJA::util::PluginContext& p) override;
 
-			static void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
+         static void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
    };
 }
 

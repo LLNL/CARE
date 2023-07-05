@@ -23,6 +23,7 @@
 
 // other library headers
 #include "chai/ArrayManager.hpp"
+//#include "chai/ExecutionSpaces.hpp"
 #include "RAJA/RAJA.hpp"
 
 namespace care {
@@ -210,6 +211,7 @@ namespace care {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
 #endif
+      PluginData::setParallelContext(true);
       
 #if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
@@ -495,6 +497,7 @@ namespace care {
             body_to_call(x, y);
          }
       }
+      arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
    }
 
 #ifdef CARE_GPUCC
@@ -548,10 +551,11 @@ namespace care {
           dimGrid.x  = (xend/CARE_CUDA_BLOCK_SIZE)+(xend%CARE_CUDA_BLOCK_SIZE==0?0:1);
           dimGrid.y = ylength;
           care_kernel_2D<<<dimGrid, dimBlock>>>( body, gpu_lengths, ylength);
+          
+          arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
        }
    }
 #endif
-
 } // namespace care
 
 #endif // !defined(_CARE_FORALL_H_)
