@@ -8,11 +8,20 @@
 
 namespace care{
    unsigned int ProfilePlugin::s_current_color = 0;
-   uint32_t ProfilePlugin::s_colors[7] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
+   uint32_t ProfilePlugin::s_colors[7] = { 0x0000ff00,   //green
+                                           0x000000ff,   //blue
+                                           0x00ffff00,   //yellow
+                                           0x00ff00ff,   //pink
+                                           0x0000ffff,   //cyan
+                                           0x00ff0000,   //red
+                                           0x00ffffff }; //white
    int ProfilePlugin::s_num_colors = sizeof(s_colors) / sizeof(uint32_t);
    bool ProfilePlugin::s_profile_host_loops = true; 
    
    void ProfilePlugin::registerPlugin() {
+#if !defined(__HIPCC_)
+      printf("[CARE] Warning: Profiling is only supported in CUDA builds.\n");
+#endif
       static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "CARE plugin for profiling");
    }
 

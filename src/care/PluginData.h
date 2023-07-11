@@ -12,10 +12,10 @@ namespace chai {
 }
 
 namespace care{
-
-	class PluginData	{
-		public:
-			PluginData() = default;
+   //class for plugin functions and variables
+   class PluginData	{
+      public:
+         PluginData() = default;
 
          static void setFileName(const char * name);
 
@@ -47,8 +47,7 @@ namespace care{
 
          static int s_threadID;
 
-
-		private:
+      private:
          static const char * s_file_name;
 
          static int s_line_number;
@@ -58,7 +57,7 @@ namespace care{
          static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> s_post_parallel_forall_actions;
 
          static std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
-	};
+   };
 }
 
 #endif
