@@ -97,43 +97,6 @@ namespace care {
       }
    }
 
-   	template <typename LB> 
-   void forall_with_streams(gpu, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
-#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-      s_reverseLoopOrder = true;
-#endif
-
-#if defined(__CUDACC__)
-			RAJA::resources::Cuda res;
-     		RAJA::resources::Event e = forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-													res, RAJA::RangeSegment(start, end), std::forward<LB>(body));	   
-#endif
-
-#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-      s_reverseLoopOrder = false;
-#endif
-	} 
-
-   template <typename LB> 
-   void forall_given_stream(gpu, RAJA::resources::Cuda res, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
-#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-      s_reverseLoopOrder = true;
-#endif
-
-#if defined(__CUDACC__)
-			
-     		RAJA::resources::Event e = forall<RAJA::cuda_exec_async<CARE_CUDA_BLOCK_SIZE>>(
-													res, RAJA::RangeSegment(start, end), std::forward<LB>(body));	   
-#endif
-
-#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-      s_reverseLoopOrder = false;
-#endif
-	}
-
-
    ////////////////////////////////////////////////////////////////////////////////
    ///
    /// @author Alan Dayton
