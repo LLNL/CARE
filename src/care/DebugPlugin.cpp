@@ -12,7 +12,7 @@
 
 namespace care{
    void DebugPlugin::registerPlugin() {
-      static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "Care plugin for debugging");
+      static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "CARE plugin for debugging");
    }
 
    void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
