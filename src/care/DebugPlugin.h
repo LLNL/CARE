@@ -16,7 +16,16 @@ namespace care{
          void preLaunch(const RAJA::util::PluginContext& p) override;
 
          void postLaunch(const RAJA::util::PluginContext& p) override;
-
+         
+         /////////////////////////////////////////////////////////////////////////////////
+         ///
+         /// @brief Writes out debugging information after a loop is executed.
+         ///
+         /// @arg[in] space The execution space
+         /// @arg[in] fileName The file where the loop macro was called
+         /// @arg[in] lineNumber The line number where the loop macro was called
+         ///
+         /////////////////////////////////////////////////////////////////////////////////
          static void writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber);
    };
 }

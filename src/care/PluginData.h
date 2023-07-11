@@ -1,10 +1,12 @@
 #ifndef _CARE_PluginData_H_
 #define _CARE_PluginData_H_
 
-#include "chai/ExecutionSpaces.hpp"
+#include "chai/PointerRecord.hpp"
 #include "care/config.h"
 #include "care/CHAICallback.h"
 #include <vector>
+#include <functional>
+#include <unordered_map>
 
 namespace chai {
    struct PointerRecord;

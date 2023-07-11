@@ -13,11 +13,10 @@ namespace care{
    bool ProfilePlugin::s_profile_host_loops = true; 
    
    void ProfilePlugin::registerPlugin() {
-      static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "CARE plugin for profiling");
+      static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
    }
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
-#if CARE_HAVE_NVTOOLSEXT
 #if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
       // Profile the host loops
       if (s_profile_host_loops) {
@@ -43,7 +42,7 @@ namespace care{
 
 
    void ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {
             // TODO: Add error checking

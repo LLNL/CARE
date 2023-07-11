@@ -61,15 +61,6 @@ namespace care{
 #endif // !defined(CHAI_DISABLE_RM)
    }
 
-   /////////////////////////////////////////////////////////////////////////////////
-   ///
-   /// @brief Writes out debugging information after a loop is executed.
-   ///
-   /// @arg[in] space The execution space
-   /// @arg[in] fileName The file where the loop macro was called
-   /// @arg[in] lineNumber The line number where the loop macro was called
-   ///
-   /////////////////////////////////////////////////////////////////////////////////
    void DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber) {
       if (CHAICallback::loggingIsEnabled()) {
          const int s_log_data = CHAICallback::getLogData();
@@ -124,7 +115,7 @@ namespace care{
             // Write the arrays captured in the loop
             usedRecords.clear();
 
-            for (const chai::PointerRecord* record : PluginData::getActivePointers) {
+            for (const chai::PointerRecord* record : PluginData::getActivePointers()) {
                if (record && usedRecords.find(record) == usedRecords.end()) {
                   usedRecords.emplace(record);
                   CHAICallback::writeArray(record, space);
