@@ -13,7 +13,7 @@ namespace care{
    bool ProfilePlugin::s_profile_host_loops = true; 
    
    void ProfilePlugin::registerPlugin() {
-      static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
+      static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "CARE plugin for profiling");
    }
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
