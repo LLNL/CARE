@@ -19,7 +19,7 @@ namespace care{
    bool ProfilePlugin::s_profile_host_loops = true; 
    
    void ProfilePlugin::registerPlugin() {
-#if !defined(__HIPCC_)
+#if defined(__HIPCC_)
       printf("[CARE] Warning: Profiling is only supported in CUDA builds.\n");
 #endif
       static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "CARE plugin for profiling");
