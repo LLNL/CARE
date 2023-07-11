@@ -36,8 +36,7 @@ namespace care{
             nvtxRangePushEx(&eventAttrib);
          }
       }
-#endif // CARE_HAVE_NVTOOLSEXT
-#endif // defined(CARE_GPUCC)
+#endif // defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
    }
 
 

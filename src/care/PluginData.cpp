@@ -9,7 +9,6 @@ namespace care{
    std::vector<const chai::PointerRecord*> PluginData::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
    int PluginData::s_threadID = -1;
 
-      
    void PluginData::setFileName(const char * name) {PluginData::s_file_name = name;}
    
    void PluginData::setLineNumber(int num) {PluginData::s_line_number = num;}
@@ -26,6 +25,10 @@ namespace care{
       return s_parallel_context;
    }
 
+   std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> PluginData::get_post_parallel_forall_actions() {
+      return s_post_parallel_forall_actions;
+   }
+
    void PluginData::register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action) { 
       s_post_parallel_forall_actions[key] = action;
    }
@@ -34,6 +37,8 @@ namespace care{
       bool registered = s_post_parallel_forall_actions.count(key) > 0;
       return registered;
    }
+
+   void PluginData::clear_post_parallel_forall_actions(){s_post_parallel_forall_actions.clear();}
 
    std::vector<const chai::PointerRecord*> PluginData::getActivePointers() {return s_active_pointers_in_loop;}
 

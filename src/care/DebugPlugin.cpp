@@ -50,13 +50,18 @@ namespace care{
 
       if (CHAICallback::isActive()) {			
          writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
-	
-         // Clear out the captured arrays
-         PluginData::clearActivePointers();
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
          GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
+      }
+
+      if (PluginData::isParallelContext()) {
+         for (auto const & it : PluginData::get_post_parallel_forall_actions()) {
+             it.second(space, PluginData::getFileName(), PluginData::getLineNumber());
+          }
+          PluginData::clear_post_parallel_forall_actions();
+          PluginData::s_threadID = -1;
       }
 #endif // !defined(CHAI_DISABLE_RM)
    }

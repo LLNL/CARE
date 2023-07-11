@@ -3,7 +3,6 @@
 
 #include "chai/PointerRecord.hpp"
 #include "care/config.h"
-#include "care/CHAICallback.h"
 #include <vector>
 #include <functional>
 #include <unordered_map>
@@ -32,7 +31,11 @@ namespace care{
 
          static bool post_parallel_forall_action_registered(void * key); 
 
+         static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> get_post_parallel_forall_actions();
+
          static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
+
+         static void clear_post_parallel_forall_actions();
 
          static std::vector<const chai::PointerRecord*> getActivePointers();
 
