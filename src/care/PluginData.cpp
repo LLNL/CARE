@@ -1,24 +1,22 @@
 #include "PluginData.h"
 
 namespace care{
-   const char * PluginData::fileName = "N/A";
-   int PluginData::lineNumber = -1;
+   const char * PluginData::s_file_name = "N/A";
+   int PluginData::s_line_number = -1;
    bool PluginData::s_parallel_context = false;
    std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> PluginData::s_post_parallel_forall_actions 
       = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>{};     
    std::vector<const chai::PointerRecord*> PluginData::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
-   bool PluginData::s_synchronize_before = false; 
-   bool PluginData::s_synchronize_after = false;
    int PluginData::s_threadID = -1;
 
       
-   void PluginData::setFileName(const char * name) {PluginData::fileName = name;}
+   void PluginData::setFileName(const char * name) {PluginData::s_file_name = name;}
    
-   void PluginData::setLineNumber(int num) {PluginData::lineNumber = num;}
+   void PluginData::setLineNumber(int num) {PluginData::s_line_number = num;}
 
-   const char * PluginData::getFileName() {return fileName;}
+   const char * PluginData::getFileName() {return s_file_name;}
 
-   int PluginData::getLineNumber() {return lineNumber;}
+   int PluginData::getLineNumber() {return s_line_number;}
 
    void PluginData::setParallelContext(bool isParallel) {
       s_parallel_context = isParallel;
@@ -36,12 +34,6 @@ namespace care{
       bool registered = s_post_parallel_forall_actions.count(key) > 0;
       return registered;
    }
-
-   void PluginData::setSynchronization(bool synchronizeBefore,
-                                       bool synchronizeAfter) {
-      s_synchronize_before = synchronizeBefore;
-      s_synchronize_after = synchronizeAfter;
-   }   
 
    std::vector<const chai::PointerRecord*> PluginData::getActivePointers() {return s_active_pointers_in_loop;}
 

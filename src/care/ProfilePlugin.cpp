@@ -1,5 +1,4 @@
 #include "care/ProfilePlugin.h"
-
 #include "care/PluginData.h"
 
 /* CUDA profiling macros */
@@ -13,15 +12,13 @@ namespace care{
    int ProfilePlugin::s_num_colors = sizeof(s_colors) / sizeof(uint32_t);
    bool ProfilePlugin::s_profile_host_loops = true; 
    
-   ProfilePlugin::ProfilePlugin() {}
-   
    void ProfilePlugin::registerPlugin() {
       static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "Care plugin for profiling");
    }
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if CARE_HAVE_NVTOOLSEXT
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
       // Profile the host loops
       if (s_profile_host_loops) {
          if (p.platform == RAJA::Platform::host) {

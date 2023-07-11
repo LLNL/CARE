@@ -133,10 +133,6 @@ namespace care {
       chai::ArrayManager::getInstance()->enableDeviceSynchronize();
    }
 
-   inline void setSynchronization(bool before, bool after) {
-      PluginData::setSynchronization(before, after);
-   }
-   
    // does a GPU device synchronize if there has been a kernel launch through care
    // since the last time this was called.
    CARE_DLL_API bool syncIfNeeded();

@@ -9,7 +9,9 @@ namespace care{
    class DebugPlugin : public RAJA::util::PluginStrategy
    {
       public:
-         DebugPlugin();
+         DebugPlugin() = default;
+
+         static void registerPlugin();
 						
          void preLaunch(const RAJA::util::PluginContext& p) override;
 

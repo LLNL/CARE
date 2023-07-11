@@ -8,7 +8,7 @@ namespace care{
    class ProfilePlugin : public RAJA::util::PluginStrategy
    {
       public:
-         ProfilePlugin();
+         ProfilePlugin() = default;
 
          static void registerPlugin();
 						

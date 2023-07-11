@@ -1,11 +1,6 @@
 #include "care/DebugPlugin.h"
-
-#include "chai/ArrayManager.hpp"
-
 #include "chai/ExecutionSpaces.hpp"
-
 #include "care/CHAICallback.h"
-
 #include "care/PluginData.h"
 
 // Std library headers
@@ -15,8 +10,10 @@
 
 #include <unordered_set>
 
-namespace care{ 
-   DebugPlugin::DebugPlugin() {}
+namespace care{
+   void DebugPlugin::registerPlugin() {
+      static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "Care plugin for debugging");
+   }
 
    void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
@@ -34,25 +31,25 @@ namespace care{
 
    void DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
-		chai::ExecutionSpace space;
+	   chai::ExecutionSpace space;
 
-		switch (p.platform) {
-    		case RAJA::Platform::host:
-      		space = chai::CPU; break;
+	   switch (p.platform) {
+         case RAJA::Platform::host:
+         	space = chai::CPU; break;
 #if defined(CHAI_ENABLE_CUDA)
-    		case RAJA::Platform::cuda:
-      		space = chai::GPU; break;
+    	   case RAJA::Platform::cuda:
+      	   space = chai::GPU; break;
 #endif
 #if defined(CHAI_ENABLE_HIP)
-    		case RAJA::Platform::hip:
-      		space = chai::GPU; break;
+         case RAJA::Platform::hip:
+            space = chai::GPU; break;
 #endif
-    		default:
-      		space = chai::NONE;
-  			}
+         default:
+            space = chai::NONE;
+      }
 
-		if (CHAICallback::isActive()) {			
-			writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
+      if (CHAICallback::isActive()) {			
+         writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
 	
          // Clear out the captured arrays
          PluginData::clearActivePointers();
@@ -64,7 +61,15 @@ namespace care{
 #endif // !defined(CHAI_DISABLE_RM)
    }
 
-
+   /////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @brief Writes out debugging information after a loop is executed.
+   ///
+   /// @arg[in] space The execution space
+   /// @arg[in] fileName The file where the loop macro was called
+   /// @arg[in] lineNumber The line number where the loop macro was called
+   ///
+   /////////////////////////////////////////////////////////////////////////////////
    void DebugPlugin::writeLoopData(chai::ExecutionSpace space, const char * fileName, int lineNumber) {
       if (CHAICallback::loggingIsEnabled()) {
          const int s_log_data = CHAICallback::getLogData();
@@ -135,7 +140,4 @@ namespace care{
       }
    }
 }
-
-
-static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "Care plugin for debugging");
 

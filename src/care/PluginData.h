@@ -14,7 +14,7 @@ namespace care{
 
 	class PluginData	{
 		public:
-			PluginData();
+			PluginData() = default;
 
          static void setFileName(const char * name);
 
@@ -32,8 +32,6 @@ namespace care{
 
          static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
 
-         static void setSynchronization(bool synchronizeBefore, bool synchronizeAfter);
-
          static std::vector<const chai::PointerRecord*> getActivePointers();
 
          static void addActivePointer(const chai::PointerRecord* record);
@@ -46,17 +44,13 @@ namespace care{
 
 
 		private:
-         static const char * fileName;
+         static const char * s_file_name;
 
-         static int lineNumber;
+         static int s_line_number;
 
          static bool s_parallel_context;
 
          static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> s_post_parallel_forall_actions;
-
-         static bool s_synchronize_before;
-         
-         static bool s_synchronize_after;
 
          static std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
 	};
