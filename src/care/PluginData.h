@@ -56,7 +56,7 @@ namespace care{
 
          static bool s_parallel_context;
 
-         static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> s_post_parallel_forall_actions;
+         static ActionMap s_post_parallel_forall_actions;
 
          static std::vector<const chai::PointerRecord*> s_active_pointers_in_loop;
    };
