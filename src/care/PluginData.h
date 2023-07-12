@@ -12,7 +12,7 @@ namespace chai {
 }
 
 namespace care{
-   //class for plugin functions and variables
+   //class for shared plugin functions and variables
    class PluginData	{
       public:
          PluginData() = default;
