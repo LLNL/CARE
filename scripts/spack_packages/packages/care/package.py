@@ -40,7 +40,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.14.5:', type='build')
     depends_on('cmake@3.21:', when='+rocm', type='build')
 
-    depends_on('blt@0.5.2:', type='build', when='@0.10.0:')
+    depends_on('blt@0.5.2', type='build', when='@0.10.0:')
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
