@@ -11,6 +11,8 @@ namespace chai {
    struct PointerRecord;
 }
 
+using ActionMap = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>;
+
 namespace care{
    //class for shared plugin functions and variables
    class PluginData	{
@@ -31,7 +33,7 @@ namespace care{
 
          static bool post_parallel_forall_action_registered(void * key); 
 
-         static std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> get_post_parallel_forall_actions();
+         static ActionMap get_post_parallel_forall_actions();
 
          static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
 

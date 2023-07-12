@@ -4,8 +4,7 @@ namespace care{
    const char * PluginData::s_file_name = "N/A";
    int PluginData::s_line_number = -1;
    bool PluginData::s_parallel_context = false;
-   std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> PluginData::s_post_parallel_forall_actions 
-      = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>{};     
+   ActionMap PluginData::s_post_parallel_forall_actions = ActionMap{};     
    std::vector<const chai::PointerRecord*> PluginData::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
    int PluginData::s_threadID = -1;
 
@@ -25,7 +24,7 @@ namespace care{
       return s_parallel_context;
    }
 
-   std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>> PluginData::get_post_parallel_forall_actions() {
+   ActionMap PluginData::get_post_parallel_forall_actions() {
       return s_post_parallel_forall_actions;
    }
 
