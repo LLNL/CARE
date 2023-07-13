@@ -31,14 +31,14 @@ namespace care{
 
    void DebugPlugin::postLaunch(const RAJA::util::PluginContext& p) {
 #if !defined(CHAI_DISABLE_RM)
-	   chai::ExecutionSpace space;
+      chai::ExecutionSpace space;
 
-	   switch (p.platform) {
+      switch (p.platform) {
          case RAJA::Platform::host:
-         	space = chai::CPU; break;
+            space = chai::CPU; break;
 #if defined(CHAI_ENABLE_CUDA)
-    	   case RAJA::Platform::cuda:
-      	   space = chai::GPU; break;
+         case RAJA::Platform::cuda:
+            space = chai::GPU; break;
 #endif
 #if defined(CHAI_ENABLE_HIP)
          case RAJA::Platform::hip:
@@ -52,7 +52,7 @@ namespace care{
          writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
 
 #if defined(CARE_GPUCC) && defined(CARE_DEBUG)
-         GPUWatchpoint::setOrCheckWatchpoint<int>();
+      GPUWatchpoint::setOrCheckWatchpoint<int>();
 #endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 
