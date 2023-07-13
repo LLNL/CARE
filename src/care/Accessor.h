@@ -6,6 +6,7 @@
 #include "care/PluginData.h"
 
 #include <algorithm>
+#include <stdio.h>
 #include <cstdlib>
 #include <functional>
 #include <set>
