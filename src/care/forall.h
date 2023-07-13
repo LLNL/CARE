@@ -541,7 +541,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * /* fileName */, int /* lineNumber */, LB && body) {
        if (xend > 0 && ylength > 0) {
           // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
           chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();

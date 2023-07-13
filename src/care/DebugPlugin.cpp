@@ -15,7 +15,7 @@ namespace care{
       static RAJA::util::PluginRegistry::add<care::DebugPlugin> L ("Debug plugin", "CARE plugin for debugging");
    }
 
-   void DebugPlugin::preLaunch(const RAJA::util::PluginContext& p) {
+   void DebugPlugin::preLaunch(const RAJA::util::PluginContext& /* p */) {
 #if !defined(CHAI_DISABLE_RM)
       // Prepare to record CHAI data
       if (CHAICallback::isActive()) {
