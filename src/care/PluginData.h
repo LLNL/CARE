@@ -11,9 +11,9 @@ namespace chai {
    struct PointerRecord;
 }
 
-using ActionMap = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>;
-
 namespace care{
+   using ActionMap = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>;
+   
    //class for shared plugin functions and variables
    class PluginData	{
       public:
