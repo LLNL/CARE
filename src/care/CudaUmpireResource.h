@@ -95,7 +95,8 @@ namespace care {
       void memcpy(void *dst, const void *src, size_t size) {
         if (size > 0) {
           auto d{camp::resources::device_guard(get_device())};
-          m_resourceManager->copy(dst, src, *this, size);
+          camp::resources::Resource resource(*this);
+          m_resourceManager->copy(dst, const_cast<void*>(src), resource, size);
         }
       }
 
@@ -103,7 +104,8 @@ namespace care {
       {
         if (size > 0) {
           auto d{camp::resources::device_guard(get_device())};
-          m_resourceManager->memset(p, val, *this, size);
+          camp::resources::Resource resource(*this);
+          m_resourceManager->memset(p, val, resource, size);
         }
       }
 
