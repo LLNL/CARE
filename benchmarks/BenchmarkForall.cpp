@@ -75,7 +75,7 @@ static void benchmark_gpu_loop_streams(benchmark::State& state) {
 
    for (auto _ : state) {
       RAJA::resources::Cuda res;
-      care::forall_with_stream(care::gpu{}, res, "test", 0, 0, size, [=] CARE_DEVICE (int i) {
+      care::forall_with_stream(care::gpu{}, res, "BenchmarkForall.cpp", 78, 0, size, [=] CARE_DEVICE (int i) {
          data[i] = i;
       }); 
    }
