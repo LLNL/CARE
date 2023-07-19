@@ -12,6 +12,7 @@ set(BLT_EXPORT_THIRDPARTY OFF CACHE BOOL "")
 
 set(ENABLE_CUDA ON CACHE BOOL "Enable CUDA")
 set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "")
+set(CMAKE_CUDA_FLAGS "-Xcompiler=--gcc-toolchain=${GCC_HOME}" CACHE STRING "")
 #TODO: Remove CUDA_ARCH and CUDA_CODE
 set(CUDA_ARCH "sm_70" CACHE STRING "Set the CUDA virtual architecture")
 set(CUDA_CODE "compute_70" CACHE STRING "Set the CUDA actual architecture")
