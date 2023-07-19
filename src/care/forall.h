@@ -18,12 +18,11 @@
 
 // CARE headers
 #include "care/policies.h"
+#include "care/RAJAPlugin.h"
 #include "care/util.h"
-#include "care/PluginData.h"
 
 // other library headers
 #include "chai/ArrayManager.hpp"
-#include "chai/ExecutionSpaces.hpp"
 #include "RAJA/RAJA.hpp"
 
 namespace care {
@@ -76,9 +75,9 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
-         PluginData::setFileName(fileName);
-         PluginData::setLineNumber(lineNumber);
-
+#ifndef CARE_DISABLE_RAJAPLUGIN
+         RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+#endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
          RAJA::RangeStrideSegment rangeSegment =
@@ -93,6 +92,10 @@ namespace care {
          RAJA::forall<RAJA::seq_exec>(rangeSegment, std::forward<LB>(body));
 #else
          RAJA::forall<ExecutionPolicy>(rangeSegment, std::forward<LB>(body));
+#endif
+
+#ifndef CARE_DISABLE_RAJAPLUGIN
+         RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
 #endif
       }
    }
@@ -189,6 +192,31 @@ namespace care {
 #endif
    }
 
+   template <typename LB> 
+   void forall_with_stream(gpu, RAJA::resources::Cuda res, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+      forall(gpu_simulation{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__CUDACC__)
+      forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
+#elif defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
+#else
+      forall(RAJA::seq_exec{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
+#endif   
+	}
+
+
    ////////////////////////////////////////////////////////////////////////////////
    ///
    /// @author Alan Dayton
@@ -211,8 +239,8 @@ namespace care {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
 #endif
-      PluginData::setParallelContext(true);
-      
+
+      RAJAPlugin::setParallelContext(true);
 #if CARE_ENABLE_GPU_SIMULATION_MODE
       forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
@@ -226,8 +254,8 @@ namespace care {
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
-      PluginData::setParallelContext(false);
 
+      RAJAPlugin::setParallelContext(false);
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = false;
 #endif
@@ -487,10 +515,8 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB, typename Exec>
-   void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * /* fileName */, int /* lineNumber */, LB && body) {
-      chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();       
-      arrayManager->setExecutionSpace(ExecutionPolicyToSpace<Exec>::value);
-
+   void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
+      care::RAJAPlugin::pre_forall_hook(chai::CPU, fileName, lineNumber);
       // intentional trigger of copy constructor for CHAI correctness
       LB body_to_call{body};
       for (int y = ystart; y < ylength; ++y) {
@@ -498,7 +524,7 @@ namespace care {
             body_to_call(x, y);
          }
       }
-      arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
+      care::RAJAPlugin::post_forall_hook(chai::CPU, fileName, lineNumber);
    }
 
 #ifdef CARE_GPUCC
@@ -541,22 +567,20 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber , LB && body) {
+   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber, LB && body) {
        if (xend > 0 && ylength > 0) {
           // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
-          chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();
-          arrayManager->setExecutionSpace(chai::GPU);
-
+          care::RAJAPlugin::pre_forall_hook(chai::GPU, fileName, lineNumber);
           dim3 dimBlock(CARE_CUDA_BLOCK_SIZE, 1);
           dim3 dimGrid;
           dimGrid.x  = (xend/CARE_CUDA_BLOCK_SIZE)+(xend%CARE_CUDA_BLOCK_SIZE==0?0:1);
           dimGrid.y = ylength;
           care_kernel_2D<<<dimGrid, dimBlock>>>( body, gpu_lengths, ylength);
-          
-          arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
+          care::RAJAPlugin::post_forall_hook(chai::GPU, fileName, lineNumber);
        }
    }
 #endif
+
 } // namespace care
 
 #endif // !defined(_CARE_FORALL_H_)

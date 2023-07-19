@@ -69,6 +69,23 @@ static void benchmark_gpu_loop(benchmark::State& state) {
 // Register the function as a benchmark
 BENCHMARK(benchmark_gpu_loop)->Range(1, INT_MAX);
 
+static void benchmark_gpu_loop_streams(benchmark::State& state) {
+   const int size = state.range(0);
+   care::host_device_ptr<int> data(size, "data");
+
+   for (auto _ : state) {
+      RAJA::resources::Cuda res;
+      care::forall_with_stream(care::gpu{}, res, "test", 0, 0, size, [=] CARE_DEVICE (int i) {
+         data[i] = i;
+      }); 
+   }
+
+   data.free();
+}
+
+// Register the function as a benchmark
+BENCHMARK(benchmark_gpu_loop_streams)->Range(1, INT_MAX);
+
 #endif
 
 // Run the benchmarks
