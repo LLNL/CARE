@@ -163,3 +163,18 @@ target_include_directories(Benchmarks
 
 blt_add_test( NAME Benchmarks
               COMMAND Benchmarks )
+
+if (ENABLE_CUDA)
+   blt_add_executable( NAME TestCudaUmpireResource
+                       SOURCES TestCudaUmpireResource.cpp
+                       DEPENDS_ON ${care_test_dependencies} )
+
+   target_include_directories(TestCudaUmpireResource
+                              PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+   target_include_directories(TestCudaUmpireResource
+                              PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+   blt_add_test( NAME TestCudaUmpireResource
+                 COMMAND TestCudaUmpireResource )
+endif ()
