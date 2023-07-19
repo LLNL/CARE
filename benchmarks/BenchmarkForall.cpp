@@ -20,6 +20,7 @@ static void benchmark_sequential_loop(benchmark::State& state) {
    const int size = state.range(0);
    care::host_device_ptr<int> data(size, "data");
 
+   // For consistency with the GPU case, which requires a warm up kernel
    CARE_SEQUENTIAL_LOOP(i, 0, size) {
       data[i] = 0;
    } CARE_SEQUENTIAL_LOOP_END
@@ -42,6 +43,7 @@ static void benchmark_openmp_loop(benchmark::State& state) {
    const int size = state.range(0);
    care::host_device_ptr<int> data(size, "data");
 
+   // For consistency with the GPU case, which requires a warm up kernel
    CARE_OPENMP_LOOP(i, 0, size) {
       data[i] = 0;
    } CARE_OPENMP_LOOP_END
