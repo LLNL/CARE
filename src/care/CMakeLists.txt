@@ -27,6 +27,7 @@ set(care_headers
     care_inst.h
     CHAICallback.h
     CHAIDataGetter.h
+    CudaUmpireResource.h
     GPUWatchpoint.h
     Debug.h
     DefaultMacros.h
