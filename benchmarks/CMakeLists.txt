@@ -36,6 +36,19 @@ target_include_directories(BenchmarkForall
 blt_add_benchmark(NAME BenchmarkForall
                   COMMAND BenchmarkForall)
 
+blt_add_executable(NAME BenchmarkRaja
+                   SOURCES BenchmarkRaja.cpp
+                   DEPENDS_ON ${care_benchmark_depends})
+
+target_include_directories(BenchmarkRaja
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(BenchmarkRaja
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_benchmark(NAME BenchmarkRaja
+                  COMMAND BenchmarkRaja)
+
 blt_add_executable(NAME BenchmarkNumeric
                    SOURCES BenchmarkNumeric.cpp
                    DEPENDS_ON ${care_benchmark_depends})
