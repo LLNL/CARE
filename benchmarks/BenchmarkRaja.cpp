@@ -45,9 +45,9 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
         		//run num kernels
         		for(int j = 0; j < NUM_KERNELS; j++)
 				{
-					care::forall_with_stream(gpu{}, res_arr[j], fileName, 71, 0 , N, [=] RAJA_HOST_DEVICE (int i) {
+					CARE_STREAMED_LOOP(i, res_arr[j], 0 , N) {
 						arr[i] = i;
-					});
+               } CARE_STREAMED_LOOP_END
 					
 					if(j > 0) res_arr[j].wait_for(&event_arr[j - 1]);
 				}
@@ -71,9 +71,9 @@ int N = state.range(0);
         		//run num kernels
         		for(int j = 0; j < NUM_KERNELS; j++)
 				{
-					care::forall_with_stream(gpu{}, res, fileName, 71, 0 , N, [=] RAJA_HOST_DEVICE (int i) {
+					CARE_STREAMED_LOOP(i, res, 0 , N) {
 						arr[i] = i;
-					});
+					}CARE_STREAMED_LOOP_END
 					res.wait();
 				}
    	}
