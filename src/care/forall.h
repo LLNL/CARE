@@ -206,6 +206,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(CARE_GPUCC)
    template <typename LB> 
    void forall_with_stream(gpu, RAJA::resources::Cuda res, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
@@ -229,6 +230,7 @@ namespace care {
       s_reverseLoopOrder = false;
 #endif   
 	}   
+#endif
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
