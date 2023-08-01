@@ -28,31 +28,29 @@ using namespace care;
 //each kernel has a separate stream
 static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
    int N = state.range(0);
-	const char * fileName = "test";
 
-	RAJA::resources::Cuda res_arr[NUM_KERNELS];
-	RAJA::resources::Event event_arr[NUM_KERNELS];
-	for(int i = 0; i < NUM_KERNELS; i++)
-	{
-		RAJA::resources::Cuda res;
-		res_arr[i] = res;
-		RAJA::resources::Event e = res.get_event();
-		event_arr[i] = e;
-	}
+   RAJA::resources::Cuda res_arr[NUM_KERNELS];
+   RAJA::resources::Event event_arr[NUM_KERNELS];
+   for(int i = 0; i < NUM_KERNELS; i++)
+   {
+      RAJA::resources::Cuda res;
+      res_arr[i] = res;
+      RAJA::resources::Event e = res.get_event();
+      event_arr[i] = e;
+   }
 	
-	care::host_device_ptr<int> arr(N, "arr");
+   care::host_device_ptr<int> arr(N, "arr");
    for (auto _ : state) {
-        		//run num kernels
-        		for(int j = 0; j < NUM_KERNELS; j++)
-				{
-					CARE_STREAMED_LOOP(i, res_arr[j], 0 , N) {
-						arr[i] = i;
-               } CARE_STREAMED_LOOP_END
-					
-					if(j > 0) res_arr[j].wait_for(&event_arr[j - 1]);
-				}
-   	}
-		arr.free();
+      //run num kernels
+      for(int j = 0; j < NUM_KERNELS; j++)
+      {
+         CARE_STREAMED_LOOP(res_arr[j], i, 0 , N) {
+         arr[i] = i;
+         } CARE_STREAMED_LOOP_END					
+         if(j > 0) res_arr[j].wait_for(&event_arr[j - 1]);
+      }
+   }
+   arr.free();
 }
 
 // Register the function as a benchmark
@@ -60,24 +58,22 @@ BENCHMARK(benchmark_gpu_loop_separate_streams)->Range(1, INT_MAX);
 
 //all kernels on one stream
 static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
-int N = state.range(0);
-	const char * fileName = "test";
-	RAJA::resources::Cuda res;
-	
-	care::host_device_ptr<int> arr(N, "arr");
-			
-	RAJA::resources::Event e = res.get_event();
-	for (auto _ : state) {
-        		//run num kernels
-        		for(int j = 0; j < NUM_KERNELS; j++)
-				{
-					CARE_STREAMED_LOOP(i, res, 0 , N) {
-						arr[i] = i;
-					}CARE_STREAMED_LOOP_END
-					res.wait();
-				}
-   	}
-		arr.free();
+   int N = state.range(0);	
+
+   RAJA::resources::Cuda res;   
+
+   care::host_device_ptr<int> arr(N, "arr");	
+   for (auto _ : state) {
+      //run num kernels
+      for(int j = 0; j < NUM_KERNELS; j++)
+      {
+         CARE_STREAMED_LOOP(res, i, 0, N) {
+         arr[i] = i;
+         }CARE_STREAMED_LOOP_END
+         res.wait();
+      }
+   }
+   arr.free();
 }
 
 // Register the function as a benchmark
