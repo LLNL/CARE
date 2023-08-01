@@ -548,6 +548,15 @@
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
 
+#define CARE_CHECKED_STREAMED_LOOP_START(INDEX, RESOURCE, START_INDEX, END_INDEX, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall_with_stream(care::gpu{}, RESOURCE, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) { \
+         CARE_SET_THREAD_ID(INDEX)
+
+#define CARE_CHECKED_STREAMED_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// @brief Macros that start and end a GPU RAJA loop of length one. If GPU is
@@ -752,6 +761,10 @@
 #define CARE_PARALLEL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_parallel_loop_check)
 
 #define CARE_PARALLEL_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_parallel_loop_check)
+
+#define CARE_STREAMED_LOOP(INDEX, RESOURCE, START_INDEX, END_INDEX) CARE_CHECKED_STREAMED_LOOP_START(INDEX, RESOURCE, START_INDEX, END_INDEX, care_streamed_loop_check)
+
+#define CARE_STREAMED_LOOP_END CARE_CHECKED_STREAMED_LOOP_END(care_streamed_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
