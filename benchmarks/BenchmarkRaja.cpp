@@ -31,26 +31,33 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
 
    RAJA::resources::Cuda res_arr[NUM_KERNELS];
    RAJA::resources::Event event_arr[NUM_KERNELS];
+   care::host_device_ptr<int> arrays[NUM_KERNELS];
    for(int i = 0; i < NUM_KERNELS; i++)
    {
       RAJA::resources::Cuda res;
       res_arr[i] = res;
       RAJA::resources::Event e = res.get_event();
       event_arr[i] = e;
+      care::host_device_ptr<int> arr(N, "arr");
+      arrays[i] = arr;
    }
+
+   //warmup kernel
+   RAJA::resources::Cuda warmup_res;
+   CARE_STREAMED_LOOP(warmup_res, i, 0 , N) {
+      arrays[0][i] = 0;
+   } CARE_STREAMED_LOOP_END					
 	
-   care::host_device_ptr<int> arr(N, "arr");
    for (auto _ : state) {
       //run num kernels
       for(int j = 0; j < NUM_KERNELS; j++)
       {
          CARE_STREAMED_LOOP(res_arr[j], i, 0 , N) {
-         arr[i] = i;
+            arrays[j][i] = i;
          } CARE_STREAMED_LOOP_END					
-         if(j > 0) res_arr[j].wait_for(&event_arr[j - 1]);
       }
    }
-   arr.free();
+   for(int i = 0; i < NUM_KERNELS; i++) {arrays[i].free();}
 }
 
 // Register the function as a benchmark
@@ -62,18 +69,30 @@ static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
 
    RAJA::resources::Cuda res;   
 
-   care::host_device_ptr<int> arr(N, "arr");	
+   care::host_device_ptr<int> arrays[NUM_KERNELS];
+   for(int i = 0; i < NUM_KERNELS; i++)
+   {
+      care::host_device_ptr<int> arr(N, "arr");
+      arrays[i] = arr;
+   }
+
+   //warmup kernel
+   RAJA::resources::Cuda warmup_res;
+   CARE_STREAMED_LOOP(warmup_res, i, 0, N) {
+      arrays[0][i] = i;
+   } CARE_STREAMED_LOOP_END
+
    for (auto _ : state) {
       //run num kernels
       for(int j = 0; j < NUM_KERNELS; j++)
       {
          CARE_STREAMED_LOOP(res, i, 0, N) {
-         arr[i] = i;
-         }CARE_STREAMED_LOOP_END
+            arrays[j][i] = i;
+         } CARE_STREAMED_LOOP_END
          res.wait();
       }
    }
-   arr.free();
+   for(int i = 0; i < NUM_KERNELS; i++) {arrays[i].free();}
 }
 
 // Register the function as a benchmark
