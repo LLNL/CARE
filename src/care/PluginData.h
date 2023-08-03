@@ -29,17 +29,17 @@ namespace care{
 
          static void setParallelContext(bool isParallel);
 
-         static bool isParallelContext();
+         CARE_DLL_API static bool isParallelContext();
 
-         static bool post_parallel_forall_action_registered(void * key); 
+         CARE_DLL_API static bool post_parallel_forall_action_registered(void * key); 
 
          static ActionMap get_post_parallel_forall_actions();
 
-         static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
+         CARE_DLL_API static void register_post_parallel_forall_action(void * key, std::function<void(chai::ExecutionSpace, const char *, int)> action);
 
          static void clear_post_parallel_forall_actions();
 
-         static std::vector<const chai::PointerRecord*> getActivePointers();
+         CARE_DLL_API static std::vector<const chai::PointerRecord*> getActivePointers();
 
          static void addActivePointer(const chai::PointerRecord* record);
 
@@ -47,7 +47,7 @@ namespace care{
 
          static void clearActivePointers();
 
-         static int s_threadID;
+         CARE_DLL_API static int s_threadID;
 
       private:
          static const char * s_file_name;
