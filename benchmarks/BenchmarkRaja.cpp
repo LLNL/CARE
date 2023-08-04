@@ -45,10 +45,11 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
 	
    for (auto _ : state) {
       //run num kernels
+      omp_set_num_threads(16);
       #pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
-         CARE_STREAMED_LOOP(res_arr[j], i, 0 , size) {
+            CARE_STREAMED_LOOP(res_arr[j], i, 0 , size) {
             arrays[j][i] = sqrtf(i) + cosf(j) * powf(i, j);
          } CARE_STREAMED_LOOP_END					
       }
@@ -67,7 +68,7 @@ BENCHMARK(benchmark_gpu_loop_separate_streams)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->
 static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
    int N = state.range(0);	
 
-  care::host_device_ptr<int> arrays[16];
+   care::host_device_ptr<int> arrays[16];
    for(int i = 0; i < N; i++)
    {
       arrays[i] = care::host_device_ptr<int>(size, "arr");
