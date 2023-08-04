@@ -101,6 +101,50 @@ namespace care {
       }
    }
 
+      ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson, Alan Dayton
+   ///
+   /// @brief Loops over the given indices and calls the loop body with each index.
+   ///        This overload is CHAI and RAJA aware and sets the execution space accordingly.
+   ///
+   /// @arg[in] policy Used to choose this overload of forall
+   /// @arg[in] res Resource to be used
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename ExecutionPolicy, typename LB>
+   void forall(ExecutionPolicy /* policy */, Resource res, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+      const int length = end - start;
+
+      if (length != 0) {
+         PluginData::setFileName(fileName);
+         PluginData::setLineNumber(lineNumber);
+
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+         RAJA::RangeStrideSegment rangeSegment =
+            s_reverseLoopOrder ?
+            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
+            RAJA::RangeStrideSegment(start, end, 1);
+#else
+         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
+#endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         RAJA::forall<RAJA::seq_exec>(res, rangeSegment, std::forward<LB>(body));
+#else
+         RAJA::forall<ExecutionPolicy>(res, rangeSegment, std::forward<LB>(body));
+#endif
+      }
+   }
+
+
    ////////////////////////////////////////////////////////////////////////////////
    ///
    /// @author Alan Dayton
@@ -222,10 +266,10 @@ namespace care {
       forall(gpu_simulation{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
+             res, fileName, lineNumber, start, end, std::forward<LB>(body));
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             res, RAJA::RangeSegment(start, end), std::forward<LB>(body));
+             res, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
       forall(RAJA::seq_exec{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
