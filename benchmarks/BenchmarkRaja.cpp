@@ -45,7 +45,7 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
 	
    for (auto _ : state) {
       //run num kernels
-      omp_set_num_threads(16);
+      omp_set_num_threads(N);
       #pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
