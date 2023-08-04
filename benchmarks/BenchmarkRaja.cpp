@@ -49,7 +49,7 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
       for(int j = 0; j < N; j++)
       {
          CARE_STREAMED_LOOP(res_arr[j], i, 0 , size) {
-            arrays[j][i] = i;
+            arrays[j][i] = sqrtf(i) + cosf(j) * powf(i, j);
          } CARE_STREAMED_LOOP_END					
       }
       care::gpuDeviceSynchronize(__FILE__, __LINE__);
@@ -67,9 +67,7 @@ BENCHMARK(benchmark_gpu_loop_separate_streams)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->
 static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
    int N = state.range(0);	
 
-   care::Resource res;   
-
-   care::host_device_ptr<int> arrays[16];
+  care::host_device_ptr<int> arrays[16];
    for(int i = 0; i < N; i++)
    {
       arrays[i] = care::host_device_ptr<int>(size, "arr");
@@ -77,21 +75,20 @@ static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
 
    //warmup kernel
    CARE_GPU_LOOP(i, 0, size) {
-      arrays[0][i] = i;
+      arrays[0][i] = 0;
    } CARE_GPU_LOOP_END
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    for (auto _ : state) {
       //run num kernels
-      #pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
-         CARE_STREAMED_LOOP(res, i, 0, size) {
-            arrays[j][i] = i;
-         } CARE_STREAMED_LOOP_END
+         CARE_GPU_LOOP(i, 0, size) {
+            arrays[j][i] = sqrtf(i) + cosf(j) * powf(i, j);
+         } CARE_GPU_LOOP_END
       }
-      res.wait();
+      care::gpuDeviceSynchronize(__FILE__, __LINE__);
    }
 
    for(int i = 0; i < N; i++){
