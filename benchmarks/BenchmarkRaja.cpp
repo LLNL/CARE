@@ -45,7 +45,7 @@ static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
 	
    for (auto _ : state) {
       //run num kernels
-      //#pragma omp parallel for
+      #pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
          CARE_STREAMED_LOOP(res_arr[j], i, 0 , size) {
@@ -84,7 +84,7 @@ static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
 
    for (auto _ : state) {
       //run num kernels
-      //#pragma omp parallel for
+      #pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
          CARE_STREAMED_LOOP(res, i, 0, size) {
