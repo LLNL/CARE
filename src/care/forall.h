@@ -117,8 +117,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename ExecutionPolicy, typename LB>
-   void forall(ExecutionPolicy /* policy */, Resource res, const char * fileName, const int lineNumber,
+   template <typename R, typename ExecutionPolicy, typename LB>
+   void forall(ExecutionPolicy /* policy */, R res, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
       const int length = end - start;
 
