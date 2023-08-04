@@ -30,22 +30,26 @@ namespace care {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
    static bool s_reverseLoopOrder = false;
 #endif
-
+   
    template <typename T>
    struct ExecutionPolicyToSpace {
       static constexpr const chai::ExecutionSpace value = chai::CPU;
    };
 
 #if defined(__CUDACC__)
+   typedef RAJA::resources::Cuda Resource;
    template <>
    struct ExecutionPolicyToSpace<RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
 #elif defined (__HIPCC__)
+   typedef RAJA::resources::Hip Resource;
    template <>
    struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
+#else
+   typedef RAJA::resources::Host Resource;
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
@@ -208,7 +212,7 @@ namespace care {
 
 #if defined(CARE_GPUCC)
    template <typename LB> 
-   void forall_with_stream(gpu, RAJA::resources::Cuda res, const char * fileName, const int lineNumber,
+   void forall_with_stream(gpu, Resource res, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;

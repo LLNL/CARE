@@ -22,41 +22,42 @@
 
 #define size 1000000
 
-namespace care{
-
 #if defined(CARE_GPUCC)
 //each kernel has a separate stream
 static void benchmark_gpu_loop_separate_streams(benchmark::State& state) {
    int N = state.range(0);
-   RAJA::resources::Cuda res_arr[N];
-   RAJA::resources::Event event_arr[N];
+   care::Resource res_arr[16];
+   RAJA::resources::Event event_arr[16];
    care::host_device_ptr<int> arrays[16];
    for(int i = 0; i < N; i++)
    {
-      RAJA::resources::Cuda res;
-      res_arr[i] = res;
-      RAJA::resources::Event e = res.get_event();
-      event_arr[i] = e;
-      care::host_device_ptr<int> arr(size, "arr");
-      arrays[i] = arr;
+      res_arr[i] = care::Resource();
+      event_arr[i] = res_arr[i].get_event();
+      arrays[i] = care::host_device_ptr<int>(size, "arr");
    }
 
    //warmup kernel
-   RAJA::resources::Cuda warmup_res;
-   CARE_STREAMED_LOOP(warmup_res, i, 0 , size) {
+   CARE_GPU_LOOP(i, 0 , size) {
       arrays[0][i] = 0;
-   } CARE_STREAMED_LOOP_END					
+   } CARE_GPU_LOOP_END	
+
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);   
 	
    for (auto _ : state) {
       //run num kernels
+      //#pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
          CARE_STREAMED_LOOP(res_arr[j], i, 0 , size) {
             arrays[j][i] = i;
          } CARE_STREAMED_LOOP_END					
       }
+      care::gpuDeviceSynchronize(__FILE__, __LINE__);
    }
-   for(int i = 0; i < N; i++) {arrays[i].free();}
+
+   for(int i = 0; i < N; i++){
+      arrays[i].free();
+   }
 }
 
 // Register the function as a benchmark
@@ -66,40 +67,42 @@ BENCHMARK(benchmark_gpu_loop_separate_streams)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->
 static void benchmark_gpu_loop_single_stream(benchmark::State& state) {
    int N = state.range(0);	
 
-   RAJA::resources::Cuda res;   
+   care::Resource res;   
 
    care::host_device_ptr<int> arrays[16];
    for(int i = 0; i < N; i++)
    {
-      care::host_device_ptr<int> arr(size, "arr");
-      arrays[i] = arr;
+      arrays[i] = care::host_device_ptr<int>(size, "arr");
    }
 
    //warmup kernel
-   RAJA::resources::Cuda warmup_res;
-   CARE_STREAMED_LOOP(warmup_res, i, 0, size) {
+   CARE_GPU_LOOP(i, 0, size) {
       arrays[0][i] = i;
-   } CARE_STREAMED_LOOP_END
+   } CARE_GPU_LOOP_END
+
+   care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
    for (auto _ : state) {
       //run num kernels
+      //#pragma omp parallel for
       for(int j = 0; j < N; j++)
       {
          CARE_STREAMED_LOOP(res, i, 0, size) {
             arrays[j][i] = i;
          } CARE_STREAMED_LOOP_END
-         res.wait();
       }
+      res.wait();
    }
-   for(int i = 0; i < N; i++) {arrays[i].free();}
+
+   for(int i = 0; i < N; i++){
+      arrays[i].free();
+   }
 }
 
 // Register the function as a benchmark
 BENCHMARK(benchmark_gpu_loop_single_stream)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->Arg(12)->Arg(16);
 
 #endif
-
-} //namespace care
 
 // Run the benchmarks
 BENCHMARK_MAIN();
