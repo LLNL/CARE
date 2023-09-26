@@ -980,6 +980,15 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
          CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::stable_sort(rawData, rawData + len);
+
+         // Free stale arrays
+         if (m_keys) {
+            m_keys.free();
+         }
+
+         if (m_values) {
+            m_values.free();
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1016,6 +1025,15 @@ class KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
          CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
+
+         // Free stale arrays
+         if (m_keys) {
+            m_keys.free();
+         }
+
+         if (m_values) {
+            m_values.free();
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////
