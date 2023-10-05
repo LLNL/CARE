@@ -10,7 +10,7 @@ variables:
   INCLUDED_FILE_CANNOT_BE_EMPTY: "True"
 
 # Override to set minimum CUDA architecture
-clang_12_0_1_gcc_8_3_1_cuda_10_1_243:
+clang_12_0_1_ibm_gcc_8_3_1_cuda_10_1_243:
   variables:
     SPEC: "${PROJECT_LASSEN_VARIANTS} +cuda cuda_arch=70 %clang@12.0.1.gcc.8.3.1 ^cuda@10.1.243+allow-unsupported-compilers ${PROJECT_LASSEN_DEPS}"
   extends: .job_on_lassen
