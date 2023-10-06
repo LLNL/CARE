@@ -52,7 +52,7 @@ variables:
 # Override the pattern describing branches that will skip the "draft PR filter
 # test".  Add protected branches here. See default value in
 # preliminary-ignore-draft-pr.yml.
-  ALWAYS_RUN_PATTERN: "^develop$|^master$"
+  ALWAYS_RUN_PATTERN: "^develop$|^master$|^v[0-9.]*$"
 
 # We organize the build-and-test stage with sub-pipelines. Each sub-pipeline
 # corresponds to a test batch on a given machine.
