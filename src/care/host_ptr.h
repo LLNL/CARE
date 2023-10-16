@@ -42,14 +42,14 @@ namespace care {
          ///
          /// Default constructor
          ///
-         host_ptr() noexcept : m_ptr(nullptr) {}
+         host_ptr() = default;
 
          ///
          /// @author Peter Robinson
          ///
          /// nullptr constructor
          ///
-         host_ptr(std::nullptr_t) noexcept : m_ptr(nullptr) {}
+         host_ptr(std::nullptr_t) noexcept : host_ptr() {}
 
          ///
          /// @author Peter Robinson
@@ -63,7 +63,7 @@ namespace care {
          ///
          /// Copy constructor
          ///
-         host_ptr(host_ptr const & ptr) noexcept : m_ptr(ptr.data()) {}
+         host_ptr(host_ptr const & ptr) = default;
 
          ///
          /// @author Peter Robinson
@@ -72,7 +72,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
+         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.m_ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -178,7 +178,7 @@ namespace care {
          }
 
       private:
-         T * m_ptr; //!< Raw host pointer
+         T* m_ptr = nullptr; //!< Raw host pointer
    };
 
    /// Comparison operators
