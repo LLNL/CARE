@@ -37,14 +37,14 @@ namespace care {
          ///
          /// Default constructor
          ///
-         CARE_HOST_DEVICE local_ptr() noexcept : m_ptr(nullptr) {}
+         CARE_HOST_DEVICE local_ptr() = default;
 
          ///
          /// @author Alan Dayton
          ///
          /// nullptr constructor
          ///
-         CARE_HOST_DEVICE local_ptr(std::nullptr_t) noexcept : m_ptr(nullptr) {}
+         CARE_HOST_DEVICE local_ptr(std::nullptr_t) noexcept : local_ptr() {}
 
          ///
          /// @author Peter Robinson
@@ -53,11 +53,12 @@ namespace care {
          ///
          CARE_HOST_DEVICE local_ptr(T* ptr) noexcept : m_ptr(ptr) {}
 
+         ///
          /// @author Peter Robinson
          ///
          /// Copy constructor
          ///
-         CARE_HOST_DEVICE local_ptr(local_ptr const &ptr) noexcept : m_ptr(ptr) {}
+         CARE_HOST_DEVICE local_ptr(local_ptr const &ptr) = default;
 
          ///
          /// @author Peter Robinson
@@ -66,7 +67,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE local_ptr<T>(local_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
+         CARE_HOST_DEVICE local_ptr<T>(local_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.m_ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -134,7 +135,7 @@ namespace care {
          CARE_HOST_DEVICE const T* cdata() const { return m_ptr; }
 
       private:
-         T * m_ptr; //!< Raw pointer
+         T* m_ptr = nullptr; //!< Raw pointer
    };
 } // namespace care
 
