@@ -72,7 +72,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.m_ptr) {}
+         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          ///
          /// @author Peter Robinson
