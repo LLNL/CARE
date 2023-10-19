@@ -60,6 +60,7 @@ set(care_headers
     Setup.h
     single_access_ptr.h
     util.h
+    utility.h
  )
 
 set(care_sources
