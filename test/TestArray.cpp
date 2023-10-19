@@ -384,341 +384,538 @@ TEST(array, deduction_guide)
 
 #if defined(CARE_GPUCC)
 
-GPU_TEST(array, constructor)
+GPU_TEST(array, initialization)
 {
-   care::array<int, 3> a{{1, 2, 3}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (a[0] != 1) {
-         passed.min(false);
-         return;
-      }
-      else if (a[1] != 2) {
-         passed.min(false);
-         return;
-      }
-      else if (a[2] != 3) {
-         passed.min(false);
-         return;
-      }
+      care::array<int, 3> a{1, 2, 10};
+
+      passed.min(a[0] == 1);
+      passed.min(a[1] == 2);
+      passed.min(a[2] == 10);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
-GPU_TEST(array, write)
+GPU_TEST(array, copy_initialization)
 {
-   care::array<int, 3> a;
-
-   a[0] = 7;
-   a[1] = 3;
-   a[2] = 6;
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (a[0] != 7) {
-         passed.min(false);
-         return;
-      }
-      else if (a[1] != 3) {
-         passed.min(false);
-         return;
-      }
-      else if (a[2] != 6) {
-         passed.min(false);
-         return;
-      }
+      care::array<int, 3> a = {1, 2, 10};
+
+      passed.min(a[0] == 1);
+      passed.min(a[1] == 2);
+      passed.min(a[2] == 10);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, copy_construct)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 3> a = {1, 2, 10};
+      care::array<int, 3> b{a};
+
+      passed.min(b[0] == 1);
+      passed.min(b[1] == 2);
+      passed.min(b[2] == 10);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, copy_construct_host_to_device)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   care::array<int, 3> a = {1, 2, 10};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      passed.min(a[0] == 1);
+      passed.min(a[1] == 2);
+      passed.min(a[2] == 10);
+      a[0] = 3; // Should fail to compile
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, copy_assignment)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 3> a = {1, 2, 10};
+      a = care::array<int, 3>{3, 4, 6};
+
+      passed.min(a[0] == 3);
+      passed.min(a[1] == 4);
+      passed.min(a[2] == 6);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, access)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      a[0] = 3;
+      passed.min(a[0] == 3);
+
+      const care::array<int, 2>& b = a;
+      passed.min(b[0] == 3);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, front)
 {
-   care::array<int, 2> a{{7, 3}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (a.front() != 7) {
-         passed.min(false);
-      }
+      care::array<int, 2> a = {1, 12};
+      a.front() = 3;
+      passed.min(a[0] == 3);
+
+      const care::array<int, 2>& b = a;
+      passed.min(b.front() == 3);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, back)
 {
-   care::array<int, 2> a{{7, 3}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (a.back() != 3) {
-         passed.min(false);
-      }
+      care::array<int, 2> a = {1, 12};
+      a.back() = 5;
+      passed.min(a[1] == 5);
+
+      const care::array<int, 2>& b = a;
+      passed.min(b.back() == 5);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, data)
 {
-   care::array<int, 2> a{{6, 2}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      int const * temp = a.data();
+      care::array<int, 2> a = {1, 12};
+      int* a_data = a.data();
+      passed.min(a_data[0] == a[0]);
+      passed.min(a_data[1] == a[1]);
 
-      if (temp[0] != 6) {
-         passed.min(false);
-         return;
-      }
-      else if (temp[1] != 2) {
-         passed.min(false);
-         return;
-      }
+      const care::array<int, 2>& b = a;
+      const int* b_data = b.data();
+      passed.min(b_data[0] == b[0]);
+      passed.min(b_data[1] == b[1]);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, begin)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      auto a_it = a.begin();
+      *a_it = 4;
+      passed.min(a[0] == 4);
+      *(++a_it) = 6;
+      passed.min(a[1] == 6);
+
+      const care::array<int, 2>& b = a;
+      auto b_it = b.begin();
+      passed.min(*b_it == b[0]);
+      passed.min(*(++b_it) == b[1]);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, cbegin)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      auto a_it = a.cbegin();
+      passed.min(*a_it == a[0]);
+      passed.min(*(++a_it) == a[1]);
+
+      const care::array<int, 2>& b = a;
+      auto b_it = b.begin();
+      passed.min(*b_it == b[0]);
+      passed.min(*(++b_it) == b[1]);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, end)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      auto a_it = a.end();
+      *(--a_it) = 4;
+      passed.min(a[1] == 4);
+      *(--a_it) = 6;
+      passed.min(a[0] == 6);
+
+      const care::array<int, 2>& b = a;
+      auto b_it = b.end();
+      passed.min(*(--b_it) == b[1]);
+      passed.min(*(--b_it) == b[0]);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, cend)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      auto a_it = a.cend();
+      passed.min(*(--a_it) == a[1]);
+      passed.min(*(--a_it) == a[0]);
+
+      const care::array<int, 2>& b = a;
+      auto b_it = b.cend();
+      passed.min(*(--b_it) == b[1]);
+      passed.min(*(--b_it) == b[0]);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, empty)
 {
-   care::array<float, 0> a1{};
-   care::array<float, 1> a2{{1}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (!a1.empty()) {
-         passed.min(false);
-         return;
-      }
-      else if (a2.empty()) {
-         passed.min(false);
-         return;
-      }
+      care::array<double, 0> a{};
+      passed.min(a.empty());
+
+      care::array<double, 1> b{1.0};
+      passed.min(!b.empty());
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, size)
 {
-   care::array<float, 0> a1{};
-   care::array<float, 4> a2{{1, 2, 3, 4}};
-
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (a1.size() != 0) {
-         passed.min(false);
-         return;
-      }
-      else if (a2.size() != 4) {
-         passed.min(false);
-         return;
-      }
+      care::array<double, 0> a{};
+      passed.min(a.size() == 0);
+
+      care::array<double, 2> b{1.0, 3.0};
+      passed.min(b.size() == 2);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, max_size)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<double, 0> a{};
+      passed.min(a.max_size() == 0);
+
+      care::array<double, 2> b{1.0, 3.0};
+      passed.min(b.max_size() == 2);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, fill)
 {
-   care::array<int, 4> a;
-   a.fill(13);
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 4) {
-      if (a[i] != 13) {
-         passed.min(false);
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 3> a{1, 2, 3};
+      a.fill(0);
+
+      for (size_t i = 0; i < 3; ++i) {
+         passed.min(a[i] == 0);
       }
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, swap)
 {
-   care::array<int, 3> a1{{1, 1, 1}};
-   care::array<int, 3> a2{{5, 5, 5}};
-
-   a1.swap(a2);
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (a1[i] != 5) {
-         passed.min(false);
-         return;
-      }
-      else if (a2[i] != 1) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{3, 4};
+
+      a.swap(b);
+
+      passed.min(a[0] == 3);
+      passed.min(a[1] == 4);
+
+      passed.min(b[0] == 1);
+      passed.min(b[1] == 2);
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
-GPU_TEST(array, equal_to)
+GPU_TEST(array, equal)
 {
-   care::array<int, 3> a1{{7, 1, 1}};
-   care::array<int, 3> a2{{7, 1, 1}};
-   care::array<int, 3> a3{{1, 1, 7}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (!(a1 == a2)) {
-         passed.min(false);
-         return;
-      }
-      else if (a2 == a3) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(a == a);
+      passed.min(!(a == b));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
-GPU_TEST(array, not_equal_to)
+GPU_TEST(array, not_equal)
 {
-   care::array<int, 3> a1{{7, 1, 1}};
-   care::array<int, 3> a2{{7, 1, 1}};
-   care::array<int, 3> a3{{1, 1, 7}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (a1 != a2) {
-         passed.min(false);
-         return;
-      }
-      else if (!(a2 != a3)) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(a != b);
+      passed.min(!(a != a));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, less_than)
 {
-   care::array<int, 3> a1{{5, -2, -1}};
-   care::array<int, 3> a2{{6, -1, 0}};
-   care::array<int, 3> a3{{7, 0, 0}};
-   care::array<int, 3> a4{{8, -1, 1}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (!(a1 < a2)) {
-         passed.min(false);
-         return;
-      }
-      else if (a2 < a3) {
-         passed.min(false);
-         return;
-      }
-      else if (a3 < a4) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(a < b);
+      passed.min(!(b < a));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
-GPU_TEST(array, less_than_or_equal_to)
+GPU_TEST(array, less_than_or_equal)
 {
-   care::array<int, 3> a1{{5, -2, -1}};
-   care::array<int, 3> a2{{6, -1, 0}};
-   care::array<int, 3> a3{{6, -1, 0}};
-   care::array<int, 3> a4{{5, -1, 0}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (!(a1 <= a2)) {
-         passed.min(false);
-         return;
-      }
-      else if (!(a2 <= a3)) {
-         passed.min(false);
-         return;
-      }
-      else if (a3 <= a4) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(a <= a);
+      passed.min(a <= b);
+      passed.min(!(b <= a));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
 GPU_TEST(array, greater_than)
 {
-   care::array<int, 3> a1{{5, -2, -1}};
-   care::array<int, 3> a2{{4, -3, -2}};
-   care::array<int, 3> a3{{3, -4, -2}};
-   care::array<int, 3> a4{{2, -5, -1}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (!(a1 > a2)) {
-         passed.min(false);
-         return;
-      }
-      else if (a2 > a3) {
-         passed.min(false);
-         return;
-      }
-      else if (a3 > a4) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(b > a);
+      passed.min(!(a > b));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
 }
 
-GPU_TEST(array, greater_than_or_equal_to)
+GPU_TEST(array, greater_than_or_equal)
 {
-   care::array<int, 3> a1{{5, -2, -1}};
-   care::array<int, 3> a2{{4, -3, -2}};
-   care::array<int, 3> a3{{4, -3, -2}};
-   care::array<int, 3> a4{{3, -4, -1}};
-
    RAJAReduceMin<bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 3) {
-      if (!(a1 >= a2)) {
-         passed.min(false);
-         return;
-      }
-      else if (!(a2 >= a3)) {
-         passed.min(false);
-         return;
-      }
-      else if (a3 >= a4) {
-         passed.min(false);
-         return;
-      }
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{1, 3};
+
+      passed.min(a >= a);
+      passed.min(b >= a);
+      passed.min(!(a >= b));
    } CARE_REDUCE_LOOP_END
 
-   ASSERT_TRUE((bool) passed);
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, get_lvalue_reference)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      care::get<0>(a) = 3;
+      passed.min(a[0] == 3);
+
+      const care::array<int, 2>& b = a;
+      passed.min(care::get<0>(b) == 3);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, get_rvalue_reference)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a = {1, 12};
+      int&& a0 = care::get<0>(care::move(a));
+      passed.min(a0 == 1);
+      passed.min(a[0] == 1);
+
+      const care::array<int, 2> b{6, 8};
+      const int&& b1 = care::get<1>(care::move(b));
+      passed.min(b1 == 8);
+      passed.min(b[1] == 8);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, generic_swap)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{1, 2};
+      care::array<int, 2> b{3, 4};
+
+      care::swap(a, b);
+
+      passed.min(a[0] == 3);
+      passed.min(a[1] == 4);
+
+      passed.min(b[0] == 1);
+      passed.min(b[1] == 2);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, to_array)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      int temp[3] = {1, 2, 10};
+
+      care::array<int, 3> a = care::to_array(temp);
+      passed.min(a[0] == 1);
+      passed.min(a[1] == 2);
+      passed.min(a[2] == 10);
+
+      care::array<int, 3> b = care::to_array(care::move(temp));
+      passed.min(b[0] == 1);
+      passed.min(b[1] == 2);
+      passed.min(b[2] == 10);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, tuple_size)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      constexpr std::size_t size = std::tuple_size<care::array<double, 7>>::value;
+      constexpr std::size_t size_v = std::tuple_size_v<care::array<double, 11>>;
+
+      passed.min(size == 7);
+      passed.min(size_v == 11);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, tuple_element)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      constexpr bool element0 = std::is_same_v<double, std::tuple_element_t<0, care::array<double, 5>>>;
+      constexpr bool element4 = std::is_same_v<double, std::tuple_element_t<4, care::array<double, 5>>>;
+
+      passed.min(element0);
+      passed.min(element4);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, structured_binding)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array<int, 2> a{-1, 1};
+      auto& [a0, a1] = a;
+      passed.min(a0 == -1);
+      passed.min(a1 == 1);
+
+      a1 = 3;
+      passed.min(a[1] == 3);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
+}
+
+GPU_TEST(array, deduction_guide)
+{
+   RAJAReduceMin<bool> passed{true};
+
+   CARE_REDUCE_LOOP(i, 0, 1) {
+      care::array a{-1, 1};
+      passed.min(a[0] == -1);
+      passed.min(a[1] == 1);
+   } CARE_REDUCE_LOOP_END
+
+   EXPECT_TRUE((bool) passed);
 }
 
 #endif // CARE_GPUCC
