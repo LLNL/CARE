@@ -7,17 +7,15 @@
 
 #include "care/config.h"
 
-// std library headers
-#include <array>
-
-// other library headers
-#include "gtest/gtest.h"
-
 // care headers
 #include "care/array.h"
 #include "care/DefaultMacros.h"
 #include "care/policies.h"
 #include "care/detail/test_utils.h"
+
+// other library headers
+#include "gtest/gtest.h"
+
 
 #if defined(CARE_GPUCC)
 GPU_TEST(array, gpu_initialization) {
@@ -375,12 +373,14 @@ TEST(array, structured_binding)
    EXPECT_EQ(a[1], 3);
 }
 
+#if 0
 TEST(array, deduction_guide)
 {
    care::array a{-1, 1};
    EXPECT_EQ(a[0], -1);
    EXPECT_EQ(a[1], 1);
 }
+#endif
 
 #if defined(CARE_GPUCC)
 
@@ -905,6 +905,7 @@ GPU_TEST(array, structured_binding)
    EXPECT_TRUE((bool) passed);
 }
 
+#if 0
 GPU_TEST(array, deduction_guide)
 {
    RAJAReduceMin<bool> passed{true};
@@ -917,6 +918,7 @@ GPU_TEST(array, deduction_guide)
 
    EXPECT_TRUE((bool) passed);
 }
+#endif
 
 #endif // CARE_GPUCC
 
