@@ -13,4 +13,4 @@ variables:
 #<job-name (usually spec or description)>:
 #  variables:
 #    SPEC: "<spack spec without package name>"
-#  extends: .build_and_test_on_ruby
+#  extends: .job_on_ruby
