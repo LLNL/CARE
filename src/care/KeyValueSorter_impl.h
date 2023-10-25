@@ -174,15 +174,6 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    keyValues.free();
 
-   // Free stale arrays
-   if (m_keys) {
-      m_keys.free();
-   }
-
-   if (m_values) {
-      m_values.free();
-   }
-
 #endif // defined(CARE_GPUCC)
 
 }
