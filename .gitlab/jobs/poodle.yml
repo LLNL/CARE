@@ -1,9 +1,9 @@
-##############################################################################
+###############################################################################
 # Copyright (c) 2022-23, Lawrence Livermore National Security, LLC and RADIUSS
 # project contributors. See the COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (MIT)
-##############################################################################
+###############################################################################
 
 # With GitLab CI, included files cannot be empty.
 variables:
@@ -13,4 +13,4 @@ variables:
 #<job-name (usually spec or description)>:
 #  variables:
 #    SPEC: "<spack spec without package name>"
-#  extends: .job_on_ruby
+#  extends: .job_on_poodle
