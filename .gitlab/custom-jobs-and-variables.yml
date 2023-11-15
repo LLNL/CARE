@@ -7,16 +7,16 @@
 
 # We define the following GitLab pipeline variables:
 variables:
-# On LLNL's ruby, this pipeline creates only one allocation shared among jobs
-# in order to save time and resources. This allocation has to be uniquely named
-# so that we are sure to retrieve it and avoid collisions.
+# In some pipelines we create only one allocation shared among jobs in
+# order to save time and resources. This allocation has to be uniquely
+# named so that we are sure to retrieve it and avoid collisions.
   ALLOC_NAME: ${CI_PROJECT_NAME}_ci_${CI_PIPELINE_ID}
 
 # Ruby
 # Arguments for top level allocation
-  RUBY_SHARED_ALLOC: "--partition=pdebug --time=25 --nodes=1 --cpus-per-task=36"
+  RUBY_SHARED_ALLOC: "--partition=pdebug --time=15 --nodes=1"
 # Arguments for job level allocation
-  RUBY_JOB_ALLOC: "--time=25 --nodes=1"
+  RUBY_JOB_ALLOC: "--time=5 --nodes=1"
 # Project specific variants for ruby
   PROJECT_RUBY_VARIANTS: ""
 # Project specific deps for ruby
@@ -24,9 +24,9 @@ variables:
 
 # Poodle
 # Arguments for top level allocation
-  POODLE_SHARED_ALLOC: "--exclusive --partition=pdebug --time=15 --nodes=1"
+  POODLE_SHARED_ALLOC: "--exclusive --partition=pdebug --time=5 --nodes=1"
 # Arguments for job level allocation
-  POODLE_JOB_ALLOC: "--overlap --time=14 --nodes=1"
+  POODLE_JOB_ALLOC: "--overlap --time=3 --nodes=1"
 # Project specific variants for poodle
   PROJECT_POODLE_VARIANTS: ""
 # Project specific deps for poodle
