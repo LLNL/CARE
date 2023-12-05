@@ -26,3 +26,7 @@
 [submodule "scripts/uberenv"]
 	path = scripts/uberenv
 	url = https://github.com/LLNL/uberenv
+[submodule "tpl/mdspan"]
+	path = tpl/mdspan
+	url = https://github.com/kokkos/mdspan
+	branch = stable
