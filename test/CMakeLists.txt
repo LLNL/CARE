@@ -163,3 +163,19 @@ target_include_directories(Benchmarks
 
 blt_add_test( NAME Benchmarks
               COMMAND Benchmarks )
+
+
+
+
+blt_add_executable( NAME TestStaleCheckAccessor
+                    SOURCES TestStaleCheckAccessor.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestStaleCheckAccessor
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestStaleCheckAccessor
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestStaleCheckAccessor
+              COMMAND TestStaleCheckAccessor )

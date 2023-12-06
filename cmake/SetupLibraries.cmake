@@ -200,3 +200,28 @@ if (ENABLE_CUDA AND NOT TARGET cub)
    include(cmake/libraries/FindCUB.cmake)
 endif ()
 
+################################
+# mdspan (optional)
+################################
+if (NOT TARGET mdspan)
+   find_package(mdspan QUIET NO_DEFAULT_PATH HINTS ${MDSPAN_DIR})
+
+   if (mdspan_FOUND)
+      message(STATUS "CARE: Using external mdspan")
+   else ()
+      message(STATUS "CARE: Using mdspan submodule")
+
+      if (NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/mdspan/CMakeLists.txt)
+         message(FATAL_ERROR "CARE: mdspan submodule not initialized. Run 'git submodule update --init' in the git repository or set MDSPAN_DIR to use an external build of mdspan.")
+      else ()
+         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/mdspan)
+      endif ()
+   endif ()
+
+   # Manually set includes as system includes
+   get_target_property(_dirs mdspan INTERFACE_INCLUDE_DIRECTORIES)
+   set_property(TARGET mdspan
+                APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                "${_dirs}")
+   unset(_dirs)
+endif ()

@@ -46,6 +46,7 @@ set(care_headers
     local_ptr.h
     LoopFuser.h
     managed_ptr.h
+    mdspan.hpp
     openmp.h
     SortFuser.h
     numeric.h
@@ -60,6 +61,7 @@ set(care_headers
     Setup.h
     single_access_ptr.h
     util.h
+    StaleCheckAccessor.hpp
  )
 
 set(care_sources
@@ -71,6 +73,7 @@ set(care_sources
     DebugPlugin.cpp
     ProfilePlugin.cpp
     scan.cpp
+    mdspan.cpp
     )
 
 if(CARE_ENABLE_EXTERN_INSTANTIATE)
@@ -78,7 +81,7 @@ if(CARE_ENABLE_EXTERN_INSTANTIATE)
 endif()
 
 
-set(care_depends chai RAJA umpire camp)
+set(care_depends mdspan chai RAJA umpire camp)
 
 if (ENABLE_MPI)
    list(APPEND care_depends mpi)

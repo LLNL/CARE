@@ -3,3 +3,4 @@ CAMP: v2022.10.1
 CHAI: v2022.10.0
 RAJA: v2022.10.5
 Umpire: v2022.10.0
+mdspan: 9fbe4b4 (branch: stable)
