@@ -77,12 +77,12 @@ GPU_TEST(StaleDataChecker, StaleData)
       a[i] = size - i;
    });
 
-   RAJA::forall<RAJA::seq_exec>(RAJA::TypedRangeSegment<int>(0, size), [=] (int i) {
-      a[i] += i;
-   });
-
    for (int i = 0; i < size; ++i) {
       host_a[i] += i;
    }
+
+   RAJA::forall<RAJA::seq_exec>(RAJA::TypedRangeSegment<int>(0, size), [=] (int i) {
+      a[i] += i;
+   });
 }
 #endif
