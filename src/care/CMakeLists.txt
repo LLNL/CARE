@@ -84,8 +84,8 @@ if (ENABLE_MPI)
    list(APPEND care_depends mpi)
 endif ()
 
-if (LLNL_GLOBALID_FOUND)
-   list (APPEND care_depends llnl_globalid)
+if (LLNL_GlobalID_FOUND)
+   list (APPEND care_depends LLNL_GlobalID::LLNL_GlobalID)
 endif()
 
 if (ENABLE_CUDA)

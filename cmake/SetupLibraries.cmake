@@ -176,21 +176,21 @@ endif()
 ################################
 # LLNL_GlobalID
 ################################
-if (LLNL_GLOBALID_DIR)
-    include(cmake/libraries/FindLLNL_GlobalID.cmake)
+if (NOT TARGET LLNL_GlobalID::LLNL_GlobalID)
+   if (LLNL_GLOBALID_DIR)
+      find_package(LLNL_GlobalID REQUIRED NO_DEFAULT_PATH HINTS ${LLNL_GLOBALID_DIR} ${LLNL_GlobalID_DIR})
 
-    if (LLNL_GLOBALID_FOUND)
-        blt_import_library(NAME llnl_globalid
-                           INCLUDES ${LLNL_GLOBALID_INCLUDE_DIRS}
-                           TREAT_INCLUDES_AS_SYSTEM ON)
+      # Manually set includes as system includes
+      get_target_property(_dirs LLNL_GlobalID::LLNL_GlobalID INTERFACE_INCLUDE_DIRECTORIES)
+      set_property(TARGET LLNL_GlobalID::LLNL_GlobalID
+                   APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                   "${_dirs}")
 
-        set(CARE_HAVE_LLNL_GLOBALID "1" CACHE STRING "")
-    else()
-        message(FATAL_ERROR "CARE: Unable to find LLNL_GlobalID with given path: ${LLNL_GLOBALID_DIR}")
-    endif()
-else()
-    message(STATUS "CARE: LLNL_GlobalID disabled")
-    set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
+      set(CARE_HAVE_LLNL_GLOBALID "1" CACHE STRING "")
+   else ()
+      message(STATUS "CARE: LLNL_GlobalID disabled")
+      set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
+   endif()
 endif()
 
 ################################
