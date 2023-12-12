@@ -153,25 +153,10 @@ endif ()
 ################################
 # NVTOOLSEXT
 ################################
-if (NVTOOLSEXT_DIR)
-    if (ENABLE_CUDA)
-       include(cmake/libraries/FindNvToolsExt.cmake)
-
-       if (NVTOOLSEXT_FOUND)
-           blt_import_library(NAME nvtoolsext
-                              LIBRARIES ${NVTOOLSEXT_LIBRARY}
-                              INCLUDES ${NVTOOLSEXT_INCLUDE_DIRS}
-                              TREAT_INCLUDES_AS_SYSTEM ON)
-
-           set(CARE_HAVE_NVTOOLSEXT "1" CACHE STRING "")
-       else()
-           message(FATAL_ERROR "CARE: Unable to find NVTOOLSEXT with given path: ${NVTOOLSEXT_DIR}")
-       endif()
-    endif()
-else()
-    message(STATUS "CARE: NVTOOLSEXT disabled")
-    set(CARE_HAVE_NVTOOLSEXT "0" CACHE STRING "")
-endif()
+if (ENABLE_CUDA AND NOT TARGET CUDA::nvToolsExt)
+   set(CUDAToolkit_ROOT ${CUDA_TOOLKIT_ROOT_DIR})
+   find_package(CUDAToolkit)
+endif ()
 
 ################################
 # LLNL_GlobalID
