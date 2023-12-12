@@ -61,13 +61,13 @@ namespace care {
 
 } // namespace care
 
-#define CARE_HOST_VIEW(DATA) care::makeHostView(DATA, std::string(__FILE__) + std::string(":") + std::to_string(__LINE__));
+#define CARE_MAKE_HOST_VIEW(DATA) care::makeHostView(DATA, std::string(__FILE__) + std::string(":") + std::to_string(__LINE__));
 
 GPU_TEST(StaleDataChecker, StaleData)
 {
    constexpr int size = 10;
    chai::ManagedArray<int> a(size);
-   auto host_a = CARE_HOST_VIEW(a);
+   auto host_a = CARE_MAKE_HOST_VIEW(a);
 
    RAJA::forall<RAJA::seq_exec>(RAJA::TypedRangeSegment<int>(0, size), [=] (int i) {
       host_a[i] = i;
