@@ -77,7 +77,7 @@ endif ()
 ################################
 # RAJA (required)
 ################################
-if (NOT TARGET raja)
+if (NOT TARGET RAJA)
    find_package(raja QUIET NO_DEFAULT_PATH HINTS ${RAJA_DIR} ${raja_DIR})
 
    if (raja_FOUND)
@@ -151,14 +151,6 @@ if (NOT TARGET chai)
 endif ()
 
 ################################
-# NVTOOLSEXT
-################################
-if (ENABLE_CUDA AND NOT TARGET CUDA::nvToolsExt)
-   set(CUDAToolkit_ROOT ${CUDA_TOOLKIT_ROOT_DIR})
-   find_package(CUDAToolkit)
-endif ()
-
-################################
 # LLNL_GlobalID
 ################################
 if (NOT TARGET LLNL_GlobalID::LLNL_GlobalID)
@@ -177,6 +169,14 @@ if (NOT TARGET LLNL_GlobalID::LLNL_GlobalID)
       set(CARE_HAVE_LLNL_GLOBALID "0" CACHE STRING "")
    endif()
 endif()
+
+################################
+# NVTOOLSEXT
+################################
+if (ENABLE_CUDA AND NOT TARGET CUDA::nvToolsExt)
+   set(CUDAToolkit_ROOT ${CUDA_TOOLKIT_ROOT_DIR})
+   find_package(CUDAToolkit)
+endif ()
 
 ################################
 # CUB (required for CUDA build)
