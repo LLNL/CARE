@@ -91,8 +91,8 @@ endif()
 if (ENABLE_CUDA)
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
-   if (NVTOOLSEXT_FOUND)
-      list(APPEND care_depends nvtoolsext)
+   if (TARGET CUDA::nvToolsExt)
+      list(APPEND care_depends CUDA::nvToolsExt)
    endif()
 
    list(APPEND care_depends cub cuda)
