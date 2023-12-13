@@ -150,5 +150,5 @@ install(
    DESTINATION
       lib/cmake/care)
 
-blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
+#blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
 
