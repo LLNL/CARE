@@ -5,9 +5,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ######################################################################################
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.14)
 
-project(care LANGUAGES CXX)
+project(care
+        LANGUAGES CXX
+        VERSION 0.11.1)
 
 ################################
 # Build options
@@ -96,17 +98,6 @@ endif ()
 set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
 # Required dependencies (if the following variables are not set, uses submodules)
-# The lower case variables point to the cmake config file (if applicable).
-# The upper case variables simply point to the root install location.
-# Whichever form is most convenient can be used to specify the dependencies.
-
-# These variables point to the installed config files
-set(camp_DIR "" CACHE PATH "Path to campConfig.cmake")
-set(umpire_DIR "" CACHE PATH "Path to umpire-config.cmake")
-set(raja_DIR "" CACHE PATH "Path to raja-config.cmake")
-set(chai_DIR "" CACHE PATH "Path to chai-config.cmake")
-
-# These variables point to the root install location
 set(CAMP_DIR "" CACHE PATH "Path to installed CAMP")
 set(UMPIRE_DIR "" CACHE PATH "Path to installed Umpire")
 set(RAJA_DIR "" CACHE PATH "Path to installed RAJA")

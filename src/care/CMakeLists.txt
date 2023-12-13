@@ -77,6 +77,10 @@ if(CARE_ENABLE_EXTERN_INSTANTIATE)
    list(APPEND care_sources care_inst.cpp)
 endif()
 
+set(care_includes
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
 set(care_depends chai RAJA umpire camp)
 
@@ -107,34 +111,43 @@ if (ENABLE_HIP)
 endif ()
 
 blt_add_library(NAME care
-                SOURCES ${care_sources}
-                HEADERS ${care_headers}
-                DEPENDS_ON ${care_depends}
-                )
+                SOURCES    ${care_sources}
+                HEADERS    ${care_headers}
+                INCLUDES   ${care_includes}
+                DEPENDS_ON ${care_depends})
 
-target_include_directories(care PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(care PRIVATE ${PROJECT_BINARY_DIR}/include)
-
-install(TARGETS care
-        EXPORT  ${PROJECT_NAME}-targets 
-        DESTINATION lib
-        INCLUDES DESTINATION include/care
-        )
+################################
+# care package install
+################################
 
 install(FILES       ${care_headers}
-        DESTINATION include/care
-        )
+        DESTINATION include/care)
 
+install(TARGETS care
+        EXPORT  care-targets
+        DESTINATION lib)
 
-install(EXPORT ${PROJECT_NAME}-targets DESTINATION share/care/cmake)
+install(EXPORT care-targets
+        NAMESPACE care::
+        DESTINATION lib/cmake/care)
 
-blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
+include(CMakePackageConfigHelpers)
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/src/care/care-config.cmake.in
-  ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake)
+configure_package_config_file(
+   ${PROJECT_SOURCE_DIR}/cmake/care-config.cmake.in
+   ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+   INSTALL_DESTINATION lib/cmake/care)
+
+write_basic_package_version_file(
+   ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+   COMPATIBILITY SameMajorVersion)
 
 install(
-  FILES ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake
-  DESTINATION share/care/cmake/)
+   FILES
+      ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+      ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+   DESTINATION
+      lib/cmake/care)
+
+#blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
 
