@@ -146,8 +146,9 @@ install(
    FILES
       ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
       ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/libraries/FindCUB.cmake
    DESTINATION
       lib/cmake/care)
 
-#blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
+blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
 
