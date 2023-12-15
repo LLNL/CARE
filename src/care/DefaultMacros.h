@@ -10,6 +10,7 @@
 
 // CARE config header
 #include "care/config.h"
+#include "care/Captures.hpp"
 
 // for OMP CARE loops, only used in compatibility mode
 #if defined(CARE_LEGACY_COMPATIBILITY_MODE)
@@ -885,6 +886,27 @@
 #define CARE_LOOP_2D_STREAM_JAGGED(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
    launch_2D_jagged(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
 #define CARE_LOOP_2D_STREAM_JAGGED_END });
+
+
+#define CARE_CHECKED_COMPUTE_LOOP_WITH_CAPTURES_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
+   const int care_start_index = START_INDEX; \
+   const int care_end_index = END_INDEX; \
+\
+   if (care_end_index > care_start_index) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::parallel{}, __FILE__, __LINE__, care_start_index, care_end_index, [= __VA_ARGS__] CARE_DEVICE (int INDEX) {
+
+#define CARE_CHECKED_COMPUTE_LOOP_WITH_CAPTURES_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+#define CARE_COMPUTE_LOOP(INDEX, START_INDEX, END_INDEX, ...) \
+   CARE_CHECKED_COMPUTE_LOOP_WITH_CAPTURES_START(INDEX, START_INDEX, END_INDEX, care_compute_loop_check, __VA_ARGS__)
+
+#define CARE_COMPUTE_LOOP_END CARE_CHECKED_COMPUTE_LOOP_WITH_CAPTURES_END(care_compute_loop_check)
+
+
+
+
 
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)

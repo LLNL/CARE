@@ -131,7 +131,7 @@ install(FILES       ${care_headers}
 
 install(EXPORT ${PROJECT_NAME}-targets DESTINATION share/care/cmake)
 
-blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
+#blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
 
 configure_file(
   ${PROJECT_SOURCE_DIR}/src/care/care-config.cmake.in

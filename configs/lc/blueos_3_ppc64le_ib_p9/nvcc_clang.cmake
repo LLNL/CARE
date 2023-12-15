@@ -17,6 +17,6 @@ set(CMAKE_CUDA_FLAGS "-Xcompiler=--gcc-toolchain=${GCC_HOME}" CACHE STRING "")
 set(CUDA_ARCH "sm_70" CACHE STRING "Set the CUDA virtual architecture")
 set(CUDA_CODE "compute_70" CACHE STRING "Set the CUDA actual architecture")
 
-set(CUDA_TOOLKIT_ROOT_DIR "/usr/tce/packages/cuda/cuda-11.7.0" CACHE PATH "Path to CUDA")
+set(CUDA_TOOLKIT_ROOT_DIR "/usr/tce/packages/cuda/cuda-11.8.0" CACHE PATH "Path to CUDA")
 set(NVTOOLSEXT_DIR "${CUDA_TOOLKIT_ROOT_DIR}" CACHE PATH "Path to NVTOOLSEXT")
 

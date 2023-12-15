@@ -10,6 +10,10 @@
 
 #include "chai/config.hpp"
 
+#if defined(__HIPCC__)
+#include "hip/hip_runtime.h"
+#endif
+
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define CARE_DEVICE_COMPILE
 #endif

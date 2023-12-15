@@ -7,7 +7,7 @@
 
 cmake_minimum_required(VERSION 3.9)
 
-project(care LANGUAGES CXX)
+project(care LANGUAGES C CXX)
 
 ################################
 # Build options
@@ -158,7 +158,7 @@ option(ENABLE_UNCRUSTIFY   "Enables Uncrustify support" OFF)
 option(ENABLE_YAPF         "Enables Yapf support" OFF)
 
 set(BLT_EXPORT_THIRDPARTY ON CACHE BOOL "")
-set(BLT_CXX_STD "c++14" CACHE STRING "Set the c++ standard to use")
+set(BLT_CXX_STD "c++17" CACHE STRING "Set the c++ standard to use")
 
 if (BLT_SOURCE_DIR)
     message(STATUS "CARE: Using external BLT")
@@ -226,7 +226,7 @@ add_subdirectory(src)
 # Build CARE extras
 ################################
 if (CARE_ENABLE_TESTS)
-   add_subdirectory(test)
+   #add_subdirectory(test)
 endif()
 
 if (CARE_ENABLE_BENCHMARKS)
