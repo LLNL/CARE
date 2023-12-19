@@ -1516,20 +1516,78 @@ CARE_INLINE void ArrayCopy(RAJA::seq_exec,
 }
 
 /************************************************************************
+ * Function  : ArrayCopy
+ * Author(s) : Peter Robinson
+ * Purpose   : Duplicates a ManagedArray.
+ * ************************************************************************/
+template <typename T>
+CARE_INLINE care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len)
+{
+   return ArrayDup<T>(RAJAExec {}, from, len);
+}
+
+/************************************************************************
+ * Function  : ArrayCopy
+ * Author(s) : Benjamin Liu
+ * Purpose   : Duplicates a ManagedArray from raw pointer.
+ * ************************************************************************/
+template <typename T>
+CARE_INLINE care::host_device_ptr<T> ArrayDup(const T* from, int len)
+{
+   return ArrayDup<T>(RAJAExec {}, from, len);
+}
+
+/************************************************************************
  * Function  : ArrayDup
  * Author(s) : Peter Robinson
  * Purpose   : Duplicates a ManagedArray.
  * ************************************************************************/
 template <typename T, typename Exec>
-CARE_INLINE care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len)
+CARE_INLINE care::host_device_ptr<T> ArrayDup(Exec, care::host_device_ptr<const T> from, int len)
 {
    if (from == nullptr) { // don't make a new array for null input
      return nullptr;
    } else {
      care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
-     CARE_STREAM_LOOP(i, 0, len) {
+     ArrayCopy<T>(Exec{}, newArray, from, len);
+     return newArray;
+   }
+}
+
+/************************************************************************
+ * Function  : ArrayDup
+ * Author(s) : Benjamin Liu
+ * Purpose   : Duplicates a ManagedArray from raw pointer.
+ * ************************************************************************/
+template <typename T, typename Exec>
+CARE_INLINE care::host_device_ptr<T> ArrayDup(Exec, const T* from, int len)
+{
+   if (from == nullptr) { // don't make a new array for null input
+     return nullptr;
+   } else {
+     care::host_device_ptr<const T> wrappedArray(from, len, "ArrayDup wrappedArray");
+     care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
+     ArrayCopy<T>(Exec{}, newArray, wrappedArray, len);
+     wrappedArray.freeDeviceMemory(nullptr, 0);
+     return newArray;
+   }
+}
+
+/************************************************************************
+ * Function  : ArrayDup
+ * Author(s) : Benjamin Liu
+ * Purpose   : Duplicates a ManagedArray from raw pointer.
+ * ************************************************************************/
+template <typename T>
+CARE_INLINE care::host_device_ptr<T> ArrayDup(RAJA::seq_exec, const T* from, int len)
+{
+   if (from == nullptr) { // don't make a new array for null input
+     return nullptr;
+   } else {
+     care::host_device_ptr<T> newArray(len,"ArrayDup newArray");
+     CARE_SEQUENTIAL_LOOP(i, 0, len) {
         newArray[i] = from[i];
-     } CARE_STREAM_LOOP_END
+     } CARE_SEQUENTIAL_LOOP_END
      return newArray;
    }
 }

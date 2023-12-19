@@ -183,8 +183,20 @@ T ArrayMaskedSum(care::host_device_ptr<const T> arr, care::host_device_ptr<int c
 template <typename T, typename Exec=RAJAExec>
 int FindIndexGT(care::host_device_ptr<const T> arr, int n, T limit);
 
-template <typename T, typename Exec=RAJAExec >
+template <typename T>
 care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> from, int len);
+
+template <typename T>
+care::host_device_ptr<T> ArrayDup(const T* from, int len);
+
+template <typename T, typename Exec>
+care::host_device_ptr<T> ArrayDup(Exec, care::host_device_ptr<const T> from, int len);
+
+template <typename T, typename Exec>
+care::host_device_ptr<T> ArrayDup(Exec, const T* from, int len);
+
+template <typename T>
+care::host_device_ptr<T> ArrayDup(RAJA::seq_exec, const T* from, int len);
 
 template <typename T>
 void ArrayCopy(care::host_device_ptr<T> into, care::host_device_ptr<const T> from, int n,
