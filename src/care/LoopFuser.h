@@ -418,7 +418,7 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-#if defined(CARE_GPUCC)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
 #else
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::CPU));
@@ -998,7 +998,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 }
 
 
-#if defined(CARE_GPUCC)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
 #else
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
