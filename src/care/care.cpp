@@ -124,11 +124,7 @@ namespace care {
    }
 
    bool syncIfNeeded() {
-#ifndef CHAI_DISABLE_RM
       return chai::ArrayManager::getInstance()->syncIfNeeded();
-#else
-      return false;
-#endif
    }
 }
 
