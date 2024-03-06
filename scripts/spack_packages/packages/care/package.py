@@ -196,10 +196,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
         
         entries.append(cmake_cache_path('BLT_SOURCE_DIR', spec['blt'].prefix))
-        entries.append(cmake_cache_path('camp_DIR', spec['camp'].prefix))
-        entries.append(cmake_cache_path('umpire_DIR', spec['umpire'].prefix))
-        entries.append(cmake_cache_path('raja_DIR', spec['raja'].prefix))
-        entries.append(cmake_cache_path('chai_DIR', spec['chai'].prefix))
+        entries.append(cmake_cache_path('CAMP_DIR', spec['camp'].prefix))
+        entries.append(cmake_cache_path('UMPIRE_DIR', spec['umpire'].prefix))
+        entries.append(cmake_cache_path('RAJA_DIR', spec['raja'].prefix))
+        entries.append(cmake_cache_path('CHAI_DIR', spec['chai'].prefix))
 
         # Build options
         entries.append("#------------------{0}".format("-" * 60))
