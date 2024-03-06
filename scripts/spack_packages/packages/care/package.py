@@ -160,7 +160,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
             entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
             entries.append(cmake_cache_string("CUDA_TOOLKIT_ROOT_DIR", spec['cuda'].prefix))
-            entries.append(cmake_cache_string("NVTOOLSEXT_DIR", spec['cuda'].prefix))
             entries.append(cmake_cache_string("CUB_DIR", spec['cub'].prefix))
 
             cuda_for_radiuss_projects(entries, spec)
