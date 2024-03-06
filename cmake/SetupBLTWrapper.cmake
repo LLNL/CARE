@@ -15,7 +15,7 @@ if(NOT BLT_LOADED)
    else()
        message(STATUS "CARE: Using BLT submodule")
 
-       set(BLT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/blt")
+       set(BLT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/blt")
 
        if(NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
           message(FATAL_ERROR "CARE: BLT submodule is not initialized. Run `git submodule update --init` in git repository or set BLT_SOURCE_DIR to external BLT.")
@@ -48,8 +48,6 @@ if(NOT BLT_LOADED)
    option(ENABLE_FORTRAN      "Enables Fortran compiler support" OFF)
 
    set(BLT_CXX_STD "c++14" CACHE STRING "Set the c++ standard to use")
-
-   set(BLT_SOURCE_DIR "" CACHE PATH "Path to external BLT")
 
    include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
