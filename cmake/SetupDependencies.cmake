@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 # CAMP (required)
 ################################
 if(NOT TARGET camp)
-   care_find_package(NAME camp TARGETS camp REQUIRED)
+   care_find_package(NAME camp TARGETS camp)
 
    if(CAMP_FOUND)
       message(STATUS "CARE: Using external CAMP")
@@ -30,7 +30,7 @@ endif()
 # Umpire (required)
 ################################
 if(NOT TARGET umpire)
-   care_find_package(NAME umpire TARGETS umpire REQUIRED)
+   care_find_package(NAME umpire TARGETS umpire)
 
    if(UMPIRE_FOUND)
       message(STATUS "CARE: Using external Umpire")
@@ -55,7 +55,7 @@ endif()
 # RAJA (required)
 ################################
 if(NOT TARGET RAJA)
-   care_find_package(NAME raja TARGETS RAJA REQUIRED)
+   care_find_package(NAME raja TARGETS RAJA)
 
    if(RAJA_FOUND)
       message(STATUS "CARE: Using external RAJA")
@@ -92,7 +92,7 @@ endif()
 # CHAI (required)
 ################################
 if(NOT TARGET chai)
-   care_find_package(NAME chai TARGETS chai REQUIRED)
+   care_find_package(NAME chai TARGETS chai)
 
    if(CHAI_FOUND)
       message(STATUS "CARE: Using external CHAI")
