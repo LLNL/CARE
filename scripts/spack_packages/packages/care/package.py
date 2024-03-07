@@ -160,7 +160,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
             entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
             entries.append(cmake_cache_string("CUDA_TOOLKIT_ROOT_DIR", spec['cuda'].prefix))
-            entries.append(cmake_cache_string("NVTOOLSEXT_DIR", spec['cuda'].prefix))
             entries.append(cmake_cache_string("CUB_DIR", spec['cub'].prefix))
 
             cuda_for_radiuss_projects(entries, spec)
@@ -197,10 +196,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
         
         entries.append(cmake_cache_path('BLT_SOURCE_DIR', spec['blt'].prefix))
-        entries.append(cmake_cache_path('camp_DIR', spec['camp'].prefix))
-        entries.append(cmake_cache_path('umpire_DIR', spec['umpire'].prefix))
-        entries.append(cmake_cache_path('raja_DIR', spec['raja'].prefix))
-        entries.append(cmake_cache_path('chai_DIR', spec['chai'].prefix))
+        entries.append(cmake_cache_path('CAMP_DIR', spec['camp'].prefix))
+        entries.append(cmake_cache_path('UMPIRE_DIR', spec['umpire'].prefix))
+        entries.append(cmake_cache_path('RAJA_DIR', spec['raja'].prefix))
+        entries.append(cmake_cache_path('CHAI_DIR', spec['chai'].prefix))
 
         # Build options
         entries.append("#------------------{0}".format("-" * 60))
