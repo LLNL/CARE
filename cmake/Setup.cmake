@@ -1,0 +1,12 @@
+######################################################################################
+# Copyright 2024 Lawrence Livermore National Security, LLC and other CARE developers.
+# See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+######################################################################################
+
+include(${PROJECT_SOURCE_DIR}/cmake/SetupOptions.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/SetupCompilerOptions.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/SetupBLTWrapper.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/SetupMacros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/SetupDependencies.cmake)
