@@ -1,23 +1,33 @@
 ##############################################################################
-# Copyright (c) 2022-23, Lawrence Livermore National Security, LLC and RADIUSS
+# Copyright (c) 2022-24, Lawrence Livermore National Security, LLC and RADIUSS
 # project contributors. See the COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (MIT)
 ##############################################################################
 
-# With GitLab CI, included files cannot be empty.
-variables:
-  INCLUDED_FILE_CANNOT_BE_EMPTY: "True"
+# Override reproducer section to define project specific variables.
+.lassen_reproducer_vars: &lassen_reproducer_vars
+    - |
+      echo -e "export MODULE_LIST=\"${MODULE_LIST}\""
+      echo -e "export SPEC=\"${SPEC//\"/\\\"}\""
 
-# Override to set minimum CUDA architecture
+########################
+# Overridden shared jobs
+########################
+# We duplicate the shared jobs description and add necessary changes for this
+# project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
+# So that the comparison with the original job is easier.
+
+# Override job with old cuda to allow it to fail.
 clang_12_0_1_ibm_gcc_8_3_1_cuda_10_1_243:
   variables:
-    SPEC: "${PROJECT_LASSEN_VARIANTS} +cuda cuda_arch=70 %clang@12.0.1.ibm.gcc.8.3.1 ^cuda@10.1.243+allow-unsupported-compilers ${PROJECT_LASSEN_DEPS}"
+    SPEC: "${PROJECT_LASSEN_VARIANTS} +cuda %clang@12.0.1.ibm.gcc.8.3.1 ^cuda@10.1.243+allow-unsupported-compilers ${PROJECT_LASSEN_DEPS}"
   extends: .job_on_lassen
   allow_failure: true
 
-## Template for extra jobs defined by the project.
-#<job-name (usually spec or description)>:
-#  variables:
-#    SPEC: "<spack spec without package name>"
-#  extends: .job_on_lassen
+############
+# Extra jobs
+############
+# We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
+# ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
+# describe the spec here.
