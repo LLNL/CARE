@@ -78,7 +78,7 @@ if(CARE_ENABLE_EXTERN_INSTANTIATE)
 endif()
 
 
-set(care_depends chai RAJA umpire camp)
+set(care_depends chai RAJA umpire)
 
 if (ENABLE_MPI)
    list(APPEND care_depends mpi)

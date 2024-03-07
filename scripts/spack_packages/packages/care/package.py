@@ -44,7 +44,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
-    depends_on('camp@2022.10.1:', when='@0.10.0:')
     depends_on('umpire~c~shared~werror@2022.10.0:', when='@0.10.0:')
     depends_on('raja~shared~vectorization~examples~exercises@2022.10.5:', when='@0.10.0:')
     depends_on('chai~shared+raja~examples+enable_pick@2022.10.0:', when='@0.10.0:')
@@ -52,7 +51,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('umpire+mpi', when='+mpi')
 
     with when('+openmp'):
-        depends_on('camp+openmp')
         depends_on('umpire+openmp')
         depends_on('raja+openmp')
         depends_on('chai+openmp')
@@ -64,25 +62,21 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         # cub package.
         depends_on('cub')
 
-        depends_on('camp+cuda')
         depends_on('umpire+cuda')
         depends_on('raja+cuda')
         depends_on('chai+cuda')
 
         for sm_ in CudaPackage.cuda_arch_values:
-            depends_on('camp+cuda cuda_arch={0}'.format(sm_), when='cuda_arch={0}'.format(sm_))
             depends_on('umpire+cuda cuda_arch={0}'.format(sm_), when='cuda_arch={0}'.format(sm_))
             depends_on('raja+cuda cuda_arch={0}'.format(sm_), when='cuda_arch={0}'.format(sm_))
             depends_on('chai+cuda cuda_arch={0}'.format(sm_), when='cuda_arch={0}'.format(sm_))
 
     with when('+rocm'):
-        depends_on('camp+rocm')
         depends_on('umpire+rocm')
         depends_on('raja+rocm')
         depends_on('chai+rocm')
 
         for arch_ in ROCmPackage.amdgpu_targets:
-            depends_on('camp+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
             depends_on('umpire+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
             depends_on('raja+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
             depends_on('chai+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
@@ -196,7 +190,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
         
         entries.append(cmake_cache_path('BLT_SOURCE_DIR', spec['blt'].prefix))
-        entries.append(cmake_cache_path('CAMP_DIR', spec['camp'].prefix))
         entries.append(cmake_cache_path('UMPIRE_DIR', spec['umpire'].prefix))
         entries.append(cmake_cache_path('RAJA_DIR', spec['raja'].prefix))
         entries.append(cmake_cache_path('CHAI_DIR', spec['chai'].prefix))

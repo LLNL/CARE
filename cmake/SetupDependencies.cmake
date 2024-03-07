@@ -8,25 +8,6 @@
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 ################################
-# CAMP (required)
-################################
-if(NOT TARGET camp)
-   care_find_package(NAME camp TARGETS camp)
-
-   if(CAMP_FOUND)
-      message(STATUS "CARE: Using external CAMP")
-   else()
-      message(STATUS "CARE: Using CAMP submodule")
-
-      if(NOT EXISTS ${PROJECT_SOURCE_DIR}/tpl/camp/CMakeLists.txt)
-         message(FATAL_ERROR "CARE: CAMP submodule not initialized. Run 'git submodule update --init' in the git repository or set CAMP_DIR to use an external build of CAMP.")
-      else()
-         add_subdirectory(${PROJECT_SOURCE_DIR}/tpl/camp)
-      endif()
-   endif()
-endif()
-
-################################
 # Umpire (required)
 ################################
 if(NOT TARGET umpire)
