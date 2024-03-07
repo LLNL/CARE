@@ -26,8 +26,3 @@
 # We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
-
-clang_14_0_6_develop_tpls:
-  variables:
-    SPEC: " %clang@14.0.6 ^camp@main ^umpire@develop ^raja@develop ^chai@develop"
-  extends: .job_on_poodle
