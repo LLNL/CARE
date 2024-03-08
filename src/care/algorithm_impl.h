@@ -1516,7 +1516,7 @@ CARE_INLINE void ArrayCopy(RAJA::seq_exec,
 }
 
 /************************************************************************
- * Function  : ArrayCopy
+ * Function  : ArrayDup
  * Author(s) : Peter Robinson
  * Purpose   : Duplicates a ManagedArray.
  * ************************************************************************/
@@ -1527,7 +1527,7 @@ CARE_INLINE care::host_device_ptr<T> ArrayDup(care::host_device_ptr<const T> fro
 }
 
 /************************************************************************
- * Function  : ArrayCopy
+ * Function  : ArrayDup
  * Author(s) : Benjamin Liu
  * Purpose   : Duplicates a ManagedArray from raw pointer.
  * ************************************************************************/
