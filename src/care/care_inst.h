@@ -1250,34 +1250,77 @@ void ArrayCopy(care::host_device_ptr<globalID>, care::host_device_ptr<const glob
 
 ///////////////////////////////////////////////////////////////////////////////
 
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<bool> ArrayDup<bool>(care::host_device_ptr<const bool>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<bool> ArrayDup<bool>(const bool*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<int> ArrayDup<int>(care::host_device_ptr<const int>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<int> ArrayDup<int>(const int*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float>(care::host_device_ptr<const float>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float>(const float*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double>(care::host_device_ptr<const double>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double>(const double*, int) ;
+#if CARE_HAVE_LLNL_GLOBALID
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<globalID> ArrayDup<globalID>(care::host_device_ptr<const globalID>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<globalID> ArrayDup<globalID>(const globalID*, int) ;
+#endif
+
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<bool> ArrayDup<bool, RAJADeviceExec>(care::host_device_ptr<const bool>, int) ;
+care::host_device_ptr<bool> ArrayDup<bool, RAJADeviceExec>(RAJADeviceExec, care::host_device_ptr<const bool>, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<int> ArrayDup<int, RAJADeviceExec>(care::host_device_ptr<const int>, int) ;
+care::host_device_ptr<bool> ArrayDup<bool, RAJADeviceExec>(RAJADeviceExec, const bool*, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<float> ArrayDup<float, RAJADeviceExec>(care::host_device_ptr<const float>, int) ;
+care::host_device_ptr<int> ArrayDup<int, RAJADeviceExec>(RAJADeviceExec, care::host_device_ptr<const int>, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<double> ArrayDup<double, RAJADeviceExec>(care::host_device_ptr<const double>, int) ;
+care::host_device_ptr<int> ArrayDup<int, RAJADeviceExec>(RAJADeviceExec, const int*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float, RAJADeviceExec>(RAJADeviceExec, care::host_device_ptr<const float>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float, RAJADeviceExec>(RAJADeviceExec, const float*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double, RAJADeviceExec>(RAJADeviceExec, care::host_device_ptr<const double>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double, RAJADeviceExec>(RAJADeviceExec, const double*, int) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<globalID> ArrayDup<globalID, RAJADeviceExec>(care::host_device_ptr<const globalID>, int) ;
+care::host_device_ptr<globalID> ArrayDup<globalID, RAJADeviceExec>(RAJADeviceExec, care::host_device_ptr<const globalID>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<globalID> ArrayDup<globalID, RAJADeviceExec>(RAJADeviceExec, const globalID*, int) ;
 #endif
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<bool> ArrayDup<bool, RAJA::seq_exec>(care::host_device_ptr<const bool>, int) ;
+care::host_device_ptr<bool> ArrayDup<bool, RAJA::seq_exec>(RAJA::seq_exec, care::host_device_ptr<const bool>, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<int> ArrayDup<int, RAJA::seq_exec>(care::host_device_ptr<const int>, int) ;
+care::host_device_ptr<bool> ArrayDup<bool, RAJA::seq_exec>(RAJA::seq_exec, const bool*, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<float> ArrayDup<float, RAJA::seq_exec>(care::host_device_ptr<const float>, int) ;
+care::host_device_ptr<int> ArrayDup<int, RAJA::seq_exec>(RAJA::seq_exec, care::host_device_ptr<const int>, int) ;
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<double> ArrayDup<double, RAJA::seq_exec>(care::host_device_ptr<const double>, int) ;
+care::host_device_ptr<int> ArrayDup<int, RAJA::seq_exec>(RAJA::seq_exec, const int*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float, RAJA::seq_exec>(RAJA::seq_exec, care::host_device_ptr<const float>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<float> ArrayDup<float, RAJA::seq_exec>(RAJA::seq_exec, const float*, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double, RAJA::seq_exec>(RAJA::seq_exec, care::host_device_ptr<const double>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<double> ArrayDup<double, RAJA::seq_exec>(RAJA::seq_exec, const double*, int) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-care::host_device_ptr<globalID> ArrayDup<globalID, RAJA::seq_exec>(care::host_device_ptr<const globalID>, int) ;
+care::host_device_ptr<globalID> ArrayDup<globalID, RAJA::seq_exec>(RAJA::seq_exec, care::host_device_ptr<const globalID>, int) ;
+CARE_EXTERN template CARE_DLL_API
+care::host_device_ptr<globalID> ArrayDup<globalID, RAJA::seq_exec>(RAJA::seq_exec, const globalID*, int) ;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
