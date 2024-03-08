@@ -15,6 +15,8 @@ RED="\033[1;31m"
 GREEN="\033[1;32m"
 NOCOLOR="\033[0m"
 
+#files_no_license=$(grep -rL "LLC and CARE" . \
+#files_no_license=$(grep -rL "SPDX-License-Identifier: BSD-3-Clause" . \
 files_no_license=$(grep -rL "the CARE LICENSE file" . \
    --exclude-dir=.git \
    --exclude-dir=blt \
