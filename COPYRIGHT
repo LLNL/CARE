@@ -20,7 +20,7 @@ License Identifiers that are available here: https://spdx.org/licenses/
 Files that are licensed as BSD-3 contain the following
 text in the license header:
 
-    SPDX-License-Identifier: BSD-3 Clause
+    SPDX-License-Identifier: BSD-3-Clause
 
 
 External Packages

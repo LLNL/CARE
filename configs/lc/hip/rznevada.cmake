@@ -1,3 +1,10 @@
+##############################################################################
+# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# project contributors. See the CARE LICENSE file for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+##############################################################################
+
 set(ENABLE_HIP ON CACHE BOOL "Enable HIP build")
 set(HIP_ROOT_DIR "/opt/rocm-4.2.0/hip" CACHE PATH "Path to HIP root directory")
 

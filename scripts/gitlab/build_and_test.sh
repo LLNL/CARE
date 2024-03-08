@@ -8,9 +8,9 @@ fi
 
 ###############################################################################
 # Copyright (c) 2016-24, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the COPYRIGHT file for details.
+# project contributors. See the CARE LICENSE file for details.
 #
-# SPDX-License-Identifier: (BSD-3-Clause)
+# SPDX-License-Identifier: BSD-3-Clause
 ###############################################################################
 
 set -o errexit

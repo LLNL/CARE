@@ -1,3 +1,9 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef CHAI_Accessor__HPP
 #define CHAI_Accessor__HPP

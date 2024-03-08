@@ -1,3 +1,10 @@
+[comment]: # (#################################################################)
+[comment]: # (Copyright 2020-24, Lawrence Livermore National Security, LLC and CARE)
+[comment]: # (project contributors. See the CARE LICENSE file for details.)
+[comment]: #
+[comment]: # (SPDX-License-Identifier: BSD-3-Clause)
+[comment]: # (#################################################################)
+
 CARE: CHAI and RAJA Extensions
 ===============================
 CHAI and RAJA provide an excellent base on which to build portable code. CARE expands that functionality, adding new features such as loop fusion capability, a portable interface for many numerical algorithms, and additional data structures. It provides all the basics for anyone wanting to write portable code.
