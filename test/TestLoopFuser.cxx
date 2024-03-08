@@ -94,9 +94,13 @@ GPU_TEST(TestPacker, packFixedRange) {
 
    care::gpuDeviceSynchronize(__FILE__, __LINE__);
 
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) && !defined(CHAI_THIN_GPU_ALLOCATE)
    // pack should have happened on the device, so
    // host data should not be updated yet
+   //
+   // ...but if CHAI_THIN_GPU_ALLOCATE set then host memory is
+   // literally the gpu memory so we skip this test
+   //
    for (int i = 0; i < arrSize; ++i) {
       ASSERT_EQ(host_src[i], i);
       ASSERT_EQ(host_dst[i], -1);
@@ -152,9 +156,13 @@ GPU_TEST(TestPacker, packFixedRangeMacro) {
    const int* host_src;
    const int* host_dst;
 
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) && !defined(CHAI_THIN_GPU_ALLOCATE)
    // pack should have happened on the device, so
    // host data should not be updated yet
+   //
+   // ...but if CHAI_THIN_GPU_ALLOCATE set then host memory is
+   // literally the gpu memory so we skip this test
+   //
    host_src = src.data(chai::CPU, false);
    host_dst = dst.data(chai::CPU, false);
 
@@ -228,9 +236,13 @@ GPU_TEST(TestPacker, fuseFixedRangeMacro) {
    const int* host_src;
    const int* host_dst;
 
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) && !defined(CHAI_THIN_GPU_ALLOCATE)
    // pack should have happened on the device, so
    // host data should not be updated yet
+   //
+   // ...but if CHAI_THIN_GPU_ALLOCATE set then host memory is
+   // literally the gpu memory so we skip this test
+   //
    host_dst = dst.data(chai::CPU, false);
    host_src = src.data(chai::CPU, false);
 
@@ -818,10 +830,14 @@ GPU_TEST(fusible_phase, fusible_loop_phase) {
          }
       } CARE_STREAM_LOOP_END
 
-#ifdef CARE_GPUCC
+#if defined(CARE_GPUCC) && !defined(CHAI_THIN_GPU_ALLOCATE)
       // pack should have happened on the device, so
       // host data should not be updated yet
       // check that no phases have been executed yet
+      //
+      // ...but if CHAI_THIN_GPU_ALLOCATE set then host memory is
+      // literally the gpu memory so we skip this test
+      //
       const int* host_A = A.cdata();
       const int* host_C = C.cdata();
 

@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
+
 #ifndef _CARE_LOOP_FUSER_H_
 #define _CARE_LOOP_FUSER_H_
 
@@ -40,6 +41,18 @@ constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 #endif
 
 namespace care {
+   template <typename T, typename T_PTR>
+   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
+                                       T_PTR freeDeviceCPUDestination,
+                                       size_t elems) {
+      if constexpr(std::is_null_pointer_v<T_PTR>) {
+         array.freeDeviceMemory(nullptr, 0);
+      }
+      else {
+         array.freeDeviceMemory(&freeDeviceCPUDestination, elems);
+      }
+   }
+
    ///////////////////////////////////////////////////////////////////////////
    /// @author Ben Liu, Peter Robinson, Alan Dayton
    /// @brief Checks whether an array of type T is sorted and optionally unique.
@@ -329,6 +342,8 @@ public:
                             m_last_insert_priority(-FLT_MAX),
                             m_to_be_freed(),
                             m_to_be_freed_device(),
+                            m_to_be_freed_device_destinations(),
+                            m_to_be_freed_device_elems(),
                             m_recording(false) 
     {
        if (registerWithAllObservers) {
@@ -403,13 +418,17 @@ public:
          array.free();
       }
       m_to_be_freed.clear();
+      int i = 0;
       for (auto & array: m_to_be_freed_device) {
          // Prevent two duplicate frees when wrapping the same host pointer more than once
          if (chai::ArrayManager::getInstance()->getPointerRecord((void *)array.getActivePointer()) != &chai::ArrayManager::s_null_record) {
-            array.freeDeviceMemory();
+            array.freeDeviceMemory(&m_to_be_freed_device_destinations[i], m_to_be_freed_device_elems[i]);
          }
+         ++i;
       }
       m_to_be_freed_device.clear();
+      m_to_be_freed_device_destinations.clear();
+      m_to_be_freed_device_elems.clear();
       flush_now = false;
    }
 
@@ -418,7 +437,7 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-#if defined(CARE_GPUCC)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
 #else
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::CPU));
@@ -463,6 +482,8 @@ public:
       m_fused_action_order.clear();
       m_to_be_freed.clear();
       m_to_be_freed_device.clear();
+      m_to_be_freed_device_destinations.clear();
+      m_to_be_freed_device_elems.clear();
       m_recording = false;
    }
 
@@ -473,8 +494,11 @@ public:
    /// @param[in] array : the array to be freed after a flushActions
    /// @param[in] freeDeviceOnly: whether to only free device memory
    ///////////////////////////////////////////////////////////////////////////
-   template <typename T>
-   inline void registerFree(care::host_device_ptr<T> & array, bool freeDeviceOnly = false) {
+   template <typename T, typename T_PTR=std::nullptr_t>
+   inline void registerFree(care::host_device_ptr<T> & array,
+                            bool freeDeviceOnly = false,
+                            T_PTR freeDeviceCPUDestination = nullptr,
+                            size_t elems = 0) {
       if (!freeDeviceOnly) {
          if (m_recording) {
             m_to_be_freed.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
@@ -486,9 +510,11 @@ public:
       else {
          if (m_recording) {
             m_to_be_freed_device.push_back(reinterpret_cast<care::host_device_ptr<char> &>(array));
+            m_to_be_freed_device_destinations.push_back((char *)freeDeviceCPUDestination);
+            m_to_be_freed_device_elems.push_back(elems*sizeof(T));
          }
          else {
-            array.freeDeviceMemory();
+            wrappedFreeDeviceMemory(array,freeDeviceCPUDestination, elems);
          }
       }
    }
@@ -506,6 +532,8 @@ public:
       double m_last_insert_priority;
       std::vector<care::host_device_ptr<char> > m_to_be_freed;
       std::vector<care::host_device_ptr<char> > m_to_be_freed_device;
+      std::vector<char *> m_to_be_freed_device_destinations;
+      std::vector<size_t> m_to_be_freed_device_elems;
       bool m_recording;
 
 };
@@ -998,7 +1026,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 }
 
 
-#if defined(CARE_GPUCC)
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
 #else
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
@@ -1110,7 +1138,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 
 // frees
 #define FUSIBLE_FREE(A) FusedActionsObserver::getActiveObserver()->registerFree(A);
-#define FUSIBLE_FREE_DEVICE(A) FusedActionsObserver::getActiveObserver()->registerFree(A, true);
+#define FUSIBLE_FREE_DEVICE(A,DEST,ELEM) FusedActionsObserver::getActiveObserver()->registerFree(A, true, DEST, ELEM);
 
 #else // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1139,7 +1167,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOPS_PAUSE
 #define FUSIBLE_LOOPS_RESUME
 #define FUSIBLE_FREE(A) A.free();
-#define FUSIBLE_FREE_DEVICE(A) A.freeDeviceMemory();
+#define FUSIBLE_FREE_DEVICE(A,DEST,ELEM) care::wrappedFreeDeviceMemory(A, DEST, ELEM);
 
 #endif // defined(CARE_DEBUG) || defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -1480,7 +1508,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 #define FUSIBLE_LOOP_SCAN_PHASE_END(LENGTH, POS, POS_STORE_DESTINATION) SCAN_LOOP_END(LENGTH, POS, POS_STORE_DESTINATION)
 
 #define FUSIBLE_FREE(A) A.free()
-#define FUSIBLE_FREE_DEVICE(A) A.freeDeviceMemory()
+#define FUSIBLE_FREE_DEVICE(A,DEST,ELEM) care::wrappedFreeDeviceMemory(A, DEST, ELEM);
 
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN_R(INDX,START,END,SCANVAR, REGISTER_COUNT) SCAN_COUNTS_TO_OFFSETS_LOOP(INDX, START, END, SCANVAR)
 #define FUSIBLE_LOOP_COUNTS_TO_OFFSETS_SCAN(INDX,START,END,SCANVAR) SCAN_COUNTS_TO_OFFSETS_LOOP(INDX, START, END, SCANVAR)

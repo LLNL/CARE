@@ -31,7 +31,7 @@ namespace care {
       std::size_t min_block_size,  ///< The minimum block size in bytes
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);
@@ -58,7 +58,7 @@ namespace care {
       std::size_t block_coalesce_heuristic, ///< The number of blocks that should be releasable to trigger coalescing
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined (CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);
@@ -88,7 +88,7 @@ namespace care {
       std::size_t percent_coalesce_heuristic, ///< The percentage of blocks that should be releasable to trigger coalescing
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);

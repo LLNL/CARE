@@ -683,11 +683,19 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
 
    // do the sort
    if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#endif   
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
+#endif
    }
 
    // cleanup
