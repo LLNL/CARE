@@ -37,8 +37,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('implicit_conversions', default=False, description='Enable implicit conversions to/from raw pointers')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
 
-    depends_on('cmake@3.18:', type='build', when='@develop')
     depends_on('cmake@3.21:', type='build', when='+rocm')
+    depends_on('cmake@3.18:', type='build', when='@develop')
     depends_on('cmake@3.14:', type='build', when='@0.10.0:')
 
     depends_on('blt@0.6.1:', type='build', when='@develop')
