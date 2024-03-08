@@ -77,64 +77,80 @@ if(CARE_ENABLE_EXTERN_INSTANTIATE)
    list(APPEND care_sources care_inst.cpp)
 endif()
 
+set(care_includes
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
-set(care_depends chai RAJA umpire camp)
+set(care_depends chai RAJA umpire)
 
-if (ENABLE_MPI)
+if(LLNL_GLOBALID_FOUND)
+   list(APPEND care_depends llnl_globalid::llnl_globalid)
+endif()
+
+if(ENABLE_MPI)
    list(APPEND care_depends mpi)
-endif ()
-
-if (LLNL_GLOBALID_FOUND)
-   list (APPEND care_depends llnl_globalid)
 endif()
 
-if (ENABLE_CUDA)
-   # separable compilation, delay all device linking to executable linking time
-   # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
-   if (NVTOOLSEXT_FOUND)
-      list(APPEND care_depends nvtoolsext)
-   endif()
-
-   list(APPEND care_depends cub cuda)
-endif()
-
-if (ENABLE_OPENMP)
+if(ENABLE_OPENMP)
    list(APPEND care_depends openmp)
 endif()
 
-if (ENABLE_HIP)
+if(ENABLE_CUDA)
+   # separable compilation, delay all device linking to executable linking time
+   # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
+
+   if(TARGET CUDA::nvToolsExt)
+      list(APPEND care_depends CUDA::nvToolsExt)
+   endif()
+
+   list(APPEND care_depends cub::cub cuda)
+endif()
+
+
+if(ENABLE_HIP)
   list(APPEND care_depends blt::hip)
 endif ()
 
 blt_add_library(NAME care
-                SOURCES ${care_sources}
-                HEADERS ${care_headers}
-                DEPENDS_ON ${care_depends}
-                )
+                SOURCES    ${care_sources}
+                HEADERS    ${care_headers}
+                INCLUDES   ${care_includes}
+                DEPENDS_ON ${care_depends})
 
-target_include_directories(care PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(care PRIVATE ${PROJECT_BINARY_DIR}/include)
-
-install(TARGETS care
-        EXPORT  ${PROJECT_NAME}-targets 
-        DESTINATION lib
-        INCLUDES DESTINATION include/care
-        )
+################################
+# care package install
+################################
 
 install(FILES       ${care_headers}
-        DESTINATION include/care
-        )
+        DESTINATION include/care)
 
+install(TARGETS care
+        EXPORT  care-targets
+        DESTINATION lib)
 
-install(EXPORT ${PROJECT_NAME}-targets DESTINATION share/care/cmake)
+install(EXPORT care-targets
+        NAMESPACE care::
+        DESTINATION lib/cmake/care)
 
-blt_export_tpl_targets(EXPORT ${PROJECT_NAME}-targets NAMESPACE care)
+blt_install_tpl_setups(DESTINATION lib/cmake/care)
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/src/care/care-config.cmake.in
-  ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake)
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+   ${PROJECT_SOURCE_DIR}/cmake/care-config.cmake.in
+   ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+   INSTALL_DESTINATION lib/cmake/care)
+
+write_basic_package_version_file(
+   ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+   COMPATIBILITY SameMajorVersion)
 
 install(
-  FILES ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake
-  DESTINATION share/care/cmake/)
+   FILES
+      ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+      ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/modules/Findcub.cmake
+   DESTINATION
+      lib/cmake/care)
 

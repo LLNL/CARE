@@ -129,10 +129,6 @@ namespace care {
       CHAICallback::setLogData(log_chai_data);
    }
 
-   inline void chai_force_sync() {
-      chai::ArrayManager::getInstance()->enableDeviceSynchronize();
-   }
-
    // does a GPU device synchronize if there has been a kernel launch through care
    // since the last time this was called.
    CARE_DLL_API bool syncIfNeeded();
