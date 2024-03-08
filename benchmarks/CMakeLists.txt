@@ -1,9 +1,9 @@
-######################################################################################
+##############################################################################
 # Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-######################################################################################
+##############################################################################
 
 set (care_benchmark_depends care gbenchmark)
 blt_list_append(TO care_benchmark_depends ELEMENTS openmp IF ${ENABLE_OPENMP})

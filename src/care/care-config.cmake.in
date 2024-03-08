@@ -1,9 +1,9 @@
-######################################################################################
+##############################################################################
 # Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-######################################################################################
+##############################################################################
 
 set (CARE_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@)
 set (CARE_INCLUDE_DIRS @CMAKE_INSTALL_PREFIX@/include)

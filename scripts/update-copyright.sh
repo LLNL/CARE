@@ -38,7 +38,7 @@
 #=============================================================================
 # First find all the files we want to modify
 #=============================================================================
-grep -rl "the top-level LICENSE file" . --exclude-dir=.git --exclude-dir=blt --exclude-dir=cub --exclude-dir=umpire --exclude-dir=raja --exclude-dir=chai --exclude-dir=radiuss-spack-configs --exclude-dir=uberenv --exclude-dir=build --exclude=update-copyright.sh > files2change
+grep -rl "the CARE LICENSE file" . --exclude-dir=.git --exclude-dir=blt --exclude-dir=cub --exclude-dir=umpire --exclude-dir=raja --exclude-dir=chai --exclude-dir=radiuss-spack-configs --exclude-dir=uberenv --exclude-dir=build --exclude=update-copyright.sh > files2change
 
 #=============================================================================
 # Replace the old copyright dates with new dates
@@ -49,7 +49,8 @@ do
     cp $i $i.sed.bak
     #sed "s/Copyright \([0-9]\{4\}\) Lawrence Livermore National Security, LLC and other CARE developers./Copyright (c) \1-24, Lawrence Livermore National Security, LLC and CARE/" $i.sed.bak > $i
     #sed "s/See the top-level LICENSE file for details/project contributors. See the CARE LICENSE file for details/" $i.sed.bak > $i
-    sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
+    #sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
+    sed "s/######################################################################################/##############################################################################/" $i.sed.bak > $i
 done
 
 echo LICENSE

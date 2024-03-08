@@ -1,9 +1,9 @@
-######################################################################################
+##############################################################################
 # Copyright (c) 2024-24, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-######################################################################################
+##############################################################################
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
