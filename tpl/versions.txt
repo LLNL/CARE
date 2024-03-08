@@ -1,5 +1,11 @@
-BLT: 0.5.3
-CAMP: v2022.10.1
-CHAI: v2022.10.0
-RAJA: v2022.10.5
-Umpire: v2022.10.0
+##############################################################################
+# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# project contributors. See the CARE LICENSE file for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+##############################################################################
+
+BLT: 0.6.1
+CHAI: v2024.02.0
+RAJA: v2024.02.0
+Umpire: v2024.02.0

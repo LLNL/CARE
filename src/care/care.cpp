@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 // CARE config header
 #include "care/config.h"
@@ -124,11 +124,7 @@ namespace care {
    }
 
    bool syncIfNeeded() {
-#ifndef CHAI_DISABLE_RM
       return chai::ArrayManager::getInstance()->syncIfNeeded();
-#else
-      return false;
-#endif
    }
 }
 

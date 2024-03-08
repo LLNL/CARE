@@ -1,9 +1,6 @@
 [submodule "blt"]
 	path = blt
 	url = https://github.com/LLNL/blt
-[submodule "tpl/camp"]
-	path = tpl/camp
-	url = https://github.com/LLNL/camp
 [submodule "tpl/umpire"]
 	path = tpl/umpire
 	url = https://github.com/LLNL/umpire
@@ -16,10 +13,6 @@
 [submodule "tpl/cub"]
 	path = tpl/cub
 	url = https://github.com/NVlabs/cub
-[submodule ".radiuss-ci"]
-	path = .radiuss-ci
-	url = https://github.com/LLNL/radiuss-ci
-	branch = feature/umpire-ci
 [submodule "scripts/radiuss-spack-configs"]
 	path = scripts/radiuss-spack-configs
 	url = https://github.com/LLNL/radiuss-spack-configs

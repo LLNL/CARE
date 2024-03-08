@@ -1,8 +1,8 @@
 ###############################################################################
-# Copyright (c) 2022-23, Lawrence Livermore National Security, LLC and RADIUSS
-# project contributors. See the COPYRIGHT file for details.
+# Copyright (c) 2022-24, Lawrence Livermore National Security, LLC and CARE
+# project contributors. See the CARE LICENSE file for details.
 #
-# SPDX-License-Identifier: (MIT)
+# SPDX-License-Identifier: BSD-3-Clause
 ###############################################################################
 
 # DESCRIPTION:
@@ -48,11 +48,15 @@ variables:
   GITHUB_PROJECT_NAME: "CARE"
   GITHUB_PROJECT_ORG: "LLNL"
 # Set the build-and-test command.
-  JOB_CMD: "./scripts/gitlab/build_and_test.sh"
+# Nested variables are allowed and useful to customize the job command. We
+# prevent variable expansion so that you can define them at job level.
+  JOB_CMD:
+    value: "./scripts/gitlab/build_and_test.sh"
+    expand: false
 # Override the pattern describing branches that will skip the "draft PR filter
 # test".  Add protected branches here. See default value in
 # preliminary-ignore-draft-pr.yml.
-  ALWAYS_RUN_PATTERN: "^develop$|^master$|^v[0-9.]*$"
+#  ALWAYS_RUN_PATTERN: ""
 
 # We organize the build-and-test stage with sub-pipelines. Each sub-pipeline
 # corresponds to a test batch on a given machine.
@@ -69,7 +73,7 @@ stages:
     include:
       - local: '.gitlab/custom-jobs-and-variables.yml'
       - project: 'radiuss/radiuss-shared-ci'
-        ref: 'v2023.09.0'
+        ref: 'v2023.12.0'
         file: 'pipelines/${CI_MACHINE}.yml'
       - artifact: '${CI_MACHINE}-jobs.yml'
         job: 'generate-job-lists'
@@ -79,8 +83,8 @@ stages:
 
 include:
   # [Optional] checks preliminary to running the actual CI test
-  - project: 'radiuss/radiuss-shared-ci'
-    ref: 'v2023.09.0'
-    file: 'utilities/preliminary-ignore-draft-pr.yml'
+  #- project: 'radiuss/radiuss-shared-ci'
+  #  ref: 'v2023.12.0'
+  #  file: 'utilities/preliminary-ignore-draft-pr.yml'
   # pipelines subscribed by the project
   - local: '.gitlab/subscribed-pipelines.yml'

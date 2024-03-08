@@ -13,7 +13,7 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
     - name: Initialize submodules
-      run: git submodule update --init
+      run: git submodule update --init --recursive
     - name: Make build directory
       run: mkdir build
     - name: Set up CMake

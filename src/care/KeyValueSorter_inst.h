@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////
+
 // This header should be included once for each type, defined by CARE_TEMPLATE_ARRAY_TYPE,
 // in the instantiation header that is included by the host code.
 // The instantiation header should be included in one compilation unit with
