@@ -47,11 +47,7 @@ for i in `cat files2change`
 do
     echo $i
     cp $i $i.sed.bak
-    #sed "s/Copyright \([0-9]\{4\}\) Lawrence Livermore National Security, LLC and other CARE developers./Copyright (c) \1-24, Lawrence Livermore National Security, LLC and CARE/" $i.sed.bak > $i
-    #sed "s/See the top-level LICENSE file for details/project contributors. See the CARE LICENSE file for details/" $i.sed.bak > $i
-    #sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
-    #sed "s/######################################################################################/##############################################################################/" $i.sed.bak > $i
-    sed "s#//////////////////////////////////////////////////////////////////////////////////////#//////////////////////////////////////////////////////////////////////////////#" $i.sed.bak > $i
+    sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
 done
 
 echo LICENSE
