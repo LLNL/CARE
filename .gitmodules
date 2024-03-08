@@ -1,6 +1,9 @@
 [submodule "blt"]
 	path = blt
 	url = https://github.com/LLNL/blt
+[submodule "tpl/camp"]
+	path = tpl/camp
+	url = https://github.com/LLNL/camp
 [submodule "tpl/umpire"]
 	path = tpl/umpire
 	url = https://github.com/LLNL/umpire
