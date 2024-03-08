@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////
+
 #ifndef CARE_ARRAY_VIEW_H
 #define CARE_ARRAY_VIEW_H
 

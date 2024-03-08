@@ -1,3 +1,10 @@
+##############################################################################
+# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# project contributors. See the CARE LICENSE file for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+##############################################################################
+
 # Things to do before building:
 #module load opt
 #module load rocm

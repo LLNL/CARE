@@ -24,7 +24,18 @@ files_no_license=$(grep -rL "the CARE LICENSE file" . \
    --exclude-dir=chai \
    --exclude-dir=radiuss-spack-configs \
    --exclude-dir=uberenv \
-   --exclude-dir=build)
+   --exclude-dir=build \
+   --exclude=\*.swp \
+   --exclude=ci.yml \
+   --exclude=.gitignore \
+   --exclude=.gitmodules \
+   --exclude=LICENSE \
+   --exclude=COPYRIGHT \
+   --exclude=NOTICE \
+   --exclude=\*.natvis \
+   --exclude=repo.yaml \
+   --exclude=package.py \
+   --exclude=.uberenv_config.json)
 
 if [ $files_no_license ]; then
   print "${RED} [!] Some files are missing license text: ${NOCOLOR}"
