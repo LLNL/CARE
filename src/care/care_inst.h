@@ -505,19 +505,6 @@ CARE_HOST_DEVICE void InsertionSort(care::local_ptr<globalID>, int) ;
 ///////////////////////////////////////////////////////////////////////////////
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<int>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<float>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<double>, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<globalID>, int) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE void uniqLocal(care::local_ptr<int>, int&) ;
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE void uniqLocal(care::local_ptr<float>, int&) ;
