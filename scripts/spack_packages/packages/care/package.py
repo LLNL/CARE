@@ -37,16 +37,26 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('implicit_conversions', default=False, description='Enable implicit conversions to/from raw pointers')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
 
-    depends_on('cmake@3.14.5:', type='build')
-    depends_on('cmake@3.21:', when='+rocm', type='build')
+    depends_on('cmake@3.18:', type='build', when'@develop')
+    depends_on('cmake@3.21:', type='build', when'+rocm')
+    depends_on('cmake@3.14:', type='build', when'@0.10.1:')
 
+    depends_on('blt@0.6.1:', type='build', when='@develop')
     depends_on('blt@0.5.2:', type='build', when='@0.10.0:')
     depends_on('blt@0.4.1:', type='build', when='@0.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
-    depends_on('umpire~c~shared~werror@2022.10.0:', when='@0.10.0:')
-    depends_on('raja~shared~vectorization~examples~exercises@2022.10.5:', when='@0.10.0:')
-    depends_on('chai~shared+raja~examples+enable_pick@2022.10.0:', when='@0.10.0:')
+    depends_on('umpire')
+    depends_on('umpire@2024.02.0:', when='@develop')
+    depends_on('umpire@2022.10.0:', when='@0.10.0:')
+
+    depends_on('raja')
+    depends_on('raja@2024.02.0:', when='@develop')
+    depends_on('raja@2022.10.5:', when='@0.10.0:')
+
+    depends_on('chai+raja+enable_pick')
+    depends_on('chai@2024.02.0:', when='@develop')
+    depends_on('chai@2022.10.0:', when='@0.10.0:')
 
     depends_on('umpire+mpi', when='+mpi')
 
@@ -108,8 +118,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_compiler_entries(self):
         spec = self.spec
         compiler = self.compiler
-        # Default entries are already defined in CachedCMakePackage, inherit them:
-        entries = super(Care, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
 
         #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
         flags = spec.compiler_flags
@@ -146,24 +155,18 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     def initconfig_hardware_entries(self):
         spec = self.spec
         compiler = self.compiler
-        entries = super(Care, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
-        if '+cuda' in spec:
+        if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
-            entries.append(cmake_cache_string("CUDA_TOOLKIT_ROOT_DIR", spec['cuda'].prefix))
-            entries.append(cmake_cache_string("CUB_DIR", spec['cub'].prefix))
-
             cuda_for_radiuss_projects(entries, spec)
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-        if '+rocm' in spec:
+        if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_string("HIP_ROOT_DIR", spec['hip'].prefix))
-
             hip_for_radiuss_projects(entries, spec, compiler)
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
@@ -199,22 +202,25 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_string(
+            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
 
-        entries.append(cmake_cache_option('ENABLE_TESTS', '+tests' in spec))
-        entries.append(cmake_cache_option('CARE_ENABLE_TESTS', '+tests' in spec))
+        entries.append(cmake_cache_option(
+            'ENABLE_TESTS', '+tests' in spec))
 
-        entries.append(cmake_cache_option('ENABLE_BENCHMARKS', '+benchmarks' in spec))
-        entries.append(cmake_cache_option('CARE_ENABLE_BENCHMARKS', '+benchmarks' in spec))
+        entries.append(cmake_cache_option(
+            'ENABLE_BENCHMARKS', '+benchmarks' in spec))
 
-        entries.append(cmake_cache_option('ENABLE_EXAMPLES', '+examples' in spec))
-        entries.append(cmake_cache_option('CARE_ENABLE_EXAMPLES', '+examples' in spec))
+        entries.append(cmake_cache_option(
+            'ENABLE_EXAMPLES', '+examples' in spec))
 
-        entries.append(cmake_cache_option('ENABLE_DOCS', '+docs' in spec))
-        entries.append(cmake_cache_option('CARE_ENABLE_DOCS', '+docs' in spec))
+        entries.append(cmake_cache_option(
+            'ENABLE_DOCS', '+docs' in spec))
 
-        entries.append(cmake_cache_option('CARE_ENABLE_IMPLICIT_CONVERSIONS', '+implicit_conversions' in spec))
-        entries.append(cmake_cache_option('CARE_ENABLE_LOOP_FUSER', '+loop_fuser' in spec))
+        entries.append(cmake_cache_option(
+            'CARE_ENABLE_IMPLICIT_CONVERSIONS', '+implicit_conversions' in spec))
+        entries.append(cmake_cache_option(
+            'CARE_ENABLE_LOOP_FUSER', '+loop_fuser' in spec))
 
         return entries
     
