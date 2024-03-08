@@ -22,7 +22,7 @@ namespace care{
    using ActionMap = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>;
    
    //class for shared plugin functions and variables
-   class PluginData	{
+   CARE_DLL_API class PluginData	{
       public:
          PluginData() = default;
 

@@ -333,7 +333,7 @@ namespace care {
          ///
          /// @param[in] record The record associated with this callback
          ///
-         CHAICallback(const chai::PointerRecord* record);
+         CARE_DLL_API CHAICallback(const chai::PointerRecord* record);
 
          ///
          /// The callback registered with CHAI
@@ -342,9 +342,9 @@ namespace care {
          /// @param[in] action The CHAI event that was triggered
          /// @param[in] space The execution space that the CHAI event was triggered in
          ///
-         void operator()(const chai::PointerRecord* record,
-                         chai::Action action,
-                         chai::ExecutionSpace space);
+         CARE_DLL_API void operator()(const chai::PointerRecord* record,
+                                      chai::Action action,
+                                      chai::ExecutionSpace space);
 
       private:
          ///

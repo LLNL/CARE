@@ -67,7 +67,11 @@
 #ifdef CARE_INSTANTIATE
 #define CARE_EXTERN
 #else
+#if defined(_WIN32) && !defined(CARESTATICLIB)
+#define CARE_EXTERN
+#else
 #define CARE_EXTERN extern
+#endif
 #endif
 
 namespace care {

@@ -261,19 +261,25 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const i
 #endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const mapType *map, const int start,
-                             const int mapSize, const mapType num,
-                             bool returnUpperBound = false) ;
+CARE_HOST_DEVICE CARE_DLL_API int BinarySearch(const mapType *map,
+                                               const int start,
+                                               const int mapSize,
+                                               const mapType num,
+                                               bool returnUpperBound = false);
 
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const mapType> & map, const int start,
-                                  const int mapSize, const mapType num,
-                                  bool returnUpperBound = false) ;
+CARE_HOST_DEVICE CARE_DLL_API int BinarySearch(const care::host_device_ptr<const mapType> & map,
+                                               const int start,
+                                               const int mapSize,
+                                               const mapType num,
+                                               bool returnUpperBound = false);
 
 template<typename mapType>
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<mapType> & map, const int start,
-                                  const int mapSize, const mapType num,
-                                  bool returnUpperBound = false) ;
+CARE_HOST_DEVICE CARE_DLL_API int BinarySearch(const care::host_device_ptr<mapType> & map,
+                                               const int start,
+                                               const int mapSize,
+                                               const mapType num,
+                                               bool returnUpperBound = false);
 
 #ifdef CARE_PARALLEL_DEVICE
 template <typename T>

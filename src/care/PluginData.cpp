@@ -8,12 +8,12 @@
 #include "PluginData.h"
 
 namespace care{
-   const char * PluginData::s_file_name = "N/A";
-   int PluginData::s_line_number = -1;
-   bool PluginData::s_parallel_context = false;
-   ActionMap PluginData::s_post_parallel_forall_actions = ActionMap{};     
-   std::vector<const chai::PointerRecord*> PluginData::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
-   int PluginData::s_threadID = -1;
+   CARE_DLL_API const char * PluginData::s_file_name = "N/A";
+   CARE_DLL_API int PluginData::s_line_number = -1;
+   CARE_DLL_API bool PluginData::s_parallel_context = false;
+   CARE_DLL_API ActionMap PluginData::s_post_parallel_forall_actions = ActionMap{};
+   CARE_DLL_API std::vector<const chai::PointerRecord*> PluginData::s_active_pointers_in_loop = std::vector<const chai::PointerRecord*>{};
+   CARE_DLL_API int PluginData::s_threadID = -1;
 
    void PluginData::setFileName(const char * name) {PluginData::s_file_name = name;}
    

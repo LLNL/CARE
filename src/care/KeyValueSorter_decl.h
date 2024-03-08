@@ -26,8 +26,8 @@ namespace care {
 ///    this template class. Templating rather than inheritance is used
 ///    to make this GPU friendly.
 ///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType,  typename Exec=RAJAExec>
-class KeyValueSorter {};
+template <typename KeyType, typename ValueType, typename Exec=RAJAExec>
+CARE_DLL_API class KeyValueSorter {};
 
 /// LocalKeyValueSorter should be used as the type for HOSTDEV functions
 /// to indicate that the function should only be called in a RAJA context.
