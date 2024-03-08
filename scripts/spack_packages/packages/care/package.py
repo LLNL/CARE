@@ -39,7 +39,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.18:', type='build', when'@develop')
     depends_on('cmake@3.21:', type='build', when'+rocm')
-    depends_on('cmake@3.14:', type='build', when'@0.10.1:')
+    depends_on('cmake@3.14:', type='build', when'@0.10.0:')
 
     depends_on('blt@0.6.1:', type='build', when='@develop')
     depends_on('blt@0.5.2:', type='build', when='@0.10.0:')
@@ -47,6 +47,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
     depends_on('umpire')
+    depends_on('umpire+mpi', when='+mpi')
     depends_on('umpire@2024.02.0:', when='@develop')
     depends_on('umpire@2022.10.0:', when='@0.10.0:')
 
@@ -54,11 +55,11 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja@2024.02.0:', when='@develop')
     depends_on('raja@2022.10.5:', when='@0.10.0:')
 
+    # TODO: Add an enable_pick variant
     depends_on('chai+raja+enable_pick')
     depends_on('chai@2024.02.0:', when='@develop')
     depends_on('chai@2022.10.0:', when='@0.10.0:')
 
-    depends_on('umpire+mpi', when='+mpi')
 
     with when('+openmp'):
         depends_on('umpire+openmp')
@@ -157,16 +158,22 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super().initconfig_hardware_entries()
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
 
-        if "+cuda" in spec:
+        if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
+            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
+            entries.append(cmake_cache_string("CUDA_TOOLKIT_ROOT_DIR", spec['cuda'].prefix))
+            entries.append(cmake_cache_string("CUB_DIR", spec['cub'].prefix))
+
             cuda_for_radiuss_projects(entries, spec)
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-        if "+rocm" in spec:
+        if '+rocm' in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
+            entries.append(cmake_cache_string("HIP_ROOT_DIR", spec['hip'].prefix))
+
             hip_for_radiuss_projects(entries, spec, compiler)
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
@@ -219,6 +226,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option(
             'CARE_ENABLE_IMPLICIT_CONVERSIONS', '+implicit_conversions' in spec))
+
         entries.append(cmake_cache_option(
             'CARE_ENABLE_LOOP_FUSER', '+loop_fuser' in spec))
 
