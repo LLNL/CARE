@@ -40,6 +40,8 @@ endforeach()
 
 include(CMakeFindDependencyMacro)
 
+include("${CMAKE_CURRENT_LIST_DIR}/BLTSetupTargets.cmake")
+
 find_dependency(umpire NO_DEFAULT_PATH PATHS "${UMPIRE_DIR}")
 find_dependency(raja NO_DEFAULT_PATH PATHS "${RAJA_DIR}")
 find_dependency(chai NO_DEFAULT_PATH PATHS "${CHAI_DIR}")
