@@ -47,6 +47,8 @@ for i in `cat files2change`
 do
     echo $i
     cp $i $i.sed.bak
+    # For when there is only a single year in the copyright
+    # sed "s/Copyright (c) \([0-9]\{4\}\),/Copyright (c) \1-24,/" $i.sed.bak > $i
     sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
 done
 
