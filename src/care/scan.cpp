@@ -8,10 +8,6 @@
 #include "care/DefaultMacros.h"
 #include "care/scan.h"
 
-#if CARE_HAVE_LLNL_GLOBALID
-#include "LLNL_GlobalID.h"
-#endif // CARE_HAVE_LLNL_GLOBALID
-
 #define CARE_SCAN_EXEC RAJA::seq_exec
 #include "care/scan_impl.h"
 
@@ -22,36 +18,52 @@
 
 namespace care {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 // scan count accessors
 
-void getFinalScanCountFromPinned(chai::ManagedArray<int> scanvar_length, int& scanCount)
+void getFinalScanCountFromPinned(chai::ManagedArray<int> scanvar_length,
+                                 int& scanCount)
 {
    CARE_CHECKED_HOST_KERNEL_WITH_REF_START(scan_loop_check, scanCount) {
       scanCount = scanvar_length[0];
    } CARE_CHECKED_HOST_KERNEL_WITH_REF_END(scan_loop_check)
 }
 
-void getFinalScanCount(chai::ManagedArray<int> scanvar, int length, int& scanCount)
+void getFinalScanCount(chai::ManagedArray<int> scanvar,
+                       int length, int& scanCount)
 {
    scanCount = scanvar.pick(length);
 }
 
-#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void getFinalScanCountFromPinned(chai::ManagedArray<GIDTYPE> scanvar_length, GIDTYPE& scanCount)
+void getFinalScanCountFromPinned(chai::ManagedArray<size_t> scanvar_length,
+                                 size_t& scanCount)
 {
    CARE_CHECKED_HOST_KERNEL_WITH_REF_START(scan_loop_check, scanCount) {
       scanCount = scanvar_length[0];
    } CARE_CHECKED_HOST_KERNEL_WITH_REF_END(scan_loop_check)
 }
 
-void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE& scanCount)
+void getFinalScanCount(chai::ManagedArray<size_t> scanvar,
+                       int length, size_t& scanCount)
 {
    scanCount = scanvar.pick(length);
 }
 
-#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+void getFinalScanCountFromPinned(chai::ManagedArray<int64_t> scanvar_length,
+                                 int64_t& scanCount)
+{
+   CARE_CHECKED_HOST_KERNEL_WITH_REF_START(scan_loop_check, scanCount) {
+      scanCount = scanvar_length[0];
+   } CARE_CHECKED_HOST_KERNEL_WITH_REF_END(scan_loop_check)
+}
+
+void getFinalScanCount(chai::ManagedArray<int64_t> scanvar,
+                       int length, int64_t& scanCount)
+{
+   scanCount = scanvar.pick(length);
+}
+
 
 } // namespace care
 

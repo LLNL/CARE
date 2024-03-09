@@ -558,6 +558,10 @@ void fill_n(care::host_device_ptr<bool, care::NoOpAccessor>, int, const bool&) ;
 CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API
+void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, unsigned int, const int&) ;
+CARE_EXTERN template CARE_DLL_API
+void fill_n(care::host_device_ptr<unsigned int, care::NoOpAccessor>, int, const unsigned int&) ;
+CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, int, const float&) ;

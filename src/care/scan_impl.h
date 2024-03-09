@@ -20,20 +20,16 @@
 
 #include "umpire/util/backtrace.hpp"
 
-#if CARE_HAVE_LLNL_GLOBALID
-#include "LLNL_GlobalID.h"
-#endif // CARE_HAVE_LLNL_GLOBALID
-
 namespace care {
 
 #ifndef _CARE_SCAN_INST_H_
 #define _CARE_SCAN_INST_H_
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Template helper functions for implementations
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // exclusive scan functionality
 
 template <typename T, typename Exec, typename Fn, typename ValueType=T>
@@ -136,7 +132,7 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
 template <typename T, typename Exec, typename Fn, typename ValueType=T>
 void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
@@ -224,11 +220,11 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
 
 #endif // defined(_CARE_SCAN_INST_H_)
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function implementations
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // exclusive scan functionality
 
 void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
@@ -241,9 +237,24 @@ void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<int> data, chai::ManagedA
 // typesafe wrapper for out of place scan
 void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val)
-{ 
+{
     const bool inPlace = false;
     exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<int> *>(&inData), outData, size, val, inPlace);
+}
+
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val, bool inPlace)
+{
+   exclusive_scan<unsigned int, CARE_SCAN_EXEC, RAJA::operators::plus<unsigned int>>(data, outData, size,
+                                                                   RAJA::operators::plus<unsigned int>{}, val, inPlace) ;
+}
+
+// typesafe wrapper for out of place scan
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val)
+{
+    const bool inPlace = false;
+    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<unsigned int> *>(&inData), outData, size, val, inPlace);
 }
 
 void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,
@@ -256,7 +267,7 @@ void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<float> data, chai::Manage
 // typesafe wrapper for out of place scan
 void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const float> inData, chai::ManagedArray<float> outData,
                     int size, float val)
-{ 
+{
     const bool inPlace = false;
     exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<float> *>(&inData), outData, size, val, inPlace);
 }
@@ -271,31 +282,44 @@ void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<double> data, chai::Manag
 // typesafe wrapper for out of place scan
 void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const double> inData, chai::ManagedArray<double> outData,
                     int size, double val)
-{ 
+{
     const bool inPlace = false;
     exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<double> *>(&inData), outData, size, val, inPlace);
 }
 
-#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
-void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val, bool inPlace)
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<size_t> data, chai::ManagedArray<size_t> outData,
+                    int size, size_t val, bool inPlace)
 {
-   exclusive_scan<GIDTYPE, CARE_SCAN_EXEC, RAJA::operators::plus<GIDTYPE>, GIDTYPE>(data, outData, size,
-                                                                                    RAJA::operators::plus<GIDTYPE>{}, val, inPlace) ;
+   exclusive_scan<size_t, CARE_SCAN_EXEC, RAJA::operators::plus<size_t>, size_t>(data, outData, size,
+                                                                                    RAJA::operators::plus<size_t>{}, val, inPlace) ;
 }
 
 // typesafe wrapper for out of place scan
-void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val)
-{ 
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const size_t> inData, chai::ManagedArray<size_t> outData,
+                    int size, size_t val)
+{
     const bool inPlace = false;
-    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<GIDTYPE> *>(&inData), outData, size, val, inPlace);
+    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<size_t> *>(&inData), outData, size, val, inPlace);
 }
 
-#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<int64_t> data, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val, bool inPlace)
+{
+   exclusive_scan<int64_t, CARE_SCAN_EXEC, RAJA::operators::plus<int64_t>, int64_t>(data, outData, size,
+                                                                                    RAJA::operators::plus<int64_t>{}, val, inPlace) ;
+}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// typesafe wrapper for out of place scan
+void exclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const int64_t> inData, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val)
+{
+    const bool inPlace = false;
+    exclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<int64_t> *>(&inData), outData, size, val, inPlace);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
 
 void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<int> data, chai::ManagedArray<int> outData,
@@ -311,6 +335,21 @@ void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const int> inData, chai::
 {
     const bool inPlace = false;
     inclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<int> *>(&inData), outData, size, inPlace);
+}
+
+void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, bool inPlace)
+{
+   inclusive_scan<unsigned int, CARE_SCAN_EXEC, RAJA::operators::plus<unsigned int>>(data, outData, size,
+                                                                   RAJA::operators::plus<unsigned int>{}, inPlace) ;
+}
+
+// typesafe wrapper for out of place scan
+void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
+                    int size)
+{
+    const bool inPlace = false;
+    inclusive_scan(CARE_SCAN_EXEC{}, *reinterpret_cast<chai::ManagedArray<unsigned int> *>(&inData), outData, size, inPlace);
 }
 
 void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<float> data, chai::ManagedArray<float> outData,

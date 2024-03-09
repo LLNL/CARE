@@ -53,9 +53,12 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) for (int INDEX = START_INDEX; INDEX < (int)END_INDEX; ++INDEX) CARE_NEST_BEGIN(CHECK)
+#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_NEST_BEGIN(CHECK) \
+auto _care_for_loop_end_index = END_INDEX; \
+decltype(_care_for_loop_end_index) _care_for_loop_begin_index = START_INDEX; \
+for (auto INDEX = _care_for_loop_begin_index; INDEX < _care_for_loop_end_index; ++INDEX)  {
 
-#define CARE_CHECKED_FOR_LOOP_END(CHECK) CARE_NEST_END(CHECK)
+#define CARE_CHECKED_FOR_LOOP_END(CHECK) } CARE_NEST_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -78,10 +81,13 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { int const __end_ndx = END_INDEX; OMP_FOR_BEGIN for (int INDEX = START_INDEX; INDEX < __end_ndx; ++INDEX) CARE_NEST_BEGIN(CHECK)
+#define CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) {\
+ CARE_NEST_BEGIN(CHECK) \
+ auto const _care_openmp_for_loop_end_ndx = END_INDEX; \
+ decltype(_care_openmp_for_loop_end_ndx) _care_openmp_for_loop_begin_ndx = START_INDEX; \
+OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_openmp_for_loop_end_ndx; ++INDEX) {\
 
-#define CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK) CARE_NEST_END(CHECK) OMP_FOR_END }
-
+#define CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK) } OMP_FOR_END CARE_NEST_END(CHECK) }
 
 
 
@@ -540,9 +546,11 @@
 #endif
 
 #define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
-   if (END_INDEX > START_INDEX) { \
+   auto _care_checked_loop_end = END_INDEX; \
+   decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
+   if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) { \
+      care::forall(care::parallel{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
          CARE_SET_THREAD_ID(INDEX)
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
