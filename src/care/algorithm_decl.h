@@ -402,6 +402,56 @@ CARE_HOST_DEVICE inline void InsertionSort(care::local_ptr<T> array, int len)
    }
 }
 
+/************************************************************************
+ * Function  : LocalSortPairs
+ * Author(s) : Alan Dayton
+ * Purpose   : Simple insertion simultaneous sort function.  Should only
+ *             be used on small arrays - otherwise use the qsort function
+ *             from the standard C library.  Sorts in ascending order.
+ ************************************************************************/
+template <class T, class U, class Comparator>
+CARE_HOST_DEVICE void LocalSortPairs(int length,
+                                     care::local_ptr<T> sortArray,
+                                     care::local_ptr<U> pairArray,
+                                     Comparator comparator);
+
+template <class T, class U, class Comparator>
+CARE_HOST_DEVICE void LocalSortPairs(int length,
+                                     care::local_ptr<T> sortArray,
+                                     care::local_ptr<U> pairArray,
+                                     Comparator comparator)
+{
+   for (int i = 1; i < length; ++i) {
+      const T currentSortArrayEntry = sortArray[i];
+      const U currentPairArrayEntry = pairArray[i];
+
+      int j = i - 1;
+
+      while (j >= 0 && comparator(currentSortArrayEntry, sortArray[j])) {
+         sortArray[j + 1] = sortArray[j];
+         pairArray[j + 1] = pairArray[j];
+
+         --j;
+      }
+
+      sortArray[j + 1] = currentSortArrayEntry;
+      pairArray[j + 1] = currentPairArrayEntry;
+   }
+}
+
+template <class T, class U>
+CARE_HOST_DEVICE void LocalSortPairs(int length,
+                                     care::local_ptr<T> sortArray,
+                                     care::local_ptr<U> pairArray);
+
+template <class T, class U>
+CARE_HOST_DEVICE void LocalSortPairs(int length,
+                                     care::local_ptr<T> sortArray,
+                                     care::local_ptr<U> pairArray) {
+   LocalSortPairs(length, sortArray, pairArray,
+                  [] (const T& val1, const T& val2) { return val1 < val2; });
+}
+
 template <typename T>
 CARE_HOST_DEVICE void sortLocal(care::local_ptr<T> array, int len);
 
