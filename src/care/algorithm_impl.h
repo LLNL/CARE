@@ -578,7 +578,7 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> Ar
                            care::host_device_ptr<T, Accessor> & outArray, int & newLen)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
-   auto * rawData = getter.getRawArrayData(Array);
+   const auto * rawData = getter.getConstRawArrayData(Array);
    newLen = 0 ;
    care::host_ptr<T> arrout = nullptr ;
    outArray = nullptr;
@@ -664,7 +664,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
    care::host_device_ptr<T> result(len,"radix_sort_result");
-   auto * rawData = getter.getRawArrayData(Array) + start;
+   const auto * rawData = getter.getConstRawArrayData(Array) + start;
    auto * rawResult = getter.getRawArrayData(result);
    // get the temp storage length
    char * d_temp_storage = nullptr;
@@ -683,11 +683,19 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
 
    // do the sort
    if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#endif   
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
+#endif
    }
 
    // cleanup

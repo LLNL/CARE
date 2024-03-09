@@ -37,7 +37,7 @@ namespace care {
          ///
          /// Default constructor
          ///
-         CARE_HOST_DEVICE local_ptr() = default;
+         local_ptr() = default;
 
          ///
          /// @author Alan Dayton
@@ -58,7 +58,7 @@ namespace care {
          ///
          /// Copy constructor
          ///
-         CARE_HOST_DEVICE local_ptr(local_ptr const &ptr) = default;
+         local_ptr(local_ptr const &ptr) = default;
 
          ///
          /// @author Peter Robinson

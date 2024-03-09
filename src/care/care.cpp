@@ -31,7 +31,7 @@ namespace care {
       std::size_t min_block_size,  ///< The minimum block size in bytes
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);
@@ -58,7 +58,7 @@ namespace care {
       std::size_t block_coalesce_heuristic, ///< The number of blocks that should be releasable to trigger coalescing
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined (CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);
@@ -88,7 +88,7 @@ namespace care {
       std::size_t percent_coalesce_heuristic, ///< The percentage of blocks that should be releasable to trigger coalescing
       bool /* grows */)
    {
-#ifndef CHAI_DISABLE_RM
+#if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
 
       auto allocator = rm.getAllocator(resource);
@@ -128,9 +128,11 @@ namespace care {
    }
 }
 
-#ifndef CARE_DISABLE_RAJAPLUGIN
+// TODO: Fix conflicting requirement on _WIN32
+#if !defined(_WIN32)
+#if !defined(CARE_DISABLE_RAJAPLUGIN)
 #if defined(_WIN32) && !defined(CARESTATICLIB)
-#ifdef CARE_EXPORTS
+#if defined(CARE_EXPORTS)
 
 #include "RAJA/util/PluginStrategy.hpp"
 RAJA_INSTANTIATE_REGISTRY(RAJA::util::PluginRegistry);
@@ -143,6 +145,7 @@ namespace RAJA
 	}
 }  // namespace RAJA
 
+#endif
 #endif
 #endif
 #endif

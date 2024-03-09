@@ -20,15 +20,15 @@
 #include "LLNL_GlobalID.h"
 #endif // CARE_HAVE_LLNL_GLOBALID
 
-#if CARE_ENABLE_PINNED_MEMORY_FOR_SCANS
+#if CARE_ENABLE_PINNED_MEMORY_FOR_SCANS && defined(CHAI_ENABLE_PINNED)
 #define CARE_SCANVARLENGTHNAME_SPACE chai::PINNED
 #else
 #define CARE_SCANVARLENGTHNAME_SPACE chai::GPU
-#endif // CARE_ENABLE_PINNED_MEMORY_FOR_SCANS
+#endif // CARE_ENABLE_PINNED_MEMORY_FOR_SCANS && defined(CHAI_ENABLE_PINNED)
 
 namespace care {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 // exclusive scan functionality
 
 CARE_DLL_API
@@ -38,6 +38,13 @@ void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedA
 CARE_DLL_API
 void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val);
 
 #ifdef CARE_PARALLEL_DEVICE
 
@@ -48,6 +55,14 @@ void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedA
 CARE_DLL_API
 void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
                     int size, int val);
+
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
+                    int size, unsigned int val);
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
@@ -91,31 +106,50 @@ void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 CARE_DLL_API
-void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val, bool inPlace);
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<size_t> data, chai::ManagedArray<size_t> outData,
+                    int size, size_t val, bool inPlace);
 // typesafe wrapper for out of place scan
 CARE_DLL_API
-void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val);
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const size_t> inData, chai::ManagedArray<size_t> outData,
+                    int size, size_t val);
 
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
-void exclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val, bool inPlace);
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<size_t> data, chai::ManagedArray<size_t> outData,
+                    int size, size_t val, bool inPlace);
+
 // typesafe wrapper for out of place scan
 CARE_DLL_API
-void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
-                    int size, GIDTYPE val);
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const size_t> inData, chai::ManagedArray<size_t> outData,
+                    int size, size_t val);
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<int64_t> data, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void exclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int64_t> inData, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val);
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef CARE_PARALLEL_DEVICE
+
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<int64_t> data, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val, bool inPlace);
+
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void exclusive_scan(RAJADeviceExec, chai::ManagedArray<const int64_t> inData, chai::ManagedArray<int64_t> outData,
+                    int size, int64_t val);
+
+#endif // defined(CARE_PARALLEL_DEVICE)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // inclusive scan functionality
 
 CARE_DLL_API
@@ -124,6 +158,13 @@ void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<int> data, chai::ManagedA
 // typesafe wrapper for out of place scan
 CARE_DLL_API
 void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+                    int size) ;
+CARE_DLL_API
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
                     int size) ;
 
 #ifdef CARE_PARALLEL_DEVICE
@@ -134,6 +175,13 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<int> data, chai::ManagedA
 // typesafe wrapper for out of place scan
 CARE_DLL_API
 void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const int> inData, chai::ManagedArray<int> outData,
+                    int size) ;
+CARE_DLL_API
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<unsigned int> data, chai::ManagedArray<unsigned int> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const unsigned int> inData, chai::ManagedArray<unsigned int> outData,
                     int size) ;
 
 #endif // defined(CARE_PARALLEL_DEVICE)
@@ -178,31 +226,49 @@ void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const double> inData, cha
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
 
 CARE_DLL_API
-void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<size_t> data, chai::ManagedArray<size_t> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
 CARE_DLL_API
-void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const size_t> inData, chai::ManagedArray<size_t> outData,
                     int size) ;
 
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_DLL_API
-void inclusive_scan(RAJADeviceExec, chai::ManagedArray<GIDTYPE> data, chai::ManagedArray<GIDTYPE> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<size_t> data, chai::ManagedArray<size_t> outData,
                     int size, bool inPlace);
 // typesafe wrapper for out of place scan
 CARE_DLL_API
-void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const GIDTYPE> inData, chai::ManagedArray<GIDTYPE> outData,
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const size_t> inData, chai::ManagedArray<size_t> outData,
                     int size) ;
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+CARE_DLL_API
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<int64_t> data, chai::ManagedArray<int64_t> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void inclusive_scan(RAJA::seq_exec, chai::ManagedArray<const int64_t> inData, chai::ManagedArray<int64_t> outData,
+                    int size) ;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef CARE_PARALLEL_DEVICE
+
+CARE_DLL_API
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<int64_t> data, chai::ManagedArray<int64_t> outData,
+                    int size, bool inPlace);
+// typesafe wrapper for out of place scan
+CARE_DLL_API
+void inclusive_scan(RAJADeviceExec, chai::ManagedArray<const int64_t> inData, chai::ManagedArray<int64_t> outData,
+                    int size) ;
+
+#endif // defined(CARE_PARALLEL_DEVICE)
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // scan count accessors
 
 CARE_DLL_API
@@ -210,14 +276,22 @@ void getFinalScanCountFromPinned(chai::ManagedArray<int> scanvar_length, int& sc
 CARE_DLL_API
 void getFinalScanCount(chai::ManagedArray<int> scanvar, int length, int& scanCount) ;
 
-#if CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+CARE_DLL_API
+void getFinalScanCountFromPinned(chai::ManagedArray<unsigned int> scanvar_length, unsigned int& scanCount) ;
+CARE_DLL_API
+void getFinalScanCount(chai::ManagedArray<unsigned int> scanvar, int length, unsigned int& scanCount) ;
+
 
 CARE_DLL_API
-void getFinalScanCountFromPinned(chai::ManagedArray<GIDTYPE> scanvar_length, GIDTYPE& scanCount) ;
+void getFinalScanCountFromPinned(chai::ManagedArray<size_t> scanvar_length, size_t& scanCount) ;
 CARE_DLL_API
-void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE& scanCount) ;
+void getFinalScanCount(chai::ManagedArray<size_t> scanvar, int length, size_t& scanCount) ;
 
-#endif // CARE_HAVE_LLNL_GLOBALID && GLOBALID_IS_64BIT
+CARE_DLL_API
+void getFinalScanCountFromPinned(chai::ManagedArray<int64_t> scanvar_length, int64_t& scanCount) ;
+CARE_DLL_API
+void getFinalScanCount(chai::ManagedArray<int64_t> scanvar, int length, int64_t& scanCount) ;
+
 
 } // namespace care
 
@@ -245,6 +319,7 @@ void getFinalScanCount(chai::ManagedArray<GIDTYPE> scanvar, int length, GIDTYPE&
 // scan var is an managed array of ints
 
 using ScanVar = chai::ManagedArray<int>;
+using ScanVar64 = chai::ManagedArray<size_t>;
 
 #if CARE_HAVE_LLNL_GLOBALID
 
@@ -322,6 +397,20 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
    SCANVARNAME(SCANINDX).free(); \
    SCANVARLENGTHNAME(SCANINDX).free(); \
    }
+
+#define SCAN_LOOP_64(INDX, START, END, SCANINDX, SCANINDX_OFFSET, EXPR) \
+   { \
+      int const SCANVARSTARTNAME(SCANINDX) = START; \
+      ScanVar64 SCANVARNAME(SCANINDX)(END-START+1); \
+      ScanVar64 SCANVARLENGTHNAME(SCANINDX)(1, CARE_SCANVARLENGTHNAME_SPACE); \
+      SCAN_LOOP_INIT(INDX, SCANVARSTARTNAME(SCANINDX), END, SCANVARNAME(SCANINDX), SCANVARLENGTHNAME(SCANINDX), SCANINDX_OFFSET, EXPR); \
+      int const SCANVARENDNAME(SCANINDX) = END; \
+      CARE_CHECKED_PARALLEL_LOOP_START(INDX, START, END, scan_loop_check) { \
+         if (INDX == SCANVARENDNAME(SCANINDX) -1) { \
+            SCANVARLENGTHNAME(SCANINDX)[0] = SCANVARNAME(SCANINDX)[SCANVARENDNAME(SCANINDX)-START]; \
+         } \
+         const size_t SCANINDX = SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)]; \
+         if (SCANINDX != SCANVARNAME(SCANINDX)[INDX-SCANVARSTARTNAME(SCANINDX)+1]) {
 
 #if CARE_HAVE_LLNL_GLOBALID
 

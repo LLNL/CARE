@@ -133,16 +133,21 @@ namespace care {
 
       ///
       /// @author Peter Robinson
-      /// @note   cannot make this CARE_HOST_DEVICE due to use of standard library.
-      //          The test file TestArrayUtils.cpp gives a warning about calling a
-      //          __host__ function from a __host__ __device__ function when compiled on with CUDA.
+      ///
       /// Construct from a chai::ManagedArray containing non-const elements
       ///
       template <bool B = std::is_const<T>::value,
                 typename std::enable_if<B, int>::type = 1>
-      host_device_ptr<T, Accessor>(MAU const & other) : MA (other), Accessor<T>() {Accessor<T>::set_data(MA::data(chai::CPU, false));}
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor>(MAU const & other)
+         : MA (other),
+           Accessor<T>()
+      {
+#if !defined (CARE_DEVICE_COMPILE)
+         Accessor<T>::set_data(MA::data(chai::CPU, false));
+#endif
+      }
 
-#if defined (CHAI_DISABLE_RM)
+#if defined (CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       ///
       /// @author Peter Robinson
       ///
@@ -254,7 +259,7 @@ namespace care {
 
       host_device_ptr<T, Accessor> & realloc(size_t elems) {
          // If the managed array is empty, we register the callback on reallocation.
-         bool doRegisterCallback = (MA::m_elems == 0 && MA::m_active_base_pointer == nullptr);
+         bool doRegisterCallback = (MA::m_size == 0 && MA::m_active_base_pointer == nullptr);
          MA::reallocate(elems);
          Accessor<T>::set_size(elems);
          Accessor<T>::set_data(MA::data(chai::CPU,false));
@@ -388,13 +393,9 @@ namespace care {
          registerCallbacks(name);
 
 #if !defined(CHAI_DISABLE_RM)
-         // Update the size if cast from a different underlying data type.
+         // Let the pointer record be source of truth for the size.
          if (MA::m_pointer_record && MA::m_pointer_record->m_size > 0) {
-            MA::m_elems = MA::m_pointer_record->m_size / sizeof(T);
-
-            if (MA::m_elems * sizeof(T) != MA::m_pointer_record->m_size) {
-               fprintf(stderr, "[CARE] host_device_ptr<T>::namePointer performed an unsafe cast to a different underlying type. Expect errors!\n");
-            }
+            MA::m_size = MA::m_pointer_record->m_size;
          }
 #endif
          Accessor<T>::set_name(name);
@@ -417,16 +418,70 @@ namespace care {
          }
       }
 
-      void freeDeviceMemory(bool deregisterPointer=true) {
+            // frees device memory, ensuring that *CPU_destination is updated with valid CPU data.
+      // if CPU_destination is nullptr, that indicates CPU data is not needed so no work should be done to get it.
+      //    This best supports use cases where the user already has a handle on CPU data that they know is up to date.
+      // if *CPU_destination is nullptr, the semantics is 0-copy if you can, so after this call *CPU_destination will
+      //     be aliased to the CPU data of this host_device_ptr. if CHAI_THIN_GPU_ALLOCATE is defined, this is the same
+      //     as the GPU data. It's up to the user to sort out whether that pointer needs to be freed with umpire calls
+      //     or with raw free commands.
+      // if *CPU_destination is not nullptr and is a different address from the host_device_ptr CPU data, then
+      //     *CPU_destination will be updated with a deep copy of this data
+      //
+      // TODO: Should this really live in chai::ManagedArray?
+      void freeDeviceMemory(T_non_const ** CPU_destination,
+                            size_t elems,
+                            bool deregisterPointer=true) {
 #if !defined(CHAI_DISABLE_RM) 
 #if defined(CHAI_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
-         MA::move(chai::CPU);
+         if (CPU_destination != nullptr) {
+            MA::move(chai::CPU);
+
+            // if our active pointer is different than the CPU destination
+            if (MA::m_active_pointer != *CPU_destination) {
+               // and the cpu destination is nullptr,
+               if (*CPU_destination == nullptr) {
+                  // semantics is moving our pointer to that pointer
+                  *CPU_destination = const_cast<T_non_const *> (MA::m_active_pointer);
+               }
+               // if the CPU destination is not nullptr
+               else {
+                  // semantics is copying from our pointer to the CPU_destination
+                  std::copy_n(MA::m_active_pointer, elems, *CPU_destination);
+               }
+            }
+            // otherwise our active pointer is the cpu destination so we don't
+            // have to do anything other than the move that just happened
+         }
+
          MA::free(chai::GPU);
 #endif
          if (deregisterPointer) {
             auto arrayManager = chai::ArrayManager::getInstance();
             arrayManager->deregisterPointer(MA::m_pointer_record,true);
             CHAICallback::deregisterRecord(MA::m_pointer_record);
+         }
+#else // no resource manager active
+#if defined(CHAI_THIN_GPU_ALLOCATE) // GPU allocated thin wrapped
+         // ... then sync to ensure data is up to date
+         // this needs to be called even without a CPU_destination in case the pointer is reused
+         chai::ArrayManager::getInstance()->syncIfNeeded();
+#endif
+         // if there is a pointer to update ...
+         if (CPU_destination != nullptr) {
+            // if our active pointer is different than the CPU destination
+            if (MA::m_active_pointer != *CPU_destination) {
+               // and the cpu destination is nullptr,
+               if (*CPU_destination == nullptr) {
+                  // semantics is moving our pointer to that pointer
+                  *CPU_destination = const_cast<T_non_const *> (MA::m_active_pointer);
+               }
+               // if the CPU destination is not nullptr
+               else {
+                  // semantics is copying from our pointer to the CPU_destination
+                  std::copy_n(MA::m_active_pointer, elems, *CPU_destination);
+               }
+            }
          }
 #endif
       }

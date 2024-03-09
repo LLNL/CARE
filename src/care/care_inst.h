@@ -67,7 +67,11 @@
 #ifdef CARE_INSTANTIATE
 #define CARE_EXTERN
 #else
+#if defined(_WIN32) && !defined(CARESTATICLIB)
+#define CARE_EXTERN
+#else
 #define CARE_EXTERN extern
+#endif
 #endif
 
 namespace care {
@@ -505,19 +509,6 @@ CARE_HOST_DEVICE void InsertionSort(care::local_ptr<globalID>, int) ;
 ///////////////////////////////////////////////////////////////////////////////
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<int>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<float>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<double>, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void sortLocal(care::local_ptr<globalID>, int) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE void uniqLocal(care::local_ptr<int>, int&) ;
 CARE_EXTERN template CARE_DLL_API
 CARE_HOST_DEVICE void uniqLocal(care::local_ptr<float>, int&) ;
@@ -566,6 +557,10 @@ CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<bool, care::NoOpAccessor>, int, const bool&) ;
 CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, int, const int&) ;
+CARE_EXTERN template CARE_DLL_API
+void fill_n(care::host_device_ptr<int, care::NoOpAccessor>, unsigned int, const int&) ;
+CARE_EXTERN template CARE_DLL_API
+void fill_n(care::host_device_ptr<unsigned int, care::NoOpAccessor>, int, const unsigned int&) ;
 CARE_EXTERN template CARE_DLL_API
 void fill_n(care::host_device_ptr<float, care::NoOpAccessor>, int, const int&) ;
 CARE_EXTERN template CARE_DLL_API

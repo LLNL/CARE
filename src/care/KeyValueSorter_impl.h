@@ -115,6 +115,10 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    // Now sort
    if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
 #if defined(__CUDACC__)
       cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
                                       rawKeyData, rawKeyResult,
@@ -125,6 +129,10 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                                       rawKeyData, rawKeyResult,
                                       rawValueData, rawValueResult,
                                       len);
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
 #endif
 
       tmpManaged.free();
