@@ -133,14 +133,19 @@ namespace care {
 
       ///
       /// @author Peter Robinson
-      /// @note   cannot make this CARE_HOST_DEVICE due to use of standard library.
-      //          The test file TestArrayUtils.cpp gives a warning about calling a
-      //          __host__ function from a __host__ __device__ function when compiled on with CUDA.
+      ///
       /// Construct from a chai::ManagedArray containing non-const elements
       ///
       template <bool B = std::is_const<T>::value,
                 typename std::enable_if<B, int>::type = 1>
-      host_device_ptr<T, Accessor>(MAU const & other) : MA (other), Accessor<T>() {Accessor<T>::set_data(MA::data(chai::CPU, false));}
+      CARE_HOST_DEVICE host_device_ptr<T, Accessor>(MAU const & other)
+         : MA (other),
+           Accessor<T>()
+      {
+#if !defined (CARE_DEVICE_COMPILE)
+         Accessor<T>::set_data(MA::data(chai::CPU, false));
+#endif
+      }
 
 #if defined (CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       ///
@@ -457,12 +462,13 @@ namespace care {
             CHAICallback::deregisterRecord(MA::m_pointer_record);
          }
 #else // no resource manager active
+#if defined(CHAI_THIN_GPU_ALLOCATE) // GPU allocated thin wrapped
+         // ... then sync to ensure data is up to date
+         // this needs to be called even without a CPU_destination in case the pointer is reused
+         chai::ArrayManager::getInstance()->syncIfNeeded();
+#endif
          // if there is a pointer to update ...
          if (CPU_destination != nullptr) {
-#if defined(CHAI_THIN_GPU_ALLOCATE) // GPU allocated thin wrapped
-            // ... then sync to ensure data is up to date
-            chai::ArrayManager::getInstance()->syncIfNeeded();
-#endif
             // if our active pointer is different than the CPU destination
             if (MA::m_active_pointer != *CPU_destination) {
                // and the cpu destination is nullptr,

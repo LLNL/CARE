@@ -128,9 +128,11 @@ namespace care {
    }
 }
 
-#ifndef CARE_DISABLE_RAJAPLUGIN
+// TODO: Fix conflicting requirement on _WIN32
+#if !defined(_WIN32)
+#if !defined(CARE_DISABLE_RAJAPLUGIN)
 #if defined(_WIN32) && !defined(CARESTATICLIB)
-#ifdef CARE_EXPORTS
+#if defined(CARE_EXPORTS)
 
 #include "RAJA/util/PluginStrategy.hpp"
 RAJA_INSTANTIATE_REGISTRY(RAJA::util::PluginRegistry);
@@ -143,6 +145,7 @@ namespace RAJA
 	}
 }  // namespace RAJA
 
+#endif
 #endif
 #endif
 #endif
