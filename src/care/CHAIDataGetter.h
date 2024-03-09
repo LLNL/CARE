@@ -31,6 +31,11 @@ class CHAIDataGetter {
          return (T*)data.getPointer(chai::CPU);
       }
 
+      const T * getConstRawArrayData(chai::ManagedArray<T> data) {
+         data.move(chai::CPU);
+         return (const T*)data.getPointer(chai::CPU);
+      }
+
       static const auto ChaiPolicy = chai::CPU;
 };
 
@@ -47,6 +52,11 @@ class CHAIDataGetter<T, RAJADeviceExec> {
          return (T*)data.getPointer(chai::GPU);
       }
 
+      const T * getConstRawArrayData(chai::ManagedArray<T> data) {
+         data.move(chai::GPU);
+         return (const T*)data.getPointer(chai::GPU);
+      }
+
       static const auto ChaiPolicy = chai::GPU;
 };
 
@@ -60,6 +70,11 @@ class CHAIDataGetter<globalID, RAJADeviceExec> {
       GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::GPU);
          data.registerTouch(chai::GPU);
+         return (GIDTYPE*)data.getPointer(chai::GPU);
+      }
+
+      const GIDTYPE * getConstRawArrayData(chai::ManagedArray<globalID> data) {
+         data.move(chai::GPU);
          return (GIDTYPE*)data.getPointer(chai::GPU);
       }
 
@@ -80,6 +95,11 @@ class CHAIDataGetter<globalID, RAJA::seq_exec> {
       GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::CPU);
          data.registerTouch(chai::CPU);
+         return (GIDTYPE*)data.getPointer(chai::CPU);
+      }
+
+      const GIDTYPE * getConstRawArrayData(chai::ManagedArray<globalID> data) {
+         data.move(chai::CPU);
          return (GIDTYPE*)data.getPointer(chai::CPU);
       }
 
