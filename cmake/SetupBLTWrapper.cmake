@@ -24,7 +24,10 @@ if(NOT BLT_LOADED)
 
    include(CMakeDependentOption)
 
-   option(ENABLE_BENCHMARKS "Enables benchmarks" ON)
+   option(ENABLE_DOCS       "Enables documentation" OFF)
+   option(ENABLE_EXAMPLES   "Enables examples" OFF)
+   option(ENABLE_TESTS      "Enables tests" ON)
+   option(ENABLE_BENCHMARKS "Enables benchmarks" OFF)
 
    option(ENABLE_GIT "Enables Git support" OFF)
 
