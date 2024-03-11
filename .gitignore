@@ -1,6 +1,9 @@
 *.swp
 *.swo
-build*
-*.vcxproj.user
-*/x64/*/
-*.aps
+build
+build-*
+build_*/*
+hc-*
+*.orig
+*.vscode
+spack-*.txt

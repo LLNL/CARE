@@ -1,14 +1,11 @@
-.. ######################################################################################
-   # Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-   # See the top-level LICENSE file for details.
+.. ##############################################################################
+   # Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+   # project contributors. See the CARE LICENSE file for details.
    #
    # SPDX-License-Identifier: BSD-3-Clause
-   ######################################################################################
+   ##############################################################################
 
-==============================
-CARE: CHAI and RAJA Extensions
-==============================
-
+=========================
 Installation Instructions
 =========================
 
@@ -25,4 +22,4 @@ CMake Options
 
 ``-DCARE_LOOP_VVERBOSE_ENABLED=ON|OFF`` Controls whether or not the contents of all host_device_ptr's can be dumped after every RAJA loop.
 
-``-DCARE_HAVE_LOOP_FUSER=ON|OFF`` Controls whether or not the loop fusion (CUDA kernel fusion) capability is turned on.
+``-DCARE_ENABLE_LOOP_FUSER=ON|OFF`` Controls whether or not the loop fusion (CUDA kernel fusion) capability is turned on.

@@ -1,33 +1,34 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//////////////////////////////////////////////////////////////////////////////
 
 #include "care/config.h"
 
-#define GPU_ACTIVE
-
 #include "gtest/gtest.h"
 
+#include "care/Setup.h"
 #include "care/SortFuser.h"
-#include "care/care.h"
+#include "care/detail/test_utils.h"
 
 using namespace care;
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
+GPU_TEST(TestPacker, gpu_initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing care::SortFuser\n");
+}
 
-using int_ptr = host_device_ptr<int>;
-
-CUDA_TEST(TestPacker, testFuseSort) {
-   care::initialize_pool("PINNED","PINNED_pool",chai::PINNED,128*1024*1024,128*1024*1024,true);
-   care::initialize_pool("DEVICE","DEVICE_pool",chai::GPU,128*1024*1024,128*1024*1024,true);
+GPU_TEST(TestPacker, testFuseSort) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(i,0,N) {
+   CARE_STREAM_LOOP(i,0,N) {
       arr1[i] = N-1-i;
       arr2[i] = N+3-i;
-   }
-   LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    SortFuser<int> sorter = SortFuser<int>();
    sorter.reset();
@@ -36,24 +37,23 @@ CUDA_TEST(TestPacker, testFuseSort) {
    sorter.sort();
    int_ptr concatanated = sorter.getConcatenatedResult();
    
-   LOOP_SEQUENTIAL(i,0,N) {
+   CARE_SEQUENTIAL_LOOP(i,0,N) {
       EXPECT_EQ(arr1[i],concatanated[i]);
       EXPECT_EQ(arr2[i],concatanated[i+N]);
       EXPECT_EQ(arr1[i],i);
       EXPECT_EQ(arr2[i],i+4);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
 }
 
-CUDA_TEST(TestPacker, testFuseUniq) {
+GPU_TEST(TestPacker, testFuseUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(i,0,N) {
+   CARE_STREAM_LOOP(i,0,N) {
       arr1[i] = i - i%2;
       arr2[i] = i + N/2- i%2; 
-   }
-   LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    int_ptr out1,out2;
    int len1, len2;
@@ -66,31 +66,30 @@ CUDA_TEST(TestPacker, testFuseUniq) {
    int_ptr concatanated_lengths = sorter.getConcatenatedLengths();
    
    EXPECT_EQ(len1,3); 
-   LOOP_SEQUENTIAL(i,0,len1) {
+   CARE_SEQUENTIAL_LOOP(i,0,len1) {
       EXPECT_EQ(out1[i],concatanated[i]);
       EXPECT_EQ(out1[i],i*2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    
    EXPECT_EQ(len2,3); 
-   LOOP_SEQUENTIAL(i,0,len2) {
+   CARE_SEQUENTIAL_LOOP(i,0,len2) {
       EXPECT_EQ(out2[i],concatanated[i+len1]);
       EXPECT_EQ(out2[i],i*2+N/2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    EXPECT_EQ(concatanated_lengths.pick(0), len1);
    EXPECT_EQ(concatanated_lengths.pick(1), len2);
 }
 
-CUDA_TEST(TestPacker, testFuseSortUniq) {
+GPU_TEST(TestPacker, testFuseSortUniq) {
    int N = 5; 
    int_ptr arr1(N); 
    int_ptr arr2(N);
-   LOOP_STREAM(j,0,N) {
+   CARE_STREAM_LOOP(j,0,N) {
       int i = N-1 -j;
       arr1[j] = i - i%2;
       arr2[j] = i + N/2- i%2; 
-   }
-   LOOP_STREAM_END
+   } CARE_STREAM_LOOP_END
 
    int_ptr out1,out2;
    int len1, len2;
@@ -103,23 +102,23 @@ CUDA_TEST(TestPacker, testFuseSortUniq) {
    int_ptr concatanated_lengths = sorter.getConcatenatedLengths();
    
    EXPECT_EQ(len1,3); 
-   LOOP_SEQUENTIAL(i,0,len1) {
+   CARE_SEQUENTIAL_LOOP(i,0,len1) {
       EXPECT_EQ(out1[i],concatanated[i]);
       EXPECT_EQ(out1[i],i*2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
    
    EXPECT_EQ(len2,3); 
-   LOOP_SEQUENTIAL(i,0,len2) {
+   CARE_SEQUENTIAL_LOOP(i,0,len2) {
       EXPECT_EQ(out2[i],concatanated[i+len1]);
       EXPECT_EQ(out2[i],i*2+N/2);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 
    EXPECT_EQ(concatanated_lengths.pick(0), len1);
    EXPECT_EQ(concatanated_lengths.pick(1), len2);
 }
 
 
-CUDA_TEST(TestPacker, testFuseSortUniqMissingArrays) {
+GPU_TEST(TestPacker, testFuseSortUniqMissingArrays) {
    int a0[3] = {15,16,16};
    int a1[18] = {5,6,6,7,7,8,8,10,11,11,12,12,13,13,17,17,18,18}; 
    int a2[3] = {15,16,16};

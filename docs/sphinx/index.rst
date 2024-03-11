@@ -1,9 +1,9 @@
-.. ######################################################################################
-   # Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-   # See the top-level LICENSE file for details.
+.. ##############################################################################
+   # Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+   # project contributors. See the CARE LICENSE file for details.
    #
    # SPDX-License-Identifier: BSD-3-Clause
-   ######################################################################################
+   ##############################################################################
 
 .. CARE documentation master file, created by
    sphinx-quickstart on Wed Oct  9 12:25:31 2019.
@@ -27,7 +27,6 @@ Required Dependencies
 
 Optional Dependencies
 =====================
-* Basil (optional)
 * Cub (optional)
 * LLNL_GlobalID (optional)
 * NVTX (optional)
@@ -42,8 +41,11 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
 .. toctree::
    :maxdepth: 2
 
    install
+   tutorial
+   infrastructure
+   data_structures
+   loop_fuser

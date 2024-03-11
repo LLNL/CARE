@@ -1,28 +1,29 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 #include "care/config.h"
 
-
-#define GPU_ACTIVE
 #include "gtest/gtest.h"
 
-#include "care/care.h"
+#include "care/DefaultMacros.h"
+#include "care/host_device_ptr.h"
+#include "care/scan.h"
+#include "care/Setup.h"
+#include "care/detail/test_utils.h"
 
-// This makes it so we can use device lambdas from within a CUDA_TEST
-#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
-   static void cuda_test_ ## X_ ## Y()
 
-using int_ptr = chai::ManagedArray<int>;
 
-CUDA_TEST(Scan, test_scan_offset) {
-   care::initialize_pool("PINNED","PINNED_POOL",chai::PINNED,128*1024*1024,128*1024*1024,true);
-   care::initialize_pool("DEVICE","DEVICE_POOL",chai::GPU,128*1024*1024,128*1024*1024,true);
+GPU_TEST(forall, Initialization) {
+   printf("Initializing\n");
+   init_care_for_testing();
+   printf("Initialized... Testing Scan\n");
+}
+
+GPU_TEST(Scan, test_scan_offset) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -35,12 +36,12 @@ CUDA_TEST(Scan, test_scan_offset) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
-CUDA_TEST(Scan, test_scan_zero_length) {
+GPU_TEST(Scan, test_scan_zero_length) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 0;
@@ -54,12 +55,12 @@ CUDA_TEST(Scan, test_scan_zero_length) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
-CUDA_TEST(Scan, test_scan_offset_index) {
+GPU_TEST(Scan, test_scan_offset_index) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -74,12 +75,12 @@ CUDA_TEST(Scan, test_scan_offset_index) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
-CUDA_TEST(Scan, test_scan_offset_index_half) {
+GPU_TEST(Scan, test_scan_offset_index_half) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -94,14 +95,14 @@ CUDA_TEST(Scan, test_scan_offset_index_half) {
 
    EXPECT_EQ(offset,starting_offset+length/2);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       if ((i+start)%2 == 0) {
          EXPECT_EQ(scan_Result[i],starting_offset+i/2);
       }
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
-CUDA_TEST(Scan, test_scan_everywhere) {
+GPU_TEST(Scan, test_scan_everywhere) {
    const int starting_offset = 17;
    int offset = starting_offset;
    int length = 20;
@@ -116,16 +117,16 @@ CUDA_TEST(Scan, test_scan_everywhere) {
 
    EXPECT_EQ(offset,starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i],starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
 
-#ifdef CARE_HAVE_LLNL_GLOBALID
+#if CARE_HAVE_LLNL_GLOBALID
+
 using globalID_ptr = chai::ManagedArray<globalID>;
 
-
-CUDA_TEST(Scan, test_scan_offset_index_gid) {
+GPU_TEST(Scan, test_scan_offset_index_gid) {
    const int starting_offset = 13;
    globalID offset(starting_offset);
    int length = 20;
@@ -140,8 +141,9 @@ CUDA_TEST(Scan, test_scan_offset_index_gid) {
 
    EXPECT_EQ(offset.Ref(),starting_offset+length);
 
-   LOOP_SEQUENTIAL(i,0,length) {
+   CARE_SEQUENTIAL_LOOP(i,0,length) {
       EXPECT_EQ(scan_Result[i].Ref(),starting_offset+i);
-   } LOOP_SEQUENTIAL_END
+   } CARE_SEQUENTIAL_LOOP_END
 }
+
 #endif

@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_DEFAULT_MACROS_H_
 #define _CARE_DEFAULT_MACROS_H_
@@ -11,35 +11,28 @@
 // CARE config header
 #include "care/config.h"
 
+// for OMP CARE loops, only used in compatibility mode
+#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#include "care/openmp.h"
+#endif
+
 // Other CARE headers
 #include "care/forall.h"
+#include "care/FOREACHMACRO.h"
+#include "care/GPUMacros.h"
 #include "care/policies.h"
-
-// This makes sure the lambdas get decorated with the right __host__ and or
-// __device__ specifiers
-#if defined(__CUDACC__) && defined(GPU_ACTIVE)
-#define CARE_HOST_DEVICE_ACTIVE __host__ __device__
-#define CARE_DEVICE_ACTIVE __device__
-#define CARE_HOST_ACTIVE __host__
-#define CARE_GLOBAL_ACTIVE __global__
-#else // defined __CUDACC__
-#define CARE_HOST_DEVICE_ACTIVE
-#define CARE_DEVICE_ACTIVE
-#define CARE_HOST_ACTIVE
-#define CARE_GLOBAL_ACTIVE
-#endif // defined __CUDACC__
 
 /// Used to make sure the start and end macros match
 #ifndef NDEBUG
 #define CARE_NEST_BEGIN(x) { int x ;
-#define CARE_NEST_END(x) x = 1 ; (void) ++x ; }
+#define CARE_NEST_END(x) x = 1 ; (void) ++x ; x = x;}
 #else // !NDEBUG
 #define CARE_NEST_BEGIN(x) {
 #define CARE_NEST_END(x) }
 #endif // !NDEBUG
 
 /// Used to capture variables by reference into a lambda (combine with FOR_EACH)
-#define REF_CAPTURE(X) , &X
+#define CARE_REF_CAPTURE(X) , &X
 
 
 
@@ -60,9 +53,12 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) for (int INDEX = START_INDEX; INDEX < END_INDEX; ++INDEX) CARE_NEST_BEGIN(CHECK)
+#define CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_NEST_BEGIN(CHECK) \
+auto _care_for_loop_end_index = END_INDEX; \
+decltype(_care_for_loop_end_index) _care_for_loop_begin_index = START_INDEX; \
+for (auto INDEX = _care_for_loop_begin_index; INDEX < _care_for_loop_end_index; ++INDEX)  {
 
-#define CARE_CHECKED_FOR_LOOP_END(CHECK) CARE_NEST_END(CHECK)
+#define CARE_CHECKED_FOR_LOOP_END(CHECK) } CARE_NEST_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -85,20 +81,23 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { int const __end_ndx = END_INDEX; OMP_FOR_BEGIN for (int INDEX = START_INDEX; INDEX < __end_ndx; ++INDEX) CARE_NEST_BEGIN(CHECK)
+#define CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) {\
+ CARE_NEST_BEGIN(CHECK) \
+ auto const _care_openmp_for_loop_end_ndx = END_INDEX; \
+ decltype(_care_openmp_for_loop_end_ndx) _care_openmp_for_loop_begin_ndx = START_INDEX; \
+OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_openmp_for_loop_end_ndx; ++INDEX) {\
 
-#define CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK) CARE_NEST_END(CHECK) OMP_FOR_END }
-
-
-
-
-
-
+#define CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK) } OMP_FOR_END CARE_NEST_END(CHECK) }
 
 
 
 
-#if defined(CARE_LEGACY_COMPATIBILITY_MODE)
+
+
+
+
+
+#if CARE_LEGACY_COMPATIBILITY_MODE
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -106,6 +105,17 @@
 /// It also make for easier debugging.
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        The legacy version uses a "continue" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE continue
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -165,6 +175,20 @@
 #define CARE_CHECKED_HOST_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
 
 #define CARE_CHECKED_HOST_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a sequential RAJA loop of length one that
+///        captures some variables by reference. The legacy version uses a raw
+///        for loop.
+///
+/// @arg[in] CHECK The variable to check that the start and end macros match
+/// @arg[in] __VA_ARGS__ The variables to capture by reference
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) CARE_CHECKED_HOST_CODE_START(CHECK)
+
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -259,18 +283,36 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device. The legacy version only
-///        executes code on the host.
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device.
+///        The legacy version only executes code on the host.
 ///
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_EVERYWHERE_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) CARE_CHECKED_HOST_CODE_START(CHECK)
 
-#define CARE_CHECKED_EVERYWHERE_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
-
-
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) CARE_CHECKED_HOST_CODE_END(CHECK)
 
 
 
@@ -279,7 +321,9 @@
 
 
 
-#else // defined(CARE_LEGACY_COMPATIBILITY_MODE)
+
+
+#else // CARE_LEGACY_COMPATIBILITY_MODE
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -294,6 +338,17 @@
 /// together for OpenMP, OpenACC, and GPU
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macro for skipping the remainder of the current iteration in a CARE loop.
+///        In a lambda, this is done with a "return" statement.
+///
+/// @note This should only be used within the outermost scope inside a CARE loop
+///       (a regular "continue" can be used inside nested loops within a CARE loop).
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_CONTINUE return
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -347,7 +402,7 @@
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -364,6 +419,22 @@
    care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [=] (const int) {
 
 #define CARE_CHECKED_HOST_KERNEL_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a sequential RAJA loop of length one that
+///        captures some variables by reference.
+///
+/// @arg[in] CHECK The variable to check that the start and end macros match
+/// @arg[in] __VA_ARGS__ The variables to capture by reference
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) { \
+   CARE_NEST_BEGIN(CHECK) \
+   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int) {
+
+#define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +471,7 @@
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -434,7 +505,7 @@
 #define CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_GPU_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -449,7 +520,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_GPU_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_GPU_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -467,10 +538,20 @@
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef CARE_ENABLE_RACE_DETECTION
+#define CARE_SET_THREAD_ID(INDEX) care::DebugPlugin::s_threadID = INDEX ;
+#else
+#define CARE_SET_THREAD_ID(INDEX)
+#endif
+
 #define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
-   if (END_INDEX > START_INDEX) { \
+   auto _care_checked_loop_end = END_INDEX; \
+   decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
+   if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE_ACTIVE (const int INDEX) {
+      care::forall(care::parallel{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
+         CARE_SET_THREAD_ID(INDEX)
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -485,32 +566,52 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_PARALLEL_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE_ACTIVE (const int) {
+   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_PARALLEL_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device.
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
 ///
-/// @note This should execute on the device even if GPU_ACTIVE is not defined.
-///       The reason for this is that managed_ptrs are always constructed on
-///       both the host and device, and this macro is used to update both the
-///       host and device objects to keep them in sync.
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
+
+#define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device to
+///        keep both the host and device objects in sync.
 ///
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_EVERYWHERE_KERNEL_START(CHECK) { \
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::raja_chai_everywhere{}, __FILE__, __LINE__, 0, 1, [=] CARE_HOST_DEVICE (const int) {
+   care::forall(care::managed_ptr_write{}, __FILE__, __LINE__, 0, 1, [=] CARE_MANAGED_PTR_HOST_DEVICE (const int) {
 
-#define CARE_CHECKED_EVERYWHERE_KERNEL_END(CHECK) }); \
+#define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
 
-#endif // defined(CARE_LEGACY_COMPATIBILITY_MODE)
+#endif  // CARE_LEGACY_COMPATIBILITY_MODE
 
 
 
@@ -544,9 +645,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_loop_check)
+#define CARE_SEQUENTIAL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_loop_check)
 
-#define LOOP_SEQUENTIAL_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_loop_check)
+#define CARE_SEQUENTIAL_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -559,9 +660,9 @@
 /// @arg[in] __VA_ARGS__ The variables to capture by reference
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_REF(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_loop_check, __VA_ARGS__)
+#define CARE_SEQUENTIAL_REF_LOOP(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_loop_check, __VA_ARGS__)
 
-#define LOOP_SEQUENTIAL_REF_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_loop_check)
+#define CARE_SEQUENTIAL_REF_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -577,9 +678,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_P(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_p_loop_check)
+#define CARE_SEQUENTIAL_P_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_sequential_p_loop_check)
 
-#define LOOP_SEQUENTIAL_P_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_p_loop_check)
+#define CARE_SEQUENTIAL_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_sequential_p_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -596,30 +697,9 @@
 /// @arg[in] __VA_ARGS__ The variables to capture by reference
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_SEQUENTIAL_P_REF(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_p_loop_check, __VA_ARGS__)
+#define CARE_SEQUENTIAL_REF_P_LOOP(INDEX, START_INDEX, END_INDEX, ...) CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, care_sequential_ref_p_loop_check, __VA_ARGS__)
 
-#define LOOP_SEQUENTIAL_P_REF_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_p_loop_check)
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// @brief Macros that start and end a sequential RAJA loop. The P indicates
-///        that pointers are used in the loop (and thus it is unsafe to run
-///        on the device).
-///
-///        STREAM is an alias to PARALLEL that indicates not much work is taking place.
-///        The P indicates it is not safe to run on the device (yet).
-///
-/// @note The P is used to indicate to uncrustify that pointers can be used
-///       in this loop.
-///
-/// @arg[in] INDEX The index variable
-/// @arg[in] START_INDEX The starting index (inclusive)
-/// @arg[in] END_INDEX The ending index (exclusive)
-///
-////////////////////////////////////////////////////////////////////////////////
-#define LOOP_STREAM_P(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_p_loop_check)
-
-#define LOOP_STREAM_P_END CARE_CHECKED_SEQUENTIAL_LOOP_END(care_stream_p_loop_check)
+#define CARE_SEQUENTIAL_REF_P_LOOP_END CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(care_sequential_ref_p_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -652,6 +732,55 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available, executes
+///        sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_GPU_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, care_gpu_loop_check)
+
+#define CARE_GPU_LOOP_END CARE_CHECKED_GPU_LOOP_END(care_gpu_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_PARALLEL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_parallel_loop_check)
+
+#define CARE_PARALLEL_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_parallel_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_MANAGED_PTR_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, care_managed_ptr_read_loop_check)
+
+#define CARE_MANAGED_PTR_LOOP_END CARE_CHECKED_MANAGED_PTR_LOOP_END(care_managed_ptr_read_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
 ///        executes on the device. If GPU is not available but OpenMP is,
 ///        executes in parallel on the host. Otherwise, executes sequentially
@@ -664,9 +793,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_WORK(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_work_loop_check)
+#define CARE_WORK_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_work_loop_check)
 
-#define LOOP_WORK_END CARE_CHECKED_PARALLEL_LOOP_END(care_work_loop_check)
+#define CARE_WORK_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_work_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -682,9 +811,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_STREAM(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_loop_check)
+#define CARE_STREAM_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_stream_loop_check)
 
-#define LOOP_STREAM_END CARE_CHECKED_PARALLEL_LOOP_END(care_stream_loop_check)
+#define CARE_STREAM_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_stream_loop_check)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -701,9 +830,9 @@
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define LOOP_REDUCE(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
+#define CARE_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
 
-#define LOOP_REDUCE_END CARE_CHECKED_PARALLEL_LOOP_END(care_reduce_loop_check)
+#define CARE_REDUCE_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_reduce_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -746,13 +875,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Macros that start and end a sequential loop of length one. If GPU is
-///        available, also executes on the device.
+/// @brief Macros for updating/initializing managed_ptrs.
+///        Will start and end a sequential loop of length one.
+///        If GPU is available, also executes on the device.
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_EVERYWHERE_KERNEL { CARE_CHECKED_EVERYWHERE_KERNEL_START(care_everywhere_kernel_check)
+#define CARE_MANAGED_PTR_UPDATE_KERNEL { CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(care_managed_ptr_write_kernel_check)
 
-#define CARE_EVERYWHERE_KERNEL_END CARE_CHECKED_EVERYWHERE_KERNEL_END(care_everywhere_kernel_check) }
+#define CARE_MANAGED_PTR_UPDATE_KERNEL_END CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(care_managed_ptr_write_kernel_check) }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros for launching a 2D kernel with fixed y dimension and varying x dimension
+///        If GPU is available, executes on the device.
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_LOOP_2D_STREAM_JAGGED(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
+   launch_2D_jagged(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
+#define CARE_LOOP_2D_STREAM_JAGGED_END });
+
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 

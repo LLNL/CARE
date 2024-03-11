@@ -1,9 +1,9 @@
-######################################################################################
-# Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-# See the top-level LICENSE file for details.
+##############################################################################
+# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-######################################################################################
+##############################################################################
 
 if (WIN32)
   if (NOT BUILD_SHARED_LIBS)
@@ -17,30 +17,46 @@ configure_file(
 
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
+    Accessor.h
+    algorithm.h
+    algorithm_decl.h
+    algorithm_impl.h
     array.h
-    array_utils.h
+    ArrayView.h
+    atomic.h
+    care_inst.h
     CHAICallback.h
     CHAIDataGetter.h
-    CUDAWatchpoint.h
+    GPUWatchpoint.h
     Debug.h
     DefaultMacros.h
     device_ptr.h
+    host_device_map.h
     ExecutionSpace.h
     forall.h
     FOREACHMACRO.h
+    GPUMacros.h
     host_device_ptr.h
     host_ptr.h
     KeyValueSorter.h
+    KeyValueSorter_decl.h
+    KeyValueSorter_impl.h
+    KeyValueSorter_inst.h
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h
+    managed_ptr.h
+    openmp.h
     SortFuser.h
     numeric.h
     PointerTypes.h
     policies.h
-    care.h
-    RAJAPlugin.h
+    care.h 
+    PluginData.h
+    DebugPlugin.h
+    ProfilePlugin.h
     scan.h
+    scan_impl.h
     Setup.h
     single_access_ptr.h
     util.h
@@ -49,64 +65,92 @@ set(care_headers
 set(care_sources
     care.cpp
     CHAICallback.cpp
+    ExecutionSpace.cpp
     LoopFuser.cpp
-    RAJAPlugin.cpp
+    PluginData.cpp
+    DebugPlugin.cpp
+    ProfilePlugin.cpp
+    scan.cpp
     )
 
-if (ENABLE_MPI)
-    set(care_depends
-        mpi
-        chai
-        raja
-        )
-else()
-    set(care_depends
-        chai
-        raja
-        )
+if(CARE_ENABLE_EXTERN_INSTANTIATE)
+   list(APPEND care_sources care_inst.cpp)
 endif()
 
-if (LLNL_GLOBALID_DIR)
-   list (APPEND care_depends llnl_globalid)
+set(care_includes
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+set(care_depends chai RAJA umpire)
+
+if(LLNL_GLOBALID_FOUND)
+   list(APPEND care_depends llnl_globalid::llnl_globalid)
 endif()
 
-if (ENABLE_CUDA)
-   # separable compilation, delay all device linking to executable linking time
-   # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
-   list(APPEND care_depends basil)
-   list(APPEND care_depends cuda)
+if(ENABLE_MPI)
+   list(APPEND care_depends mpi)
 endif()
 
-if (ENABLE_OPENMP)
+if(ENABLE_OPENMP)
    list(APPEND care_depends openmp)
 endif()
 
+if(ENABLE_CUDA)
+   # separable compilation, delay all device linking to executable linking time
+   # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
+
+   if(TARGET CUDA::nvToolsExt)
+      list(APPEND care_depends CUDA::nvToolsExt)
+   endif()
+
+   list(APPEND care_depends cub::cub cuda)
+endif()
+
+
+if(ENABLE_HIP)
+  list(APPEND care_depends blt::hip)
+endif ()
+
 blt_add_library(NAME care
-                SOURCES ${care_sources}
-                HEADERS ${care_headers}
-                DEPENDS_ON ${care_depends}
-                )
+                SOURCES    ${care_sources}
+                HEADERS    ${care_headers}
+                INCLUDES   ${care_includes}
+                DEPENDS_ON ${care_depends})
 
-target_include_directories(care PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(care PRIVATE ${PROJECT_BINARY_DIR}/include)
-
-install(TARGETS care
-        EXPORT  ${PROJECT_NAME}-targets 
-        DESTINATION lib
-        INCLUDES DESTINATION include/care
-        )
+################################
+# care package install
+################################
 
 install(FILES       ${care_headers}
-        DESTINATION include/care
-        )
+        DESTINATION include/care)
 
-install(EXPORT ${PROJECT_NAME}-targets DESTINATION share/care/cmake)
+install(TARGETS care
+        EXPORT  care-targets
+        DESTINATION lib)
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/src/care/care-config.cmake.in
-  ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake)
+install(EXPORT care-targets
+        NAMESPACE care::
+        DESTINATION lib/cmake/care)
+
+blt_install_tpl_setups(DESTINATION lib/cmake/care)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+   ${PROJECT_SOURCE_DIR}/cmake/care-config.cmake.in
+   ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+   INSTALL_DESTINATION lib/cmake/care)
+
+write_basic_package_version_file(
+   ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+   COMPATIBILITY SameMajorVersion)
 
 install(
-  FILES ${PROJECT_BINARY_DIR}/share/care/cmake/care-config.cmake
-  DESTINATION share/care/cmake/)
+   FILES
+      ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
+      ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/modules/Findcub.cmake
+   DESTINATION
+      lib/cmake/care)
 
