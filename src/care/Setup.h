@@ -1,21 +1,21 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_SETUP_H_
 #define _CARE_SETUP_H_
 
 // CARE headers
-#include "care/config.h"
 #include "care/CHAICallback.h"
-#include "care/PluginData.h"
+#include "care/RAJAPlugin.h"
 
 // Other library headers
 #include "chai/ExecutionSpaces.hpp"
 #include "chai/ArrayManager.hpp"
+#include "chai/PointerRecord.hpp"
 #include "umpire/Umpire.hpp"
 
 #ifdef UMPIRE_ENABLE_MPI
@@ -23,7 +23,9 @@
 #endif
 
 // Std library headers
+#include <stdio.h>
 #include <string>
+#include <vector>
 
 namespace care {
 #ifdef UMPIRE_ENABLE_MPI
@@ -45,22 +47,6 @@ namespace care {
                         std::size_t min_block_size,
                         bool grows = true);
 
-   void initialize_pool_block_heuristic(const std::string& resource,
-                                        const std::string& poolname,
-                                        chai::ExecutionSpace space,
-                                        std::size_t initial_size,
-                                        std::size_t min_block_size,
-                                        std::size_t block_coalesce_heuristic = 3,
-                                        bool grows = true);
-
-   void initialize_pool_percent_heuristic(const std::string& resource,
-                                          const std::string& poolname,
-                                          chai::ExecutionSpace space,
-                                          std::size_t initial_size,
-                                          std::size_t min_block_size,
-                                          std::size_t percent_coalesce_heuristic = 100,
-                                          bool grows = true);
-
    void dump_memory_statistics();
 
    inline void report_leaks() {
@@ -77,7 +63,7 @@ namespace care {
    }
 
    inline void evict_device_memory() {
-#ifdef CARE_GPUCC
+#ifdef __CUDACC__
       evict_memory(chai::ExecutionSpace::GPU, chai::ExecutionSpace::CPU);
 #endif
 
@@ -129,9 +115,17 @@ namespace care {
       CHAICallback::setLogData(log_chai_data);
    }
 
+   inline void chai_force_sync() {
+      chai::ArrayManager::getInstance()->enableDeviceSynchronize();
+   }
+
+   inline void setSynchronization(bool before, bool after) {
+      RAJAPlugin::setSynchronization(before, after);
+   }
+   
    // does a GPU device synchronize if there has been a kernel launch through care
    // since the last time this was called.
-   CARE_DLL_API bool syncIfNeeded();
+   bool syncIfNeeded();
 } // namespace care
 
 #endif // !defined(_CARE_SETUP_H_)

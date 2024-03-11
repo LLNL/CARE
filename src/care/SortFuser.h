@@ -1,18 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
-//
-// SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
 
-#ifndef CARE_SORT_FUSER_H
-#define CARE_SORT_FUSER_H
-
-#include "care/device_ptr.h"
+#include "care/care.h"
 #include "care/host_ptr.h"
 #include "care/host_device_ptr.h"
 #include "care/LoopFuser.h"
-#include "care/algorithm.h"
+#include "care/array_utils.h"
 
 namespace care {
    template <typename T>
@@ -70,13 +61,13 @@ namespace care {
       /// @brief uniq's all arrays registered with the Fuser via uniqArray or sortUniqArray
       /// @param isSorted - whether all arrays were sorted before the call to uniq.
       ///////////////////////////////////////////////////////////////////////////
-      void uniq(bool isSorted=true, bool realloc=true);
+      void uniq(bool isSorted=true);
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
       /// @brief sorts and uniq's all arrays registered with the Fuser via uniqArray or sortUniqArray
       ///////////////////////////////////////////////////////////////////////////
-      void sortUniq(bool realloc=true) { uniq(false, realloc);}
+      void sortUniq() { uniq(false);}
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson
@@ -106,7 +97,7 @@ namespace care {
       ///        offsetting their values so that they own their own range of the
       ///        space in T.
       ///////////////////////////////////////////////////////////////////////////
-#ifndef CARE_GPUCC      
+#ifndef __CUDACC__      
    private:
 #endif
 
@@ -197,7 +188,7 @@ namespace care {
       m_offsets.push_back(m_total_length);
       ++m_num_arrays;
       m_total_length += len;
-      m_max_range = care::max(m_max_range,range);
+      m_max_range = CARE_MAX(m_max_range,range);
    }
    
    template <typename T>
@@ -208,7 +199,7 @@ namespace care {
       m_offsets.push_back(m_total_length);
       ++m_num_arrays;
       m_total_length += len;
-      m_max_range = care::max(m_max_range,range);
+      m_max_range = CARE_MAX(m_max_range,range);
       m_out_arrays.push_back(&out_array); 
       m_out_lengths.push_back(&out_len);
    }
@@ -245,7 +236,7 @@ namespace care {
    template <typename T>
    void SortFuser<T>::sort() {
       assemble();
-      care::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
+      care_utils::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
       // scatter answer back into original arrays by subtracting off the range
       // multipliers
       FUSIBLE_LOOPS_START
@@ -266,23 +257,23 @@ namespace care {
    /// perform a fused uniq, sorting if necessary.
    ///
    template <typename T>
-   void SortFuser<T>::uniq(bool isSorted, bool realloc) {
+   void SortFuser<T>::uniq(bool isSorted) {
       assemble();
       host_device_ptr<T> concatenated_out;
       if (!isSorted) {
-         care::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
+         care_utils::sortArray(RAJAExec{}, m_concatenated_result, m_total_length);
       }
       
       // do the unique of the concatenated sort result
       int outLen;
-      care::uniqArray(RAJAExec{}, m_concatenated_result, m_total_length, concatenated_out, outLen);
+      care_utils::uniqArray(RAJAExec{}, m_concatenated_result, m_total_length, concatenated_out, outLen);
       
       /// determine new offsets by looking for boundaries in max_range
       host_device_ptr<int> out_offsets(m_num_arrays+1, "out_offsets");
 
       int num_arrays = m_num_arrays;
       T max_range = m_max_range;
-      CARE_STREAM_LOOP(i,0,outLen+1) {
+      LOOP_STREAM(i,0,outLen+1) {
          int prev_array = i == 0 ? -1 :  concatenated_out[i-1] / max_range;
          int next_array = i == outLen ? num_arrays : concatenated_out[i] / max_range;
          if (prev_array != next_array) {
@@ -291,39 +282,28 @@ namespace care {
                out_offsets[j] = i;
             }
          }
-      } CARE_STREAM_LOOP_END
+      } LOOP_STREAM_END
+
       host_ptr<const int> host_out_offsets = out_offsets;
       host_device_ptr<int> concatenated_lengths(m_num_arrays, "concatenated_lengths");
       host_device_ptr<T> result = concatenated_out;
-      
-      // set up a 2D kernel, put per-array meta-data in pinned memory to eliminate cudaMemcpy's of the smaller dimension of data
-      host_device_ptr<int> lengths(chai::ManagedArray<int>(m_num_arrays, chai::ZERO_COPY));
-      host_device_ptr<host_device_ptr<int> > out_arrays(chai::ManagedArray<host_device_ptr<int>>(m_num_arrays, chai::ZERO_COPY));
-      host_ptr<int> pinned_lengths = lengths.getPointer(care::ZERO_COPY, false);
-      host_ptr<host_device_ptr<int>>  pinned_out_arrays = out_arrays.getPointer(care::ZERO_COPY, false);
-      // initialized lengths, maxLength, and array of arrays for the 2D kernel
-      int maxLength = 0;
-      for (int a = 0; a < m_num_arrays; ++a ) {
+      FUSIBLE_LOOPS_START
+      for (int a = 0; a < m_num_arrays; ++a) {
          // update output length by doing subtraction of the offsets
          int & len = *m_out_lengths[a];
          len = host_out_offsets[a+1]-host_out_offsets[a];
-         pinned_lengths[a]= len;
-         maxLength = care::max(len, maxLength);
-         if (realloc) {
-            m_out_arrays[a]->realloc(len);
-         }
-         pinned_out_arrays[a] = *m_out_arrays[a];
+         // grow / shrink array to appropriate length
+         host_device_ptr<T> &array = *m_out_arrays[a]; 
+         array.realloc(len);
+         int offset = host_out_offsets[a];
+         // scatter results into output arrays
+         FUSIBLE_LOOP_STREAM(i,0,len) {
+            result[i+offset] -= max_range*a;
+            array[i] = result[i+offset];
+            concatenated_lengths[a] = len;
+         } FUSIBLE_LOOP_STREAM_END
       }
-      // subtract out the offset, copy the result into individual arrays
-      // (use of device pointer is to avoid clang-query rules that prevent capture of raw pointer)
-      device_ptr<int> dev_pinned_lengths = lengths.getPointer(ZERO_COPY, false);
-      CARE_LOOP_2D_STREAM_JAGGED(i, 0, maxLength, lengths, a, 0, m_num_arrays, iFlattened)  {
-         result[i+out_offsets[a]] -= max_range*a;
-         out_arrays[a][i] = result[i+out_offsets[a]];
-         if (i == 0) {
-            concatenated_lengths[a] = dev_pinned_lengths[a];
-         }
-      } CARE_LOOP_2D_STREAM_JAGGED_END
+      FUSIBLE_LOOPS_STOP
 
       // m_concatenated_result contains result of the initial contcatenation, need to swap it
       // out with the result of the uniq
@@ -333,9 +313,7 @@ namespace care {
 
       out_offsets.free();
       
-      lengths.free();
-      out_arrays.free();
    }
-}
 
-#endif // CARE_SORT_FUSER_H
+
+}

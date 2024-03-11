@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_CHAI_CALLBACK_H_
 #define _CARE_CHAI_CALLBACK_H_
@@ -19,7 +19,6 @@
 // Std library headers
 #include <functional>
 #include <string>
-#include <typeindex>
 #include <unordered_map>
 
 // Forward declarations
@@ -30,11 +29,8 @@ namespace chai {
 namespace care {
    class CHAICallback {
       public:
-         using PrintCallback = std::function<std::string(const void*)>;
          using NameMap = std::unordered_map<const chai::PointerRecord*, std::string>;
-         using TypeMap = std::unordered_map<const chai::PointerRecord*, std::type_index>;
-         using PrintCallbackMap = std::unordered_map<std::type_index, PrintCallback>;
-         using TypeSizeMap = std::unordered_map<std::type_index, size_t>;
+         using PrintCallbackMap = std::unordered_map<const chai::PointerRecord*, std::function<void(std::ostream&, const void*, size_t)>>;
 
          ///
          /// Whether or not this infrastructure is turned on, meaning that CHAI
@@ -220,104 +216,13 @@ namespace care {
                                           std::string name);
 
          ///
-         /// Deregister the given pointer record
+         /// Sets the print callback associated with the given pointer record
          ///
-         /// @param[in] record The record to deregister
+         /// @param[in] record The record to associate the callback with
+         /// @param[in] name The callback to tie the record to
          ///
-         CARE_DLL_API static void deregisterRecord(const chai::PointerRecord* record);
-
-         ///
-         /// Returns true or false depending on whether there is a type index
-         /// associated with the given pointer record.
-         ///
-         /// @param[in] record The record used to look up whether there is an
-         ///                   associated type index
-         ///
-         /// @return True if there is a type index associated with the given
-         ///         pointer record, false otherwise.
-         ///
-         CARE_DLL_API static bool hasTypeIndex(const chai::PointerRecord* record);
-
-         ///
-         /// Gets the type index associated with the given pointer record
-         ///
-         /// @param[in] record The record used to look up the type index
-         ///
-         /// @return The type index associated with the given pointer record
-         ///         if there is one.
-         ///
-         CARE_DLL_API static std::type_index getTypeIndex(const chai::PointerRecord* record);
-
-         ///
-         /// Sets the type index associated with the given pointer record
-         ///
-         /// @param[in] record The record to associate the type index with
-         /// @param[in] typeIndex The type index of the record
-         ///
-         CARE_DLL_API static void setTypeIndex(const chai::PointerRecord* record,
-                                               std::type_index typeIndex);
-
-         ///
-         /// Returns true or false depending on whether there is a print callback
-         /// associated with the given type index.
-         ///
-         /// @param[in] typeIndex The type index used to look up whether there is an
-         ///                      associated print callback
-         ///
-         /// @return True if there is a print callback associated with the given
-         ///         type index, false otherwise.
-         ///
-         CARE_DLL_API static bool hasPrintCallback(std::type_index typeIndex);
-
-         ///
-         /// Gets the print callback associated with the given type index.
-         ///
-         /// @param[in] typeIndex The type index used to look up the print callback
-         ///
-         /// @return The print callback associated with the given type index
-         ///         if there is one.
-         ///
-         CARE_DLL_API static PrintCallback getPrintCallback(std::type_index typeIndex);
-
-         ///
-         /// Sets the print callback associated with the given type index.
-         ///
-         /// @param[in] typeIndex The type index to associate the callback with
-         /// @param[in] name The callback to tie the type index to
-         ///
-         CARE_DLL_API static void setPrintCallback(std::type_index typeIndex,
-                                                   PrintCallback callback);
-
-         ///
-         /// Returns true or false depending on whether there is a size
-         /// associated with the given type index.
-         ///
-         /// @param[in] typeIndex The type index used to look up whether
-         ///                      there is an associated size
-         ///
-         /// @return True if there is a size associated with the given
-         ///         type index, false otherwise.
-         ///
-         CARE_DLL_API static bool hasTypeSize(std::type_index typeIndex);
-
-         ///
-         /// Gets the size associated with the given type index.
-         ///
-         /// @param[in] typeIndex The type index used to look up the size
-         ///
-         /// @return The size associated with the given type index
-         ///         if there is one.
-         ///
-         CARE_DLL_API static size_t getTypeSize(std::type_index typeIndex);
-
-         ///
-         /// Sets the size associated with the given pointer record
-         ///
-         /// @param[in] typeIndex The type to associate the size with
-         /// @param[in] size The size of the given type
-         ///
-         CARE_DLL_API static void setTypeSize(std::type_index typeIndex,
-                                              size_t size);
+         CARE_DLL_API static void setPrintCallback(const chai::PointerRecord* record,
+                                                   std::function<void(std::ostream&, const void*, size_t)> callback);
 
          ///
          /// Writes out the data in the given execution space
@@ -333,7 +238,7 @@ namespace care {
          ///
          /// @param[in] record The record associated with this callback
          ///
-         CARE_DLL_API CHAICallback(const chai::PointerRecord* record);
+         CHAICallback(const chai::PointerRecord* record);
 
          ///
          /// The callback registered with CHAI
@@ -342,9 +247,9 @@ namespace care {
          /// @param[in] action The CHAI event that was triggered
          /// @param[in] space The execution space that the CHAI event was triggered in
          ///
-         CARE_DLL_API void operator()(const chai::PointerRecord* record,
-                                      chai::Action action,
-                                      chai::ExecutionSpace space);
+         void operator()(const chai::PointerRecord* record,
+                         chai::Action action,
+                         chai::ExecutionSpace space);
 
       private:
          ///
@@ -355,25 +260,11 @@ namespace care {
          static NameMap& getNameMap();
 
          ///
-         /// Gets the map of pointer records to type indices
+         /// Gets the map of pointer records to print callbacks
          ///
-         /// @return The map of pointer records to type indices
-         ///
-         static TypeMap& getTypeMap();
-
-         ///
-         /// Gets the map of types to print callbacks
-         ///
-         /// @return The map of types to print callbacks
+         /// @return The map of pointer records to print callbacks
          ///
          static PrintCallbackMap& getPrintCallbackMap();
-
-         ///
-         /// Gets the map of types to type sizes
-         ///
-         /// @return The map of types to type sizes
-         ///
-         static TypeSizeMap& getTypeSizeMap();
 
          ///
          /// Checks if the log setting is valid.

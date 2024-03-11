@@ -1,43 +1,23 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_CONFIG_H_
 #define _CARE_CONFIG_H_
 
 #cmakedefine CARE_LOOP_VVERBOSE_ENABLED
-#cmakedefine01 CARE_ENABLE_LOOP_FUSER
-#cmakedefine CARE_LOOP_FUSER_FLUSH_LENGTH @CARE_LOOP_FUSER_FLUSH_LENGTH@
+#cmakedefine01 CARE_HAVE_LOOP_FUSER
 #cmakedefine CARE_DEBUG
-#cmakedefine CARE_ENABLE_BOUNDS_CHECKING
 #cmakedefine01 CARE_ENABLE_GPU_SIMULATION_MODE
-#cmakedefine CARE_NEVER_USE_RAJA_PARALLEL_SCAN
-#cmakedefine CARE_ENABLE_IMPLICIT_CONVERSIONS
-#ifndef CARE_LEGACY_COMPATIBILITY_MODE
-#cmakedefine01 CARE_LEGACY_COMPATIBILITY_MODE
-#endif
-#cmakedefine CARE_ENABLE_MANAGED_PTR
-#cmakedefine CARE_DISABLE_RAJAPLUGIN
-#cmakedefine CARE_ENABLE_EXTERN_INSTANTIATE
-#cmakedefine CARE_ENABLE_FUSER_BIN_32
-#cmakedefine01 CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-#cmakedefine01 CARE_ENABLE_PINNED_MEMORY_FOR_SCANS
-#cmakedefine CARE_GPU_MEMORY_IS_ACCESSIBLE_ON_CPU
-#cmakedefine CARE_ENABLE_STALE_DATA_CHECK
-#cmakedefine CARE_ENABLE_RACE_DETECTION
 
 // Optional dependencies
+#cmakedefine01 CARE_HAVE_BASIL
+#cmakedefine01 CARE_HAVE_CUB
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID
 #cmakedefine01 CARE_HAVE_NVTOOLSEXT
-
-#ifdef CARE_ENABLE_EXTERN_INSTANTIATE
-#define CARE_INLINE
-#else
-#define CARE_INLINE inline
-#endif
 
 #if defined(_WIN32) && !defined(CARESTATICLIB)
 #if defined(CARE_EXPORTS)
@@ -49,16 +29,17 @@
 #define CARE_DLL_API
 #endif // defined(_WIN32) && !defined(CARESTATICLIB)
 
-#define CARE_STRINGIFY(x) CARE_DO_STRINGIFY(x)
-#define CARE_DO_STRINGIFY(x) #x
-#ifdef _WIN32
-#define CARE_PRAGMA(x) __pragma(x)
-#else
-#define CARE_PRAGMA(x) _Pragma(CARE_STRINGIFY(x))
-#endif
-
-// gpu macros that need to be defined everywhere
-#include "care/GPUMacros.h"
+#if defined(__CUDACC__)
+#define CARE_HOST_DEVICE __host__ __device__
+#define CARE_DEVICE __device__
+#define CARE_HOST __host__
+#define CARE_GLOBAL __global__
+#else // defined(__CUDACC__)
+#define CARE_HOST_DEVICE
+#define CARE_DEVICE
+#define CARE_HOST
+#define CARE_GLOBAL
+#endif // defined(__CUDACC__)
 
 #endif // !defined(_CARE_CONFIG_H_)
 

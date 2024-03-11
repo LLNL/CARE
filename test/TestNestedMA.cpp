@@ -1,22 +1,28 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
-#include "care/config.h"
+#ifdef __CUDACC__
+#define GPU_ACTIVE
+// This asserts a crash on the GPU, but does not mark gtest as passing.
+#define GPU_FAIL(code) ASSERT_DEATH(code, "")
+#else
+#define GPU_FAIL(code) code
+#endif
 
 // other library headers
 #include "gtest/gtest.h"
 
 // care headers
-#include "care/algorithm.h"
-#include "care/DefaultMacros.h"
-#include "care/host_device_ptr.h"
-#include "care/detail/test_utils.h"
+#include "care/care.h"
 
-
+// This makes it so we can use device lambdas from within a CUDA_TEST
+#define CUDA_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
+   TEST(X, Y) { cuda_test_ ## X_ ## Y(); } \
+   static void cuda_test_ ## X_ ## Y()
 
 template<typename T>
 void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
@@ -24,14 +30,15 @@ void memAlloc(size_t size, char const * name, care::host_device_ptr<T> *ptr)
    *ptr = care::host_device_ptr<T>(size, name);
 }
 
-GPU_TEST(nestedMA, gpu_initialization) {
-   printf("Initializing\n");
-   init_care_for_testing();
-   printf("Initialized... testing nested care::host_device_ptr patterns\n");
+template <typename T>
+inline void ArrayFill(care::host_device_ptr<T> arr, int n, T val) {
+   LOOP_STREAM(i, 0, n) {
+      arr[i] = val;
+   } LOOP_STREAM_END
 }
 
 // This initialization pattern works fine
-GPU_TEST(nestedMA, gpu_init0)
+CUDA_TEST(nestedMA, gpu_init0)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -39,27 +46,27 @@ GPU_TEST(nestedMA, gpu_init0)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
    std::string name("test") ;
-   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
+   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      care::fill_n(nestedMA[i], M, 0) ;
-   } CARE_SEQUENTIAL_REF_LOOP_END
+      ArrayFill<int>(nestedMA[i], M, 0) ;
+   } LOOP_SEQUENTIAL_REF_END
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i][j] = 1 ;
       }
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
 }
 
 // This initialization pattern fails on the GPU build
-GPU_TEST(nestedMA, gpu_init)
+CUDA_TEST(nestedMA, gpu_init)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -67,33 +74,33 @@ GPU_TEST(nestedMA, gpu_init)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
    std::string name("test") ;
-   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
+   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
-      care::fill_n(nestedMA[i], M, 0) ;
-   } CARE_SEQUENTIAL_REF_LOOP_END
+      ArrayFill<int>(nestedMA[i], M, 0) ;
+   } LOOP_SEQUENTIAL_REF_END
 
-   CARE_STREAM_LOOP(i, 0, N) {
+   LOOP_STREAM(i, 0, N) {
       if (nestedMA) {}
       (void) i; // quiet compiler
-   } CARE_STREAM_LOOP_END
+   } LOOP_STREAM_END
 
    GPU_FAIL(
-      CARE_SEQUENTIAL_LOOP(i, 0, N) {
+      LOOP_SEQUENTIAL(i, 0, N) {
          for (int j = 0 ; j < M ; ++j) {
             nestedMA[i][j] = 1 ;
          }
-      } CARE_SEQUENTIAL_LOOP_END
+      } LOOP_SEQUENTIAL_END
    ) ;
 }
 
 // This initialization pattern works fine
-GPU_TEST(nestedMA, cpu_init0)
+CUDA_TEST(nestedMA, cpu_init0)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -101,28 +108,28 @@ GPU_TEST(nestedMA, cpu_init0)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
    std::string name("test") ;
-   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
+   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i].set(j, 0) ;
       }
-   } CARE_SEQUENTIAL_REF_LOOP_END
+   } LOOP_SEQUENTIAL_REF_END
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i][j] = 1 ;
       }
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
 }
 // This initialization pattern fails on the GPU build
-GPU_TEST(nestedMA, cpu_init)
+CUDA_TEST(nestedMA, cpu_init)
 {
    const int N = 1 ;
    const int M = 1 ;
@@ -130,30 +137,30 @@ GPU_TEST(nestedMA, cpu_init)
 
    memAlloc(N, "test", &nestedMA) ;
 
-   CARE_SEQUENTIAL_LOOP(i, 0, N) {
+   LOOP_SEQUENTIAL(i, 0, N) {
       nestedMA[i] = nullptr ;
-   } CARE_SEQUENTIAL_LOOP_END
+   } LOOP_SEQUENTIAL_END
 
    std::string name("test") ;
-   CARE_SEQUENTIAL_REF_LOOP(i, 0, N, name) {
+   LOOP_SEQUENTIAL_REF(i, 0, N, name) {
       name = name + "_" ;
       memAlloc(M, name.c_str(), &nestedMA[i]) ;
       for (int j = 0 ; j < M ; ++j) {
          nestedMA[i].set(j, 0) ;
       }
-   } CARE_SEQUENTIAL_REF_LOOP_END
+   } LOOP_SEQUENTIAL_REF_END
 
-   CARE_STREAM_LOOP(i, 0, N) {
+   LOOP_STREAM(i, 0, N) {
       if (nestedMA) {}
       (void) i; // quiet compiler
-   } CARE_STREAM_LOOP_END
+   } LOOP_STREAM_END
 
    GPU_FAIL(
-      CARE_SEQUENTIAL_LOOP(i, 0, N) {
+      LOOP_SEQUENTIAL(i, 0, N) {
          for (int j = 0 ; j < M ; ++j) {
             nestedMA[i][j] = 1 ;
          }
-      } CARE_SEQUENTIAL_LOOP_END
+      } LOOP_SEQUENTIAL_END
    ) ;
 
 }

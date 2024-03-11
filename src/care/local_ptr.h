@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_LOCAL_PTR_H_
 #define _CARE_LOCAL_PTR_H_
@@ -37,14 +37,14 @@ namespace care {
          ///
          /// Default constructor
          ///
-         local_ptr() = default;
+         CARE_HOST_DEVICE local_ptr() noexcept : m_ptr(nullptr) {}
 
          ///
          /// @author Alan Dayton
          ///
          /// nullptr constructor
          ///
-         CARE_HOST_DEVICE local_ptr(std::nullptr_t) noexcept : local_ptr() {}
+         CARE_HOST_DEVICE local_ptr(std::nullptr_t) noexcept : m_ptr(nullptr) {}
 
          ///
          /// @author Peter Robinson
@@ -53,12 +53,11 @@ namespace care {
          ///
          CARE_HOST_DEVICE local_ptr(T* ptr) noexcept : m_ptr(ptr) {}
 
-         ///
          /// @author Peter Robinson
          ///
          /// Copy constructor
          ///
-         local_ptr(local_ptr const &ptr) = default;
+         CARE_HOST_DEVICE local_ptr(local_ptr const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -67,14 +66,14 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE local_ptr<T>(local_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
+         CARE_HOST_DEVICE local_ptr<T>(local_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
          ///
          /// Construct from host_ptr
          ///
-         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T> const &ptr) noexcept : m_ptr(ptr.data()) {}
+         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T> const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -83,14 +82,14 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.cdata()) {}
+         CARE_HOST_DEVICE local_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
          ///
          /// Construct from chai::ManagedArray
          ///
-         CARE_HOST_DEVICE local_ptr<T>(chai::ManagedArray<T> const &ptr) : m_ptr(ptr.data()) {}
+         CARE_HOST_DEVICE local_ptr<T>(chai::ManagedArray<T> const &ptr) : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -99,12 +98,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE local_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.data()) {}
-
-         ///
-         /// Copy assignment operator
-         ///
-         local_ptr& operator=(const local_ptr& other) = default;
+         CARE_HOST_DEVICE local_ptr<T>(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -120,22 +114,8 @@ namespace care {
          ///
          CARE_HOST_DEVICE operator T*() const { return m_ptr; }
 
-         ///
-         /// @author Danny Taller
-         ///
-         /// Convert to a raw pointer
-         ///
-         CARE_HOST_DEVICE T* data() const { return m_ptr; }
-
-         ///
-         /// @author Alan Dayton
-         ///
-         /// Convert to a raw pointer
-         ///
-         CARE_HOST_DEVICE const T* cdata() const { return m_ptr; }
-
       private:
-         T* m_ptr = nullptr; //!< Raw pointer
+         T * m_ptr; //!< Raw pointer
    };
 } // namespace care
 
