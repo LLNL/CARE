@@ -1,68 +1,44 @@
-##############################################################################
-# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+######################################################################################
+# Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+# See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-##############################################################################
+######################################################################################
 
-##########################################################################
-# Set up CMake
-##########################################################################
+cmake_minimum_required(VERSION 3.4)
 
-cmake_minimum_required(VERSION 3.18)
+project(care)
 
-##########################################################################
-# Set up project
-##########################################################################
+################################
+# BLT
+################################
+set(BLT_CXX_STD "c++11" CACHE STRING "Set the c++ standard to use")
 
-project(CARE
-        LANGUAGES CXX
-        VERSION 0.12.0)
+if (DEFINED BLT_SOURCE_DIR)
+    # Support having a shared BLT outside of the repository if given a BLT_SOURCE_DIR
 
-include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
+    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
+        message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
+    endif()
+else()
+   message(FATAL_ERROR "BLT_SOURCE_DIR not defined")
+endif()
 
-##########################################################################
-# Set up library
-##########################################################################
+include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
+
+include(cmake/SetupLibraries.cmake)
 
 add_subdirectory(src)
 
-##########################################################################
-# Set up tests
-##########################################################################
-
-if(CARE_ENABLE_TESTS)
+if (ENABLE_TESTS)
    add_subdirectory(test)
 endif()
 
-##########################################################################
-# Set up benchmarks
-##########################################################################
-
-if(CARE_ENABLE_BENCHMARKS)
+if (ENABLE_BENCHMARKS)
    add_subdirectory(benchmarks)
 endif()
 
-##########################################################################
-# Set up documentation
-##########################################################################
-
-if(CARE_ENABLE_DOCS)
+if (ENABLE_DOCUMENTATION)
    add_subdirectory(docs)
-endif()
+endif ()
 
-##########################################################################
-# Set up examples
-##########################################################################
-
-if(CARE_ENABLE_EXAMPLES)
-   add_subdirectory(examples)
-endif()
-
-##########################################################################
-# Set up reproducers
-##########################################################################
-
-if(CARE_ENABLE_REPRODUCERS)
-   add_subdirectory(reproducers)
-endif()

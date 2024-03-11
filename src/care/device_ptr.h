@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
+// See the top-level LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_DEVICE_PTR_H_
 #define _CARE_DEVICE_PTR_H_
@@ -25,7 +25,7 @@ namespace care {
    ///
    /// @author Peter Robinson
    ///
-   /// Designed to be used only on the device. If CARE_GPUCC is defined and
+   /// Designed to be used only on the device. If GPU_ACTIVE is defined and
    /// this is dereferenced in a host context, it will produce a compile time error.
    ///
    template <typename T>
@@ -62,7 +62,7 @@ namespace care {
          ///
          /// Copy constructor
          ///
-         CARE_HOST_DEVICE device_ptr(device_ptr const &ptr) noexcept : m_ptr(ptr.m_ptr) {}
+         CARE_HOST_DEVICE device_ptr(device_ptr const &ptr) noexcept : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -78,7 +78,7 @@ namespace care {
          ///
          /// Construct from chai::ManagedArray
          ///
-         CARE_HOST_DEVICE device_ptr(chai::ManagedArray<T> const &ptr) : m_ptr(ptr.data()) {}
+         CARE_HOST_DEVICE device_ptr(chai::ManagedArray<T> const &ptr) : m_ptr(ptr) {}
 
          ///
          /// @author Peter Robinson
@@ -87,12 +87,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         CARE_HOST_DEVICE device_ptr(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr.data()) {}
-
-         ///
-         /// Copy assignment operator
-         ///
-         device_ptr& operator=(const device_ptr& other) = default;
+         CARE_HOST_DEVICE device_ptr(chai::ManagedArray<T_non_const> const &ptr) : m_ptr(ptr) {}
          
          ///
          /// @author Peter Robinson
@@ -106,7 +101,7 @@ namespace care {
          ///
          /// Return the element at the given index
          ///
-#ifdef CARE_GPUCC
+#ifdef GPU_ACTIVE
          CARE_DEVICE 
 #else
          CARE_HOST_DEVICE 
@@ -118,7 +113,7 @@ namespace care {
          ///
          /// Convert to a raw pointer
          ///
-#ifdef CARE_GPUCC
+#ifdef GPU_ACTIVE
          CARE_DEVICE 
 #else
          CARE_HOST_DEVICE 
