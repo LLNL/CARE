@@ -30,22 +30,26 @@ namespace care {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
    static bool s_reverseLoopOrder = false;
 #endif
-
+   
    template <typename T>
    struct ExecutionPolicyToSpace {
       static constexpr const chai::ExecutionSpace value = chai::CPU;
    };
 
 #if defined(__CUDACC__)
+   typedef RAJA::resources::Cuda Resource;
    template <>
    struct ExecutionPolicyToSpace<RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
 #elif defined (__HIPCC__)
+   typedef RAJA::resources::Hip Resource;
    template <>
    struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
+#else
+   typedef RAJA::resources::Host Resource;
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
@@ -96,6 +100,50 @@ namespace care {
 #endif
       }
    }
+
+      ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson, Alan Dayton
+   ///
+   /// @brief Loops over the given indices and calls the loop body with each index.
+   ///        This overload is CHAI and RAJA aware and sets the execution space accordingly.
+   ///
+   /// @arg[in] policy Used to choose this overload of forall
+   /// @arg[in] res Resource to be used
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename R, typename ExecutionPolicy, typename LB>
+   void forall(ExecutionPolicy /* policy */, R res, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+      const int length = end - start;
+
+      if (length != 0) {
+         PluginData::setFileName(fileName);
+         PluginData::setLineNumber(lineNumber);
+
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+         RAJA::RangeStrideSegment rangeSegment =
+            s_reverseLoopOrder ?
+            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
+            RAJA::RangeStrideSegment(start, end, 1);
+#else
+         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
+#endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         RAJA::forall<RAJA::seq_exec>(res, rangeSegment, std::forward<LB>(body));
+#else
+         RAJA::forall<ExecutionPolicy>(res, rangeSegment, std::forward<LB>(body));
+#endif
+      }
+   }
+
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -188,6 +236,49 @@ namespace care {
       s_reverseLoopOrder = false;
 #endif
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Neela Kausik
+   ///
+   /// @brief If GPU is available, execute on the device. Otherwise, execute on
+   ///        the host. This specialization is needed for clang-query.
+   ///
+   /// @arg[in] gpu Used to choose this overload of forall
+   /// @arg[in] res Resource provided for execution
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+
+#if defined(CARE_GPUCC)
+   template <typename LB> 
+   void forall_with_stream(gpu, Resource res, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+      forall(gpu_simulation{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__CUDACC__)
+      forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#else
+      forall(RAJA::seq_exec{}, res, fileName, lineNumber, start, end, std::forward<LB>(body));
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
+#endif   
+	}   
+#endif
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
