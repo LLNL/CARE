@@ -16,7 +16,23 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 
 ### Added
 - Support for APUs with a single memory space.
+- ArrayDup overloads
+- LocalSortPairs for a thread local simultaneous sort
+- Better support for unsigned and 64 bit integers (explicit instantiations of some algorithms, a SCAN\_LOOP\_64 macro)
+
+### Removed
+- Camp submodule
+- radiuss-ci submodule
+- The `chai_force_sync` function used for debugging (the corresponding functionality in CHAI has also been removed)
 
 ### Changed
+- When building with submodules, they now need to be initialized recursively
+- When building with external libraries, specify the install location with `-D<uppercase name>_DIR` (previously, the lowercase version was also accepted)
+- Only tests are built by default now. Docs, examples, and benchmarks must be enabled explicitly.
+- The `CARE_ENABLE_*` options for tests, docs, examples, and benchmarks now CMake dependent options based on the corresponding `ENABLE_*` options
+- care-config.cmake has been moved to ${INSTALL\_PREFIX}/lib/cmake/care and now properly exports CMake targets for care
 
 ### Fixed
+- Eliminated some unnecessary data motion for GPU builds
+- Several fixes were added for shared library builds on Windows
+- Some warnings have been fixed
