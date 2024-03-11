@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_LOCAL_HOST_DEVICE_PTR_H_
 #define _CARE_LOCAL_HOST_DEVICE_PTR_H_
@@ -94,7 +94,7 @@ namespace care {
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<!B, int>::type = 0>
          CARE_HOST_DEVICE operator local_host_device_ptr<const T> () const{
-#ifndef __CUDA_ARCH__
+#if !defined(CARE_DEVICE_COMPILE)
 #if defined(CHAI_DISABLE_RM)
              return host_device_ptr<const T>(const_cast<const T*>(MA::m_host_ptr));
 #else

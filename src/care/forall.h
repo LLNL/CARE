@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_FORALL_H_
 #define _CARE_FORALL_H_
@@ -17,24 +17,33 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 // CARE headers
-#include "care/CHAIDataGetter.h"
-#include "care/CUDAWatchpoint.h"
 #include "care/policies.h"
-#include "care/RAJAPlugin.h"
 #include "care/util.h"
+#include "care/PluginData.h"
 
 // other library headers
 #include "chai/ArrayManager.hpp"
+#include "chai/ExecutionSpaces.hpp"
+#include "RAJA/RAJA.hpp"
 
 namespace care {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+   static bool s_reverseLoopOrder = false;
+#endif
+
    template <typename T>
    struct ExecutionPolicyToSpace {
       static constexpr const chai::ExecutionSpace value = chai::CPU;
    };
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
    template <>
    struct ExecutionPolicyToSpace<RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
+      static constexpr const chai::ExecutionSpace value = chai::GPU;
+   };
+#elif defined (__HIPCC__)
+   template <>
+   struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
 #endif
@@ -67,15 +76,24 @@ namespace care {
       const int length = end - start;
 
       if (length != 0) {
-         care::RAJAPlugin::pre_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+         PluginData::setFileName(fileName);
+         PluginData::setLineNumber(lineNumber);
 
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+         RAJA::RangeStrideSegment rangeSegment =
+            s_reverseLoopOrder ?
+            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
+            RAJA::RangeStrideSegment(start, end, 1);
 #else
-         RAJA::forall<ExecutionPolicy>(RAJA::RangeSegment(start, end), body);
+         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
 #endif
 
-         care::RAJAPlugin::post_forall_hook(ExecutionPolicyToSpace<ExecutionPolicy>::value, fileName, lineNumber);
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         RAJA::forall<RAJA::seq_exec>(rangeSegment, std::forward<LB>(body));
+#else
+         RAJA::forall<ExecutionPolicy>(rangeSegment, std::forward<LB>(body));
+#endif
       }
    }
 
@@ -96,7 +114,7 @@ namespace care {
    template <typename LB>
    void forall(sequential, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -117,10 +135,18 @@ namespace care {
    template <typename LB>
    void forall(openmp, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-#if defined(_OPENMP) && defined(OPENMP_ACTIVE)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
+#if defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
 #endif
    }
 
@@ -142,13 +168,24 @@ namespace care {
    template <typename LB>
    void forall(gpu, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__CUDACC__)
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#endif
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
 #endif
    }
 
@@ -171,15 +208,63 @@ namespace care {
    template <typename LB>
    void forall(parallel, const char * fileName, const int lineNumber,
                const int start, const int end, LB&& body) {
-#if defined(GPU_ACTIVE) && CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, body);
-#elif defined(GPU_ACTIVE) && defined(__CUDACC__)
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+      PluginData::setParallelContext(true);
+      
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, body);
-#elif defined(_OPENMP) && defined(OPENMP_ACTIVE)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, body);
+             fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__HIPCC__)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#endif
+      PluginData::setParallelContext(false);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Alan Dayton
+   ///
+   /// @brief If GPU is available and managed_ptr is available on the device,
+   ///        execute on the device. If GPU is not available but openmp is,
+   ///        execute an openmp policy. Otherwise, execute on the host.
+   ///        This specialization is needed for clang-query.
+   ///
+   /// @arg[in] managed_ptr_read Used to choose this overload of forall
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(managed_ptr_read, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+#if CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+      forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
+             fileName, lineNumber, start, end, std::forward<LB>(body));
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+#else
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
    }
 
@@ -198,8 +283,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   void forall(raja_fusible_seq, int start, int end, bool fused, int action, LB body) {
+   template <typename LB, typename ...XARGS>
+   void forall(raja_fusible_seq, int start, int end, LB && body, XARGS ...xargs) {
       const int length = end - start;
 
       if (length != 0) {
@@ -209,15 +294,15 @@ namespace care {
          /* trigger the chai copy constructors in captured variables */
          LB my_body = body;
 
-         for (int i = start; i < end; ++i) {
-            my_body(i,fused,action,start,end);
+         for (int i = 0; i < length; ++i) {
+            my_body(i,nullptr,xargs...);
          }
 
          threadRM->setExecutionSpace(chai::NONE);
       }
    }
 
-#if defined __CUDACC__ && defined GPU_ACTIVE
+#if defined(CARE_GPUCC)
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -233,13 +318,13 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   __global__ void forall_fusible_kernel(LB body, int start, int end, bool fused, int action) {
+   template <typename LB, typename ...XARGS>
+   __global__ void forall_fusible_kernel(LB body, int start, int end, XARGS... xargs){
       int i = blockDim.x * blockIdx.x + threadIdx.x;
       int length =  end - start;
 
       if (i < length) {
-         body(i+start, fused, action, start, end);
+         body(i, nullptr, xargs...);
       }
    }
 
@@ -258,8 +343,8 @@ namespace care {
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
-   template <typename LB>
-   void forall(raja_fusible, int start, int end, bool fused, int action, LB body) {
+   template <typename LB, typename ...XARGS>
+   void forall(raja_fusible, int start, int end, LB && body, const char * fileName, int lineNumber, XARGS ...xargs){
       const int length = end - start;
 
       if (length != 0) {
@@ -270,16 +355,16 @@ namespace care {
          /* trigger the chai copy constructors in captured variables */
          LB my_body = body;
 
-         for (int i = start; i < end; ++i) {
-            my_body(i,fused,action,start,end);
+         for (int i = 0; i < length; ++i) {
+            my_body(i,nullptr , xargs...);
          }
 #else
          size_t blockSize = CARE_CUDA_BLOCK_SIZE;
-         size_t gridSize = (end - start) / blockSize + 1;
-         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, fused, action);
+         size_t gridSize = length / blockSize + 1;
+         forall_fusible_kernel<<<gridSize, blockSize>>>(body, start, end, xargs...);
 
 #if FORCE_SYNC
-         care_gpuErrchk(::cudaDeviceSynchronize());
+         care::gpuDeviceSynchronize(fileName, lineNumber);
 #endif
 #endif
 
@@ -295,10 +380,15 @@ namespace care {
    ///
    /// @brief Loops over the given indices and calls the loop body with each index.
    ///        This overload is CHAI and RAJA aware. It sets the execution space
-   ///        accordingly and calls RAJA::forall. First executes on the device, and
-   ///        then on the host.
+   ///        accordingly and calls RAJA::forall. First executes on the host, and
+   ///        then on the device.
+   /// @note In GPU_SIM mode, this does not simulate the call on the device because
+   ///       there is only a single pointer for the managed_ptr in GPU_SIM mode.
+   ///       If managed_ptr is ever updated to use a separate space in GPU_SIM mode,
+   ///       an additional sequential RAJA::forall in the GPU space must be added
+   ///       for GPU_SIM mode.
    ///
-   /// @arg[in] raja_chai_everywhere Used to choose this overload of forall
+   /// @arg[in] managed_ptr_write Used to choose this overload of forall
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
@@ -307,32 +397,166 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void forall(raja_chai_everywhere, const char * fileName, int lineNumber,
+   void forall(managed_ptr_write, const char * fileName, int lineNumber,
                int start, const int end, LB body) {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
 
-#if defined(__CUDACC__) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       const int length = end - start;
 
       if (length != 0) {
          chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
          threadRM->setExecutionSpace(chai::GPU);
 
-#if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(start, end), body);
-#else
+#if defined(__CUDACC__)
          RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
-
-#if FORCE_SYNC
-         care_gpuErrchk(::cudaDeviceSynchronize());
+#elif defined(__HIPCC__)
+         RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
 #endif
+
+#if FORCE_SYNC && defined(CARE_GPUCC)
+         care::gpuDeviceSynchronize(fileName, lineNumber);
 #endif
 
          threadRM->setExecutionSpace(chai::NONE);
       }
 #endif
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Alan Dayton
+   ///
+   /// @brief Loops over the given indices and calls the loop body with each index.
+   ///        This overload takes a run time selectable policy.
+   ///
+   /// @arg[in] policy Run time policy used to select the backend to execute on.
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(Policy&& policy, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+      switch (policy) {
+         case Policy::sequential:
+            forall(sequential{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         case Policy::openmp:
+            forall(openmp{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         case Policy::gpu:
+            forall(gpu{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         case Policy::parallel:
+            forall(parallel{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         case Policy::managed_ptr_read:
+            forall(managed_ptr_read{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         case Policy::managed_ptr_write:
+            forall(managed_ptr_write{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            break;
+         default:
+            std::cout << "[CARE] Error: Invalid policy!" << std::endl;
+            std::abort();
+            break;
+      }
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Loops over a 2 dimensional index space with varying lengths in the second dimension. 
+   ///
+   /// @arg[in] policy Compile time execution space to select the backend to execute on.
+   /// @arg[in] xstart X dimension starting index (inclusive)
+   /// @arg[in] xend  X dimension upper bound of ending index (exclusive)
+   /// @arg[in] host_lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for the Exec type
+   /// @arg[in] ystart The starting index in the y dimension (inclusive)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] body The loop body to execute at each (x,y) index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB, typename Exec>
+   void launch_2D_jagged(Exec /*policy*/, int xstart, int /*xend*/, int const * host_lengths, int ystart, int ylength, const char * /* fileName */, int /* lineNumber */, LB && body) {
+      chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();       
+      arrayManager->setExecutionSpace(ExecutionPolicyToSpace<Exec>::value);
+
+      // intentional trigger of copy constructor for CHAI correctness
+      LB body_to_call{body};
+      for (int y = ystart; y < ylength; ++y) {
+         for (int x = xstart ; x < host_lengths[y]; ++x) {
+            body_to_call(x, y);
+         }
+      }
+      arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
+   }
+
+#ifdef CARE_GPUCC
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief the GPU kernel to call from a care::gpu specialization of launch_2D_jagged
+   ///
+   /// @arg[in] loopBody The loop body to execute at each (x,y) index
+   /// @arg[in] lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for executing on the GPU, recommend PINNED memory so long as bulk of data is in the x dimension (that is sum(lengths) >> ylength)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   CARE_GLOBAL void care_kernel_2D(LB loopBody, int const * lengths, int ylength) {
+     int x = threadIdx.x + blockIdx.x * blockDim.x; 
+     int y = threadIdx.y + blockIdx.y * blockDim.y; 
+     if (x < lengths[y] && y < ylength) {
+        loopBody(x,y);
+     }
+   }
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Loops over a 2 dimensional index space with varying lengths in the second dimension. 
+   ///
+   /// @arg[in] policy Compile time execution space to select the backend to execute on.
+   /// @arg[in] xstart X dimension starting index (inclusive)
+   /// @arg[in] xend  X dimension upper bound of ending index (exclusive)
+   /// @arg[in] host_lengths ending index in x dimension at each y index from ystart (inclusive) to ylength (exclusive). Raw pointer should be in an appropriate memory
+   ///          space for the Exec type
+   /// @arg[in] ystart The starting index in the y dimension (inclusive)
+   /// @arg[in] ylength The ending index in the y dimension (exclusive)
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] body The loop body to execute at each (x,y) index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void launch_2D_jagged(care::gpu, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber , LB && body) {
+       if (xend > 0 && ylength > 0) {
+          // TODO launch this kernel in the camp or RAJA default stream - not sure how to do this - for now this is a synchronous call on the CUDA/HIP default stream
+          chai::ArrayManager* arrayManager = chai::ArrayManager::getInstance();
+          arrayManager->setExecutionSpace(chai::GPU);
+
+          dim3 dimBlock(CARE_CUDA_BLOCK_SIZE, 1);
+          dim3 dimGrid;
+          dimGrid.x  = (xend/CARE_CUDA_BLOCK_SIZE)+(xend%CARE_CUDA_BLOCK_SIZE==0?0:1);
+          dimGrid.y = ylength;
+          care_kernel_2D<<<dimGrid, dimBlock>>>( body, gpu_lengths, ylength);
+          
+          arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
+       }
+   }
+#endif
 } // namespace care
 
 #endif // !defined(_CARE_FORALL_H_)

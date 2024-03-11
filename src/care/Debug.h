@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2020 Lawrence Livermore National Security, LLC and other CARE developers.
-// See the top-level LICENSE file for details.
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef _CARE_DEBUG_H_
 #define _CARE_DEBUG_H_
@@ -13,6 +13,11 @@
 
 // Other CARE headers
 #include "care/host_device_ptr.h"
+
+// Other library headers
+#if CARE_HAVE_LLNL_GLOBALID
+#include "LLNL_GlobalID.h"
+#endif // CARE_HAVE_LLNL_GLOBALID
 
 // Include this file into a source file that is being compiled and linked
 // into your executable. You must explicitly instantiate the TV_ttf_display_type
@@ -109,9 +114,9 @@ namespace care {
 
 template <typename T>
 int TV_ttf_display_type(const care::host_device_ptr<T> * a) {
-#if defined(__CUDACC__)
+#if defined(CARE_GPUCC)
    return TV_ttf_format_raw;
-#else // defined(__CUDACC__)
+#else // defined(CARE_GPUCC)
    // Add a row for the data
    char type[4096];
    snprintf(type, sizeof(type), "%s[%lu]", care::type_name<T>::value, a->size());
@@ -121,7 +126,7 @@ int TV_ttf_display_type(const care::host_device_ptr<T> * a) {
    }
 
    return TV_ttf_format_ok;
-#endif // defined(__CUDACC__)
+#endif // defined(CARE_GPUCC)
 }
 
 #endif // !defined(_CARE_DEBUG_H_)
