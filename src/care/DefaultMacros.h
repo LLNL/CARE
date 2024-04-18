@@ -267,6 +267,11 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
 
+#define CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) \
+   CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_PARALLEL_LOOP_END(CHECK)
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// @brief Macros that start and end a GPU RAJA loop of length one. If GPU is
@@ -545,16 +550,27 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_SET_THREAD_ID(INDEX)
 #endif
 
-#define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
+#define CARE_CHECKED_POLICY_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHECK) { \
    auto _care_checked_loop_end = END_INDEX; \
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::parallel{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
          CARE_SET_THREAD_ID(INDEX)
 
-#define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) }); \
+#define CARE_CHECKED_POLICY_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
+
+#define CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) \
+   CARE_CHECKED_POLICY_LOOP_START(care::parallel,INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_POLICY_LOOP_END(CHECK)
+
+#define CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) \
+   CARE_CHECKED_POLICY_LOOP_START(care::parallel_reduce,INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_POLICY_LOOP_END(CHECK)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -830,9 +846,9 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 /// @arg[in] END_INDEX The ending index (exclusive)
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
+#define CARE_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
 
-#define CARE_REDUCE_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_reduce_loop_check)
+#define CARE_REDUCE_LOOP_END CARE_CHECKED_REDUCE_LOOP_END(care_reduce_loop_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

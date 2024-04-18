@@ -46,6 +46,10 @@ namespace care {
    struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
+   template <>
+   struct ExecutionPolicyToSpace<RAJAReductionExec> {
+      static constexpr const chai::ExecutionSpace value = chai::GPU;
+   };
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
@@ -226,6 +230,37 @@ namespace care {
 #else
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
 #endif
+      PluginData::setParallelContext(false);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Execute using the care::RAJAReductionExec policy
+   ///
+   /// @arg[in] parallel_reducew Used to choose this overload of forall
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(parallel_reduce, const char * fileName, const int lineNumber,
+               const int start, const int end, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+      PluginData::setParallelContext(true);
+
+      forall(RAJAReductionExec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+
       PluginData::setParallelContext(false);
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
