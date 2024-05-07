@@ -6,7 +6,15 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //
-// care::array<care::host_device_ptr<T>, N> crashes at run time.
+// care::array<care::host_device_ptr<T>, N> crashes at run time with the
+// following error:
+//
+// malloc_consolidate(): unaligned fastbin chunk detected
+// flux-job: task(s) exited with exit code 134
+//
+// If WANT_EXIT_CODE_139 is defined, then the program crashes with this error:
+//
+// flux-job: task(s) exited with exit code 139
 //
 
 // CARE library headers
