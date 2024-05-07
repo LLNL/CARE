@@ -46,25 +46,18 @@ int main(int, char**) {
       a[i] = chai::ManagedArray<int>(10);
    }
 
-   RAJA::forall<RAJA::hip_exec<256, true>>(RAJA::RangeSegment(0, 10), [=] __device__ (int i) {
-      a[0][i] = i;
-   });
+   RAJA::forall<RAJA::hip_exec<256, true>>(
+      RAJA::RangeSegment(0, 10),
+      [=] __device__ (int i) { a[0][i] = i; });
 
    a[0].free();
 
    // Kernel afterwards
    StackArray<int, 2> b = {3, 7};
-   RAJA::ReduceMin<RAJA::hip_reduce, bool> passed{true};
 
-   RAJA::forall<RAJA::hip_exec<256, true>>(RAJA::RangeSegment(0, 10), [=] __device__ (int i) {
-      if (b[1] != 7) {
-         passed.min(false);
-      }
-   });
-
-   if ((bool) passed) {
-      std::cout << "Kernel after\n";
-   }
+   RAJA::forall<RAJA::hip_exec<256, true>>(
+      RAJA::RangeSegment(0, 2),
+      [=] __device__ (int i) { static_cast<void>(b[i]); });
 
    return 0;
 }
