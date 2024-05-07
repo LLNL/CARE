@@ -22,14 +22,26 @@
 #include "care/care.h"
 #include "care/host_device_ptr.h"
 #include "care/PointerTypes.h"
-#include "care/array.h"
+
+template <class T, int N>
+struct StackArray {
+   CARE_HOST_DEVICE constexpr T& operator[](int i) noexcept {
+      return elements[i];
+   }
+
+   CARE_HOST_DEVICE constexpr const T& operator[](int i) const noexcept {
+      return elements[i];
+   }
+
+   T elements[N];
+};
 
 int main(int, char**) {
    // Array containing host_device_ptr
 #if WANT_EXIT_CODE_139
-   care::array<care::host_device_ptr<int>, 1> a{{nullptr}};
+   StackArray<care::host_device_ptr<int>, 1> a{nullptr};
 #else
-   care::array<care::host_device_ptr<int>, 1> a;
+   StackArray<care::host_device_ptr<int>, 1> a;
 #endif
 
    for (int i = 0; i < 1; ++i) {
@@ -43,11 +55,11 @@ int main(int, char**) {
    a[0].free();
 
    // Kernel afterwards
-   care::array<int, 2> b{{3, 7}};
+   StackArray<int, 2> b = {3, 7};
    RAJAReduceMin<bool> passed{true};
 
    CARE_REDUCE_LOOP(i, 0, 1) {
-      if (b.back() != 7) {
+      if (b[1] != 7) {
          passed.min(false);
       }
    } CARE_REDUCE_LOOP_END
