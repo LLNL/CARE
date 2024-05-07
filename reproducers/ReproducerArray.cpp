@@ -20,6 +20,7 @@ int main(int, char**) {
    care::array<int, 2> a{{3, 7}};
    RAJAReduceMin<bool> passed{true};
 
+#if WANT_EXIT_CODE_139
    CARE_REDUCE_LOOP(i, 0, 1) {
       if (a.front() != 3) {
          passed.min(false);
@@ -30,6 +31,7 @@ int main(int, char**) {
    if ((bool) passed) {
       std::cout << "Kernel before\n";
    }
+#endif
 
    // Array containing host_device_ptr
    care::array<care::host_device_ptr<int>, 1> b;
@@ -45,7 +47,9 @@ int main(int, char**) {
    b[0].free();
 
    // Kernel afterwards
+#if WANT_EXIT_CODE_139
    passed.reset(true);
+#endif
 
    CARE_REDUCE_LOOP(i, 0, 1) {
       if (a.back() != 7) {
