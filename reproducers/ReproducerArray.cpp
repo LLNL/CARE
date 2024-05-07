@@ -18,18 +18,16 @@
 //
 
 // CARE library headers
-#include "care/config.h"
-#include "care/care.h"
-#include "care/host_device_ptr.h"
-#include "care/PointerTypes.h"
+#include "chai/ManagedArray.hpp"
+#include "RAJA/RAJA.hpp"
 
 template <class T, int N>
 struct StackArray {
-   CARE_HOST_DEVICE constexpr T& operator[](int i) noexcept {
+   __host__ __device__ constexpr T& operator[](int i) noexcept {
       return elements[i];
    }
 
-   CARE_HOST_DEVICE constexpr const T& operator[](int i) const noexcept {
+   __host__ __device__ constexpr const T& operator[](int i) const noexcept {
       return elements[i];
    }
 
@@ -39,30 +37,30 @@ struct StackArray {
 int main(int, char**) {
    // Array containing host_device_ptr
 #if WANT_EXIT_CODE_139
-   StackArray<care::host_device_ptr<int>, 1> a{nullptr};
+   StackArray<chai::ManagedArray<int>, 1> a{chai::ManagedArray<int>{}};
 #else
-   StackArray<care::host_device_ptr<int>, 1> a;
+   StackArray<chai::ManagedArray<int>, 1> a;
 #endif
 
    for (int i = 0; i < 1; ++i) {
-      a[i] = care::host_device_ptr<int>(10);
+      a[i] = chai::ManagedArray<int>(10);
    }
 
-   CARE_STREAM_LOOP(i, 0, 10) {
+   RAJA::forall<RAJA::hip_exec<256, true>>(RAJA::RangeSegment(0, 10), [=] __device__ (int i) {
       a[0][i] = i;
-   } CARE_STREAM_LOOP_END
+   });
 
    a[0].free();
 
    // Kernel afterwards
    StackArray<int, 2> b = {3, 7};
-   RAJAReduceMin<bool> passed{true};
+   RAJA::ReduceMin<RAJA::hip_reduce, bool> passed{true};
 
-   CARE_REDUCE_LOOP(i, 0, 1) {
+   RAJA::forall<RAJA::hip_exec<256, true>>(RAJA::RangeSegment(0, 10), [=] __device__ (int i) {
       if (b[1] != 7) {
          passed.min(false);
       }
-   } CARE_REDUCE_LOOP_END
+   });
 
    if ((bool) passed) {
       std::cout << "Kernel after\n";
