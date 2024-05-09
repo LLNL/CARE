@@ -6,13 +6,17 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //
-// care::array<care::host_device_ptr<T>, N> crashes at run time with the
-// following error:
+// A c-style stack array containing chai::ManagedArray<int> crashes
+// at run time with the following error:
+//
+// corrupted double-linked list
+// flux-job: task(s) exited with exit code 134
+//
+// During the process of tweaking this reproducer the following errors
+// have also occurred:
 //
 // malloc_consolidate(): unaligned fastbin chunk detected
 // flux-job: task(s) exited with exit code 134
-//
-// If WANT_EXIT_CODE_139 is defined, then the program crashes with this error:
 //
 // flux-job: task(s) exited with exit code 139
 //
@@ -21,26 +25,9 @@
 #include "chai/ManagedArray.hpp"
 #include "RAJA/RAJA.hpp"
 
-template <class T, int N>
-struct StackArray {
-   __host__ __device__ constexpr T& operator[](int i) noexcept {
-      return elements[i];
-   }
-
-   __host__ __device__ constexpr const T& operator[](int i) const noexcept {
-      return elements[i];
-   }
-
-   T elements[N];
-};
-
 int main(int, char**) {
-   // Array containing host_device_ptr
-#if WANT_EXIT_CODE_139
-   StackArray<chai::ManagedArray<int>, 1> a{chai::ManagedArray<int>{}};
-#else
-   StackArray<chai::ManagedArray<int>, 1> a;
-#endif
+   // Kernel using c-style stack array of chai::ManagedArrays
+   chai::ManagedArray<int> a[1];
 
    for (int i = 0; i < 1; ++i) {
       a[i] = chai::ManagedArray<int>(10);
@@ -53,7 +40,7 @@ int main(int, char**) {
    a[0].free();
 
    // Kernel afterwards
-   StackArray<int, 2> b = {3, 7};
+   int b[2] = {3, 7};
 
    RAJA::forall<RAJA::hip_exec<256, true>>(
       RAJA::RangeSegment(0, 2),
