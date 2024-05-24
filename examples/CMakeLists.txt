@@ -40,3 +40,6 @@ blt_add_executable(NAME RaceConditionsExample
 
 target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+target_compile_options(RaceConditionsExample PRIVATE -fsanitize=thread -g)
+target_link_options(RaceConditionsExample PRIVATE -fsanitize=thread)

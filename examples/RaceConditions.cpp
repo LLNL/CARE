@@ -16,7 +16,7 @@
 #include <vector>
 
 int main(int, char**) {
-   int size = 10;
+   const int size = 10;
    care::host_device_ptr<int> data(size);
 
    CARE_OPENMP_LOOP(i, 0, size) {
