@@ -15,6 +15,7 @@ namespace care {
    struct openmp {};
    struct gpu {};
    struct parallel {};
+   struct parallel_reduce {};
    struct raja_fusible {};
    struct raja_fusible_seq {};
    struct managed_ptr_read {};
@@ -27,6 +28,7 @@ namespace care {
       openmp,
       gpu,
       parallel,
+      parallel_reduce,
       managed_ptr_read,
       managed_ptr_write
    };
@@ -65,6 +67,12 @@ using RAJADeviceExec = RAJA::seq_exec;
 
 #endif // CARE_GPUCC
 
+//  reduction kernel policy
+#if defined(__HIPCC__)
+using RAJAReductionExec = RAJA::hip_exec_occ_calc<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>;
+#else
+using RAJAReductionExec = RAJADeviceExec;
+#endif
 
 
 
