@@ -5,7 +5,7 @@
 [comment]: # (SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
 
-# CARE v0.12.0
+# CARE v0.13.0
 
 CARE: CHAI and RAJA Extensions
 ===============================
