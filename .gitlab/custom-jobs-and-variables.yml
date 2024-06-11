@@ -27,7 +27,6 @@ variables:
 # Arguments for top level allocation
   POODLE_SHARED_ALLOC: "--exclusive --partition=pdebug --time=10 --nodes=1"
 # Arguments for job level allocation
-# Note: We repeat the reservation, necessary when jobs are manually re-triggered.
   POODLE_JOB_ALLOC: "--overlap --nodes=1"
 # Project specific variants for poodle
   PROJECT_POODLE_VARIANTS: ""
@@ -71,3 +70,15 @@ variables:
   artifacts:
     reports:
       junit: junit.xml
+
+.reproducer_vars:
+  script:
+    - |
+      echo -e "
+      # Required variables \n
+      export MODULE_LIST=\"${MODULE_LIST}\" \n
+      export SPEC=\"${SPEC//\"/\\\"}\" \n
+      # Allow to set job script for debugging (only this differs from CI) \n
+      export DEBUG_MODE=true \n
+      # Using the CI build cache is optional and requires a token. Set it like so: \n
+      # export REGISTRY_TOKEN=\"<your token here>\" \n"
