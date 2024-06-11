@@ -69,25 +69,24 @@ macro(care_find_package)
 
    ## parse the arguments to the macro
    cmake_parse_arguments(
-      arg "${options}" "${singleValuedArgs}" "${multiValuedArgs}" ${ARGN})
+      care_arg "${options}" "${singleValuedArgs}" "${multiValuedArgs}" ${ARGN})
 
-   if(NOT DEFINED arg_NAME)
+   if(NOT DEFINED care_arg_NAME)
       message(FATAL_ERROR "NAME is a required parameter for the care_find_package macro.")
    endif()
 
-   string(TOUPPER ${arg_NAME} _name_upper)
+   string(TOUPPER ${care_arg_NAME} care_name_upper)
+   find_package(${care_arg_NAME} QUIET NO_DEFAULT_PATH PATHS ${${care_name_upper}_DIR})
+   set(${care_name_upper}_FOUND ${${care_arg_NAME}_FOUND})
 
-   find_package(${arg_NAME} QUIET NO_DEFAULT_PATH PATHS ${${_name_upper}_DIR})
-   set(${_name_upper}_FOUND ${${arg_NAME}_FOUND})
-
-   if(${arg_REQUIRED} AND NOT ${${_name_upper}_FOUND})
-      message(FATAL_ERROR "Could not find ${arg_NAME}. Set ${_name_upper}_DIR to the install location of ${arg_NAME}.")
+   if(${care_arg_REQUIRED} AND NOT ${${care_name_upper}_FOUND})
+      message(FATAL_ERROR "Could not find ${care_arg_NAME}. Set ${care_name_upper}_DIR to the install location of ${care_arg_NAME}.")
    endif()
 
-   unset(_name_upper)
+   unset(care_name_upper)
 
-   if(${arg_TARGETS})
-      care_convert_to_system_includes(TARGETS ${arg_TARGETS} RECURSIVE)
+   if(${care_arg_TARGETS})
+      care_convert_to_system_includes(TARGETS ${care_arg_TARGETS} RECURSIVE)
    endif()
 
 endmacro()
