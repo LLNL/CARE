@@ -46,6 +46,10 @@ namespace care {
    struct ExecutionPolicyToSpace<RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>> {
       static constexpr const chai::ExecutionSpace value = chai::GPU;
    };
+   template <>
+   struct ExecutionPolicyToSpace<RAJAReductionExec> {
+      static constexpr const chai::ExecutionSpace value = chai::GPU;
+   };
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
@@ -67,33 +71,51 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename ExecutionPolicy, typename LB>
    void forall(ExecutionPolicy /* policy */, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
       const int length = end - start;
 
       if (length != 0) {
          PluginData::setFileName(fileName);
          PluginData::setLineNumber(lineNumber);
 
+         int index = start ;
+         int chunk_size = batch_size > 0 ? batch_size : length ;
+
+         while (index < end) {
+            int chunk_start = index ;
+            int chunk_end = (index + chunk_size < end) ? index + chunk_size : end ;
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
-         RAJA::RangeStrideSegment rangeSegment =
-            s_reverseLoopOrder ?
-            RAJA::RangeStrideSegment(end - 1, start - 1, -1) :
-            RAJA::RangeStrideSegment(start, end, 1);
+            RAJA::RangeStrideSegment rangeSegment =
+               s_reverseLoopOrder ?
+               RAJA::RangeStrideSegment(chunk_end - 1, chunk_start - 1, -1) :
+               RAJA::RangeStrideSegment(chunk_start, chunk_end, 1);
 #else
-         RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(start, end);
+            RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(chunk_start, chunk_end);
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-         RAJA::forall<RAJA::seq_exec>(rangeSegment, std::forward<LB>(body));
+            chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
+            if (ExecutionPolicyToSpace<ExecutionPolicy>::value == chai::GPU) {
+               threadRM->setGPUSimMode(true);
+            }
+            else {
+               threadRM->setGPUSimMode(false);
+            }
+            RAJA::forall<RAJA::seq_exec>(rangeSegment, std::forward<LB>(body));
+            threadRM->setGPUSimMode(false);
 #else
-         RAJA::forall<ExecutionPolicy>(rangeSegment, std::forward<LB>(body));
+            RAJA::forall<ExecutionPolicy>(rangeSegment, std::forward<LB>(body));
 #endif
+
+            index += chunk_size ;
+         }
       }
    }
 
@@ -108,13 +130,14 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(sequential, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+               const int start, const int end, const int batch_size, LB&& body) {
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -129,20 +152,21 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(openmp, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
 #endif
 
 #if defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -162,26 +186,27 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(gpu, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
 #endif
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #endif
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -202,30 +227,63 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(parallel, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
 #endif
       PluginData::setParallelContext(true);
       
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__CUDACC__)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__HIPCC__)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #endif
+      PluginData::setParallelContext(false);
+
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = false;
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
+   /// @author Peter Robinson
+   ///
+   /// @brief Execute using the care::RAJAReductionExec policy
+   ///
+   /// @arg[in] parallel_reduce Used to choose this overload of forall
+   /// @arg[in] fileName The name of the file where this function is called
+   /// @arg[in] lineNumber The line number in the file where this function is called
+   /// @arg[in] start The starting index (inclusive)
+   /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB>
+   void forall(parallel_reduce, const char * fileName, const int lineNumber,
+               const int start, const int end, const int batch_size, LB&& body) {
+#if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
+      s_reverseLoopOrder = true;
+#endif
+      PluginData::setParallelContext(true);
+
+      forall(RAJAReductionExec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
+
       PluginData::setParallelContext(false);
 
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
@@ -247,24 +305,25 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(managed_ptr_read, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
 #if CARE_ENABLE_GPU_SIMULATION_MODE && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
-      forall(gpu_simulation{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(gpu_simulation{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__CUDACC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(__HIPCC__) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       forall(RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>{},
-             fileName, lineNumber, start, end, std::forward<LB>(body));
+             fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP)
-      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::omp_parallel_for_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #else
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
 #endif
    }
 
@@ -398,9 +457,9 @@ namespace care {
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(managed_ptr_write, const char * fileName, int lineNumber,
-               int start, const int end, LB body) {
+               const int start, const int end, const int batch_size, LB&& body) {
       // preLoopPrint and postLoopPrint are handled in this call.
-      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, body);
+      forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, body);
 
 #if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       const int length = end - start;
@@ -409,11 +468,22 @@ namespace care {
          chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
          threadRM->setExecutionSpace(chai::GPU);
 
+         int index = start ;
+         int chunk_size = batch_size > 0 ? batch_size : length ;
+
+         while (index < end) {
+            int chunk_start = index ;
+            int chunk_end = (index + chunk_size < end) ? index + chunk_size : end ;
+            RAJA::RangeSegment rangeSegment = RAJA::RangeSegment(chunk_start, chunk_end);
+
 #if defined(__CUDACC__)
-         RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
+            RAJA::forall< RAJA::cuda_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(rangeSegment, body);
 #elif defined(__HIPCC__)
-         RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(RAJA::RangeSegment(start, end), body);
+            RAJA::forall< RAJA::hip_exec<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>>(rangeSegment, body);
 #endif
+
+            index += chunk_size ;
+         }
 
 #if FORCE_SYNC && defined(CARE_GPUCC)
          care::gpuDeviceSynchronize(fileName, lineNumber);
@@ -436,30 +506,31 @@ namespace care {
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
    void forall(Policy&& policy, const char * fileName, const int lineNumber,
-               const int start, const int end, LB&& body) {
+               const int start, const int end, const int batch_size, LB&& body) {
       switch (policy) {
          case Policy::sequential:
-            forall(sequential{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(sequential{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          case Policy::openmp:
-            forall(openmp{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(openmp{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          case Policy::gpu:
-            forall(gpu{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(gpu{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          case Policy::parallel:
-            forall(parallel{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(parallel{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          case Policy::managed_ptr_read:
-            forall(managed_ptr_read{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(managed_ptr_read{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          case Policy::managed_ptr_write:
-            forall(managed_ptr_write{}, fileName, lineNumber, start, end, std::forward<LB>(body));
+            forall(managed_ptr_write{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
             break;
          default:
             std::cout << "[CARE] Error: Invalid policy!" << std::endl;

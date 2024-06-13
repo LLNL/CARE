@@ -6,10 +6,9 @@
 ##############################################################################
 
 # Override reproducer section to define project specific variables.
-.corona_reproducer_vars: &corona_reproducer_vars
-    - |
-      echo -e "export MODULE_LIST=\"${MODULE_LIST}\""
-      echo -e "export SPEC=\"${SPEC//\"/\\\"}\""
+.corona_reproducer_vars:
+  script:
+    - !reference [.reproducer_vars, script]
 
 ########################
 # Overridden shared jobs

@@ -56,6 +56,40 @@ CPU_TEST(forall, dynamic_policy)
    temp.free();
 }
 
+CPU_TEST(forall, chunked_static_policy)
+{
+   const int batch_size = 3;
+   const int length = 10;
+   care::host_device_ptr<int> temp(length, "temp");
+
+   CARE_CHUNKED_LOOP(care::sequential{}, i, 0, length, batch_size) {
+      temp[i] = i;
+   } CARE_CHUNKED_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
+      EXPECT_EQ(temp[i], i);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   temp.free();
+}
+
+CPU_TEST(forall, chunked_dynamic_policy)
+{
+   const int batch_size = 3;
+   const int length = 10;
+   care::host_device_ptr<int> temp(length, "temp");
+
+   CARE_LOOP(care::Policy::sequential, i, 0, length, batch_size) {
+      temp[i] = i;
+   } CARE_CHUNKED_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
+      EXPECT_EQ(temp[i], i);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   temp.free();
+}
+
 #if defined(CARE_ENABLE_RACE_DETECTION)
 CPU_TEST(forall, race_condition_detection)
 {
@@ -116,6 +150,41 @@ GPU_TEST(forall, dynamic_policy)
 
    temp.free();
 }
+
+GPU_TEST(forall, chunked_static_policy)
+{
+   const int batch_size = 3;
+   const int length = 10;
+   care::host_device_ptr<int> temp(length, "temp");
+
+   CARE_CHUNKED_LOOP(care::gpu{}, i, 0, length, batch_size) {
+      temp[i] = i;
+   } CARE_CHUNKED_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
+      EXPECT_EQ(temp[i], i);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   temp.free();
+}
+
+GPU_TEST(forall, chunked_dynamic_policy)
+{
+   const int batch_size = 3;
+   const int length = 10;
+   care::host_device_ptr<int> temp(length, "temp");
+
+   CARE_CHUNKED_LOOP(care::Policy::gpu, i, 0, length, batch_size) {
+      temp[i] = i;
+   } CARE_CHUNKED_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, length) {
+      EXPECT_EQ(temp[i], i);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   temp.free();
+}
+
 
 #endif // CARE_GPUCC
 
