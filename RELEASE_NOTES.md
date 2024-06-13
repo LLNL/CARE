@@ -12,6 +12,12 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.13.0] - Release date 2024-06-11
+
+### Added
+- Alias for execution policy specificially for kernels with reductions
+- Chunked loop policies
+
 ## [Version 0.12.0] - Release date 2024-03-11
 
 ### Added
