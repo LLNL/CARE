@@ -12,6 +12,11 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.13.1] - Release date 2024-06-27
+
+### Changed
+- Updated to CHAI v2024.02.2
+
 ## [Version 0.13.0] - Release date 2024-06-11
 
 ### Added
