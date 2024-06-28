@@ -100,9 +100,6 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+rocm"):
         depends_on("rocprim")
-        depends_on("umpire+rocm")
-        depends_on("raja+rocm")
-        depends_on("chai+rocm")
 
         for arch in ROCmPackage.amdgpu_targets:
             depends_on("umpire+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch))
@@ -111,9 +108,6 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+cuda"):
         depends_on("cub", when="cuda@:10.2")
-        depends_on("umpire+cuda")
-        depends_on("raja+cuda")
-        depends_on("chai+cuda")
 
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("umpire+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
@@ -133,7 +127,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
             options.append("-DCUDA_TOOLKIT_ROOT_DIR=" + spec["cuda"].prefix)
             options.append("-DNVTOOLSEXT_DIR=" + spec["cuda"].prefix)
 
-            if spec.satisfies("@cuda:10.2"):
+            if spec.satisfies("cuda@:10.2"):
                 options.append("-DCUB_DIR=" + spec["cub"].prefix)
             else:
                 options.append("-DCUB_DIR=" + spec["cuda"].prefix)
