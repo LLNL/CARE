@@ -186,7 +186,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         options.append(from_variant("ENABLE_EXAMPLES", "examples"))
         options.append(from_variant("ENABLE_DOCS", "docs"))
 
-        if spec.satisfies("@:0.11.1")
+        if spec.satisfies("@:0.11.1"):
             options.append(from_variant("CARE_ENABLE_TESTS", "tests"))
             options.append(from_variant("CARE_ENABLE_BENCHMARKS", "benchmarks"))
             options.append(from_variant("CARE_ENABLE_EXAMPLES", "examples"))
