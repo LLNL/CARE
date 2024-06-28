@@ -133,7 +133,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
             options.append("-DCUDA_TOOLKIT_ROOT_DIR=" + spec["cuda"].prefix)
             options.append("-DNVTOOLSEXT_DIR=" + spec["cuda"].prefix)
 
-            if spec.satisfies("@cuda:10.2")
+            if spec.satisfies("@cuda:10.2"):
                 options.append("-DCUB_DIR=" + spec["cub"].prefix)
             else:
                 options.append("-DCUB_DIR=" + spec["cuda"].prefix)
