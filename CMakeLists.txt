@@ -9,7 +9,7 @@
 # Set up CMake
 ##########################################################################
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.23)
 
 ##########################################################################
 # Set up project
@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(CARE
         LANGUAGES C CXX
-        VERSION 0.13.1)
+        VERSION 0.13.2)
 
 include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
 
