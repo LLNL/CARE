@@ -16,7 +16,7 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 
 ### Changed
 - Updated to Umpire/RAJA/CHAI v2024.07.0
-- Updated minimum CMake required to 3.23
+- Updated minimum required CMake to 3.23
 
 ## [Version 0.13.1] - Release date 2024-06-27
 
