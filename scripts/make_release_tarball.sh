@@ -8,7 +8,7 @@
 ##############################################################################
 
 TAR_CMD=gtar
-VERSION=0.13.1
+VERSION=0.13.2
 
 git archive --prefix=care-${VERSION}/ -o care-${VERSION}.tar HEAD 2> /dev/null
 

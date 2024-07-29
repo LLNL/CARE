@@ -19,9 +19,9 @@ jobs:
     - name: Set up CMake
       uses: jwlawson/actions-setup-cmake@v1.13.1
       with:
-        cmake-version: '3.20.x'
+        cmake-version: '3.23.x'
     - name: Run CMake
-      run: cmake ../ -DCMAKE_BUILD_TYPE=Debug
+      run: cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCARE_ENABLE_SUBMODULE_TESTS=Off -DCARE_ENABLE_SUBMODULE_BENCHMARKS=Off -DCARE_ENABLE_SUBMODULE_EXAMPLES=Off -DCARE_ENABLE_SUBMODULE_EXERCISES=Off -DCARE_ENABLE_SUBMODULE_DOCS=Off
       working-directory: build
     - name: Run make
       run: make -j
