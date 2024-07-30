@@ -26,6 +26,8 @@ constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 
 #if CARE_ENABLE_LOOP_FUSER
 
+#include "RAJA/RAJA.hpp"
+
 #include "umpire/Allocator.hpp"
 #include "umpire/TypedAllocator.hpp"
 
@@ -581,11 +583,11 @@ class LoopFuser : public FusedActions {
                                  RAJA::constant_stride_array_of_objects >;
 #else
       using workgroup_policy = RAJA::WorkGroupPolicy <
-                                 RAJA::loop_work,
+                                 RAJA::seq_work,
                                  RAJA::ordered,
                                  RAJA::ragged_array_of_objects >;
       using workgroup_ordered_policy = RAJA::WorkGroupPolicy <
-                                 RAJA::loop_work,
+                                 RAJA::seq_work,
                                  RAJA::ordered,
                                  RAJA::ragged_array_of_objects >;
 #endif
