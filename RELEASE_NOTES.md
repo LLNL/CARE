@@ -12,6 +12,12 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.13.3] - Release date 2024-07-31
+
+### Fixed
+- Replaced loop\_work alias with seq\_work (loop\_work was removed in RAJA v2024.02.2)
+- Fixed CHUNKED loop macro implementations
+
 ## [Version 0.13.2] - Release date 2024-07-29
 
 ### Changed
