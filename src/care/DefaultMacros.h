@@ -313,7 +313,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+#define CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
 
 #define CARE_CHECKED_CHUNKED_GPU_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
 
@@ -366,12 +366,12 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHECK The variable to check that the start and end macros match
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
 
-#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
 
 #define CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) \
-   CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+   CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
 
 #define CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK)
 
@@ -901,9 +901,9 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHUNK_SIZE Maximum kernel size
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHUNKED_LOOP(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_loop_chunked_check)
+#define CARE_CHUNKED_LOOP(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_loop_chunked_check)
 
-#define CARE_CHUNKED_LOOP_END CARE_CHECKED_LOOP_END(care_loop_chunked_check)
+#define CARE_CHUNKED_LOOP_END CARE_CHECKED_CHUNKED_LOOP_END(care_loop_chunked_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -1041,7 +1041,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHUNK_SIZE Maximum kernel size
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHUNKED_GPU_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_gpu_loop_chunked_check)
+#define CARE_CHUNKED_GPU_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_gpu_loop_chunked_check)
 
 #define CARE_CHUNKED_GPU_LOOP_END CARE_CHECKED_CHUNKED_GPU_LOOP_END(care_gpu_loop_chunked_check)
 
@@ -1149,7 +1149,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHUNK_SIZE Maximum kernel size
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHUNKED_WORK_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_work_loop_chunked_check)
+#define CARE_CHUNKED_WORK_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_work_loop_chunked_check)
 
 #define CARE_CHUNKED_WORK_LOOP_END CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(care_work_loop_chunked_check)
 
@@ -1223,7 +1223,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 /// @arg[in] CHUNK_SIZE Maximum kernel size
 ///
 ////////////////////////////////////////////////////////////////////////////////
-#define CARE_CHUNKED_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_reduce_loop_chunked_check)
+#define CARE_CHUNKED_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_reduce_loop_chunked_check)
 
 #define CARE_CHUNKED_REDUCE_LOOP_END CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(care_reduce_loop_chunked_check)
 
