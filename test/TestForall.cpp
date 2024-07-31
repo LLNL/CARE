@@ -79,7 +79,7 @@ CPU_TEST(forall, chunked_dynamic_policy)
    const int length = 10;
    care::host_device_ptr<int> temp(length, "temp");
 
-   CARE_LOOP(care::Policy::sequential, i, 0, length, batch_size) {
+   CARE_CHUNKED_LOOP(care::Policy::sequential, i, 0, length, batch_size) {
       temp[i] = i;
    } CARE_CHUNKED_LOOP_END
 
@@ -184,7 +184,6 @@ GPU_TEST(forall, chunked_dynamic_policy)
 
    temp.free();
 }
-
 
 #endif // CARE_GPUCC
 
