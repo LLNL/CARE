@@ -34,3 +34,12 @@ blt_add_executable(NAME ScanLoopExample
 target_include_directories(ScanLoopExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(ScanLoopExample PRIVATE ${PROJECT_BINARY_DIR}/include)
 
+blt_add_executable(NAME RaceConditionsExample
+                   SOURCES RaceConditions.cpp
+                   DEPENDS_ON ${care_depends})
+
+target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+target_compile_options(RaceConditionsExample PRIVATE -fsanitize=thread -g)
+target_link_options(RaceConditionsExample PRIVATE -fsanitize=thread)
