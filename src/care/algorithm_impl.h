@@ -287,7 +287,7 @@ CARE_INLINE void IntersectArraysSeq(const T *arr1, int size1, int start1,
    i = j = 0 ;
 
    while (i < size1 && j < size2) {
-      if ((a1)[i] < a2[j]) {
+      if (a1[i] < a2[j]) {
          ++i;
       }
       else if (a2[j] < a1[i]) {
