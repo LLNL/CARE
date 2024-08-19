@@ -34,6 +34,12 @@
 /// Used to capture variables by reference into a lambda (combine with FOR_EACH)
 #define CARE_REF_CAPTURE(X) , &X
 
+#ifdef CARE_ENABLE_RACE_DETECTION
+#define CARE_SET_THREAD_ID(INDEX) care::DebugPlugin::s_threadID = INDEX ;
+#else
+#define CARE_SET_THREAD_ID(INDEX)
+#endif
+
 
 
 
@@ -89,6 +95,29 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 #define CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK) } OMP_FOR_END CARE_NEST_END(CHECK) }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked vanilla OpenMP 3.0 for loop.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) {\
+ CARE_NEST_BEGIN(CHECK) \
+ auto const _care_openmp_for_loop_end_ndx = END_INDEX; \
+ decltype(_care_openmp_for_loop_end_ndx) _care_openmp_for_loop_ndx = START_INDEX; \
+ decltype(_care_openmp_for_loop_end_ndx) _care_open_chunked_for_loop_chunk_size = CHUNK_SIZE > 0 ? CHUNK_SIZE : END_INDEX - START_INDEX ; \
+ while (_care_openmp_for_loop_begin_ndx < _care_openmp_for_loop_end_ndx) { \
+    decltype(_care_openmp_for_loop_end_ndx) _care_openmp_for_loop_chunk_begin_ndx = _care_openmp_for_loop_ndx ; \
+    decltype(_care_openmp_for_loop_end_ndx) _care_openmp_for_loop_chunk_end_ndx = (_care_openmp_for_loop_ndx + _care_open_chunked_for_loop_chunk_size) ? _care_openmp_for_loop_ndx + _care_open_chunked_for_loop_chunk_size : _care_openmp_for_loop_end_ndx ; \
+OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _care_openmp_for_loop_chunk_end_ndx; ++INDEX) {\
+
+#define CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK) } OMP_FOR_END } CARE_NEST_END(CHECK) }
+
 
 
 
@@ -132,6 +161,24 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
 
 #define CARE_CHECKED_LOOP_END(CHECK) CARE_CHECKED_FOR_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a call to forall with the given execution policy.
+///        This is for compatibility with chunked GPU loops.
+///        The legacy version uses a raw for loop.
+///
+/// @arg[in] POLICY The execution policy
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Not used
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
+
+#define CARE_CHECKED_CHUNKED_LOOP_END(CHECK) CARE_CHECKED_FOR_LOOP_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -208,6 +255,23 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a chunked OpenMP RAJA loop. If OpenMP is not
+///        available, executes sequentially on the host. The legacy version
+///        uses raw OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_OPENMP_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_OPENMP_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end an OpenMP RAJA loop that captures some
 ///        variables by reference. The legacy version uses raw OpenMP.
 ///
@@ -236,6 +300,22 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
 
 #define CARE_CHECKED_GPU_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked GPU RAJA loop. If GPU is not available,
+///        executes sequentially on the host. The legacy version uses raw OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_GPU_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -274,6 +354,29 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host. The legacy version uses raw OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
+
+#define CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) \
+   CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a GPU RAJA loop of length one. If GPU is
 ///        not available, executes on the host. The legacy version uses raw
 ///        host code (no need for openmp since it would only use one thread
@@ -304,6 +407,26 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK)
 
 #define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) CARE_CHECKED_OPENMP_FOR_LOOP_END(CHECK)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_OPENMP_FOR_LOOP_END(CHECK)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -369,9 +492,29 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_HOST_DEVICE (const int INDEX) {
+      care::forall(POLICY, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [=] CARE_HOST_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a call to a chunked forall with the given execution policy.
+///
+/// @arg[in] POLICY The execution policy
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum chunk size for each kernel
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(POLICY, __FILE__, __LINE__, START_INDEX, END_INDEX, CHUNK_SIZE, [=] CARE_HOST_DEVICE (const int INDEX) {
+
+#define CARE_CHECKED_CHUNKED_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,7 +530,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_SEQUENTIAL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] (const int INDEX) {
+      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [=] (const int INDEX) {
 
 #define CARE_CHECKED_SEQUENTIAL_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -407,7 +550,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::sequential{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_SEQUENTIAL_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -421,7 +564,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_HOST_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [=] (const int) {
+   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, 0, [=] (const int) {
 
 #define CARE_CHECKED_HOST_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -437,7 +580,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_HOST_KERNEL_WITH_REF_START(CHECK, ...) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int) {
+   care::forall(care::sequential{}, __FILE__, __LINE__, 0, 1, 0, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int) {
 
 #define CARE_CHECKED_HOST_KERNEL_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -456,9 +599,29 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_OPENMP_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] (const int INDEX) {
+      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [=] (const int INDEX) {
 
 #define CARE_CHECKED_OPENMP_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked OpenMP RAJA loop. If OpenMP is not
+///        available, executes sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum size of kernel
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_OPENMP_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, CHUNK_SIZE, [=] (const int INDEX) {
+
+#define CARE_CHECKED_CHUNKED_OPENMP_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -476,7 +639,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_START(INDEX, START_INDEX, END_INDEX, CHECK, ...) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
+      care::forall(care::openmp{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [= FOR_EACH(CARE_REF_CAPTURE, __VA_ARGS__)] (const int INDEX) {
 
 #define CARE_CHECKED_OPENMP_LOOP_WITH_REF_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -491,7 +654,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_OPENMP_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::openmp{}, __FILE__, __LINE__, 0, 1, [=] (const int) {
+   care::forall(care::openmp{}, __FILE__, __LINE__, 0, 1, 0, [=] (const int) {
 
 #define CARE_CHECKED_OPENMP_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -510,9 +673,29 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_DEVICE (const int INDEX) {
+      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [=] CARE_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_GPU_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked GPU RAJA loop. If GPU is not available,
+///        executes sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::gpu{}, __FILE__, __LINE__, START_INDEX, END_INDEX, CHUNK_SIZE, [=] CARE_DEVICE (const int INDEX) {
+
+#define CARE_CHECKED_CHUNKED_GPU_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -525,7 +708,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_GPU_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
+   care::forall(care::gpu{}, __FILE__, __LINE__, 0, 1, 0, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_GPU_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -544,18 +727,12 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef CARE_ENABLE_RACE_DETECTION
-#define CARE_SET_THREAD_ID(INDEX) care::DebugPlugin::s_threadID = INDEX ;
-#else
-#define CARE_SET_THREAD_ID(INDEX)
-#endif
-
 #define CARE_CHECKED_POLICY_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHECK) { \
    auto _care_checked_loop_end = END_INDEX; \
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, 0, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
          CARE_SET_THREAD_ID(INDEX)
 
 #define CARE_CHECKED_POLICY_LOOP_END(CHECK) }); \
@@ -571,6 +748,43 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 #define CARE_CHECKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_POLICY_LOOP_END(CHECK)
 
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+
+#define CARE_CHECKED_CHUNKED_POLICY_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) { \
+   auto _care_checked_loop_end = END_INDEX; \
+   decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
+   if (_care_checked_loop_end > _care_checked_loop_begin) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, CHUNK_SIZE, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
+         CARE_SET_THREAD_ID(INDEX)
+
+#define CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) \
+   CARE_CHECKED_CHUNKED_POLICY_LOOP_START(care::parallel,INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK)
+
+#define CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) \
+   CARE_CHECKED_CHUNKED_POLICY_LOOP_START(care::parallel_reduce,INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+
+#define CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK)
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -582,7 +796,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_PARALLEL_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, [=] CARE_DEVICE (const int) {
+   care::forall(care::parallel{}, __FILE__, __LINE__, 0, 1, 0, [=] CARE_DEVICE (const int) {
 
 #define CARE_CHECKED_PARALLEL_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -605,9 +819,33 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_CHECKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) { \
    if (END_INDEX > START_INDEX) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, 0, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
 
 #define CARE_CHECKED_MANAGED_PTR_LOOP_END(CHECK) }); \
+   CARE_NEST_END(CHECK) }}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+/// @arg[in] CHECK The variable to check that the start and end macros match
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) { \
+   if (END_INDEX > START_INDEX) { \
+      CARE_NEST_BEGIN(CHECK) \
+      care::forall(care::managed_ptr_read{}, __FILE__, __LINE__, START_INDEX, END_INDEX, CHUNK_SIZE, [=] CARE_MANAGED_PTR_DEVICE (const int INDEX) {
+
+#define CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,7 +860,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 ////////////////////////////////////////////////////////////////////////////////
 #define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_START(CHECK) { \
    CARE_NEST_BEGIN(CHECK) \
-   care::forall(care::managed_ptr_write{}, __FILE__, __LINE__, 0, 1, [=] CARE_MANAGED_PTR_HOST_DEVICE (const int) {
+   care::forall(care::managed_ptr_write{}, __FILE__, __LINE__, 0, 1, 0, [=] CARE_MANAGED_PTR_HOST_DEVICE (const int) {
 
 #define CARE_CHECKED_MANAGED_PTR_UPDATE_KERNEL_END(CHECK) }); \
    CARE_NEST_END(CHECK) }
@@ -651,6 +889,21 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_LOOP(POLICY, INDEX, START_INDEX, END_INDEX) CARE_CHECKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, care_loop_check)
 
 #define CARE_LOOP_END CARE_CHECKED_LOOP_END(care_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a call to chunked forall.
+///
+/// @arg[in] POLICY The execution policy to use
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_LOOP(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_LOOP_START(POLICY, INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_loop_chunked_check)
+
+#define CARE_CHUNKED_LOOP_END CARE_CHECKED_CHUNKED_LOOP_END(care_loop_chunked_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -733,6 +986,21 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a chunked OpenMP RAJA loop. If OpenMP is not
+///        available, executes sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_OPENMP_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_OPENMP_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_openmp_loop_chunked_check)
+
+#define CARE_CHUNKED_OPENMP_LOOP_END CARE_CHECKED_CHUNKED_OPENMP_LOOP_END(care_openmp_loop_chunked_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end an OpenMP RAJA loop that captures some
 ///        variables by reference.
 ///
@@ -763,6 +1031,22 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a chunked RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available, executes
+///        sequentially on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_GPU_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_GPU_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_gpu_loop_chunked_check)
+
+#define CARE_CHUNKED_GPU_LOOP_END CARE_CHECKED_CHUNKED_GPU_LOOP_END(care_gpu_loop_chunked_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
 ///        executes on the device. If GPU is not available but OpenMP is,
 ///        executes in parallel on the host. Otherwise, executes sequentially
@@ -776,6 +1060,24 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_PARALLEL_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_parallel_loop_check)
 
 #define CARE_PARALLEL_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_parallel_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_PARALLEL_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_parallel_loop_chunked_check)
+
+#define CARE_CHUNKED_PARALLEL_LOOP_END CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(care_parallel_loop_chunked_check)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -797,6 +1099,25 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Macros that start and end a chunked RAJA loop that uses at least one
+///        managed_ptr. If GPU is available, and managed_ptr is available
+///        on the device, executes on the device. If GPU is not available
+///        but OpenMP is, executes in parallel on the host. Otherwise,
+///        executes sequentially on the host. The legacy version uses raw
+///        OpenMP.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_MANAGED_PTR_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_managed_ptr_read_loop_chunked_check)
+
+#define CARE_CHUNKED_MANAGED_PTR_LOOP_END CARE_CHECKED_CHUNKED_MANAGED_PTR_LOOP_END(care_managed_ptr_read_loop_chunked_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// @brief Macros that start and end a parallel RAJA loop. If GPU is available,
 ///        executes on the device. If GPU is not available but OpenMP is,
 ///        executes in parallel on the host. Otherwise, executes sequentially
@@ -812,6 +1133,25 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_WORK_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, care_work_loop_check)
 
 #define CARE_WORK_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_work_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+///        WORK is an alias to PARALLEL that indicates a lot of work is taking place.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_WORK_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_work_loop_chunked_check)
+
+#define CARE_CHUNKED_WORK_LOOP_END CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(care_work_loop_chunked_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -831,6 +1171,24 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 
 #define CARE_STREAM_LOOP_END CARE_CHECKED_PARALLEL_LOOP_END(care_stream_loop_check)
 
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+///        STREAM is an alias to PARALLEL that indicates not much work is taking place.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_STREAM_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_PARALLEL_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_stream_loop_chunked_check)
+
+#define CARE_CHUNKED_STREAM_LOOP_END CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(care_stream_loop_chunked_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -849,6 +1207,25 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_begin_ndx; INDEX < _care_o
 #define CARE_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX) CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, care_reduce_loop_check)
 
 #define CARE_REDUCE_LOOP_END CARE_CHECKED_REDUCE_LOOP_END(care_reduce_loop_check)
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// @brief Macros that start and end a chunked parallel RAJA loop. If GPU is available,
+///        executes on the device. If GPU is not available but OpenMP is,
+///        executes in parallel on the host. Otherwise, executes sequentially
+///        on the host.
+///
+///        REDUCE is an alias to PARALLEL that indicates a reduction is taking place.
+///
+/// @arg[in] INDEX The index variable
+/// @arg[in] START_INDEX The starting index (inclusive)
+/// @arg[in] END_INDEX The ending index (exclusive)
+/// @arg[in] CHUNK_SIZE Maximum kernel size
+///
+////////////////////////////////////////////////////////////////////////////////
+#define CARE_CHUNKED_REDUCE_LOOP(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE) CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, care_reduce_loop_chunked_check)
+
+#define CARE_CHUNKED_REDUCE_LOOP_END CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(care_reduce_loop_chunked_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
