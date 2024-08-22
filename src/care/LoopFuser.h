@@ -47,7 +47,7 @@ namespace care {
    inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
                                        T_PTR freeDeviceCPUDestination,
                                        size_t elems) {
-      if constexpr(std::is_null_pointer_v<T_PTR>) {
+     if constexpr(std::is_null_pointer<T_PTR>::value) {
          array.freeDeviceMemory(nullptr, 0);
       }
       else {
