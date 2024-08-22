@@ -43,17 +43,19 @@ constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 #endif
 
 namespace care {
-   template <typename T, typename T_PTR>
+  template <typename T, typename T_PTR, std::enable_if_t<std::is_null_pointer<T_PTR>::value>* = nullptr>
    inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
                                        T_PTR freeDeviceCPUDestination,
                                        size_t elems) {
-     if constexpr(std::is_null_pointer<T_PTR>::value) {
-         array.freeDeviceMemory(nullptr, 0);
-      }
-      else {
-         array.freeDeviceMemory(&freeDeviceCPUDestination, elems);
-      }
+      array.freeDeviceMemory(nullptr, 0);
    }
+
+  template <typename T, typename T_PTR, std::enable_if_t<!std::is_null_pointer<T_PTR>::value>* = nullptr>
+   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
+                                       T_PTR freeDeviceCPUDestination,
+                                       size_t elems) {
+      array.freeDeviceMemory(&freeDeviceCPUDestination, elems);
+   }  
 
    ///////////////////////////////////////////////////////////////////////////
    /// @author Ben Liu, Peter Robinson, Alan Dayton
