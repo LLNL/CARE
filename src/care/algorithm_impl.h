@@ -689,7 +689,7 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & 
 /************************************************************************
  * Function  : radixSortArray
  * Author(s) : Peter Robinson
- * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
+ * Purpose   : ManagedArray API to [hip]cub::DeviceRadixSort::SortKeys
   ************************************************************************/
 template <typename T, template <class A> class Accessor>
 CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
@@ -752,7 +752,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
 /************************************************************************
  * Function  : mergeSortArray
  * Author(s) : Peter Robinson
- * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
+ * Purpose   : ManagedArray API to [hip]cub::DeviceMergeSort::StableSortKeys.
   ************************************************************************/
 template <typename T, template <class A> class Accessor>
 CARE_INLINE void mergeSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
