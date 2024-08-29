@@ -73,9 +73,9 @@ using RAJAReductionExec = RAJA::hip_exec_with_reduce<256, CARE_CUDA_ASYNC>;
 #elif defined(__CUDACC__)
 using RAJAReductionExec = RAJA::cuda_exec_with_reduce<256, CARE_CUDA_ASYNC>;
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
-using RAJAReductionExec = RAJA::omp_parallel_for_exec
+using RAJAReductionExec = RAJA::omp_parallel_for_exec;
 #else
-using RAJAReductionExec = RAJADeviceExec
+using RAJAReductionExec = RAJADeviceExec;
 #endif
 
 
