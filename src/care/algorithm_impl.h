@@ -449,6 +449,10 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *             If returnUpperBound is set to true, this will return the
  *             index corresponding to the earliest entry that is greater
  *             than num.
+ *
+ *             @NOTE: Intentionally implemented this using only the '<'
+ *             operator to follow weak strict ordering semantics.
+ *
  ************************************************************************/
 
 template <typename T>
