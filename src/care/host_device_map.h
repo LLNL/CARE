@@ -44,6 +44,11 @@ namespace care {
    {
       public:
          host_device_map(size_t max_entries, mapped_type miss_signal);
+         host_device_map(size_t max_entries);
+         host_device_map() noexcept;
+         host_device_map(host_device_map const & other) noexcept;
+         host_device_map(host_device_map && other) noexcept;
+         host_device_map<key_type, mapped_type, Exec>& operator=(host_device_map&& other) noexcept;
          CARE_HOST_DEVICE inline void emplace(key_type key, mapped_type val) const;
          CARE_HOST_DEVICE inline mapped_type at(key_type key) const;
          void sort();
@@ -60,8 +65,12 @@ namespace care {
    template <typename key_type, typename mapped_type>
    class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
-         // constructor
-         host_device_map(size_t max_entries, mapped_type miss_signal) : m_map(), m_max_size(max_entries), m_signal(miss_signal)  {
+         // default constructor
+         host_device_map() noexcept = default;
+         
+         // constructor taking max number of entries
+         host_device_map(size_t max_entries) : host_device_map{} {
+            m_max_size = max_entries;
             m_map = new std::map<key_type, mapped_type>{};
             m_size = new int();
             *m_size = 0;
@@ -69,6 +78,49 @@ namespace care {
             *m_iterator = m_map->begin();
             m_next_iterator_index = new int();
             *m_next_iterator_index = 0;
+         }
+
+         // constructor that also takes the miss signal
+         host_device_map(size_t max_entries, mapped_type miss_signal) : host_device_map{max_entries} {
+            m_signal = miss_signal;
+         }
+
+         // copy constructor 
+         host_device_map(host_device_map const & other) noexcept = default;
+
+         // move constructor
+         host_device_map(host_device_map && other) noexcept  {
+            delete m_map;
+            delete m_size;
+            delete m_iterator;
+            delete m_next_iterator_index;
+            m_map = other.m_map;
+            m_size = other.m_size;
+            m_iterator = other.m_iterator;
+            m_next_iterator_index = other.m_next_iterator_index;
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+            other.m_map = nullptr;
+            other.m_size = nullptr;
+            other.m_iterator = nullptr;
+            other.m_next_iterator_index = nullptr;
+         }
+         host_device_map<key_type, mapped_type, RAJA::seq_exec> & operator=(host_device_map && other) noexcept  {
+            delete m_map;
+            delete m_size;
+            delete m_iterator;
+            delete m_next_iterator_index;
+            m_map = other.m_map;
+            m_size = other.m_size;
+            m_iterator = other.m_iterator;
+            m_next_iterator_index = other.m_next_iterator_index;
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+            other.m_map = nullptr;
+            other.m_size = nullptr;
+            other.m_iterator = nullptr;
+            other.m_next_iterator_index = nullptr;
+            return *this;
          }
 
         // emplace a key value pair
@@ -141,8 +193,8 @@ namespace care {
          typename std::map<key_type, mapped_type>::iterator * m_iterator = nullptr;
          int * m_next_iterator_index = nullptr;
          int * m_size = nullptr;
-         int m_max_size;
-         mapped_type m_signal;
+         int m_max_size = 0;
+         mapped_type m_signal {};
    };
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
@@ -156,22 +208,57 @@ namespace care {
    {
       public:
          using int_ptr = care::host_device_ptr<int>;
-         // constructor
-         host_device_map(size_t max_entries, mapped_type miss_signal) : m_max_size(max_entries), m_signal(miss_signal), m_gpu_map{max_entries}   {
-            // m_size_ptr will be atomically incremented as elements are emplaced into the map
+         
+         // default constructor
+         host_device_map() noexcept = default;
+         
+         // constructor taking max_entries
+         host_device_map(size_t max_entries) : m_max_size(max_entries), m_signal(0), m_gpu_map{max_entries}   {
+            // m_size_ptr[0] will be atomically incremented as elements are emplaced into the map
             m_size_ptr = int_ptr(1, "map_size");
             // set size to 0
             clear();
          }
 
+         // constructor that also takes the miss signal
+         host_device_map(size_t max_entries, mapped_type miss_signal) : host_device_map{max_entries} {
+            m_signal = miss_signal;
+         }
+
+         // copy constructor 
+         host_device_map(host_device_map const & other) noexcept = default;
+
+         // move constructor
+         CARE_HOST_DEVICE host_device_map(host_device_map&& other) noexcept { 
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+            m_gpu_map = std::move(other.m_gpu_map);
+            m_size_ptr.free();
+            m_size_ptr = other.m_size_ptr;
+            other.m_size_ptr = nullptr;
+            m_size = other.m_size;
+         }
+
+         // move assignment
+         host_device_map<key_type,mapped_type, RAJADeviceExec> & operator=(host_device_map && other) noexcept {
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+            m_gpu_map = std::move(other.m_gpu_map);
+            m_size_ptr.free();
+            m_size_ptr = other.m_size_ptr;
+            other.m_size_ptr = nullptr;
+            m_size = other.m_size;
+            return *this;
+         }
+
         // emplace a key value pair, using return of atomic increment to provide the initial insertion index
-        inline CARE_DEVICE void emplace(key_type key, mapped_type val) const {
+        inline CARE_HOST_DEVICE void emplace(key_type key, mapped_type val) const {
            care::local_ptr<int> size_ptr = m_size_ptr;
            int index = ATOMIC_ADD(size_ptr[0], 1);
-           // TODO Add control for this check
-           if (size_ptr[0] > m_max_size) {
-              printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", size_ptr[0], m_max_size);
-           }
+           // commenting out to avoid having printfs compiled into every kernel that uses emplace
+           //if (size_ptr[0] > m_max_size) {
+           //   printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", size_ptr[0], m_max_size);
+           //}
            LocalKeyValueSorter<key_type, mapped_type, RAJADeviceExec> const & local_map = m_gpu_map;
            local_map.setKey(index, key);
            local_map.setValue(index, val);
@@ -179,7 +266,7 @@ namespace care {
 
         // lookups (valid after a sort() call) are done by binary searching the keys and using the
         // index of the located key to grab the appropriate value
-        inline CARE_DEVICE mapped_type at(key_type key) const {
+        inline CARE_HOST_DEVICE mapped_type at(key_type key) const {
            int index = care::BinarySearch<key_type>(m_gpu_map.keys(),0,m_size,key);
            if (index >= 0) {
               return m_gpu_map.values()[index];
@@ -219,20 +306,22 @@ namespace care {
         // preallocate buffers for adding up to size elements
         void reserve(int max_size) { 
            if (m_max_size < max_size) {
-              if (m_size == 0) {
-                 m_gpu_map = std::move(KeyValueSorter<key_type, mapped_type, RAJADeviceExec>{static_cast<size_t>(max_size)});
-              }
-              else {
+              KeyValueSorter<key_type, mapped_type, RAJADeviceExec> new_map{
+                 static_cast<size_t>(max_size)};
+
+              if (m_size > 0) {
                  // copy existing state into new map
-                 KeyValueSorter<key_type, mapped_type, RAJADeviceExec> new_map{static_cast<size_t>(max_size)};
                  auto & map = m_gpu_map;
+
                  CARE_STREAM_LOOP(i, 0, m_size) {
                     new_map.setKey(i, map.key(i));
                     new_map.setValue(i, map.value(i));
                  } CARE_STREAM_LOOP_END
-                 m_gpu_map = std::move(new_map);
               }
+
+              m_gpu_map = std::move(new_map);
            }
+
            m_max_size = max_size;
         }
         
@@ -264,9 +353,9 @@ namespace care {
       private:
          int_ptr m_size_ptr = nullptr;
          int m_size = 0;
-         int m_max_size;
-         int m_signal;
-         KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map;
+         int m_max_size = 0;
+         mapped_type m_signal {};
+         KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map{0};
    };
 
 #endif // defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
@@ -290,16 +379,47 @@ namespace care {
    class host_device_map<key_type, mapped_type, force_keyvaluesorter>
    {
       public:
-
+         // default constructor
+         host_device_map() noexcept = default;         
+         
          // constructor
-         host_device_map(size_t max_entries, mapped_type signal) : m_max_size(max_entries), m_signal(signal) {
-            
+         host_device_map(size_t max_entries) : host_device_map{} {
+            m_max_size = max_entries;
             // m_size_ptr will be atomically incremented as elements are emplaced into the map
             m_size_ptr = new int();
             // set size to 0
             clear();
             // back the map with a KeyValueSorter<key_type, mapped_type>
             m_map = KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{max_entries};
+         }
+
+         // constructor
+         host_device_map(size_t max_entries, mapped_type signal) : host_device_map{max_entries} { 
+            m_signal = signal;
+         }
+         
+         // copy constructor 
+         host_device_map(host_device_map const & other) noexcept = default;
+
+         // move constructor
+         host_device_map(host_device_map && other)  noexcept {
+            delete m_size_ptr;
+            m_size_ptr = other.m_size_ptr;
+            m_size = other.m_size;
+            m_map = std::move(other.m_map);
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+         }
+         
+         // move assignment
+         host_device_map<key_type, mapped_type, force_keyvaluesorter>  & operator=(host_device_map && other)  noexcept {
+            delete m_size_ptr;
+            m_size_ptr = other.m_size_ptr;
+            m_size = other.m_size;
+            m_map = std::move(other.m_map);
+            m_max_size = other.m_max_size;
+            m_signal = other.m_signal;
+            return *this;
          }
 
         // emplace a key value pair,increment length
@@ -371,11 +491,11 @@ namespace care {
       private:
          mutable int * m_size_ptr = nullptr;
          mutable int  m_size = 0;
-         mutable int m_max_size;
-         KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> m_map;
+         mutable int m_max_size = 0;
+         KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> m_map{};
          /* hasBeenSorted may be used in the future to enable an implicit sort on lambda capture */
          bool hasBeenSorted = false;
-         int m_signal;
+         mapped_type m_signal {};
    };
 
 }
