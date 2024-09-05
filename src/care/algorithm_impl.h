@@ -251,6 +251,59 @@ CARE_INLINE void IntersectArrays(RAJADeviceExec exec,
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 /************************************************************************
+ * Function  : IntersectArraysSeq
+ * Author(s) : Benjamin Liu, after Peter Robinson, Al Nichols
+ * Purpose   : Helper function for IntersectArrays<A>(RAJA::seq_exec,...)
+ * Note      : matches1 and matches2 should already be allocated to the
+ *             smaller of size1 and size2 and should be reallocated to
+ *             *numMatches after this call.
+ ************************************************************************/
+template <typename T>
+CARE_INLINE void IntersectArraysSeq(const T *arr1, int size1, int start1,
+                                    const T *arr2, int size2, int start2,
+                                    int *matches1,
+                                    int *matches2,
+                                    int *numMatches)
+{
+   const T * a1 = arr1 + start1;
+   const T * a2 = arr2 + start2;
+
+   /* This algorithm assumes that the nodelists are sorted and unique */
+#ifdef CARE_DEBUG
+   bool checkIsSorted = true ;
+#else
+   bool checkIsSorted = false;
+#endif
+
+   if (checkIsSorted) {
+      const char* funcname = "IntersectArrays" ;
+
+      // allowDuplicates is false for this check by default
+      checkSorted<T>(a1, size1, funcname, "arr1") ;
+      checkSorted<T>(a2, size2, funcname, "arr2") ;
+   }
+
+   int i, j;
+   i = j = 0 ;
+
+   while (i < size1 && j < size2) {
+      if (a1[i] < a2[j]) {
+         ++i;
+      }
+      else if (a2[j] < a1[i]) {
+         ++j;
+      }
+      else {
+         matches1[(*numMatches)] = i;
+         matches2[(*numMatches)] = j;
+         (*numMatches)++;
+         ++i;
+         ++j;
+      }
+   }
+}
+
+/************************************************************************
  * Function  : IntersectArrays<A,RAJA::seq_exec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
  * Purpose   : Given two arrays of unique elements of type A sorted in  ascending order, this
@@ -285,49 +338,8 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec,
       matches2 = (int*) std::malloc(smaller * sizeof(int));
    }
 
-   /* This algorithm assumes that the nodelists are sorted and unique */
-#ifdef CARE_DEBUG
-   bool checkIsSorted = true ;
-#else
-   bool checkIsSorted = false;
-#endif
-
-   if (checkIsSorted) {
-      const char* funcname = "IntersectArrays" ;
-
-      // allowDuplicates is false for this check by default
-      checkSorted<T>(arr1.cdata() + start1, size1, funcname, "arr1") ;
-      checkSorted<T>(arr2.cdata() + start2, size2, funcname, "arr2") ;
-   }
-
-   int i, j;
-   i = j = 0 ;
-
-   /* the host arrays */
-   const T * a1, *a2;
-   int * m1 = matches1.data();
-   int * m2 = matches2.data();
-
-   a1 = arr1.cdata();
-   a1 += start1;
-   a2 = arr2.cdata();
-   a2 += start2;
-
-   while (i < size1 && j < size2) {
-      if ((a1)[i] < a2[j]) {
-         ++i;
-      }
-      else if (a2[j] < a1[i]) {
-         ++j;
-      }
-      else {
-         m1[(*numMatches)] = i;
-         m2[(*numMatches)] = j;
-         (*numMatches)++;
-         ++i;
-         ++j;
-      }
-   }
+   IntersectArraysSeq(arr1.cdata(), size1, start1, arr2.cdata(), size2, start2,
+                      matches1.data(), matches2.data(), numMatches) ;
 
    /* change the size of the array */
    if (*numMatches == 0) {
@@ -376,15 +388,31 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
                                  care::host_device_ptr<int> &matches2,
                                  int *numMatches)
 {
-   care::host_ptr<int> matches1_tmp, matches2_tmp;
+   *numMatches = 0 ;
+   int smaller = (size1 < size2) ? size1 : size2 ;
 
-   IntersectArrays<T>(exec,
-                      care::host_ptr<const T>(arr1), size1, start1,
-                      care::host_ptr<const T>(arr2), size2, start2,
-                      matches1_tmp, matches2_tmp, numMatches);
+   if (smaller <= 0) {
+      matches1 = nullptr ;
+      matches2 = nullptr ;
+      return ;
+   }
+   else {
+      matches1.alloc(smaller);
+      matches2.alloc(smaller);
+   }
 
-   matches1 = care::host_device_ptr<int>(matches1_tmp.data(), *numMatches, "IntersectArrays matches1");
-   matches2 = care::host_device_ptr<int>(matches2_tmp.data(), *numMatches, "IntersectArrays matches2");
+   IntersectArraysSeq(arr1.cdata(), size1, start1, arr2.cdata(), size2, start2,
+                      matches1.data(), matches2.data(), numMatches) ;
+
+   /* change the size of the array */
+   if (*numMatches == 0) {
+      matches1.free();
+      matches2.free();
+   }
+   else {
+      matches1.realloc(*numMatches);
+      matches2.realloc(*numMatches);
+   }
 
    return;
 }
