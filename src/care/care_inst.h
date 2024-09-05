@@ -215,14 +215,14 @@ CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, c
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<int const, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<float const, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<double const, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID const, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -237,14 +237,14 @@ int uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::NoOpAccessor
 #endif
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<int, care::RaceConditionAccessor>, size_t, care::host_device_ptr<int, care::RaceConditionAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<int const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<int, care::RaceConditionAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<float, care::RaceConditionAccessor>, size_t, care::host_device_ptr<float, care::RaceConditionAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<float const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<float, care::RaceConditionAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<double, care::RaceConditionAccessor>, size_t, care::host_device_ptr<double, care::RaceConditionAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<double const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<double, care::RaceConditionAccessor> &, int &) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::RaceConditionAccessor>, size_t, care::host_device_ptr<globalID, care::RaceConditionAccessor> &, int &, bool) ;
+void uniqArray(RAJADeviceExec, care::host_device_ptr<globalID const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<globalID, care::RaceConditionAccessor> &, int &) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -261,14 +261,14 @@ int uniqArray(RAJADeviceExec, care::host_device_ptr<globalID, care::RaceConditio
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<int, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<int const, care::NoOpAccessor>, size_t, care::host_device_ptr<int, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<float, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<float const, care::NoOpAccessor>, size_t, care::host_device_ptr<float, care::NoOpAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<double, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<double const, care::NoOpAccessor>, size_t, care::host_device_ptr<double, care::NoOpAccessor> &, int &) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID const, care::NoOpAccessor>, size_t, care::host_device_ptr<globalID, care::NoOpAccessor> &, int &) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API
@@ -283,14 +283,14 @@ int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<globalID, care::NoOpAcc
 #endif
 
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<int, care::RaceConditionAccessor>, size_t, care::host_device_ptr<int, care::RaceConditionAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<int const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<int, care::RaceConditionAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<float, care::RaceConditionAccessor>, size_t, care::host_device_ptr<float, care::RaceConditionAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<float const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<float, care::RaceConditionAccessor> &, int &) ;
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<double, care::RaceConditionAccessor>, size_t, care::host_device_ptr<double, care::RaceConditionAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<double const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<double, care::RaceConditionAccessor> &, int &) ;
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID, care::RaceConditionAccessor>, size_t, care::host_device_ptr<globalID, care::RaceConditionAccessor> &, int &) ;
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<globalID const, care::RaceConditionAccessor>, size_t, care::host_device_ptr<globalID, care::RaceConditionAccessor> &, int &) ;
 #endif
 
 CARE_EXTERN template CARE_DLL_API

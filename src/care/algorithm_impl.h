@@ -449,6 +449,10 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *             If returnUpperBound is set to true, this will return the
  *             index corresponding to the earliest entry that is greater
  *             than num.
+ *
+ *             @NOTE: Intentionally implemented this using only the '<'
+ *             operator to follow weak strict ordering semantics.
+ *
  ************************************************************************/
 
 template <typename T>
@@ -471,7 +475,7 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
 
    while (khi-klo > 1) {
       k = (khi+klo) >> 1 ;
-      if (map[k] == num) {
+      if (! (map[k] < num) && !(num < map[k])) {
          if (returnUpperBound) {
             khi = k+1;
             klo = k;
@@ -481,7 +485,7 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
             return k ;
          }
       }
-      else if (map[k] > num) {
+      else if (num < map[k]) {
          khi = k ;
       }
       else {
@@ -491,19 +495,19 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
    if (returnUpperBound) {
       k = klo;
       // the lower option bounds num
-      if (map[k] > num) {
+      if (num < map[k]) {
          return k;
       }
       // the upper option is within the range of the map index set
       if (khi < start + mapSize) {
          // Note: fix for last test in TEST(algorithm, binarysearch). This algorithm has failed to pick up the upper
          // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
-         while ((khi < start + mapSize) && (map[khi] == num)) {
+         while ((khi < start + mapSize) && (!(map[khi] <  num) && !(num < map[khi]))) {
             ++khi;
          }
 
          // the upper option bounds num
-         if ((khi < start + mapSize) && (map[khi] > num)) {
+         if ((khi < start + mapSize) && (num < map[khi])) {
             return khi;
          }
          // neither the upper or lower option bound num
@@ -514,8 +518,8 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
          return -1;
       }
    }
-
-   if (map[--k] == num) {
+   --k;
+   if (!(map[k] < num) && !(num < map[k])) {
       return k ;
    }
    else {
@@ -547,8 +551,8 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
  *             scan.
   ************************************************************************/
 template <typename T, template<class A> class Accessor>
-CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<T, Accessor>  Array, size_t len,
-                           care::host_device_ptr<T, Accessor> & outArray, int & outLen, bool noCopy)
+CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Accessor>  Array, size_t len,
+                           care::host_device_ptr<T, Accessor> & outArray, int & outLen)
 {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
    fill_n(uniq, len+1, 0);
@@ -582,7 +586,7 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor
 {
    care::host_device_ptr<T, Accessor> tmp;
    int newLen;
-   uniqArray(exec, Array, len, tmp, newLen);
+   uniqArray<T, Accessor>(exec, Array, len, tmp, newLen);
    if (noCopy) {
       Array.free();
       Array = tmp;
@@ -602,11 +606,11 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor
  * Purpose   : CPU version of uniqArray.
   ************************************************************************/
 template <typename T, template<class A> class Accessor>
-CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> Array, size_t len,
+CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Accessor> Array, size_t len,
                            care::host_device_ptr<T, Accessor> & outArray, int & newLen)
 {
-   CHAIDataGetter<T, RAJA::seq_exec> getter {};
-   const auto * rawData = getter.getConstRawArrayData(Array);
+   CHAIDataGetter<const T, RAJA::seq_exec> getter {};
+   auto * rawData = getter.getConstRawArrayData(Array);
    newLen = 0 ;
    care::host_ptr<T> arrout = nullptr ;
    outArray = nullptr;
