@@ -12,6 +12,21 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.14.0] - Release date 2024-09-11
+
+### Added
+- Added default and move constructors and move assignment operator to host\_device\_map
+
+### Changed
+- Default policies concerning reductions were updated to RAJA's newly recommended policies.
+- Now using '<' in care::BinarySearch.
+
+### Fixed
+- Removed C++17 features so that CARE is C++14 compliant. The next release of CARE will require C++17.
+- LLNL\_GlobalID is no longer required downstream from CARE if it is disabled in CARE.
+- Const correctness fix in uniqArray API.
+- Sequential IntersectArrays now allocates data in a way that is consistent with the memory model CHAI uses for Hip GPU builds.
+
 ## [Version 0.13.3] - Release date 2024-07-31
 
 ### Fixed
