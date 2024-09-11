@@ -346,14 +346,13 @@ void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-// TODO should this have an unused noCopy parameter?
 template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & newLen);
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Accessor> Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & newLen);
 template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
 int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy=false);
 #ifdef CARE_PARALLEL_DEVICE
 template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void uniqArray(RAJADeviceExec, care::host_device_ptr<T, Accessor>  Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & outLen, bool noCopy=false);
+void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Accessor>  Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & outLen);
 template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
 int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy=false);
 #endif // defined(CARE_PARALLEL_DEVICE)
