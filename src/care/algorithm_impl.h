@@ -675,8 +675,13 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor
 
 template <typename T, template <class A> class Accessor>
 CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
-{
-   radixSortArray(Array, len, start, noCopy);
+{  
+   if constexpr( std::is_arithmetic_v<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>) {
+      radixSortArray(Array, len, start, noCopy);
+   }
+   else {
+      mergeSortArray(Array, len, start, noCopy);
+   }
 }
 
 template <typename T, template <class A> class Accessor>
@@ -688,7 +693,7 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & 
 /************************************************************************
  * Function  : radixSortArray
  * Author(s) : Peter Robinson
- * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
+ * Purpose   : ManagedArray API to [hip]cub::DeviceRadixSort::SortKeys
   ************************************************************************/
 template <typename T, template <class A> class Accessor>
 CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
@@ -743,6 +748,58 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
          result.free();
       }
    }
+   if (len > 0) {
+      tmpManaged.free();
+   }
+}
+
+/************************************************************************
+ * Function  : mergeSortArray
+ * Author(s) : Peter Robinson
+ * Purpose   : ManagedArray API to [hip]cub::DeviceMergeSort::StableSortKeys.
+  ************************************************************************/
+template <typename T, template <class A> class Accessor>
+CARE_INLINE void mergeSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
+{
+   CHAIDataGetter<T, RAJADeviceExec> getter {};
+   CHAIDataGetter<char, RAJADeviceExec> charGetter {};
+   const auto * rawData = getter.getConstRawArrayData(Array) + start;
+   // get the temp storage length
+   char * d_temp_storage = nullptr;
+   size_t temp_storage_bytes = 0;
+   auto custom_comparator = [] CARE_HOST_DEVICE (const T & lhs, const T & rhs) {
+      return lhs < rhs;
+   };
+   if (len > 0) {
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#endif   
+   }
+   // allocate the temp storage
+
+   care::host_device_ptr<char> tmpManaged(temp_storage_bytes, "merge_sort_tmpManaged");
+   d_temp_storage = charGetter.getRawArrayData(tmpManaged);
+
+   // do the sort
+   if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
+#endif
+   }
+
+   // cleanup
    if (len > 0) {
       tmpManaged.free();
    }
