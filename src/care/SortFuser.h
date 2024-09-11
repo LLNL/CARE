@@ -275,7 +275,7 @@ namespace care {
       
       // do the unique of the concatenated sort result
       int outLen;
-      care::uniqArray(RAJAExec{}, m_concatenated_result, m_total_length, concatenated_out, outLen);
+      care::uniqArray(RAJAExec{}, reinterpret_cast<host_device_ptr<const T>&>(m_concatenated_result), m_total_length, concatenated_out, outLen);
       
       /// determine new offsets by looking for boundaries in max_range
       host_device_ptr<int> out_offsets(m_num_arrays+1, "out_offsets");
