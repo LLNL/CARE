@@ -66,7 +66,7 @@ namespace care {
    class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
          // default constructor
-         host_device_map() noexcept {};
+         host_device_map() noexcept = default;
          
          // constructor taking max number of entries
          host_device_map(size_t max_entries) : host_device_map{} {
