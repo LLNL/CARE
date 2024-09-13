@@ -405,15 +405,9 @@ namespace care {
          }
          
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept {
-            m_size_ptr = other.m_size_ptr;
-            m_size = other.m_size;
-            m_map = other.m_map;
-            m_max_size = other.m_max_size;
-            m_signal = other.m_signal;
-	 }
+         host_device_map(host_device_map const & other) noexcept = default;
 
-         // move constructor
+	 // move constructor
          host_device_map(host_device_map && other)  noexcept {
             delete m_size_ptr;
             m_size_ptr = other.m_size_ptr;
