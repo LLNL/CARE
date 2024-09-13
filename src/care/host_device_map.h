@@ -386,7 +386,7 @@ namespace care {
    {
       public:
          // default constructor
-         host_device_map() noexcept {};         
+         host_device_map() noexcept = default;         
          
          // constructor
          host_device_map(size_t max_entries) : host_device_map{} {
