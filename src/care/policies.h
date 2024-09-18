@@ -69,7 +69,11 @@ using RAJADeviceExec = RAJA::seq_exec;
 
 //  reduction kernel policy
 #if defined(__HIPCC__)
-using RAJAReductionExec = RAJA::hip_exec_occ_calc<CARE_CUDA_BLOCK_SIZE, CARE_CUDA_ASYNC>;
+using RAJAReductionExec = RAJA::hip_exec_with_reduce<256, CARE_CUDA_ASYNC>;
+#elif defined(__CUDACC__)
+using RAJAReductionExec = RAJA::cuda_exec_with_reduce<256, CARE_CUDA_ASYNC>;
+#elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
+using RAJAReductionExec = RAJA::omp_parallel_for_exec;
 #else
 using RAJAReductionExec = RAJADeviceExec;
 #endif
@@ -115,7 +119,7 @@ using RAJAExec = RAJADeviceExec ;
 #else // CARE_ENABLE_GPU_SIMULATION_MODE
 
 // The defined(__HIPCC__) case is here:
-using RAJAHipReduce = RAJA::hip_reduce ;
+using RAJAHipReduce = RAJA::hip_reduce_atomic ;
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax<RAJAHipReduce, T> ;
