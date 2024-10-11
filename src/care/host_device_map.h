@@ -226,7 +226,7 @@ namespace care {
          }
 
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept = default;
+         host_device_map(host_device_map const & other) = default;
 
          // move constructor
          CARE_HOST_DEVICE host_device_map(host_device_map&& other) noexcept { 
