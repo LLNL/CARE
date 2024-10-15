@@ -12,6 +12,11 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.14.1] - Release date 2024-10-15
+
+### Fixed
+- Explicitly define host\_device\_map constructors since some versions of CUDA do not properly generate them.
+
 ## [Version 0.14.0] - Release date 2024-09-11
 
 ### Added
