@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(CARE
         LANGUAGES C CXX
-        VERSION 0.14.0)
+        VERSION 0.14.1)
 
 include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
 
