@@ -1287,6 +1287,9 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    launch_2D_jagged(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
 #define CARE_LOOP_2D_STREAM_JAGGED_END });
 
+#define CARE_LOOP_2D_REDUCE_JAGGED(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
+   launch_2D_jagged(care::parallel_reduce{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
+#define CARE_LOOP_2D_REDUCE_JAGGED_END });
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 

@@ -627,6 +627,11 @@ namespace care {
           arrayManager->setExecutionSpace(chai::ExecutionSpace::NONE);
        }
    }
+
+   template <typename LB>
+   void launch_2D_jagged(care::parallel_reduce, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber , LB && body) {
+      launch_2D_jagged(care::gpu{}, xstart, xend, gpu_lengths, ystart, ylength, fileName, lineNumber, body) ;
+   }
 #endif
 } // namespace care
 
