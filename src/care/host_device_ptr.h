@@ -500,8 +500,11 @@ namespace care {
          return MA::pick((size_t) idx);
       }
 
-      CARE_HOST T* getPointer(ExecutionSpace space, bool moveToSpace = true) {
-         return MA::getPointer(chai::ExecutionSpace((int)space), moveToSpace);
+      using MA::data;
+      using MA::cdata;
+
+      CARE_HOST T* data(ExecutionSpace space, bool moveToSpace = true) {
+         return MA::data(chai::ExecutionSpace((int)space), moveToSpace);
       }
 
       CARE_HOST void registerTouch(ExecutionSpace space) {
