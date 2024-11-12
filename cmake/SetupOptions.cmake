@@ -19,6 +19,7 @@ option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw
 # CHAI must also be configured with the same settings for implicit conversions.
 set(CHAI_ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
 option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
+option(CARE_DEEP_COPY_RAW_PTR "Use deep copy for managed array initialization from raw pointer" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
 option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)
