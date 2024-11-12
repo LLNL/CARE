@@ -29,6 +29,7 @@
 #cmakedefine CARE_GPU_MEMORY_IS_ACCESSIBLE_ON_CPU
 #cmakedefine CARE_ENABLE_STALE_DATA_CHECK
 #cmakedefine CARE_ENABLE_RACE_DETECTION
+#cmakedefine CARE_ENABLE_TSAN_ONLY_ATOMICS
 
 // Optional dependencies
 #cmakedefine01 CARE_HAVE_LLNL_GLOBALID

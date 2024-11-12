@@ -33,6 +33,8 @@ option(CARE_NEVER_USE_RAJA_PARALLEL_SCAN "Disable RAJA parallel scans in SCAN lo
 option(CARE_ENABLE_FUSER_BIN_32 "Enable the 32 register fusible loop bin." OFF)
 option(CARE_ENABLE_PARALLEL_LOOP_BACKWARDS "Reverse the start and end for parallel loops." OFF)
 option(CARE_ENABLE_STALE_DATA_CHECK "Enable checking for stale host data. Only applicable for GPU (or GPU simulation) builds." OFF)
+# TODO: Investigate correctness and performance impact of this option
+option(CARE_ENABLE_TSAN_ONLY_ATOMICS "Enable atomics for ThreadSanitizer (TSAN) build." OFF)
 
 # Extra components
 cmake_dependent_option(CARE_ENABLE_TESTS "Build CARE tests"
