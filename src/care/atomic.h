@@ -32,10 +32,10 @@ using RAJAAtomic = RAJA::auto_atomic;
 /// setting the same variable to the same value).
 ///
 /// WARNING: The returned previous value for the TSAN_ONLY_ATOMIC_* macros
-///          should not be used in a parallel context, since another thread
-///          may have modified the value at the given memory location in
-///          between the current thread's read and write. If the return value
-///          is needed, use the ATOMIC_* macros instead.
+///          should generally not be used in a parallel context, since
+///          another thread may have modified the value at the given memory
+///          location in between the current thread's read and write. If the
+///          return value is needed, use the ATOMIC_* macros instead.
 ///
 /// TODO: Evaluate whether the compiler actually does the right thing without
 ///       atomics and whether using atomics detracts from performance.
