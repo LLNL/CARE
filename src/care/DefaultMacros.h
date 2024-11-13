@@ -34,13 +34,6 @@
 /// Used to capture variables by reference into a lambda (combine with FOR_EACH)
 #define CARE_REF_CAPTURE(X) , &X
 
-#ifdef CARE_ENABLE_RACE_DETECTION
-#define CARE_SET_THREAD_ID(INDEX) care::DebugPlugin::s_threadID = INDEX ;
-#else
-#define CARE_SET_THREAD_ID(INDEX)
-#endif
-
-
 
 
 
@@ -732,8 +725,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, 0, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
-         CARE_SET_THREAD_ID(INDEX)
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, 0, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) {
 
 #define CARE_CHECKED_POLICY_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -768,8 +760,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, CHUNK_SIZE, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
-         CARE_SET_THREAD_ID(INDEX)
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, CHUNK_SIZE, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) {
 
 #define CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
