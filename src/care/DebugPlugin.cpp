@@ -68,7 +68,6 @@ namespace care{
              it.second(space, PluginData::getFileName(), PluginData::getLineNumber());
           }
           PluginData::clear_post_parallel_forall_actions();
-          PluginData::s_threadID = -1;
       }
 #endif // !defined(CHAI_DISABLE_RM)
    }
