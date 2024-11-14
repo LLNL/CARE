@@ -28,12 +28,12 @@ class CHAIDataGetter {
       T * getRawArrayData(chai::ManagedArray<T> data) {
          data.move(chai::CPU);
          data.registerTouch(chai::CPU);
-         return (T*)data.getPointer(chai::CPU);
+         return (T*)data.data(chai::CPU);
       }
 
       const T * getConstRawArrayData(chai::ManagedArray<T> data) {
          data.move(chai::CPU);
-         return (const T*)data.getPointer(chai::CPU);
+         return (const T*)data.data(chai::CPU);
       }
 
       static const auto ChaiPolicy = chai::CPU;
@@ -49,12 +49,12 @@ class CHAIDataGetter<T, RAJADeviceExec> {
       T * getRawArrayData(chai::ManagedArray<T> data) {
          data.move(chai::GPU);
          data.registerTouch(chai::GPU);
-         return (T*)data.getPointer(chai::GPU);
+         return (T*)data.data(chai::GPU);
       }
 
       const T * getConstRawArrayData(chai::ManagedArray<T> data) {
          data.move(chai::GPU);
-         return (const T*)data.getPointer(chai::GPU);
+         return (const T*)data.data(chai::GPU);
       }
 
       static const auto ChaiPolicy = chai::GPU;
@@ -70,12 +70,12 @@ class CHAIDataGetter<globalID, RAJADeviceExec> {
       GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::GPU);
          data.registerTouch(chai::GPU);
-         return (GIDTYPE*)data.getPointer(chai::GPU);
+         return (GIDTYPE*)data.data(chai::GPU);
       }
 
       const GIDTYPE * getConstRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::GPU);
-         return (GIDTYPE*)data.getPointer(chai::GPU);
+         return (GIDTYPE*)data.data(chai::GPU);
       }
 
       static const auto ChaiPolicy = chai::GPU;
@@ -95,12 +95,12 @@ class CHAIDataGetter<globalID, RAJA::seq_exec> {
       GIDTYPE * getRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::CPU);
          data.registerTouch(chai::CPU);
-         return (GIDTYPE*)data.getPointer(chai::CPU);
+         return (GIDTYPE*)data.data(chai::CPU);
       }
 
       const GIDTYPE * getConstRawArrayData(chai::ManagedArray<globalID> data) {
          data.move(chai::CPU);
-         return (GIDTYPE*)data.getPointer(chai::CPU);
+         return (GIDTYPE*)data.data(chai::CPU);
       }
 
       static const auto ChaiPolicy = chai::CPU;
