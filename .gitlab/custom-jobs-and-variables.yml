@@ -19,7 +19,7 @@ variables:
 # Note: We repeat the reservation, necessary when jobs are manually re-triggered.
   RUBY_JOB_ALLOC: "--overlap --reservation=ci --nodes=1"
 # Project specific variants for ruby
-  PROJECT_RUBY_VARIANTS: "+mpi"
+  PROJECT_RUBY_VARIANTS: "+mpi +tests"
 # Project specific deps for ruby
   PROJECT_RUBY_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
 
@@ -29,7 +29,7 @@ variables:
 # Arguments for job level allocation
   POODLE_JOB_ALLOC: "--overlap --nodes=1"
 # Project specific variants for poodle
-  PROJECT_POODLE_VARIANTS: "+mpi"
+  PROJECT_POODLE_VARIANTS: "+mpi +tests"
 # Project specific deps for poodle
   PROJECT_POODLE_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
 
@@ -39,7 +39,7 @@ variables:
 # Arguments for job level allocation
   CORONA_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
 # Project specific variants for corona
-  PROJECT_CORONA_VARIANTS: "+mpi"
+  PROJECT_CORONA_VARIANTS: "+mpi +tests"
 # Project specific deps for corona
   PROJECT_CORONA_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
 
@@ -49,7 +49,7 @@ variables:
 # Arguments for job level allocation
   TIOGA_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
 # Project specific variants for tioga
-  PROJECT_TIOGA_VARIANTS: "+mpi"
+  PROJECT_TIOGA_VARIANTS: "+mpi +tests"
 # Project specific deps for tioga
   PROJECT_TIOGA_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
 
@@ -58,7 +58,7 @@ variables:
 # Arguments for job level allocation
   LASSEN_JOB_ALLOC: "1 -W 11 -q pci"
 # Project specific variants for lassen
-  PROJECT_LASSEN_VARIANTS: " +mpi cuda_arch=70"
+  PROJECT_LASSEN_VARIANTS: " +mpi +tests cuda_arch=70"
 # Project specific deps for lassen
   PROJECT_LASSEN_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
 
