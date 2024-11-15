@@ -41,8 +41,8 @@ CARE_HOST_DEVICE CARE_INLINE const T& min(const T& a, const T& b)
    return a < b ? a : b;
 }
 
-template <class T, template<class A> class Accessor, class Size, class U>
-void fill_n(care::host_device_ptr<T, Accessor> arr, Size n, const U& val);
+template <class T, class Size, class U>
+void fill_n(care::host_device_ptr<T> arr, Size n, const U& val);
 
 template <class T, class Size, class U>
 void copy_n(care::host_device_ptr<const T> in, Size n, care::host_device_ptr<U> out);
@@ -68,11 +68,11 @@ T ArrayMin(care::host_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 template <typename T>
 T ArrayMin(care::host_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
-template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex = 0);
+template <typename T, typename Exec=RAJAExec>
+T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex = 0);
 
-template <typename T, typename Exec=RAJAExec, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex = 0);
+template <typename T, typename Exec=RAJAExec>
+T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex = 0);
 
 template <typename T>
 CARE_HOST_DEVICE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal, int startIndex = 0);
@@ -325,36 +325,36 @@ void IntersectArrays(RAJA::seq_exec exec,
                      care::host_device_ptr<int> &matches1, care::host_device_ptr<int> &matches2,
                      int *numMatches);
 
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy) ;
+template <typename T>
+void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy) ;
 
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> &Array, size_t len) ;
+template <typename T>
+void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len) ;
 
 #ifdef CARE_PARALLEL_DEVICE
 
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len, int start, bool noCopy) ;
+template <typename T>
+void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy) ;
 
 #ifdef CARE_GPUCC
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy);
+template <typename T>
+void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
 #endif // defined(CARE_GPUCC)
 
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len);
+template <typename T>
+void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len);
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Accessor> Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & newLen);
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy=false);
+template <typename T>
+void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T> Array, size_t len, care::host_device_ptr<T> & outArray, int & newLen);
+template <typename T>
+int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
 #ifdef CARE_PARALLEL_DEVICE
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Accessor>  Array, size_t len, care::host_device_ptr<T, Accessor> & outArray, int & outLen);
-template <typename T, template<class A> class Accessor = care::CARE_DEFAULT_ACCESSOR>
-int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy=false);
+template <typename T>
+void uniqArray(RAJADeviceExec, care::host_device_ptr<const T>  Array, size_t len, care::host_device_ptr<T> & outArray, int & outLen);
+template <typename T>
+int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy=false);
 #endif // defined(CARE_PARALLEL_DEVICE)
 
 template <typename T, typename Exec>
