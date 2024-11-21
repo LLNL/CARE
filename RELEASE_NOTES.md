@@ -15,6 +15,9 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 ## [Unreleased] - Release date YYYY-MM-DD
 
 ### Added
+- Added CARE\_DEEP\_COPY\_RAW\_PTR configuration option.
+
+### Added
 - Added ATOMIC\_SUB, ATOMIC\_LOAD, ATOMIC\_STORE, ATOMIC\_EXCHANGE, and ATOMIC\_CAS macros.
 - Added TSAN\_ONLY\_ATOMIC\_\* macros to suppress tsan data race reports. Controlled by CARE\_ENABLE\_TSAN\_ONLY\_ATOMICS configuration option.
 
