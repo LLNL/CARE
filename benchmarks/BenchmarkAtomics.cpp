@@ -8,6 +8,7 @@
 // CARE headers
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
+#include "care/local_ptr.h"
 #include "care/util.h"
 #include "care/atomic.h"
 
@@ -31,8 +32,8 @@ static void benchmark_sequential_no_atomic(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -60,7 +61,7 @@ static void benchmark_sequential_no_atomic(benchmark::State& state) {
 
    CARE_SEQUENTIAL_LOOP(i, 0, numNodes) {
       if (nodeTag[i] == 0) {
-         std::abort();
+         std::cerr << "benchmark_sequential_no_atomic failed!\n";
       }
    } CARE_SEQUENTIAL_LOOP_END
 
@@ -69,7 +70,7 @@ static void benchmark_sequential_no_atomic(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_sequential_no_atomic)->Range(1, INT_MAX);
+BENCHMARK(benchmark_sequential_no_atomic)->Range(1, INT_MAX/8);
 
 static void benchmark_sequential_atomic_store(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -85,8 +86,8 @@ static void benchmark_sequential_atomic_store(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -107,14 +108,14 @@ static void benchmark_sequential_atomic_store(benchmark::State& state) {
             elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
          for (int j = 0; j < nodesPerElement; ++j) {
-            ATOMIC_STORE(elementNodes[j]], 1);
+            ATOMIC_STORE(nodeTag[elementNodes[j]], 1);
          }
       } CARE_SEQUENTIAL_LOOP_END
    }
 
    CARE_SEQUENTIAL_LOOP(i, 0, numNodes) {
       if (nodeTag[i] == 0) {
-         std::abort();
+         std::cerr << "benchmark_sequential_atomic_store failed!\n";
       }
    } CARE_SEQUENTIAL_LOOP_END
 
@@ -123,7 +124,7 @@ static void benchmark_sequential_atomic_store(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_sequential_atomic_store)->Range(1, INT_MAX);
+BENCHMARK(benchmark_sequential_atomic_store)->Range(1, INT_MAX/8);
 
 static void benchmark_sequential_atomic_cas(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -139,8 +140,8 @@ static void benchmark_sequential_atomic_cas(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -161,14 +162,14 @@ static void benchmark_sequential_atomic_cas(benchmark::State& state) {
             elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
          for (int j = 0; j < nodesPerElement; ++j) {
-            ATOMIC_CAS(elementNodes[j]], 0, 1);
+            ATOMIC_CAS(nodeTag[elementNodes[j]], 0, 1);
          }
       } CARE_SEQUENTIAL_LOOP_END
    }
 
    CARE_SEQUENTIAL_LOOP(i, 0, numNodes) {
       if (nodeTag[i] == 0) {
-         std::abort();
+         std::cerr << "benchmark_sequential_atomic_cas failed!\n";
       }
    } CARE_SEQUENTIAL_LOOP_END
 
@@ -177,7 +178,7 @@ static void benchmark_sequential_atomic_cas(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_sequential_atomic_cas)->Range(1, INT_MAX);
+BENCHMARK(benchmark_sequential_atomic_cas)->Range(1, INT_MAX/8);
 
 #if defined(_OPENMP)
 
@@ -195,8 +196,8 @@ static void benchmark_openmp_no_atomic(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -237,7 +238,7 @@ static void benchmark_openmp_no_atomic(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_openmp_no_atomic)->Range(1, INT_MAX);
+BENCHMARK(benchmark_openmp_no_atomic)->Range(1, INT_MAX/8);
 
 static void benchmark_openmp_atomic_store(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -253,8 +254,8 @@ static void benchmark_openmp_atomic_store(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -295,7 +296,7 @@ static void benchmark_openmp_atomic_store(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_openmp_atomic_store)->Range(1, INT_MAX);
+BENCHMARK(benchmark_openmp_atomic_store)->Range(1, INT_MAX/8);
 
 static void benchmark_openmp_atomic_cas(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -311,8 +312,8 @@ static void benchmark_openmp_atomic_cas(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -353,7 +354,7 @@ static void benchmark_openmp_atomic_cas(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_openmp_atomic_cas)->Range(1, INT_MAX);
+BENCHMARK(benchmark_openmp_atomic_cas)->Range(1, INT_MAX/8);
 
 #endif
 
@@ -373,8 +374,8 @@ static void benchmark_gpu_no_atomic(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -415,7 +416,7 @@ static void benchmark_gpu_no_atomic(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_gpu_no_atomic)->Range(1, INT_MAX);
+BENCHMARK(benchmark_gpu_no_atomic)->Range(1, INT_MAX/8);
 
 static void benchmark_gpu_atomic_store(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -431,8 +432,8 @@ static void benchmark_gpu_atomic_store(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -473,7 +474,7 @@ static void benchmark_gpu_atomic_store(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_gpu_atomic_store)->Range(1, INT_MAX);
+BENCHMARK(benchmark_gpu_atomic_store)->Range(1, INT_MAX/8);
 
 static void benchmark_gpu_atomic_cas(benchmark::State& state) {
    const int elementsPerDim = (int) std::sqrt(state.range(0));
@@ -489,8 +490,8 @@ static void benchmark_gpu_atomic_cas(benchmark::State& state) {
       care::local_ptr<int> elementNodes =
          elementToNodeRelation.slice(i * nodesPerElement, nodesPerElement);
 
-      const int row = element % elementsPerDim;
-      const int col = element / elementsPerDim;
+      const int row = i % elementsPerDim;
+      const int col = i / elementsPerDim;
       const int startNode = col*nodesPerDim + row;
 
       elementNodes[0] = startNode;
@@ -531,7 +532,7 @@ static void benchmark_gpu_atomic_cas(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(benchmark_gpu_atomic_cas)->Range(1, INT_MAX);
+BENCHMARK(benchmark_gpu_atomic_cas)->Range(1, INT_MAX/8);
 
 #endif
 
