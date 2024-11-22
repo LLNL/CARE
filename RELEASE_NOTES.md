@@ -12,6 +12,26 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] - Release date YYYY-MM-DD
+
+### Added
+- Added CARE\_DEEP\_COPY\_RAW\_PTR configuration option.
+
+### Added
+- Added ATOMIC\_SUB, ATOMIC\_LOAD, ATOMIC\_STORE, ATOMIC\_EXCHANGE, and ATOMIC\_CAS macros.
+- Added TSAN\_ONLY\_ATOMIC\_\* macros to suppress tsan data race reports. Controlled by CARE\_ENABLE\_TSAN\_ONLY\_ATOMICS configuration option.
+
+### Removed
+- Removed Accessor template parameter from host\_device\_ptr.
+- Removed NoOpAccessor and RaceConditionAccessor. It is recommended to use ThreadSanitizer (TSAN) instead to locate race conditions.
+- Removed CARE\_ENABLE\_RACE\_DETECTION configuration option.
+
+### Changed
+- Renamed host\_device\_ptr::getPointer to host\_device\_ptr::data.
+
+### Fixed
+- Replaced calls to chai::ManagedArray::getPointer (previously deprecated and now removed) with calls to chai::ManagedArray::data.
+
 ## [Version 0.14.1] - Release date 2024-10-15
 
 ### Fixed

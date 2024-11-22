@@ -17,7 +17,6 @@ configure_file(
 
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
-    Accessor.h
     algorithm.h
     algorithm_decl.h
     algorithm_impl.h
