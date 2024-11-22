@@ -265,7 +265,7 @@ namespace care {
    ///
    /// @brief Execute using the care::RAJAReductionExec policy
    ///
-   /// @arg[in] parallel_reduce Used to choose this overload of forall
+   /// @arg[in] gpu_reduce Used to choose this overload of forall
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
@@ -275,7 +275,7 @@ namespace care {
    ///
    ////////////////////////////////////////////////////////////////////////////////
    template <typename LB>
-   void forall(parallel_reduce, const char * fileName, const int lineNumber,
+   void forall(gpu_reduce, const char * fileName, const int lineNumber,
                const int start, const int end, const int batch_size, LB&& body) {
 #if CARE_ENABLE_PARALLEL_LOOP_BACKWARDS
       s_reverseLoopOrder = true;
@@ -629,7 +629,7 @@ namespace care {
    }
 
    template <typename LB>
-   void launch_2D_jagged(care::parallel_reduce, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber , LB && body) {
+   void launch_2D_jagged(care::gpu_reduce, int xstart, int xend, int const * gpu_lengths, int ystart, int ylength, const char * fileName, int lineNumber , LB && body) {
       launch_2D_jagged(care::gpu{}, xstart, xend, gpu_lengths, ystart, ylength, fileName, lineNumber, body) ;
    }
 #endif

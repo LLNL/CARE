@@ -345,15 +345,15 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 #define SCAN_REDUCE_LOOP_INIT(INDX, START, END, SCANVAR, SCANVARLENGTH, SCANVAR_OFFSET, EXPR) \
    if (END - START > 0) { \
       int const SCANVARENDNAME(SCANVAR) = END; \
-      CARE_CHECKED_REDUCE_LOOP_START(INDX, START, END+1, scan_loop_init_check) { \
+      CARE_CHECKED_REDUCE_LOOP_START(INDX, START, END+1, scan_reduce_loop_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
-      } CARE_CHECKED_REDUCE_LOOP_END(scan_loop_init_check) \
+      } CARE_CHECKED_REDUCE_LOOP_END(scan_reduce_loop_init_check) \
       care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, END-START+1, SCANVAR_OFFSET, true); \
    } else { \
-      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_init_check) { \
+      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_reduce_loop_init_check) { \
          SCANVAR[INDX] = SCANVAR_OFFSET; \
          SCANVARLENGTH[0] = SCANVAR_OFFSET; \
-      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_loop_init_check) \
+      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_reduce_loop_init_check) \
    }
 
 #if CARE_HAVE_LLNL_GLOBALID
@@ -375,15 +375,15 @@ using ScanVarGID = chai::ManagedArray<GIDTYPE>;
 #define SCAN_REDUCE_LOOP_GID_INIT(INDX, START, END, SCANVAR, SCANVARLENGTH, SCANVAR_OFFSET, EXPR) \
    if (END - START > 0) { \
       int const SCANVARENDNAME(SCANVAR) = END; \
-      CARE_CHECKED_REDUCE_LOOP_START(INDX, START, END+1, scan_loop_gid_init_check) { \
+      CARE_CHECKED_REDUCE_LOOP_START(INDX, START, END+1, scan_reduce_loop_gid_init_check) { \
          SCANVAR[INDX-START] = (INDX != SCANVARENDNAME(SCANVAR)) && (EXPR) ; \
-      } CARE_CHECKED_REDUCE_LOOP_END(scan_loop_gid_init_check) \
+      } CARE_CHECKED_REDUCE_LOOP_END(scan_reduce_loop_gid_init_check) \
       care::exclusive_scan(RAJAExec{}, SCANVAR, nullptr, END-START+1, SCANVAR_OFFSET.Value(), true); \
    } else { \
-      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_loop_gid_init_check) { \
+      CARE_CHECKED_SEQUENTIAL_LOOP_START(INDX, 0, 1, scan_reduce_loop_gid_init_check) { \
          SCANVAR[INDX] = SCANVAR_OFFSET.Value(); \
          SCANVARLENGTH[0] = SCANVAR_OFFSET.Value(); \
-      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_loop_gid_init_check) \
+      } CARE_CHECKED_SEQUENTIAL_LOOP_END(scan_reduce_loop_gid_init_check) \
    }
 
 #endif // CARE_HAVE_LLNL_GLOBALID
