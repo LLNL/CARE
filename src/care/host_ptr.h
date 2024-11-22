@@ -123,15 +123,6 @@ namespace care {
             return m_ptr[index];
          }
 
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-         ///
-         /// @author Peter Robinson
-         ///
-         /// Convert to a raw pointer
-         ///
-         operator T*() const { return m_ptr; }
-#endif
-
          ///
          /// @author Peter Robinson
          ///

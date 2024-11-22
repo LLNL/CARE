@@ -103,21 +103,6 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<const 
    return checkSorted<T>(array.data(), len, name, argname, allowDuplicates, warnOnFailure);
 }
 
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<T>& array,
-                                              const int len,
-                                              const char* name,
-                                              const char* argname,
-                                              const bool allowDuplicates,
-                                              const bool warnOnFailure)
-{
-   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates, warnOnFailure);
-}
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
  * Author(s) : Peter Robinson, based on IntersectGlobalIDArrays by Al Nichols
