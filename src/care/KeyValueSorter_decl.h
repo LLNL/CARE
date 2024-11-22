@@ -174,31 +174,6 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
          setKeyValueArraysFromManagedArray(m_keys, m_values, len, arr);
       }
 
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      ///
-      /// @brief Constructor
-      ///
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      ///
-      /// @note This overload is needed to prevent ambiguity when implicit
-      ///       casts are enabled
-      ///
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      ///
-      /// @return a KeyValueSorter instance
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const host_device_ptr<ValueType> & arr)
-      : KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(len, host_device_ptr<const ValueType>(arr))
-      {
-      }
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       /// @brief (Shallow) Copy constructor
@@ -757,32 +732,6 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       {
          setKeyValueArraysFromManagedArray(m_keyValues, len, arr);
       }
-
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Alan Dayton
-      ///
-      /// @brief Constructor
-      ///
-      /// Allocates space and initializes the KeyValueSorter by copying
-      ///    elements and ordering from the given managed array
-      ///
-      /// @note This overload is needed to prevent ambiguity when implicit
-      ///       casts are enabled
-      ///
-      /// @param[in] len - The number of elements to allocate space for
-      /// @param[in] arr - The managed array to copy elements from
-      ///
-      /// @return a KeyValueSorter instance
-      ///
-      ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const host_device_ptr<ValueType> & arr)
-      : KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(len, host_device_ptr<const ValueType>(arr))
-      {
-      }
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton

@@ -250,16 +250,6 @@ CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const T>& array, c
                                   const bool allowDuplicates = false,
                                   const bool warnOnFailure = true);
 
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-template <typename T>
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<T>& array, const int len,
-                                  const char* name, const char* argname,
-                                  const bool allowDuplicates = false,
-                                  const bool warnOnFailure = true);
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
 template<typename mapType>
 CARE_HOST_DEVICE CARE_DLL_API int BinarySearch(const mapType *map,
                                                const int start,
