@@ -221,7 +221,7 @@ namespace care {
          using int_ptr = care::host_device_ptr<int>;
          
          // default constructor
-         CARE_HOST_DEVICE host_device_map() noexcept {}
+         CARE_HOST_DEVICE host_device_map() noexcept {};
          
          // constructor taking max_entries
          host_device_map(size_t max_entries) : m_max_size(max_entries), m_signal(0), m_gpu_map{max_entries}   {
@@ -237,14 +237,13 @@ namespace care {
          }
 
          // copy constructor 
-         CARE_HOST_DEVICE host_device_map(host_device_map const & other) noexcept {
-            m_max_size = other.m_max_size;
-            m_signal = other.m_signal;
-            m_gpu_map = other.m_gpu_map;
-            m_size_ptr.free();
-            m_size_ptr = other.m_size_ptr;
-            other.m_size_ptr = nullptr;
-            m_size = other.m_size;
+         CARE_HOST_DEVICE host_device_map(host_device_map const & other) noexcept :
+            m_max_size{other.m_max_size},
+            m_signal{other.m_signal},
+            m_gpu_map{other.m_gpu_map},
+            m_size_ptr{other.m_size_ptr},
+            m_size{other.m_size}
+	 {
 	 }
 
          // move constructor
@@ -418,13 +417,13 @@ namespace care {
          }
          
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept {
-            delete m_size_ptr;
-            m_size_ptr = other.m_size_ptr;
-            m_size = other.m_size;
-            m_map = other.m_map;
-            m_max_size = other.m_max_size;
-            m_signal = other.m_signal;
+         host_device_map(host_device_map const & other) noexcept :
+            m_size_ptr(other.m_size_ptr),
+            m_size(other.m_size),
+            m_map(other.m_map),
+            m_max_size(other.m_max_size),
+            m_signal(other.m_signal)
+	 {
 	 }
 
          // move constructor
