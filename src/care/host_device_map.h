@@ -86,17 +86,14 @@ namespace care {
          }
 
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept {
-            delete m_map;
-            delete m_size;
-            delete m_iterator;
-            delete m_next_iterator_index;
-            m_map = other.m_map;
-            m_size = other.m_size;
-            m_iterator = other.m_iterator;
-            m_next_iterator_index = other.m_next_iterator_index;
-            m_max_size = other.m_max_size;
-            m_signal = other.m_signal;
+         host_device_map(host_device_map const & other) noexcept :
+            m_map(other.m_map),
+            m_size(other.m_size),
+            m_iterator(other.m_iterator),
+            m_next_iterator_index(other.m_next_iterator_index),
+            m_max_size(other.m_max_size),
+            m_signal(other.m_signal)
+	 {
 	 }
 
          // move constructor
