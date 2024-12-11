@@ -284,7 +284,8 @@ namespace care {
         inline CARE_HOST_DEVICE mapped_type at(key_type key) const {
            int index = care::BinarySearch<key_type>(m_gpu_map.keys(),0,m_size,key);
            if (index >= 0) {
-              return m_gpu_map.values()[index];
+              const care::local_ptr<mapped_type>& values = m_gpu_map.values();
+              return values[index];
            }
            else {
               return m_signal;
@@ -351,13 +352,15 @@ namespace care {
         // lookups (valid after a sort() call) are done by binary searching the keys and using the
         // index of the located key to grab the appropriate value
         inline CARE_DEVICE mapped_type & value_at(int index) const {
-           return m_gpu_map.values()[index];
+           const care::local_ptr<mapped_type>& values = m_gpu_map.values();
+           return values[index];
         }
         
         // lookups (valid after a sort() call) are done by binary searching the keys and using the
         // index of the located key to grab the appropriate value
         inline CARE_DEVICE key_type const &  key_at(int index) const {
-           return m_gpu_map.keys()[index];
+           const care::local_ptr<key_type>& keys = m_gpu_map.keys();
+           return keys[index];
         }
 
         inline CARE_DEVICE iterator iterator_at(int index) const { 
