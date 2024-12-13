@@ -25,13 +25,6 @@ namespace care{
    inline managed_ptr<T> make_managed(Args&&... args) {
       return chai::make_managed<T>(std::forward<Args>(args)...);
    }
-
-   template <typename T,
-             typename F,
-             typename... Args>
-   inline managed_ptr<T> make_managed_from_factory(F&& f, Args&&... args) {
-      return chai::make_managed_from_factory<T>(std::forward<F>(f), std::forward<Args>(args)...);
-   }
 }
 
 #else // defined(CARE_ENABLE_MANAGED_PTR)
