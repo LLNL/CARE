@@ -14,8 +14,8 @@ namespace care {
    struct sequential {};
    struct openmp {};
    struct gpu {};
+   struct gpu_reduce {};
    struct parallel {};
-   struct parallel_reduce {};
    struct raja_fusible {};
    struct raja_fusible_seq {};
    struct managed_ptr_read {};
@@ -27,8 +27,8 @@ namespace care {
       sequential,
       openmp,
       gpu,
+      gpu_reduce,
       parallel,
-      parallel_reduce,
       managed_ptr_read,
       managed_ptr_write
    };
