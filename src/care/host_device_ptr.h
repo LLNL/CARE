@@ -23,6 +23,7 @@
 // Std library headers
 #include <cstddef>
 
+
 namespace care {
    ///////////////////////////////////////////////////////////////////////////
    /// @struct _kv
@@ -96,22 +97,6 @@ namespace care {
       ///
       CARE_HOST_DEVICE host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
 
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-      ///
-      /// @author Peter Robinson
-      ///
-      /// Construct from a raw pointer
-      ///
-      /// @note Only safe if the raw pointer is already registered with CHAI
-      ///
-      template <bool Q = 0>
-      CARE_HOST_DEVICE host_device_ptr<T>(
-         T * from, //!< Raw pointer to construct from
-         chai::CHAIDISAMBIGUATE name=chai::CHAIDISAMBIGUATE(), //!< Used to disambiguate this constructor
-         bool foo=Q) //!< Used to disambiguate this constructor
-      : MA(from, name, foo) {}
-#endif
-
       ///
       /// @author Peter Robinson
       ///
@@ -138,13 +123,20 @@ namespace care {
       {
       }
 
-#if defined (CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       ///
       /// @author Peter Robinson
       ///
       /// Construct from a raw pointer, size, and name
       /// This is defined when the CHAI resource manager is disabled
       ///
+#if defined(CARE_DEEP_COPY_RAW_PTR)
+      host_device_ptr<T>(T* from, size_t size, const char * name)
+         : MA(size)
+      {
+         std::copy_n(from, size, (T_non_const*)MA::data());
+      }
+#else /* defined(CARE_DEEP_COPY_RAW_PTR) */
+#if defined (CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       host_device_ptr<T>(T* from, size_t size, const char * name)
          : MA(from, nullptr, size, nullptr)
       {
@@ -173,6 +165,7 @@ namespace care {
          }
       }
 #endif
+#endif /* defined(CARE_DEEP_COPY_RAW_PTR) */
 
       ///
       /// @author Peter Robinson
@@ -412,6 +405,16 @@ namespace care {
       void freeDeviceMemory(T_non_const ** CPU_destination,
                             size_t elems,
                             bool deregisterPointer=true) {
+#if defined(CARE_DEEP_COPY_RAW_PTR)
+         // if there is a pointer to update ...
+         if (CPU_destination != nullptr) {
+            if (*CPU_destination == nullptr) {
+               *CPU_destination = (T_non_const *) std::malloc(elems*sizeof(T));
+            }
+            std::copy_n(MA::cdata(), elems, *CPU_destination);
+         }
+         MA::free();
+#else /* defined(CARE_DEEP_COPY_RAW_PTR) */
 #if !defined(CHAI_DISABLE_RM) 
 #if defined(CHAI_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
          if (CPU_destination != nullptr) {
@@ -441,6 +444,7 @@ namespace care {
             arrayManager->deregisterPointer(MA::m_pointer_record,true);
             CHAICallback::deregisterRecord(MA::m_pointer_record);
          }
+         
 #else // no resource manager active
 #if defined(CHAI_THIN_GPU_ALLOCATE) // GPU allocated thin wrapped
          // ... then sync to ensure data is up to date
@@ -464,6 +468,7 @@ namespace care {
             }
          }
 #endif
+#endif /* defined(CARE_DEEP_COPY_RAW_PTR) */
       }
 
       CARE_HOST_DEVICE void pick(int idx, T_non_const& val) const  {

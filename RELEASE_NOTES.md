@@ -15,13 +15,14 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 ## [Unreleased] - Release date YYYY-MM-DD
 
 ### Added
+- Added CARE\_DEEP\_COPY\_RAW\_PTR configuration option.
 - Added ATOMIC\_SUB, ATOMIC\_LOAD, ATOMIC\_STORE, ATOMIC\_EXCHANGE, and ATOMIC\_CAS macros.
-- Added TSAN\_ONLY\_ATOMIC\_\* macros to suppress tsan data race reports. Controlled by CARE\_ENABLE\_TSAN\_ONLY\_ATOMICS configuration option.
 
 ### Removed
 - Removed Accessor template parameter from host\_device\_ptr.
 - Removed NoOpAccessor and RaceConditionAccessor. It is recommended to use ThreadSanitizer (TSAN) instead to locate race conditions.
 - Removed CARE\_ENABLE\_RACE\_DETECTION configuration option.
+- Removed implicit conversions between raw pointers and host\_device\_ptrs/host\_ptrs and the corresponding CARE\_ENABLE\_IMPLICIT\_CONVERSIONS configuration option.
 
 ### Changed
 - Renamed host\_device\_ptr::getPointer to host\_device\_ptr::data.
