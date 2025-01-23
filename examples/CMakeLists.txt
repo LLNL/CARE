@@ -44,12 +44,14 @@ target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_BINARY_DIR}/i
 target_compile_options(RaceConditionsExample PRIVATE -fsanitize=thread -g)
 target_link_options(RaceConditionsExample PRIVATE -fsanitize=thread)
 
-blt_add_executable(NAME DeviceASANExample
-                   SOURCES DeviceASAN.cpp
-                   DEPENDS_ON ${care_depends})
+if (ENABLE_HIP)
+  blt_add_executable(NAME DeviceASANExample
+                     SOURCES DeviceASAN.cpp
+                     DEPENDS_ON ${care_depends})
 
-target_include_directories(DeviceASANExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(DeviceASANExample PRIVATE ${PROJECT_BINARY_DIR}/include)
+  target_include_directories(DeviceASANExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
+  target_include_directories(DeviceASANExample PRIVATE ${PROJECT_BINARY_DIR}/include)
 
-target_compile_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g)
-target_link_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g -Wl,-rpath,/opt/rocm-6.3.0/lib/asan/:/opt/rocm-6.3.0/llvm/lib/asan:/opt/rocm-6.3.0/lib/llvm/lib/clang/18/lib/linux)
+  target_compile_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g)
+  target_link_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g -Wl,-rpath,/opt/rocm-6.3.0/lib/asan/:/opt/rocm-6.3.0/llvm/lib/asan:/opt/rocm-6.3.0/lib/llvm/lib/clang/18/lib/linux)
+endif ()
