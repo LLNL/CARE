@@ -13,3 +13,6 @@ set(ENABLE_HIP ON CACHE BOOL "Enable Hip")
 set(ROCM_PATH "/usr/tce/packages/rocmcc/rocmcc-6.3.0-magic" CACHE PATH "")
 set(CMAKE_HIP_ARCHITECTURES "gfx942:xnack+" CACHE STRING "")
 set(AMDGPU_TARGETS "gfx942:xnack+" CACHE STRING "")
+
+# Used by the DeviceASAN example
+set(CARE_ASAN_RPATH_FLAG "-Wl,-rpath,/opt/rocm-6.3.0/lib/asan/:/opt/rocm-6.3.0/llvm/lib/asan:/opt/rocm-6.3.0/lib/llvm/lib/clang/18/lib/linux" CACHE STRING "")

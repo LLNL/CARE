@@ -53,5 +53,5 @@ if (ENABLE_HIP)
   target_include_directories(DeviceASANExample PRIVATE ${PROJECT_BINARY_DIR}/include)
 
   target_compile_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g)
-  target_link_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g -Wl,-rpath,/opt/rocm-6.3.0/lib/asan/:/opt/rocm-6.3.0/llvm/lib/asan:/opt/rocm-6.3.0/lib/llvm/lib/clang/18/lib/linux)
+  target_link_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g ${CARE_ASAN_RPATH_FLAG})
 endif ()
