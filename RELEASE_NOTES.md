@@ -1,5 +1,5 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2024, Lawrence Livermore National Security, LLC and CARE)
+[comment]: # (Copyright 2020-25, Lawrence Livermore National Security, LLC and CARE)
 [comment]: # (project contributors. See the CARE LICENSE file for details.)
 [comment]: # 
 [comment]: # (SPDX-License-Identifier: BSD-3-Clause)
