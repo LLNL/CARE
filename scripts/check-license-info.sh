@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 ##############################################################################
-# Copyright (c) 2016-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: (MIT)
