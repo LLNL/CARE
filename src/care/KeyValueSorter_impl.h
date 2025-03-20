@@ -98,7 +98,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    // When called with a nullptr for temp storage, this returns how much
    // temp storage should be allocated.
    if (len > 0) {
-      // TODO: Use if constexpr when c++17 support is required
+      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
       if (std::is_arithmetic<decltype(*rawKeyData)>::value) {
 #if defined(__CUDACC__)
          cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
@@ -140,7 +140,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
 #endif
     
-      // TODO: Use if constexpr when c++17 support is required
+      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
       if (std::is_arithmetic<KeyT>::value) {
 #if defined(__CUDACC__)
          cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
@@ -177,7 +177,7 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       tmpManaged.free();
    }
 
-   // TODO: Use if constexpr when c++17 support is required
+   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
    if (std::is_arithmetic<KeyT>::value) {
       // Get the result
       if (_noCopy) {

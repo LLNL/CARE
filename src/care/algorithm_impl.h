@@ -661,7 +661,7 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
 template <typename T>
 CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {  
-   // TODO: Use if constexpr when c++17 support is required
+   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
    if (std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value) {
       radixSortArray(Array, len, start, noCopy);
    }
