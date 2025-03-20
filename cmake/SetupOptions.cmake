@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2024-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -14,11 +14,8 @@ option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space" ON)
 option(CARE_ENABLE_PINNED_MEMORY_FOR_SCANS "Use pinned memory for scan lengths" ON)
 option(CARE_GPU_MEMORY_IS_ACCESSIBLE_ON_CPU "Allows default memory spaces for ZERO_COPY and PAGEABLE to be the GPU memory space" OFF)
-# Option to disable implicit conversion between host_device_ptr and raw arrays in CARE.
-option(CARE_ENABLE_IMPLICIT_CONVERSIONS "Enable implicit conversions to-from raw pointers" ON)
-# CHAI must also be configured with the same settings for implicit conversions.
-set(CHAI_ENABLE_IMPLICIT_CONVERSIONS ${CARE_ENABLE_IMPLICIT_CONVERSIONS} CACHE BOOL "Enable implicit conversions to-from raw pointers")
 option(CARE_LEGACY_COMPATIBILITY_MODE "Enable legacy compatibility mode" OFF)
+option(CARE_DEEP_COPY_RAW_PTR "Use deep copy for managed array initialization from raw pointer" OFF)
 option(CARE_ENABLE_MANAGED_PTR "Enable managed_ptr aliases, tests, and reproducer" ON)
 option(CARE_DISABLE_RAJAPLUGIN "Disable use of the RAJA plugin. WILL ALSO DISABLE MEMORY MOTION." OFF)
 option(CARE_ENABLE_EXTERN_INSTANTIATE "Enable extern instantiation of template functions" OFF)

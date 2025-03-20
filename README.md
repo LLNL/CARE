@@ -1,11 +1,11 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2020-24, Lawrence Livermore National Security, LLC and CARE)
+[comment]: # (Copyright 2020-25, Lawrence Livermore National Security, LLC and CARE)
 [comment]: # (project contributors. See the CARE LICENSE file for details.)
 [comment]: #
 [comment]: # (SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
 
-# CARE v0.14.1
+# CARE v0.15.0
 
 CARE: CHAI and RAJA Extensions
 ===============================

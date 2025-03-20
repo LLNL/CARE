@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -17,7 +17,6 @@ configure_file(
 
 set(care_headers
     ${PROJECT_BINARY_DIR}/include/care/config.h
-    Accessor.h
     algorithm.h
     algorithm_decl.h
     algorithm_impl.h

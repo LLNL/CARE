@@ -1,5 +1,5 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2024, Lawrence Livermore National Security, LLC and CARE)
+[comment]: # (Copyright 2020-25, Lawrence Livermore National Security, LLC and CARE)
 [comment]: # (project contributors. See the CARE LICENSE file for details.)
 [comment]: # 
 [comment]: # (SPDX-License-Identifier: BSD-3-Clause)
@@ -11,6 +11,30 @@ Notes describing significant changes in each CARE release are documented
 in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+
+## [Version 0.15.0] - Release date 2025-03-20
+
+### Added
+- Added CARE\_DEEP\_COPY\_RAW\_PTR configuration option.
+- Added ATOMIC\_SUB, ATOMIC\_LOAD, ATOMIC\_STORE, ATOMIC\_EXCHANGE, and ATOMIC\_CAS macros.
+
+### Removed
+- Removed Accessor template parameter from host\_device\_ptr.
+- Removed NoOpAccessor and RaceConditionAccessor. It is recommended to use ThreadSanitizer (TSAN) instead to locate race conditions.
+- Removed CARE\_ENABLE\_RACE\_DETECTION configuration option.
+- Removed implicit conversions between raw pointers and host\_device\_ptrs/host\_ptrs and the corresponding CARE\_ENABLE\_IMPLICIT\_CONVERSIONS configuration option.
+
+### Changed
+- Renamed host\_device\_ptr::getPointer to host\_device\_ptr::data.
+
+### Fixed
+- Replaced calls to chai::ManagedArray::getPointer (previously deprecated and now removed) with calls to chai::ManagedArray::data.
+
+### Updated
+- Updated to BLT v0.7.0
+- Updated to Umpire v2025.03.0
+- Updated to RAJA v2025.03.0
+- Updated to CHAI v2025.03.0
 
 ## [Version 0.14.1] - Release date 2024-10-15
 

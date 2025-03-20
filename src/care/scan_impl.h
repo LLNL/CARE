@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -57,44 +57,17 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
          }
       }
 
-#if !defined(CHAI_DISABLE_RM)
       if (size > 1) {
-         // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
-         // reliable if it is cast to a different template type.
-         void* dataPtr = data.data(chai::ExecutionSpace::CPU, false);
-         size_t offset = 0;
-         if (data.isSlice()) {
-            offset = (char*)data.getActivePointer() - (char*)data.getActiveBasePointer();
-            // The pointer record is associated with the base pointer for slices.
-            // Note that the bounds check will check against overrunning the base pointer, not the slice (again because
-            // size() is not reliable if cast to a different template type).
-            dataPtr = (char*)dataPtr - offset;
-         }
-         const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord(dataPtr);
-         int dataSize = (dataRecord->m_size-offset)/sizeof(T);
          bool warned = false;
 
-         if (dataSize < size) {
-            const char* dataName = CHAICallback::getName(dataRecord);
-            if (dataName == nullptr) {
-               dataName = "array" ;
-            }
-            printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
+         if (data.size() < size) {
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. Size of input array (%d) is less than given size (%d).\n", data.size(), size);
             warned = true;
          }
 
-         if (!inPlace) {
-            const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false));
-            int outDataSize = dataRecord->m_size/sizeof(T);
-
-            if (outDataSize < size) {
-               const char* outDataName = CHAICallback::getName(outDataRecord);
-               if (outDataName == nullptr) {
-                  outDataName = "array" ;
-               }
-               printf("[CARE] Warning: Invalid argument to care::exclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
-               warned = true;
-            }
+         if (!inPlace && outData.size() < size) {
+            printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. Size of output array (%d) is less than given size (%d).\n", outData.size(), size);
+            warned = true;
          }
 
          if (warned) {
@@ -104,7 +77,6 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
             printf("%s", stack.c_str());
          }
       }
-#endif
 
       if (size == 1) {
          if (inPlace) {
@@ -156,43 +128,16 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
          }
       }
 
-#if !defined(CHAI_DISABLE_RM)
-      // Bounds checking is only available with the resource manager because the ManagedArray::size() is not
-      // reliable if it is cast to a different template type.
-      void* dataPtr = data.data(chai::ExecutionSpace::CPU, false);
-      size_t offset = 0;
-      if (data.isSlice()) {
-         offset = (char*)data.getActivePointer() - (char*)data.getActiveBasePointer();
-         // The pointer record is associated with the base pointer for slices.
-         // Note that the bounds check will check against overrunning the base pointer, not the slice (again because
-         // size() is not reliable if cast to a different template type).
-         dataPtr = (char*)dataPtr - offset;
-      }
-      const chai::PointerRecord* dataRecord = chai::ArrayManager::getInstance()->getPointerRecord(dataPtr);
-      int dataSize = (dataRecord->m_size-offset)/sizeof(T);
       bool warned = false;
 
-      if (dataSize < size) {
-         const char* dataName = CHAICallback::getName(dataRecord);
-         if (dataName == nullptr) {
-            dataName = "array" ;
-         }
-         printf("[CARE] Warning: Invalid argument to care::inclusive_scan. Size %d < %d in input %s.\n", dataSize, size, dataName);
+      if (data.size() < size) {
+         printf("[CARE] Warning: Invalid arguments to care::inclusive_scan. Size of input array (%d) is less than given size (%d).\n", data.size(), size);
          warned = true;
       }
 
-      if (!inPlace) {
-         const chai::PointerRecord* outDataRecord = chai::ArrayManager::getInstance()->getPointerRecord((void *)outData.data(chai::ExecutionSpace::CPU, false));
-         int outDataSize = dataRecord->m_size/sizeof(T);
-
-         if (outDataSize < size) {
-            const char* outDataName = CHAICallback::getName(outDataRecord);
-            if (outDataName == nullptr) {
-               outDataName = "array" ;
-            }
-            printf("[CARE] Warning: Invalid argument to care::inclusive_scan. Size %d < %d in output %s.\n", outDataSize, size, outDataName);
-            warned = true;
-         }
+      if (!inPlace && outData.size() < size) {
+         printf("[CARE] Warning: Invalid arguments to care::inclusive_scan. Size of output array (%d) is less than given size (%d).\n", outData.size(), size);
+         warned = true;
       }
 
       if (warned) {
@@ -201,7 +146,6 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
          std::string stack = umpire::util::backtracer<umpire::util::trace_always>::print(bt);
          printf("%s", stack.c_str());
       }
-#endif
    }
 
    CHAIDataGetter<T, Exec> D {};

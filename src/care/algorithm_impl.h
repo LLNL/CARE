@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -102,21 +102,6 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<const 
 {
    return checkSorted<T>(array.data(), len, name, argname, allowDuplicates, warnOnFailure);
 }
-
-#if defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<T>& array,
-                                              const int len,
-                                              const char* name,
-                                              const char* argname,
-                                              const bool allowDuplicates,
-                                              const bool warnOnFailure)
-{
-   return checkSorted(care::host_device_ptr<const T>(array), len, name, argname, allowDuplicates, warnOnFailure);
-}
-
-#endif // defined(CARE_ENABLE_IMPLICIT_CONVERSIONS)
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
@@ -550,9 +535,9 @@ CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const 
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Accessor>  Array, size_t len,
-                           care::host_device_ptr<T, Accessor> & outArray, int & outLen)
+template <typename T>
+CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<const T>  Array, size_t len,
+                           care::host_device_ptr<T> & outArray, int & outLen)
 {
    care::host_device_ptr<int> uniq(len+1,"uniqArray uniq");
    fill_n(uniq, len+1, 0);
@@ -563,7 +548,7 @@ CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Access
    care::exclusive_scan(RAJADeviceExec{}, uniq, nullptr, len+1, 0, true);
    int numUniq;
    uniq.pick(len, numUniq);
-   care::host_device_ptr<T, Accessor> & tmp = outArray;
+   care::host_device_ptr<T> & tmp = outArray;
    tmp.alloc(numUniq);
    CARE_STREAM_LOOP(i, 0, len) {
       if ((i == len-1) || (Array[i] < Array[i+1] || Array[i+1] < Array[i])) {
@@ -581,12 +566,12 @@ CARE_INLINE void uniqArray(RAJADeviceExec, care::host_device_ptr<const T, Access
  * Purpose   : GPU version of uniqArray, implements uniq using an exclusive
  *             scan.
   ************************************************************************/
-template <typename T, template<class A> class Accessor>
-CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
+template <typename T>
+CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
 {
-   care::host_device_ptr<T, Accessor> tmp;
+   care::host_device_ptr<T> tmp;
    int newLen;
-   uniqArray<T, Accessor>(exec, Array, len, tmp, newLen);
+   uniqArray<T>(exec, Array, len, tmp, newLen);
    if (noCopy) {
       Array.free();
       Array = tmp;
@@ -605,9 +590,9 @@ CARE_INLINE int uniqArray(RAJADeviceExec exec, care::host_device_ptr<T, Accessor
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of uniqArray.
   ************************************************************************/
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Accessor> Array, size_t len,
-                           care::host_device_ptr<T, Accessor> & outArray, int & newLen)
+template <typename T>
+CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T> Array, size_t len,
+                           care::host_device_ptr<T> & outArray, int & newLen)
 {
    CHAIDataGetter<const T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getConstRawArrayData(Array);
@@ -619,7 +604,7 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Access
       size_t i=0  ;
 
       /* alloc some space, we realloc later */
-      outArray = care::host_device_ptr<T, Accessor>(len,"uniq_outArray");
+      outArray = care::host_device_ptr<T>(len,"uniq_outArray");
       arrout = outArray;
 
       while (i < len) {
@@ -644,19 +629,19 @@ CARE_INLINE void uniqArray(RAJA::seq_exec, care::host_device_ptr<const T, Access
  * Purpose   : CPU version of uniqArray, with in-place semantics. Set noCopy to true
  *             if you don't care about data left at the end of the array after the uniq.
   ************************************************************************/
-template <typename T, template<class A> class Accessor>
-CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor> & Array, size_t len, bool noCopy)
+template <typename T>
+CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array, size_t len, bool noCopy)
 {
    int newLength = 0;
    if (len > 0) {
-      care::host_device_ptr<T, Accessor> tmp;
-      uniqArray<T, Accessor>(exec, Array, len, tmp, newLength);
+      care::host_device_ptr<T> tmp;
+      uniqArray<T>(exec, Array, len, tmp, newLength);
       if (noCopy) {
          Array.free();
          Array = tmp;
       }
       else {
-         ArrayCopy<T>(RAJA::seq_exec {}, Array, reinterpret_cast<care::host_device_ptr<const T, Accessor> &>(tmp), newLength);
+         ArrayCopy<T>(RAJA::seq_exec {}, Array, reinterpret_cast<care::host_device_ptr<const T> &>(tmp), newLength);
          tmp.free();
       }
    }
@@ -673,14 +658,20 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T, Accessor
  * Purpose   : GPU version of sortArray.
   ************************************************************************/
 
-template <typename T, template <class A> class Accessor>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
-{
-   radixSortArray(Array, len, start, noCopy);
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+{  
+   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
+   if (std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value) {
+      radixSortArray(Array, len, start, noCopy);
+   }
+   else {
+      mergeSortArray(Array, len, start, noCopy);
+   }
 }
 
-template <typename T, template <class A> class Accessor>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len)
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len)
 {
    radixSortArray(Array, len, 0, false);
 }
@@ -688,10 +679,10 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & 
 /************************************************************************
  * Function  : radixSortArray
  * Author(s) : Peter Robinson
- * Purpose   : ManagedArray API to cub::DeviceRadixSort::SortKeys.
+ * Purpose   : ManagedArray API to [hip]cub::DeviceRadixSort::SortKeys
   ************************************************************************/
-template <typename T, template <class A> class Accessor>
-CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
+template <typename T>
+CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
@@ -735,7 +726,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
       if (len > 0) {
          Array.free();
       }
-      Array = care::host_device_ptr<T,Accessor>(chai::ManagedArray<T>(result));
+      Array = care::host_device_ptr<T>(chai::ManagedArray<T>(result));
    }
    else {
       ArrayCopy<T>(RAJADeviceExec{}, care::host_device_ptr<T>(Array), result, len, start, 0);
@@ -747,17 +738,69 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T, Accessor> & Array, size
       tmpManaged.free();
    }
 }
+
+/************************************************************************
+ * Function  : mergeSortArray
+ * Author(s) : Peter Robinson
+ * Purpose   : ManagedArray API to [hip]cub::DeviceMergeSort::StableSortKeys.
+  ************************************************************************/
+template <typename T>
+CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+{
+   CHAIDataGetter<T, RAJADeviceExec> getter {};
+   CHAIDataGetter<char, RAJADeviceExec> charGetter {};
+   const auto * rawData = getter.getConstRawArrayData(Array) + start;
+   // get the temp storage length
+   char * d_temp_storage = nullptr;
+   size_t temp_storage_bytes = 0;
+   auto custom_comparator = [] CARE_HOST_DEVICE (const T & lhs, const T & rhs) {
+      return lhs < rhs;
+   };
+   if (len > 0) {
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#endif   
+   }
+   // allocate the temp storage
+
+   care::host_device_ptr<char> tmpManaged(temp_storage_bytes, "merge_sort_tmpManaged");
+   d_temp_storage = charGetter.getRawArrayData(tmpManaged);
+
+   // do the sort
+   if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
+#endif
+   }
+
+   // cleanup
+   if (len > 0) {
+      tmpManaged.free();
+   }
+}
 #else // defined(CARE_GPUCC)
 
 // TODO openMP parallel implementation
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
    sortArray(RAJA::seq_exec{}, Array, len, start, noCopy);
 }
 
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &Array, size_t len)
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len)
 {
    sortArray(RAJA::seq_exec{}, Array, len);
 }
@@ -771,8 +814,8 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T, Accessor> &A
  * Author(s) : Peter Robinson
  * Purpose   : CPU version of sortArray. Calls std::sort
   ************************************************************************/
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & Array, size_t len, int start, bool noCopy)
+template <typename T>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array)+start;
@@ -780,8 +823,8 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> & 
    (void) noCopy;
 }
 
-template <typename T, template<class A> class Accessor>
-CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T, Accessor> &Array, size_t len)
+template <typename T>
+CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len)
 {
    CHAIDataGetter<T, RAJA::seq_exec> getter {};
    auto * rawData = getter.getRawArrayData(Array);
@@ -1028,8 +1071,8 @@ CARE_INLINE void ExpandArrayInPlace(RAJADeviceExec, care::host_device_ptr<T> arr
  * Author(s) : Peter Robinson
  * Purpose   : Fills a ManagedArray with the value given.
  * ************************************************************************/
-template <class T, template<class A> class Accessor, class Size, class U>
-CARE_INLINE void fill_n(care::host_device_ptr<T, Accessor> arr, Size n, const U& val)
+template <class T, class Size, class U>
+CARE_INLINE void fill_n(care::host_device_ptr<T> arr, Size n, const U& val)
 {
    CARE_STREAM_LOOP(i, 0, n) {
       arr[i] = val;
@@ -1138,8 +1181,8 @@ CARE_INLINE T ArrayMinLoc(care::host_device_ptr<const T> arr, int n, T initVal, 
  * Author(s) : Peter Robinson
  * Purpose   : Returns the maximum value in a ManagedArray
  * ************************************************************************/
-template <typename T, typename Exec, template<class A> class Accessor>
-CARE_INLINE T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec>
+CARE_INLINE T ArrayMax(care::host_device_ptr<const T> arr, int n, T initVal, int startIndex)
 {
    RAJAReduceMax<T> max { initVal };
    CARE_REDUCE_LOOP(k, startIndex, n) {
@@ -1148,10 +1191,10 @@ CARE_INLINE T ArrayMax(care::host_device_ptr<const T, Accessor> arr, int n, T in
    return (T)max;
 }
 
-template <typename T, typename Exec, template<class A> class Accessor>
-CARE_INLINE T ArrayMax(care::host_device_ptr<T, Accessor> arr, int n, T initVal, int startIndex)
+template <typename T, typename Exec>
+CARE_INLINE T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T, Exec, Accessor>((care::host_device_ptr<const T, Accessor>)arr, n, initVal, startIndex);
+   return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
 }
 
 template <typename T>
@@ -1179,7 +1222,7 @@ CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal
 template <typename T>
 CARE_INLINE T ArrayMax(care::host_ptr<const T> arr, int n, T initVal, int startIndex)
 {
-   return ArrayMax<T,RAJA::seq_exec, care::NoOpAccessor>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
+   return ArrayMax<T,RAJA::seq_exec>(care::host_device_ptr<const T>(arr.cdata(), n, "ArrayMaxTmp"), n, initVal, startIndex);
 }
 
 template <typename T>

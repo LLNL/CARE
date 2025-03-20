@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(CARE
         LANGUAGES C CXX
-        VERSION 0.14.1)
+        VERSION 0.15.0)
 
 include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
 

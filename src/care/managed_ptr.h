@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -24,13 +24,6 @@ namespace care{
              typename... Args>
    inline managed_ptr<T> make_managed(Args&&... args) {
       return chai::make_managed<T>(std::forward<Args>(args)...);
-   }
-
-   template <typename T,
-             typename F,
-             typename... Args>
-   inline managed_ptr<T> make_managed_from_factory(F&& f, Args&&... args) {
-      return chai::make_managed_from_factory<T>(std::forward<F>(f), std::forward<Args>(args)...);
    }
 }
 

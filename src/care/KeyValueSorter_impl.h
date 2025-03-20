@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -85,6 +85,10 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
    auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
    auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
+   
+   auto custom_comparator = [] CARE_HOST_DEVICE (decltype(*rawKeyData) lhs, decltype(*rawKeyData) rhs) {
+      return lhs < rhs;
+   };
 
 
    // Get the temp storage length
@@ -94,17 +98,34 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    // When called with a nullptr for temp storage, this returns how much
    // temp storage should be allocated.
    if (len > 0) {
+      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
+      if (std::is_arithmetic<decltype(*rawKeyData)>::value) {
 #if defined(__CUDACC__)
-      cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                      rawKeyData, rawKeyResult,
-                                      rawValueData, rawValueResult,
-                                      len);
+         cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData, rawKeyResult, 
+                                         rawValueData, rawValueResult,
+                                         len);
 #elif defined(__HIPCC__)
-      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                      rawKeyData, rawKeyResult,
-                                      rawValueData, rawValueResult,
-                                      len);
+         hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData, rawKeyResult,
+                                         rawValueData, rawValueResult,
+                                         len);
 #endif
+      }
+      else {
+#if defined(__CUDACC__)
+         cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData,
+                                         rawValueData,
+                                         len, custom_comparator);
+#elif defined(__HIPCC__)
+         hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData,
+                                         rawValueData,
+                                         len, custom_comparator);
+#endif
+
+      }
    }
 
    // Allocate the temp storage and get raw data to pass to cub
@@ -118,18 +139,36 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 #if defined(CHAI_THIN_GPU_ALLOCATE)
       chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
 #endif
-
+    
+      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
+      if (std::is_arithmetic<KeyT>::value) {
 #if defined(__CUDACC__)
-      cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                      rawKeyData, rawKeyResult,
-                                      rawValueData, rawValueResult,
-                                      len);
+         cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData, rawKeyResult,
+                                         rawValueData, rawValueResult,
+                                         len);
 #elif defined(__HIPCC__)
-      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                      rawKeyData, rawKeyResult,
-                                      rawValueData, rawValueResult,
-                                      len);
+         hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData, rawKeyResult,
+                                         rawValueData, rawValueResult,
+                                         len);
 #endif
+      } else {
+#if defined(__CUDACC__)
+         cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData,
+                                         rawValueData,
+                                         len,
+                                         custom_comparator);
+#elif defined(__HIPCC__)
+         hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                         rawKeyData,
+                                         rawValueData,
+                                         len,
+                                         custom_comparator);
+#endif
+
+      }
 
 #if defined(CHAI_THIN_GPU_ALLOCATE)
       chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
@@ -138,22 +177,32 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       tmpManaged.free();
    }
 
-   // Get the result
-   if (_noCopy) {
-      if (len > 0) {
-         keys.free(); 
-         values.free();
-      }
+   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
+   if (std::is_arithmetic<KeyT>::value) {
+      // Get the result
+      if (_noCopy) {
+         if (len > 0) {
+            keys.free(); 
+            values.free();
+         }
 
-      keys = keyResult;
-      values = valueResult;
+         keys = keyResult;
+         values = valueResult;
+      }
+      else {
+         CARE_STREAM_LOOP(i, 0, len) {
+            keys[i+start] = keyResult[i];
+            values[i+start] = valueResult[i];
+         } CARE_STREAM_LOOP_END
+
+         if (len > 0) {
+            keyResult.free();
+            valueResult.free();
+         }
+      }
    }
    else {
-      CARE_STREAM_LOOP(i, 0, len) {
-         keys[i+start] = keyResult[i];
-         values[i+start] = valueResult[i];
-      } CARE_STREAM_LOOP_END
-
+      // merge sort did an inplace sort, so the answer is already in keys and Values
       if (len > 0) {
          keyResult.free();
          valueResult.free();

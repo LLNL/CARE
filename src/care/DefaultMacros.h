@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -33,13 +33,6 @@
 
 /// Used to capture variables by reference into a lambda (combine with FOR_EACH)
 #define CARE_REF_CAPTURE(X) , &X
-
-#ifdef CARE_ENABLE_RACE_DETECTION
-#define CARE_SET_THREAD_ID(INDEX) care::DebugPlugin::s_threadID = INDEX ;
-#else
-#define CARE_SET_THREAD_ID(INDEX)
-#endif
-
 
 
 
@@ -732,8 +725,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, 0, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
-         CARE_SET_THREAD_ID(INDEX)
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, 0, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) {
 
 #define CARE_CHECKED_POLICY_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -744,7 +736,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 #define CARE_CHECKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_POLICY_LOOP_END(CHECK)
 
 #define CARE_CHECKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHECK) \
-   CARE_CHECKED_POLICY_LOOP_START(care::parallel_reduce,INDEX, START_INDEX, END_INDEX, CHECK)
+   CARE_CHECKED_POLICY_LOOP_START(care::gpu_reduce,INDEX, START_INDEX, END_INDEX, CHECK)
 
 #define CARE_CHECKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_POLICY_LOOP_END(CHECK)
 
@@ -768,8 +760,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    decltype(_care_checked_loop_end) _care_checked_loop_begin = START_INDEX; \
    if (_care_checked_loop_end > _care_checked_loop_begin) { \
       CARE_NEST_BEGIN(CHECK) \
-      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, CHUNK_SIZE, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) { \
-         CARE_SET_THREAD_ID(INDEX)
+      care::forall(POLICY{}, __FILE__, __LINE__, _care_checked_loop_begin, _care_checked_loop_end, CHUNK_SIZE, [=] CARE_DEVICE (decltype(_care_checked_loop_end) INDEX) {
 
 #define CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK) }); \
    CARE_NEST_END(CHECK) }}
@@ -780,7 +771,7 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
 #define CARE_CHECKED_CHUNKED_PARALLEL_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK)
 
 #define CARE_CHECKED_CHUNKED_REDUCE_LOOP_START(INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK) \
-   CARE_CHECKED_CHUNKED_POLICY_LOOP_START(care::parallel_reduce,INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
+   CARE_CHECKED_CHUNKED_POLICY_LOOP_START(care::gpu_reduce,INDEX, START_INDEX, END_INDEX, CHUNK_SIZE, CHECK)
 
 #define CARE_CHECKED_CHUNKED_REDUCE_LOOP_END(CHECK) CARE_CHECKED_CHUNKED_POLICY_LOOP_END(CHECK)
 
@@ -1287,6 +1278,9 @@ OMP_FOR_BEGIN for (auto INDEX = _care_openmp_for_loop_chunk_begin_ndx; INDEX < _
    launch_2D_jagged(care::gpu{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
 #define CARE_LOOP_2D_STREAM_JAGGED_END });
 
+#define CARE_LOOP_2D_REDUCE_JAGGED(XINDEX, XSTART, XEND, XLENGTHS, YINDEX, YSTART, YLENGTH, FLAT_INDEX)  \
+   launch_2D_jagged(care::gpu_reduce{}, XSTART, XEND, XLENGTHS.data(chai::DEFAULT, true), YSTART, YLENGTH, __FILE__, __LINE__, [=] CARE_DEVICE (int XINDEX, int YINDEX)->void  {
+#define CARE_LOOP_2D_REDUCE_JAGGED_END });
 
 #endif // !defined(_CARE_DEFAULT_MACROS_H_)
 

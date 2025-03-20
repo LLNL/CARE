@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -115,7 +115,7 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
       data[4] = 3;
    } CARE_HOST_KERNEL_END
 
-   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length, data);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length, care::host_device_ptr<const int>(data));
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);
@@ -233,7 +233,7 @@ GPU_TEST(KeyValueSorter, host_device_ptr_Constructor)
       data[4] = 3;
    } CARE_GPU_KERNEL_END
 
-   care::KeyValueSorter<size_t, int, RAJAExec> sorter(length, data);
+   care::KeyValueSorter<size_t, int, RAJAExec> sorter(length, care::host_device_ptr<const int>(data));
 
    CARE_SEQUENTIAL_LOOP(i, 0, length) {
       EXPECT_EQ(sorter.key(i), i);

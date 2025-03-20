@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2022-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -66,7 +66,7 @@ namespace care {
    class host_device_map< key_type, mapped_type, RAJA::seq_exec> {
       public:
          // default constructor
-         host_device_map() noexcept = default;
+         host_device_map() noexcept {};
          
          // constructor taking max number of entries
          host_device_map(size_t max_entries) : host_device_map{} {
@@ -86,7 +86,15 @@ namespace care {
          }
 
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept = default;
+         host_device_map(host_device_map const & other) noexcept :
+            m_map(other.m_map),
+            m_size(other.m_size),
+            m_iterator(other.m_iterator),
+            m_next_iterator_index(other.m_next_iterator_index),
+            m_max_size(other.m_max_size),
+            m_signal(other.m_signal)
+	 {
+	 }
 
          // move constructor
          host_device_map(host_device_map && other) noexcept  {
@@ -276,7 +284,8 @@ namespace care {
         inline CARE_HOST_DEVICE mapped_type at(key_type key) const {
            int index = care::BinarySearch<key_type>(m_gpu_map.keys(),0,m_size,key);
            if (index >= 0) {
-              return m_gpu_map.values()[index];
+              const care::local_ptr<mapped_type>& values = m_gpu_map.values();
+              return values[index];
            }
            else {
               return m_signal;
@@ -343,13 +352,15 @@ namespace care {
         // lookups (valid after a sort() call) are done by binary searching the keys and using the
         // index of the located key to grab the appropriate value
         inline CARE_DEVICE mapped_type & value_at(int index) const {
-           return m_gpu_map.values()[index];
+           const care::local_ptr<mapped_type>& values = m_gpu_map.values();
+           return values[index];
         }
         
         // lookups (valid after a sort() call) are done by binary searching the keys and using the
         // index of the located key to grab the appropriate value
         inline CARE_DEVICE key_type const &  key_at(int index) const {
-           return m_gpu_map.keys()[index];
+           const care::local_ptr<key_type>& keys = m_gpu_map.keys();
+           return keys[index];
         }
 
         inline CARE_DEVICE iterator iterator_at(int index) const { 
@@ -387,7 +398,7 @@ namespace care {
    {
       public:
          // default constructor
-         host_device_map() noexcept = default;         
+         host_device_map() noexcept {};         
          
          // constructor
          host_device_map(size_t max_entries) : host_device_map{} {
@@ -406,9 +417,16 @@ namespace care {
          }
          
          // copy constructor 
-         host_device_map(host_device_map const & other) noexcept = default;
+         host_device_map(host_device_map const & other) noexcept :
+            m_size_ptr(other.m_size_ptr),
+            m_size(other.m_size),
+            m_map(other.m_map),
+            m_max_size(other.m_max_size),
+            m_signal(other.m_signal)
+	 {
+	 }
 
-	 // move constructor
+         // move constructor
          host_device_map(host_device_map && other)  noexcept {
             delete m_size_ptr;
             m_size_ptr = other.m_size_ptr;

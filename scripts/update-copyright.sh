@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##############################################################################
-# Copyright (c) 2016-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -48,19 +48,19 @@ do
     echo $i
     cp $i $i.sed.bak
     # For when there is only a single year in the copyright
-    # sed "s/Copyright (c) \([0-9]\{4\}\),/Copyright (c) \1-24,/" $i.sed.bak > $i
-    sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) \1-24,/" $i.sed.bak > $i
+    # sed "s/Copyright (c) \([0-9]\{4\}\),/Copyright (c) 2020-25,/" $i.sed.bak > $i
+    sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{2\},/Copyright (c) 2020-25,/" $i.sed.bak > $i
 done
 
 echo LICENSE
 cp LICENSE LICENSE.sed.bak
-sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{4\}/Copyright (c) \1-2024/" LICENSE.sed.bak > LICENSE
+sed "s/Copyright (c) \([0-9]\{4\}\)-[0-9]\{4\}/Copyright (c) 2020-2025/" LICENSE.sed.bak > LICENSE
 
 for i in README.md
 do 
     echo $i
     cp $i $i.sed.bak
-    sed "s/\([0-9]\{4\}\)-[0-9]\{2\}/\1-24/" $i.sed.bak > $i
+    sed "s/\([0-9]\{4\}\)-[0-9]\{2\}/2020-25/" $i.sed.bak > $i
 done
 
 #=============================================================================

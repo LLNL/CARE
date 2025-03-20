@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -43,3 +43,15 @@ target_include_directories(RaceConditionsExample PRIVATE ${PROJECT_BINARY_DIR}/i
 
 target_compile_options(RaceConditionsExample PRIVATE -fsanitize=thread -g)
 target_link_options(RaceConditionsExample PRIVATE -fsanitize=thread)
+
+if (ENABLE_HIP)
+  blt_add_executable(NAME DeviceASANExample
+                     SOURCES DeviceASAN.cpp
+                     DEPENDS_ON ${care_depends})
+
+  target_include_directories(DeviceASANExample PRIVATE ${PROJECT_SOURCE_DIR}/src)
+  target_include_directories(DeviceASANExample PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+  target_compile_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g)
+  target_link_options(DeviceASANExample PRIVATE -fsanitize=address -shared-libsan -g ${CARE_ASAN_RPATH_FLAG})
+endif ()

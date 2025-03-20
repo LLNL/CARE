@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-24, Lawrence Livermore National Security, LLC and CARE
+// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 // project contributors. See the CARE LICENSE file for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -22,7 +22,7 @@ namespace care{
    using ActionMap = std::unordered_map<void *, std::function<void(chai::ExecutionSpace, const char *, int)>>;
    
    //class for shared plugin functions and variables
-   CARE_DLL_API class PluginData	{
+   class CARE_DLL_API PluginData	{
       public:
          PluginData() = default;
 
@@ -53,8 +53,6 @@ namespace care{
          static void removeActivePointer(const chai::PointerRecord* record);
 
          static void clearActivePointers();
-
-         static int s_threadID;
 
       private:
          static const char * s_file_name;
