@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 ##############################################################################
-# Copyright (c) 2016-24, Lawrence Livermore National Security, LLC and CARE
+# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
-# SPDX-License-Identifier: (MIT)
+# SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
 
 # This is used for the ~*tpl* line to ignore files in bundled tpls
@@ -15,7 +15,7 @@ RED="\033[1;31m"
 GREEN="\033[1;32m"
 NOCOLOR="\033[0m"
 
-files_no_license=$(grep -rL "LLC and CARE" . \
+files_no_license=$(grep -rL "Copyright.*2020-25, Lawrence Livermore National Security, LLC and CARE" . \
    --exclude-dir=.git \
    --exclude-dir=blt \
    --exclude-dir=cub \
@@ -37,7 +37,7 @@ files_no_license=$(grep -rL "LLC and CARE" . \
    --exclude=package.py \
    --exclude=.uberenv_config.json)
 
-files_no_license+=$(grep -rL "the CARE LICENSE file" . \
+files_no_license+=$(grep -rL "project contributors. See the CARE LICENSE file for details." . \
    --exclude-dir=.git \
    --exclude-dir=blt \
    --exclude-dir=cub \
