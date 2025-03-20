@@ -12,7 +12,7 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased] - Release date YYYY-MM-DD
+## [Version 0.15.0] - Release date 2025-03-20
 
 ### Added
 - Added CARE\_DEEP\_COPY\_RAW\_PTR configuration option.
@@ -29,6 +29,12 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 
 ### Fixed
 - Replaced calls to chai::ManagedArray::getPointer (previously deprecated and now removed) with calls to chai::ManagedArray::data.
+
+### Updated
+- Updated to BLT v0.7.0
+- Updated to Umpire v2025.03.0
+- Updated to RAJA v2025.03.0
+- Updated to CHAI v2025.03.0
 
 ## [Version 0.14.1] - Release date 2024-10-15
 
