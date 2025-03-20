@@ -50,7 +50,7 @@ if(NOT BLT_LOADED)
 
    option(ENABLE_FORTRAN      "Enables Fortran compiler support" OFF)
 
-   set(BLT_CXX_STD "c++17" CACHE STRING "Set the c++ standard to use")
+   set(BLT_CXX_STD "c++14" CACHE STRING "Set the c++ standard to use")
 
    include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
