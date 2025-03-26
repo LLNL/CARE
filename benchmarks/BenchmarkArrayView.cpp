@@ -19,7 +19,7 @@ static void benchmark_array_view_2d(benchmark::State& state) {
    const int extent2 = state.range(0);
    care::host_device_ptr<int> data(extent1*extent2, "data");
 
-   // Make sure memory transfers are not considered
+   // Make sure memory transfers are not considered in the timing
    auto temp = care::makeArrayView2D(data, extent1, extent2);
    (void) temp;
 
