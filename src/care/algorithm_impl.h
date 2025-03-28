@@ -749,7 +749,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
-   const auto * rawData = getter.getConstRawArrayData(Array) + start;
+   auto * rawData = getter.getRawArrayData(Array) + start;
    // get the temp storage length
    char * d_temp_storage = nullptr;
    size_t temp_storage_bytes = 0;
