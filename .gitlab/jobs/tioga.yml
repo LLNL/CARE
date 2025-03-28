@@ -25,3 +25,44 @@
 # We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
+
+rocmcc_6_2_4_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %rocmcc@=6.2.4 ^hip@6.2.4 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  extends: .job_on_tioga
+
+rocmcc_6_1_2_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %rocmcc@=6.1.2 ^hip@6.1.2 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  extends: .job_on_tioga
+
+rocmcc_5_7_1_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %rocmcc@=5.7.1 ^hip@5.7.1 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  extends: .job_on_tioga
+
+
+gcc_rocmcc_6_3_1_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %gcc@=12.2.1 ^hip@6.3.1 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples  ^llvm-amdgpu@6.3.1 ^hsa-rocr-dev@6.3.1"
+  extends: .job_on_tioga
+
+gcc_rocmcc_6_2_4_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %gcc@=12.2.1 ^hip@6.2.4 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples  ^llvm-amdgpu@6.2.4 ^hsa-rocr-dev@6.2.4"
+  extends: .job_on_tioga
+
+gcc_rocmcc_6_1_2_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %gcc@=12.2.1 ^hip@6.1.2 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples  ^llvm-amdgpu@6.1.2 ^hsa-rocr-dev@6.1.2"
+  extends: .job_on_tioga
+
+gcc_rocmcc_5_7_1_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %gcc@=12.2.1 ^hip@5.7.1 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples  ^llvm-amdgpu@5.7.1 ^hsa-rocr-dev@5.7.1"
+  extends: .job_on_tioga
+
+gcc_rocmcc_hip:
+  variables:
+    SPEC: "+rocm amdgpu_target=gfx90a %gcc@=12.2.1 ^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples"
+  extends: .job_on_tioga
