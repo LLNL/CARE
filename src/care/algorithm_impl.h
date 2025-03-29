@@ -658,22 +658,27 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
  * Purpose   : GPU version of sortArray.
   ************************************************************************/
 
+// TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
 template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
-{  
-   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
-   if (std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value) {
-      radixSortArray(Array, len, start, noCopy);
-   }
-   else {
-      mergeSortArray(Array, len, start, noCopy);
-   }
+CARE_INLINE
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+{
+   radixSortArray(Array, len, start, noCopy);
 }
 
 template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len)
+CARE_INLINE
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
-   radixSortArray(Array, len, 0, false);
+   mergeSortArray(Array, len, start, noCopy);
+}
+
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len)
+{
+   sortArray(exec, Array, len, 0, false);
 }
 
 /************************************************************************
@@ -697,7 +702,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#endif   
+#endif
    }
    // allocate the temp storage
 
@@ -761,7 +766,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
       cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
 #elif defined(__HIPCC__)
       hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
-#endif   
+#endif
    }
    // allocate the temp storage
 
@@ -844,7 +849,7 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
          array->free();
          *array = nullptr;
       }
-      return  ;
+      return;
    }
    /* first sort the array */
    sortArray<T>(e, *array, *len, 0, noCopy);
