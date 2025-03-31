@@ -12,6 +12,14 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] - Release date YYYY-MM-DD
+
+### Added
+- Added support for RAJA MultiReducers (Min/Max/Sum).
+
+### Changed
+- Changed RAJA reduce policy for CUDA to RAJA::cuda\_reduce\_atomic.
+
 ## [Version 0.15.0] - Release date 2025-03-20
 
 ### Added
