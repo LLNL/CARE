@@ -94,12 +94,19 @@ template<class T>
 using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::seq_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMax = RAJA::MultiReduceMax< RAJA::seq_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMin = RAJA::MultiReduceMin< RAJA::seq_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceSum = RAJA::MultiReduceSum< RAJA::seq_multi_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
 #define RAJA_PARALLEL_ACTIVE
 
 #elif defined(__CUDACC__) // CARE_ENABLE_GPU_SIMULATION_MODE
 
-using RAJACudaReduce = RAJA::cuda_reduce ;
+using RAJACudaReduce = RAJA::cuda_reduce_atomic ;
+using RAJACudaMultiReduce = RAJA::cuda_multi_reduce_atomic ;
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax<RAJACudaReduce, T> ;
@@ -111,6 +118,12 @@ template<class T>
 using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc<RAJACudaReduce, T> ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum<RAJACudaReduce, T> ;
+template<class T>
+using RAJAMultiReduceMax = RAJA::MultiReduceMax< RAJACudaMultiReduce, T>  ;
+template<class T>
+using RAJAMultiReduceMin = RAJA::MultiReduceMin< RAJACudaMultiReduce, T>  ;
+template<class T>
+using RAJAMultiReduceSum = RAJA::MultiReduceSum< RAJACudaMultiReduce, T>  ;
 using RAJACudaExec = RAJADeviceExec ;
 using RAJAExec = RAJADeviceExec ;
 
@@ -120,6 +133,7 @@ using RAJAExec = RAJADeviceExec ;
 
 // The defined(__HIPCC__) case is here:
 using RAJAHipReduce = RAJA::hip_reduce_atomic ;
+using RAJAHipMultiReduce = RAJA::hip_multi_reduce_atomic ;
 
 template <class T>
 using RAJAReduceMax = RAJA::ReduceMax<RAJAHipReduce, T> ;
@@ -131,6 +145,12 @@ template<class T>
 using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc<RAJAHipReduce, T> ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum<RAJAHipReduce, T> ;
+template<class T>
+using RAJAMultiReduceMax = RAJA::MultiReduceMax< RAJAHipMultiReduce, T>  ;
+template<class T>
+using RAJAMultiReduceMin = RAJA::MultiReduceMin< RAJAHipMultiReduce, T>  ;
+template<class T>
+using RAJAMultiReduceSum = RAJA::MultiReduceSum< RAJAHipMultiReduce, T>  ;
 using RAJAHipExec = RAJADeviceExec ;
 using RAJAExec = RAJADeviceExec ;
 
@@ -149,6 +169,12 @@ template<class T>
 using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::omp_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::omp_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMax = RAJA::MultiReduceMax< RAJA::omp_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMin = RAJA::MultiReduceMin< RAJA::omp_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceSum = RAJA::MultiReduceSum< RAJA::omp_multi_reduce, T>  ;
 using RAJAExec = RAJADeviceExec ;
 #define RAJA_PARALLEL_ACTIVE
 
@@ -164,6 +190,12 @@ template<class T>
 using RAJAReduceMaxLoc = RAJA::ReduceMaxLoc< RAJA::seq_reduce, T>  ;
 template<class T>
 using RAJAReduceSum = RAJA::ReduceSum< RAJA::seq_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMax = RAJA::MultiReduceMax< RAJA::seq_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceMin = RAJA::MultiReduceMin< RAJA::seq_multi_reduce, T>  ;
+template<class T>
+using RAJAMultiReduceSum = RAJA::MultiReduceSum< RAJA::seq_multi_reduce, T>  ;
 using RAJAExec = RAJA::seq_exec ;
 
 #endif // CARE_GPUCC
