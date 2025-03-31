@@ -324,7 +324,12 @@ void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size_t len) ;
 #ifdef CARE_PARALLEL_DEVICE
 
 template <typename T>
-void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len, int start, bool noCopy) ;
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
+
+template <typename T>
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
 
 #ifdef CARE_GPUCC
 template <typename T>
