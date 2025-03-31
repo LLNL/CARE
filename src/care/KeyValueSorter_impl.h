@@ -58,7 +58,7 @@ namespace care {
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec>
 CARE_INLINE
-std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
 sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                    host_device_ptr<ValueT> & values,
                    const size_t start, const size_t len,
@@ -81,8 +81,8 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    host_device_ptr<ValueT> valueResult{len};
 
    // Get the raw data to pass to cub
-   CHAIDataGetter<ValueT, Exec> valueGetter {};
    CHAIDataGetter<KeyT, Exec> keyGetter {};
+   CHAIDataGetter<ValueT, Exec> valueGetter {};
 
    auto * rawKeyData = keyGetter.getRawArrayData(keys) + start;
    auto * rawValueData = valueGetter.getRawArrayData(values) + start;
@@ -210,7 +210,7 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec>
 CARE_INLINE
-std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
 sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                    host_device_ptr<ValueT> & values,
                    const size_t start, const size_t len,
@@ -233,8 +233,8 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    host_device_ptr<ValueT> valueResult{len};
 
    // Get the raw data to pass to cub
-   CHAIDataGetter<ValueT, Exec> valueGetter {};
    CHAIDataGetter<KeyT, Exec> keyGetter {};
+   CHAIDataGetter<ValueT, Exec> valueGetter {};
 
    auto * rawKeyData = keyGetter.getRawArrayData(keys) + start;
    auto * rawValueData = valueGetter.getRawArrayData(values) + start;
