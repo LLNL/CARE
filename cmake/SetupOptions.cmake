@@ -10,7 +10,6 @@ include(CMakeDependentOption)
 # Advanced configuration options
 # TODO: If these are disabled, the code will not compile or run correctly.
 #       Fix those issues so that these options are actually configurable.
-option(ENABLE_PICK "Enable pick and set methods on ManagedArrays" ON)
 option(ENABLE_PINNED "Enable pinned memory space" ON)
 option(CARE_ENABLE_PINNED_MEMORY_FOR_SCANS "Use pinned memory for scan lengths" ON)
 option(CARE_GPU_MEMORY_IS_ACCESSIBLE_ON_CPU "Allows default memory spaces for ZERO_COPY and PAGEABLE to be the GPU memory space" OFF)
