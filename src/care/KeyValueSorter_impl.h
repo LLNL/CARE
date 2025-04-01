@@ -194,7 +194,7 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 
 }
 
-#if defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14))
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
 /// @brief ManagedArray API to cub::DeviceRadixSort::SortPairs
