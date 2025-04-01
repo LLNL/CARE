@@ -40,6 +40,8 @@ namespace care {
 // TODO openMP parallel implementation
 #if defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
+// TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
+
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
 /// @brief ManagedArray API to cub::DeviceRadixSort::SortPairs
@@ -55,10 +57,12 @@ namespace care {
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec>
-CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                                    host_device_ptr<ValueT> & values,
-                                    const size_t start, const size_t len,
-                                    const bool noCopy)
+CARE_INLINE
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy)
 {
    bool _noCopy ;
    if (noCopy && start > 0) {
@@ -77,15 +81,15 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    host_device_ptr<ValueT> valueResult{len};
 
    // Get the raw data to pass to cub
-   CHAIDataGetter<ValueT, Exec> valueGetter {};
    CHAIDataGetter<KeyT, Exec> keyGetter {};
+   CHAIDataGetter<ValueT, Exec> valueGetter {};
 
    auto * rawKeyData = keyGetter.getRawArrayData(keys) + start;
    auto * rawValueData = valueGetter.getRawArrayData(values) + start;
 
    auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
    auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
-   
+
    auto custom_comparator = [] CARE_HOST_DEVICE (decltype(*rawKeyData) lhs, decltype(*rawKeyData) rhs) {
       return lhs < rhs;
    };
@@ -98,34 +102,17 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    // When called with a nullptr for temp storage, this returns how much
    // temp storage should be allocated.
    if (len > 0) {
-      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
-      if (std::is_arithmetic<decltype(*rawKeyData)>::value) {
 #if defined(__CUDACC__)
-         cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData, rawKeyResult, 
-                                         rawValueData, rawValueResult,
-                                         len);
+      cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
 #elif defined(__HIPCC__)
-         hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData, rawKeyResult,
-                                         rawValueData, rawValueResult,
-                                         len);
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
 #endif
-      }
-      else {
-#if defined(__CUDACC__)
-         cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData,
-                                         rawValueData,
-                                         len, custom_comparator);
-#elif defined(__HIPCC__)
-         hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData,
-                                         rawValueData,
-                                         len, custom_comparator);
-#endif
-
-      }
    }
 
    // Allocate the temp storage and get raw data to pass to cub
@@ -139,36 +126,18 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 #if defined(CHAI_THIN_GPU_ALLOCATE)
       chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
 #endif
-    
-      // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
-      if (std::is_arithmetic<KeyT>::value) {
-#if defined(__CUDACC__)
-         cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData, rawKeyResult,
-                                         rawValueData, rawValueResult,
-                                         len);
-#elif defined(__HIPCC__)
-         hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData, rawKeyResult,
-                                         rawValueData, rawValueResult,
-                                         len);
-#endif
-      } else {
-#if defined(__CUDACC__)
-         cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData,
-                                         rawValueData,
-                                         len,
-                                         custom_comparator);
-#elif defined(__HIPCC__)
-         hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
-                                         rawKeyData,
-                                         rawValueData,
-                                         len,
-                                         custom_comparator);
-#endif
 
-      }
+#if defined(__CUDACC__)
+      cub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#elif defined(__HIPCC__)
+      hipcub::DeviceRadixSort::SortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData, rawKeyResult,
+                                      rawValueData, rawValueResult,
+                                      len);
+#endif
 
 #if defined(CHAI_THIN_GPU_ALLOCATE)
       chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
@@ -177,32 +146,22 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
       tmpManaged.free();
    }
 
-   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
-   if (std::is_arithmetic<KeyT>::value) {
-      // Get the result
-      if (_noCopy) {
-         if (len > 0) {
-            keys.free(); 
-            values.free();
-         }
-
-         keys = keyResult;
-         values = valueResult;
+   // Get the result
+   if (_noCopy) {
+      if (len > 0) {
+         keys.free();
+         values.free();
       }
-      else {
-         CARE_STREAM_LOOP(i, 0, len) {
-            keys[i+start] = keyResult[i];
-            values[i+start] = valueResult[i];
-         } CARE_STREAM_LOOP_END
 
-         if (len > 0) {
-            keyResult.free();
-            valueResult.free();
-         }
-      }
+      keys = keyResult;
+      values = valueResult;
    }
    else {
-      // merge sort did an inplace sort, so the answer is already in keys and Values
+      CARE_STREAM_LOOP(i, 0, len) {
+         keys[i+start] = keyResult[i];
+         values[i+start] = valueResult[i];
+      } CARE_STREAM_LOOP_END
+
       if (len > 0) {
          keyResult.free();
          valueResult.free();
@@ -234,6 +193,146 @@ CARE_INLINE void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 #endif // defined(CARE_GPUCC)
 
 }
+
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
+///////////////////////////////////////////////////////////////////////////
+/// @author Peter Robinson, Alan Dayton
+/// @brief ManagedArray API to cub::DeviceRadixSort::SortPairs
+/// @param[in, out] keys   - The array to sort
+/// @param[in, out] values - The array that is sorted simultaneously
+/// @param[in]      start  - The index to start sorting at
+/// @param[in]      len    - The number of elements to sort
+/// @param[in]      noCopy - Whether or not to copy the result into the
+///                             original arrays or simply replace the
+///                             original arrays. Should be false if only
+///                             sorting part of the arrays or you will
+///                             have bugs!
+/// @return void
+///////////////////////////////////////////////////////////////////////////
+template <typename KeyT, typename ValueT, typename Exec>
+CARE_INLINE
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy)
+{
+   bool _noCopy ;
+   if (noCopy && start > 0) {
+      printf("[CARE] Warning: sortKeyValueArrays. noCopy should not be set if start > 0 (%d)\n", (int)start);
+      _noCopy = false;
+   }
+   else {
+      _noCopy = noCopy;
+   }
+
+   // TODO openMP parallel implementation
+#ifdef CARE_GPUCC
+
+   // Allocate space for the result
+   host_device_ptr<KeyT> keyResult{len};
+   host_device_ptr<ValueT> valueResult{len};
+
+   // Get the raw data to pass to cub
+   CHAIDataGetter<KeyT, Exec> keyGetter {};
+   CHAIDataGetter<ValueT, Exec> valueGetter {};
+
+   auto * rawKeyData = keyGetter.getRawArrayData(keys) + start;
+   auto * rawValueData = valueGetter.getRawArrayData(values) + start;
+
+   auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
+   auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
+
+   auto custom_comparator = [] CARE_HOST_DEVICE (decltype(*rawKeyData) lhs, decltype(*rawKeyData) rhs) {
+      return lhs < rhs;
+   };
+
+
+   // Get the temp storage length
+   char * d_temp_storage = nullptr;
+   size_t temp_storage_bytes = 0;
+
+   // When called with a nullptr for temp storage, this returns how much
+   // temp storage should be allocated.
+   if (len > 0) {
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData,
+                                      rawValueData,
+                                      len, custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData,
+                                      rawValueData,
+                                      len, custom_comparator);
+#endif
+   }
+
+   // Allocate the temp storage and get raw data to pass to cub
+   host_device_ptr<char> tmpManaged {temp_storage_bytes};
+
+   CHAIDataGetter<char, Exec> charGetter {};
+   d_temp_storage = charGetter.getRawArrayData(tmpManaged);
+
+   // Now sort
+   if (len > 0) {
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::GPU);
+#endif
+
+#if defined(__CUDACC__)
+      cub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData,
+                                      rawValueData,
+                                      len,
+                                      custom_comparator);
+#elif defined(__HIPCC__)
+      hipcub::DeviceMergeSort::StableSortPairs((void *)d_temp_storage, temp_storage_bytes,
+                                      rawKeyData,
+                                      rawValueData,
+                                      len,
+                                      custom_comparator);
+#endif
+
+#if defined(CHAI_THIN_GPU_ALLOCATE)
+      chai::ArrayManager::getInstance()->setExecutionSpace(chai::NONE);
+#endif
+
+      tmpManaged.free();
+   }
+
+   // merge sort did an inplace sort, so the answer is already in keys and Values
+   if (len > 0) {
+      keyResult.free();
+      valueResult.free();
+   }
+
+#else // defined(CARE_GPUCC)
+
+   host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
+
+   CARE_STREAM_LOOP(i, 0, (int) len) {
+      keyValues[i].key = keys[i+start];
+      keyValues[i].value = values[i+start];
+   } CARE_STREAM_LOOP_END
+
+   // Now sort
+
+   CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
+   _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
+   std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyT,ValueT>>);
+
+   CARE_STREAM_LOOP(i, 0, (int) len) {
+      keys[i+start] = keyValues[i].key;
+      values[i+start] = keyValues[i].value;
+   } CARE_STREAM_LOOP_END
+
+   keyValues.free();
+
+#endif // defined(CARE_GPUCC)
+
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -380,7 +479,7 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
    numMatches =  matched.pick(smaller);
    searches.free();
    matched.free();
-   
+
    /* change the size of the array */
    if (numMatches == 0) {
       matches1.free();
@@ -541,11 +640,11 @@ CARE_INLINE void initializeValueArray(host_device_ptr<ValueType>& values,
 
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
-// and CPU versions may have different behaviors (the index they match to may be different, 
-// with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance. 
+// and CPU versions may have different behaviors (the index they match to may be different,
+// with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance.
 
 template <typename KeyType, typename ValueType>
-CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */, 
+CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
                                           KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
                                           KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
                                           host_device_ptr<int> &matches1,

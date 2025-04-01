@@ -56,10 +56,20 @@ using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyT, typename ValueT, typename Exec=RAJADeviceExec>
-void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                        host_device_ptr<ValueT> & values,
-                        const size_t start, const size_t len,
-                        const bool noCopy=false) ;
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy=false);
+
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
+template <typename KeyT, typename ValueT, typename Exec=RAJADeviceExec>
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy=false);
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
