@@ -16,6 +16,7 @@
 #include "care/host_ptr.h"
 #include "care/local_ptr.h"
 #include "care/policies.h"
+#include "care/CHAIDataGetter.h"
 
 #if CARE_HAVE_LLNL_GLOBALID
 #include "LLNL_GlobalID.h"
