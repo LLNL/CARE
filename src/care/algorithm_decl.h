@@ -327,9 +327,11 @@ template <typename T>
 std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
 sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
 
+#if defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14))
 template <typename T>
 std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
 sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy);
+#endif
 
 #ifdef CARE_GPUCC
 template <typename T>

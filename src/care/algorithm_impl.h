@@ -667,6 +667,7 @@ sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int star
    radixSortArray(Array, len, start, noCopy);
 }
 
+#if defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14))
 template <typename T>
 CARE_INLINE
 std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
@@ -674,6 +675,7 @@ sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int star
 {
    mergeSortArray(Array, len, start, noCopy);
 }
+#endif
 
 template <typename T>
 CARE_INLINE void sortArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len)
@@ -744,6 +746,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
    }
 }
 
+#if defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14))
 /************************************************************************
  * Function  : mergeSortArray
  * Author(s) : Peter Robinson
@@ -795,6 +798,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
       tmpManaged.free();
    }
 }
+#endif
 #else // defined(CARE_GPUCC)
 
 // TODO openMP parallel implementation
