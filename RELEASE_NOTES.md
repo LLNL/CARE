@@ -15,7 +15,7 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 ## [Unreleased] - Release date YYYY-MM-DD
 
 ### Fixed
-- Only enable calls to cub::DeviceMergeSort when it is available (used by care::sortArray and care::KeyValueSorter, both when the type is not arithmetic)
+- Only enable calls to cub::DeviceMergeSort when it is available (used by care::sortArray and care::KeyValueSorter when the type is not arithmetic)
 - Fixes inputs to [hip]cub::DeviceMergeSort::StableSortKeys (used by care::sortArray when the type is not arithmetic)
 - Avoids hardcoding one overload of care::sortArray to use [hip]cub::DeviceRadixSort
 
