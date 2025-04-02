@@ -853,13 +853,15 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size
 template <typename T, typename Exec>
 CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy)
 {
-   if ((*len) == 0 && noCopy) {
-      if ((*array) != nullptr) {
+   if (*len == 0) {
+      if (noCopy && *array != nullptr) {
          array->free();
          *array = nullptr;
       }
+
       return;
    }
+
    /* first sort the array */
    sortArray<T>(e, *array, *len, 0, noCopy);
    /* then unique it */
