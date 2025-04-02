@@ -19,6 +19,9 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 - Fixes inputs to [hip]cub::DeviceMergeSort::StableSortKeys (used by care::sortArray when the type is not arithmetic)
 - Avoids hardcoding one overload of care::sortArray to use [hip]cub::DeviceRadixSort
 
+### Removed
+- Removed dead ENABLE\_PICK option (corresponding option has been removed from CHAI)
+
 ## [Version 0.15.0] - Release date 2025-03-20
 
 ### Added
