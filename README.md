@@ -21,7 +21,7 @@ cmake ../   # May need to pass -DCMAKE_INSTALL_PREFIX=/path/to/install/in if the
 make -j install
 ```
 
-If desired, external libraries can be used instead of submodules. For example, an external CHAI can be specified with `-DCHAI_DIR=<path to CHAI install directory or directory containing chai-config.cmake>`. Note that if using an external CHAI, it must be configured with `-DENABLE_PICK=ON -DENABLE_PINNED=ON`.
+If desired, external libraries can be used instead of submodules. For example, an external CHAI can be specified with `-DCHAI_DIR=<path to CHAI install directory or directory containing chai-config.cmake>`. Note that if using an external CHAI, it must be configured with `-DENABLE_PINNED=ON`.
 
 To build with CUDA support, use `-DENABLE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit`. If using external libraries, note that Umpire, RAJA, and CHAI must also be configured with those options.
  
