@@ -90,11 +90,6 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
    auto * rawKeyResult = keyGetter.getRawArrayData(keyResult);
    auto * rawValueResult = valueGetter.getRawArrayData(valueResult);
 
-   auto custom_comparator = [] CARE_HOST_DEVICE (decltype(*rawKeyData) lhs, decltype(*rawKeyData) rhs) {
-      return lhs < rhs;
-   };
-
-
    // Get the temp storage length
    char * d_temp_storage = nullptr;
    size_t temp_storage_bytes = 0;
