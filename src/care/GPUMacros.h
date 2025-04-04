@@ -9,6 +9,7 @@
 #define _CARE_GPUMACROS_H_
 
 #include "chai/config.hpp"
+#include "care/config.h"
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define CARE_DEVICE_COMPILE
@@ -58,10 +59,10 @@
 #define gpuMemGetInfo cudaMemGetInfo
 
 #define gpuDeviceSetLimit cudaDeviceSetLimit
-#define gpuDeviceSynchronize cudaDeviceSynchronize
 #define gpuLimitStackSize cudaLimitStackSize
 #define gpuLimitMallocHeapSize cudaLimitMallocHeapSize
 
+#define gpuDeviceSynchronize cudaDeviceSynchronize
 #define gpuPeekAtLastError cudaPeekAtLastError
 
 #define gpuSuccess cudaSuccess
@@ -81,15 +82,21 @@
 #define gpuMemGetInfo hipMemGetInfo
 
 #define gpuDeviceSetLimit hipDeviceSetLimit
-#define gpuDeviceSynchronize hipDeviceSynchronize
 #define gpuLimitStackSize hipLimitStackSize
 #define gpuLimitMallocHeapSize hipLimitMallocHeapSize
 
+#define gpuDeviceSynchronize hipDeviceSynchronize
 #define gpuPeekAtLastError hipPeekAtLastError
 
 #define gpuSuccess hipSuccess
 
-#endif // end __HIPCC__ case
+#elif CARE_ENABLE_GPU_SIMULATION_MODE
+
+#define gpuMemcpyKind int
+#define gpuSimNoop()
+#define gpuPeekAtLastError gpuSimNoop
+
+#endif // #if defined(__CUDACC__) #elif defined(__HIPCC__)
 
 #endif // !defined(_CARE_GPUMACROS_H_)
 

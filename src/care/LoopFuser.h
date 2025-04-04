@@ -441,7 +441,7 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
+#if (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_PINNED)
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
 #else
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::CPU));
@@ -972,7 +972,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
          }
          switch(scan_type) {
             case 0:
-#if defined CARE_GPUCC
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
                care::forall(care::raja_fusible {}, 0, length, action, fileName, lineNumber, XARGS{}...);
 #else
                care::forall(care::raja_fusible_seq {}, 0, length, action, XARGS{}...); 
@@ -1030,7 +1030,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 }
 
 
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
+#if (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_PINNED)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
 #else
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
