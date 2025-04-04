@@ -1193,11 +1193,12 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
 
+// Return the keys for each KVS where their values are the same
 #ifdef CARE_PARALLEL_DEVICE
 template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
                               KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
+                              host_device_ptr<KeyType> &matches1, host_device_ptr<KeyType>& matches2,
                               int & numMatches) ;
 #endif // defined(CARE_PARALLEL_DEVICE)
 
@@ -1209,7 +1210,7 @@ template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJA::seq_exec exec, 
                               KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
                               KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2, int & numMatches) ;
+                              host_device_ptr<KeyType> &matches1, host_device_ptr<KeyType>& matches2, int & numMatches) ;
 
 } // namespace care
 
