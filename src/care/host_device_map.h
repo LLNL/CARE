@@ -496,21 +496,23 @@ namespace care {
         // preallocate buffers for adding up to size elements
         void reserve(int max_size) { 
            if (m_max_size < max_size) {
-              if (m_size == 0) {
-                 m_map = std::move(KeyValueSorter<key_type, mapped_type, RAJA::seq_exec>{max_size}); 
-              }
-              else {
+              KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> new_map{
+                 static_cast<size_t>(max_size)};
+
+              if (m_size > 0) {
                  // copy existing state into new map
-                 KeyValueSorter<key_type, mapped_type, RAJA::seq_exec> new_map{max_size};
                  auto & map = m_map;
+
                  CARE_SEQUENTIAL_LOOP(i, 0, m_size) {
                     new_map.setKey(i, map.key(i));
                     new_map.setValue(i, map.value(i));
                  } CARE_SEQUENTIAL_LOOP_END
-                 m_map = std::move(new_map);
               }
-              m_max_size = max_size;
+
+              m_map = std::move(new_map);
            }
+
+           m_max_size = max_size;
         }
 
       private:
