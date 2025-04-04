@@ -269,7 +269,7 @@ CARE_HOST inline void gpuHostAlloc(void** pHost, size_t size, unsigned int flags
 #endif
 }
 
-#endif // #if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+#endif // defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 #if defined(CARE_GPUCC)
 // kernel launch
@@ -290,7 +290,7 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 #endif
 }
 
-#endif // #if defined(CARE_GPUCC)
+#endif // defined(CARE_GPUCC)
 
 } // namespace care
 
