@@ -8,6 +8,7 @@
 #ifndef _CARE_ProfilePlugin_H_
 #define _CARE_ProfilePlugin_H_
 
+#include "care/config.h"
 #include "RAJA/util/PluginStrategy.hpp"
 
 namespace care{
@@ -17,7 +18,7 @@ namespace care{
       public:
          ProfilePlugin() = default;
 
-         static void registerPlugin();
+         CARE_DLL_API static void registerPlugin();
 						
          void preLaunch(const RAJA::util::PluginContext& p) override;
 

@@ -8,6 +8,7 @@
 #ifndef _CARE_DebugPlugin_H_
 #define _CARE_DebugPlugin_H_
 
+#include "care/config.h"
 #include "RAJA/util/PluginStrategy.hpp"
 #include "chai/ExecutionSpaces.hpp"
 
@@ -18,7 +19,7 @@ namespace care{
       public:
          DebugPlugin() = default;
 
-         static void registerPlugin();
+         CARE_DLL_API static void registerPlugin();
 						
          void preLaunch(const RAJA::util::PluginContext& p) override;
 
