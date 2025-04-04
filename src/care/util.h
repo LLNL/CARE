@@ -201,11 +201,13 @@ CARE_HOST inline void gpuDeviceSynchronize(const char *fileName, int lineNumber)
 }
 
 // various GPU wrappers, only needed for GPU compiles
-#if defined (CARE_GPUCC)
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 // wrapper for hip/cuda free
 CARE_HOST inline void gpuFree(void* buffer) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   free(buffer);
+#elif defined(__HIPCC__)
    gpuAssert(hipFree(buffer), "gpuFree", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaFree(buffer), "gpuFree", __LINE__);
@@ -214,7 +216,9 @@ CARE_HOST inline void gpuFree(void* buffer) {
 
 // wrapper for hip/cuda free host
 CARE_HOST inline void gpuFreeHost(void* buffer) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   free(buffer);
+#elif defined(__HIPCC__)
    gpuAssert(hipHostFree(buffer), "gpuFreeHost", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaFreeHost(buffer), "gpuFreeHost", __LINE__);
@@ -223,7 +227,9 @@ CARE_HOST inline void gpuFreeHost(void* buffer) {
 
 // wrapper for hip/cuda mem copy
 CARE_HOST inline void  gpuMemcpy(void* dst, const void* src, size_t count, gpuMemcpyKind kind) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   memcpy(dst, src, count);
+#elif defined(__HIPCC__)
    gpuAssert(hipMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaMemcpy(dst, src, count, kind), "gpuMemcpy", __LINE__);
@@ -232,7 +238,9 @@ CARE_HOST inline void  gpuMemcpy(void* dst, const void* src, size_t count, gpuMe
 
 // wrapper for hip/cuda malloc
 CARE_HOST inline void gpuMalloc(void** devPtr, size_t size) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   *devPtr = (void*)malloc(size);
+#elif defined(__HIPCC__)
    gpuAssert(hipMalloc(devPtr, size), "gpuMalloc", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaMalloc(devPtr, size), "gpuMalloc", __LINE__);
@@ -241,7 +249,9 @@ CARE_HOST inline void gpuMalloc(void** devPtr, size_t size) {
 
 // wrapper for hip/cuda managed malloc
 CARE_HOST inline void gpuMallocManaged(void** devPtr, size_t size) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   *devPtr = (void*)malloc(size);
+#elif defined(__HIPCC__)
    gpuAssert(hipMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaMallocManaged(devPtr, size), "gpuMallocManaged", __LINE__);
@@ -250,13 +260,18 @@ CARE_HOST inline void gpuMallocManaged(void** devPtr, size_t size) {
 
 // wrapper for hip/cuda host alloc
 CARE_HOST inline void gpuHostAlloc(void** pHost, size_t size, unsigned int flags) {
-#if defined(__HIPCC__)
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+   *pHost = (void*)malloc(size);
+#elif defined(__HIPCC__)
    gpuAssert(hipHostMalloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
 #elif defined(__CUDACC__)
    gpuAssert(cudaHostAlloc(pHost, size, flags), "gpuHostAlloc", __LINE__);
 #endif
 }
 
+#endif // #if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
+
+#if defined(CARE_GPUCC)
 // kernel launch
 CARE_HOST inline void gpuLaunchKernel(const void* func, dim3 gridDim, dim3 blockDim, void** args, size_t sharedMem, gpuStream_t stream) {
 #if defined(__HIPCC__)
@@ -275,7 +290,7 @@ CARE_HOST inline void gpuStreamSynchronize(gpuStream_t stream) {
 #endif
 }
 
-#endif // #if defined (CARE_GPUCC)
+#endif // #if defined(CARE_GPUCC)
 
 } // namespace care
 
