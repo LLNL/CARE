@@ -29,6 +29,7 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 - Miscellaneous fixes for care::host\_device\_map
 - Clarified documentation for care::BinarySearch
 - Added missing attributes to functions for building as a shared library on Windows
+- Moved helper function to be accessible when the loop fuser is disabled
 
 ### Removed
 - Removed dead ENABLE\_PICK option (corresponding option has been removed from CHAI)
