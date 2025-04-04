@@ -28,6 +28,7 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 - Fixes a case where care::sort\_uniq should not modify the input array
 - Miscellaneous fixes for care::host\_device\_map
 - Clarified documentation for care::BinarySearch
+- Moved helper function to be accessible when the loop fuser is disabled
 
 ### Removed
 - Removed dead ENABLE\_PICK option (corresponding option has been removed from CHAI)
