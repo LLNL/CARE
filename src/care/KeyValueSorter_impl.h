@@ -369,6 +369,9 @@ CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<KeyType> & ke
                                                    host_device_ptr<ValueType> & values,
                                                    const size_t len, const host_device_ptr<const ValueType>& arr)
 {
+   // TODO: this requires key types to be constructable from size_t -
+   // maybe only enable this for integral types?
+
    FUSIBLE_LOOP_STREAM(i, 0, len) {
       keys[i] = (KeyType) i;
       values[i] = arr[i];
@@ -414,8 +417,8 @@ template <typename KeyType, typename ValueType>
 CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
                                           KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
                                           KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
-                                          host_device_ptr<int> &matches1,
-                                          host_device_ptr<int>& matches2,
+                                          host_device_ptr<KeyType>& matches1,
+                                          host_device_ptr<KeyType>& matches2,
                                           int & numMatches)
 {
    int smaller = (size1 < size2) ? size1 : size2 ;
@@ -435,7 +438,7 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
       matches2.namePointer("matches2");
    }
 
-   host_device_ptr<int> smallerMatches, largerMatches;
+   host_device_ptr<KeyType> smallerMatches, largerMatches;
    host_device_ptr<KeyType> smallerKeys, largerKeys;
    int larger, smallStart, largeStart;
    host_device_ptr<const ValueType> smallerArray, largerArray;
@@ -528,6 +531,9 @@ template <typename KeyType, typename ValueType>
 CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType> > & keyValues,
                                                    const size_t len, const host_device_ptr<const ValueType>& arr)
 {
+   // TODO: this requires key types to be constructable from a size_t -
+   // maybe only enable this for integral types?
+
    FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
       keyValues[i].key = (KeyType)i;
       keyValues[i].value = arr[i];
@@ -645,14 +651,15 @@ CARE_INLINE void initializeValueArray(host_device_ptr<ValueType>& values,
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different,
-// with the GPU implementation matching whatever binary search happens to land on, and the// CPU version matching the first instance.
+// with the GPU implementation matching whatever binary search happens to land on, and the
+// CPU version matching the first instance.
 
 template <typename KeyType, typename ValueType>
 CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
                                           KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
                                           KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
-                                          host_device_ptr<int> &matches1,
-                                          host_device_ptr<int>& matches2,
+                                          host_device_ptr<KeyType>& matches1,
+                                          host_device_ptr<KeyType>& matches2,
                                           int & numMatches)
 {
    numMatches = 0 ;
@@ -675,8 +682,8 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
 
    int i = 0 ;
    int j = 0 ;
-   host_ptr<int> host_matches1 = matches1 ;
-   host_ptr<int> host_matches2 = matches2 ;
+   host_ptr<KeyType> host_matches1 = matches1 ;
+   host_ptr<KeyType> host_matches2 = matches2 ;
    /* keys() and values() will allocate managed arrays for the keys and values,
     * respectively, if they were not previously allocated.
     * Check to see whether they were previously allocated. */
