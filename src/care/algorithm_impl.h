@@ -83,7 +83,7 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
 
       if (failed) {
          if (warnOnFailure) {
-            printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+            printf("care:%s: %s not in ascending order at index %d\n", name, argname, last + 1);
          }
          return false;
       }
@@ -433,7 +433,8 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *
  *             If returnUpperBound is set to true, this will return the
  *             index corresponding to the earliest entry that is greater
- *             than num.
+ *             than num. A return value of -1 indicates that all values
+ *             in map are smaller than or equal to num.
  *
  *             @NOTE: Intentionally implemented this using only the '<'
  *             operator to follow weak strict ordering semantics.
