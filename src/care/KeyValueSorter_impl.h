@@ -346,7 +346,7 @@ CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<KeyType> & keys,
                                             host_device_ptr<ValueType> & values,
                                             const size_t len, const ValueType* arr)
 {
-   // TODO: this requires key types to be constructable from an int -
+   // TODO: this requires key types to be constructable from size_t -
    // maybe only enable this for integral types?
 
    CARE_SEQUENTIAL_LOOP(i, 0, len) {
@@ -507,7 +507,7 @@ template <typename KeyType, typename ValueType>
 CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType,ValueType>> & keyValues,
                                             const size_t len, const ValueType* arr)
 {
-   // TODO: this requires key types to be constructable from an int -
+   // TODO: this requires key types to be constructable from a size_t -
    // maybe only enable this for integral types?
 
    CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
