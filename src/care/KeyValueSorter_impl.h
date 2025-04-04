@@ -39,6 +39,7 @@ namespace care {
 
 // TODO openMP parallel implementation
 #if defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
+#if !defined(CARE_SKIP_SORT_KEY_VALUE_ARRAYS_INSTANTIATIONS)
 
 // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
 
@@ -56,7 +57,7 @@ namespace care {
 ///                             have bugs!
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename KeyT, typename ValueT, typename Exec>
+template <typename Exec, typename KeyT, typename ValueT>
 CARE_INLINE
 std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
 sortKeyValueArrays(host_device_ptr<KeyT> & keys,
@@ -204,7 +205,7 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 ///                             have bugs!
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename KeyT, typename ValueT, typename Exec>
+template <typename Exec, typename KeyT, typename ValueT>
 CARE_INLINE
 std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
 sortKeyValueArrays(host_device_ptr<KeyT> & keys,
@@ -327,7 +328,9 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
 #endif // defined(CARE_GPUCC)
 
 }
+
 #endif
+#endif   // !defined(CARE_SKIP_SORT_KEY_VALUE_ARRAYS_INSTANTIATIONS)
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -343,6 +346,9 @@ CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<KeyType> & keys,
                                             host_device_ptr<ValueType> & values,
                                             const size_t len, const ValueType* arr)
 {
+   // TODO: this requires key types to be constructable from an int -
+   // maybe only enable this for integral types?
+
    CARE_SEQUENTIAL_LOOP(i, 0, len) {
       keys[i] = (KeyType)i;
       values[i] = arr[i];
@@ -501,6 +507,9 @@ template <typename KeyType, typename ValueType>
 CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType,ValueType>> & keyValues,
                                             const size_t len, const ValueType* arr)
 {
+   // TODO: this requires key types to be constructable from an int -
+   // maybe only enable this for integral types?
+
    CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
       keyValues[i].key = (KeyType)i;
       keyValues[i].value = arr[i];
