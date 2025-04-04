@@ -83,7 +83,7 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
 
       if (failed) {
          if (warnOnFailure) {
-            printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+            printf("care:%s: %s not in ascending order at index %d\n", name, argname, last + 1);
          }
          return false;
       }
@@ -433,7 +433,8 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *
  *             If returnUpperBound is set to true, this will return the
  *             index corresponding to the earliest entry that is greater
- *             than num.
+ *             than num. A return value of -1 indicates that all values
+ *             in map are smaller than or equal to num.
  *
  *             @NOTE: Intentionally implemented this using only the '<'
  *             operator to follow weak strict ordering semantics.
@@ -844,17 +845,24 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size
 * Function  : sort_uniq(<T>_ptr)
 * Author(s) : Peter Robinson
 * Purpose   : Sorts and uniques an array.
+* @param    : e Execution policy
+* @param    : array: pointer to an array to sort and uniq
+* @param    : len: length of the array
+* @param    : noCopy. If true, implementation is free to store a completely new array at pointer
+*             If false, implementation will not mess with the underlying allocation of the new array
 **************************************************************************/
 template <typename T, typename Exec>
 CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy)
 {
-   if ((*len) == 0) {
-      if ((*array) != nullptr) {
+   if (*len == 0) {
+      if (noCopy && *array != nullptr) {
          array->free();
          *array = nullptr;
       }
+
       return;
    }
+
    /* first sort the array */
    sortArray<T>(e, *array, *len, 0, noCopy);
    /* then unique it */
