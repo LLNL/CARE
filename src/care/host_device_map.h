@@ -221,7 +221,7 @@ namespace care {
          CARE_HOST_DEVICE host_device_map() noexcept {};
          
          // constructor taking max_entries
-         host_device_map(size_t max_entries) : m_max_size(max_entries), m_signal(0), m_gpu_map{max_entries}   {
+         host_device_map(size_t max_entries) : m_max_size(max_entries), m_signal{}, m_gpu_map{max_entries}   {
             // m_size_ptr[0] will be atomically incremented as elements are emplaced into the map
             m_size_ptr = int_ptr(1, "map_size");
             // set size to 0
@@ -373,7 +373,7 @@ namespace care {
          int m_size = 0;
          int m_max_size = 0;
          mapped_type m_signal {};
-         KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map{0};
+         KeyValueSorter<key_type, mapped_type, RAJADeviceExec> m_gpu_map{};
    };
 
 #endif // defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
