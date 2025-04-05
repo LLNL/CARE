@@ -40,7 +40,6 @@ using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 
 
 #if defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
-#if !defined(CARE_SKIP_SORT_KEY_VALUE_ARRAYS_INSTANTIATIONS)
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Peter Robinson, Alan Dayton
@@ -71,7 +70,6 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                    const size_t start, const size_t len,
                    const bool noCopy=false);
 #endif
-#endif   // !defined(CARE_SKIP_SORT_KEY_VALUE_ARRAYS_INSTANTIATIONS)
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
