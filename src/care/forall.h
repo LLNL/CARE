@@ -329,6 +329,23 @@ namespace care {
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
+   /// @author Benjamin Liu
+   ///
+   /// @brief Helper function to execute loop body without elision of the
+   ///        copy constructor in captured variables.
+   ///
+   /// @arg[in] body The loop body to execute at each index
+   ///
+   ////////////////////////////////////////////////////////////////////////////////
+   template <typename LB, typename ...XARGS>
+   void execute_body_fusible_seq(const int length, LB body, XARGS ...xargs) {
+      for (int i = 0; i < length; ++i) {
+         body(i, nullptr, xargs...);
+      }
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   ///
    /// @author Peter Robinson
    ///
    /// @brief Executes a group of fused loops. This overload is CHAI aware and sets
@@ -350,16 +367,13 @@ namespace care {
          chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
          threadRM->setExecutionSpace(chai::CPU);
 
-         /* trigger the chai copy constructors in captured variables */
-         LB my_body = body;
-
-         for (int i = 0; i < length; ++i) {
-            my_body(i,nullptr,xargs...);
-         }
+         execute_body_fusible_seq(length, body, xargs...);
 
          threadRM->setExecutionSpace(chai::NONE);
       }
    }
+
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
 
 #if defined(CARE_GPUCC)
 
@@ -387,6 +401,8 @@ namespace care {
       }
    }
 
+#endif
+
    ////////////////////////////////////////////////////////////////////////////////
    ///
    /// @author Peter Robinson
@@ -411,12 +427,9 @@ namespace care {
          threadRM->setExecutionSpace(chai::GPU);
 
 #if CARE_ENABLE_GPU_SIMULATION_MODE
-         /* trigger the chai copy constructors in captured variables */
-         LB my_body = body;
-
-         for (int i = 0; i < length; ++i) {
-            my_body(i,nullptr , xargs...);
-         }
+         threadRM->setGPUSimMode(true);
+         execute_body_fusible_seq(length, body, xargs...);
+         threadRM->setGPUSimMode(false);
 #else
          size_t blockSize = CARE_CUDA_BLOCK_SIZE;
          size_t gridSize = length / blockSize + 1;
@@ -431,7 +444,7 @@ namespace care {
       }
    }
 
-#endif
+#endif /* defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE */
 
    ////////////////////////////////////////////////////////////////////////////////
    ///
@@ -441,17 +454,13 @@ namespace care {
    ///        This overload is CHAI and RAJA aware. It sets the execution space
    ///        accordingly and calls RAJA::forall. First executes on the host, and
    ///        then on the device.
-   /// @note In GPU_SIM mode, this does not simulate the call on the device because
-   ///       there is only a single pointer for the managed_ptr in GPU_SIM mode.
-   ///       If managed_ptr is ever updated to use a separate space in GPU_SIM mode,
-   ///       an additional sequential RAJA::forall in the GPU space must be added
-   ///       for GPU_SIM mode.
    ///
    /// @arg[in] managed_ptr_write Used to choose this overload of forall
    /// @arg[in] fileName The name of the file where this function is called
    /// @arg[in] lineNumber The line number in the file where this function is called
    /// @arg[in] start The starting index (inclusive)
    /// @arg[in] end The ending index (exclusive)
+   /// @arg[in] batch_size Maximum length of each kernel (0 for no limit)
    /// @arg[in] body The loop body to execute at each index
    ///
    ////////////////////////////////////////////////////////////////////////////////
@@ -461,13 +470,16 @@ namespace care {
       // preLoopPrint and postLoopPrint are handled in this call.
       forall(RAJA::seq_exec{}, fileName, lineNumber, start, end, batch_size, body);
 
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
+#if (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU)
       const int length = end - start;
 
       if (length != 0) {
          chai::ArrayManager* threadRM = chai::ArrayManager::getInstance();
          threadRM->setExecutionSpace(chai::GPU);
 
+#if CARE_ENABLE_GPU_SIMULATION_MODE
+         forall(gpu_simulation{}, fileName, lineNumber, start, end, batch_size, std::forward<LB>(body));
+#else
          int index = start ;
          int chunk_size = batch_size > 0 ? batch_size : length ;
 
@@ -484,6 +496,7 @@ namespace care {
 
             index += chunk_size ;
          }
+#endif
 
 #if FORCE_SYNC && defined(CARE_GPUCC)
          care::gpuDeviceSynchronize(fileName, lineNumber);
@@ -491,7 +504,7 @@ namespace care {
 
          threadRM->setExecutionSpace(chai::NONE);
       }
-#endif
+#endif /* (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_MANAGED_PTR_ON_GPU) */
    }
 
    ////////////////////////////////////////////////////////////////////////////////

@@ -27,10 +27,6 @@ namespace care{
       // Prepare to record CHAI data
       if (CHAICallback::isActive()) {
          PluginData::clearActivePointers();
-
-#if defined(CARE_GPUCC) && defined(CARE_DEBUG)
-         GPUWatchpoint::setOrCheckWatchpoint<int>();
-#endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 #endif // !defined(CHAI_DISABLE_RM)
    }
@@ -57,10 +53,6 @@ namespace care{
 
       if (CHAICallback::isActive()) {			
          writeLoopData(space, PluginData::getFileName(), PluginData::getLineNumber());
-
-#if defined(CARE_GPUCC) && defined(CARE_DEBUG)
-      GPUWatchpoint::setOrCheckWatchpoint<int>();
-#endif // defined(CARE_GPUCC) && defined(CARE_DEBUG)
       }
 
       if (PluginData::isParallelContext()) {
