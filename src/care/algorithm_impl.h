@@ -83,7 +83,7 @@ CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
 
       if (failed) {
          if (warnOnFailure) {
-            printf( "care:%s: %s not in ascending order at index %d", name, argname, last + 1);
+            printf("care:%s: %s not in ascending order at index %d\n", name, argname, last + 1);
          }
          return false;
       }
@@ -433,7 +433,8 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *
  *             If returnUpperBound is set to true, this will return the
  *             index corresponding to the earliest entry that is greater
- *             than num.
+ *             than num. A return value of -1 indicates that all values
+ *             in map are smaller than or equal to num.
  *
  *             @NOTE: Intentionally implemented this using only the '<'
  *             operator to follow weak strict ordering semantics.
@@ -658,22 +659,29 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
  * Purpose   : GPU version of sortArray.
   ************************************************************************/
 
+// TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
 template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
-{  
-   // TODO: Use if constexpr and std::is_arithmetic_v when c++17 support is required
-   if (std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value) {
-      radixSortArray(Array, len, start, noCopy);
-   }
-   else {
-      mergeSortArray(Array, len, start, noCopy);
-   }
+CARE_INLINE
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
+{
+   radixSortArray(Array, len, start, noCopy);
 }
 
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
 template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len)
+CARE_INLINE
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<T, RAJADeviceExec>::raw_type>::value, void>
+sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int start, bool noCopy)
 {
-   radixSortArray(Array, len, 0, false);
+   mergeSortArray(Array, len, start, noCopy);
+}
+#endif
+
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len)
+{
+   sortArray(exec, Array, len, 0, false);
 }
 
 /************************************************************************
@@ -697,7 +705,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
       cub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
 #elif defined(__HIPCC__)
       hipcub::DeviceRadixSort::SortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, rawResult, len);
-#endif   
+#endif
    }
    // allocate the temp storage
 
@@ -739,6 +747,7 @@ CARE_INLINE void radixSortArray(care::host_device_ptr<T> & Array, size_t len, in
    }
 }
 
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
 /************************************************************************
  * Function  : mergeSortArray
  * Author(s) : Peter Robinson
@@ -749,7 +758,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
 {
    CHAIDataGetter<T, RAJADeviceExec> getter {};
    CHAIDataGetter<char, RAJADeviceExec> charGetter {};
-   const auto * rawData = getter.getConstRawArrayData(Array) + start;
+   auto * rawData = getter.getRawArrayData(Array) + start;
    // get the temp storage length
    char * d_temp_storage = nullptr;
    size_t temp_storage_bytes = 0;
@@ -761,7 +770,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
       cub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
 #elif defined(__HIPCC__)
       hipcub::DeviceMergeSort::StableSortKeys((void *)d_temp_storage, temp_storage_bytes, rawData, len, custom_comparator);
-#endif   
+#endif
    }
    // allocate the temp storage
 
@@ -790,6 +799,7 @@ CARE_INLINE void mergeSortArray(care::host_device_ptr<T> & Array, size_t len, in
       tmpManaged.free();
    }
 }
+#endif
 #else // defined(CARE_GPUCC)
 
 // TODO openMP parallel implementation
@@ -835,17 +845,24 @@ CARE_INLINE void sortArray(RAJA::seq_exec, care::host_device_ptr<T> &Array, size
 * Function  : sort_uniq(<T>_ptr)
 * Author(s) : Peter Robinson
 * Purpose   : Sorts and uniques an array.
+* @param    : e Execution policy
+* @param    : array: pointer to an array to sort and uniq
+* @param    : len: length of the array
+* @param    : noCopy. If true, implementation is free to store a completely new array at pointer
+*             If false, implementation will not mess with the underlying allocation of the new array
 **************************************************************************/
 template <typename T, typename Exec>
 CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, bool noCopy)
 {
-   if ((*len) == 0) {
-      if ((*array) != nullptr) {
+   if (*len == 0) {
+      if (noCopy && *array != nullptr) {
          array->free();
          *array = nullptr;
       }
-      return  ;
+
+      return;
    }
+
    /* first sort the array */
    sortArray<T>(e, *array, *len, 0, noCopy);
    /* then unique it */

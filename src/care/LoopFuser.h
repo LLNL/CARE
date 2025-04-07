@@ -24,6 +24,23 @@
 // Priority phase value for the default loop fuser
 constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 
+namespace care {
+  // TODO: Use if constexpr when supported
+  template <typename T, typename T_PTR, std::enable_if_t<std::is_null_pointer<T_PTR>::value>* = nullptr>
+   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
+                                       T_PTR freeDeviceCPUDestination,
+                                       size_t elems) {
+      array.freeDeviceMemory(nullptr, 0);
+   }
+
+  template <typename T, typename T_PTR, std::enable_if_t<!std::is_null_pointer<T_PTR>::value>* = nullptr>
+   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
+                                       T_PTR freeDeviceCPUDestination,
+                                       size_t elems) {
+      array.freeDeviceMemory(&freeDeviceCPUDestination, elems);
+   }
+} // namespace care
+
 #if CARE_ENABLE_LOOP_FUSER
 
 #include "RAJA/RAJA.hpp"
@@ -43,20 +60,6 @@ constexpr double CARE_DEFAULT_PHASE = -FLT_MAX/2.0;
 #endif
 
 namespace care {
-  template <typename T, typename T_PTR, std::enable_if_t<std::is_null_pointer<T_PTR>::value>* = nullptr>
-   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
-                                       T_PTR freeDeviceCPUDestination,
-                                       size_t elems) {
-      array.freeDeviceMemory(nullptr, 0);
-   }
-
-  template <typename T, typename T_PTR, std::enable_if_t<!std::is_null_pointer<T_PTR>::value>* = nullptr>
-   inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
-                                       T_PTR freeDeviceCPUDestination,
-                                       size_t elems) {
-      array.freeDeviceMemory(&freeDeviceCPUDestination, elems);
-   }  
-
    ///////////////////////////////////////////////////////////////////////////
    /// @author Ben Liu, Peter Robinson, Alan Dayton
    /// @brief Checks whether an array of type T is sorted and optionally unique.
@@ -441,7 +444,7 @@ public:
       ActionsType * actions = nullptr;
       auto iter = m_fused_action_order.find(priority);
       if (iter == m_fused_action_order.end()) {
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
+#if (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_PINNED)
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED));
 #else
          static allocator a(chai::ArrayManager::getInstance()->getAllocator(chai::CPU));
@@ -972,7 +975,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
          }
          switch(scan_type) {
             case 0:
-#if defined CARE_GPUCC
+#if defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE
                care::forall(care::raja_fusible {}, 0, length, action, fileName, lineNumber, XARGS{}...);
 #else
                care::forall(care::raja_fusible_seq {}, 0, length, action, XARGS{}...); 
@@ -1030,7 +1033,7 @@ void LoopFuser<REGISTER_COUNT, XARGS...>::registerAction(const char * fileName, 
 }
 
 
-#if defined(CARE_GPUCC) && defined(CHAI_ENABLE_PINNED)
+#if (defined(CARE_GPUCC) || CARE_ENABLE_GPU_SIMULATION_MODE) && defined(CHAI_ENABLE_PINNED)
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::PINNED))
 #else
 #define DEFAULT_ALLOCATOR allocator(chai::ArrayManager::getInstance()->getAllocator(chai::CPU))
