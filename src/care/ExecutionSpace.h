@@ -31,19 +31,18 @@ namespace care {
    // CHAI and CARE are configured.
    extern CARE_DLL_API care::ExecutionSpace DEFAULT;
 } // namespace care
+
 namespace chai {
-   
    // the ZERO_COPY memory space. Typically PINNED memory, but may be a different space depending on
    // how CHAI and CARE are configured.
-   extern chai::ExecutionSpace ZERO_COPY;
+   extern CARE_DLL_API chai::ExecutionSpace ZERO_COPY;
    // the  PAGEABLE memory space. Typically UM, but may be a different space depending on how
    // CHAI and CARE are configured.
-   extern chai::ExecutionSpace PAGEABLE;
+   extern CARE_DLL_API chai::ExecutionSpace PAGEABLE;
    // the  DEFAULT memory space. Typically GPU for GPU platforms and CPU for CPU platforms, but may be a different space depending on how
    // CHAI and CARE are configured.
-   extern chai::ExecutionSpace DEFAULT;
-
-}
+   extern CARE_DLL_API chai::ExecutionSpace DEFAULT;
+} // namespace chai
 
 #endif // !defined(_CARE_EXECUTION_SPACE_H_)
 

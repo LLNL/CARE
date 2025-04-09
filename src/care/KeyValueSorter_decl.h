@@ -55,11 +55,21 @@ using LocalKeyValueSorter = KeyValueSorter<KeyType, ValueType, Exec> ;
 ///                             have bugs!
 /// @return void
 ///////////////////////////////////////////////////////////////////////////
-template <typename KeyT, typename ValueT, typename Exec=RAJADeviceExec>
-void sortKeyValueArrays(host_device_ptr<KeyT> & keys,
-                        host_device_ptr<ValueT> & values,
-                        const size_t start, const size_t len,
-                        const bool noCopy=false) ;
+template <typename Exec, typename KeyT, typename ValueT>
+std::enable_if_t<std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy=false);
+
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
+template <typename Exec, typename KeyT, typename ValueT>
+std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
+sortKeyValueArrays(host_device_ptr<KeyT> & keys,
+                   host_device_ptr<ValueT> & values,
+                   const size_t start, const size_t len,
+                   const bool noCopy=false);
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 /// @author Benjamin Liu after Alan Dayton
@@ -358,7 +368,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sort(const size_t start, const size_t len) {
-         sortKeyValueArrays<ValueType, KeyType, RAJADeviceExec>(m_values, m_keys, start, len, false);
+         sortKeyValueArrays<RAJADeviceExec>(m_values, m_keys, start, len, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -377,7 +387,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void sort() {
-         sortKeyValueArrays<ValueType, KeyType, RAJADeviceExec>(m_values, m_keys, 0, m_len, true);
+         sortKeyValueArrays<RAJADeviceExec>(m_values, m_keys, 0, m_len, true);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -389,7 +399,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sortByKey(const size_t start, const size_t len) {
-         sortKeyValueArrays<KeyType, ValueType, RAJADeviceExec>(m_keys, m_values, start, len, false);
+         sortKeyValueArrays<RAJADeviceExec>(m_keys, m_values, start, len, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -408,7 +418,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void sortByKey() {
-         sortKeyValueArrays(m_keys, m_values, 0, m_len, true);
+         sortKeyValueArrays<RAJADeviceExec>(m_keys, m_values, 0, m_len, true);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -421,7 +431,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void stableSort(const size_t start, const size_t len) {
-         sortKeyValueArrays(m_values, m_keys, start, len, false);
+         sortKeyValueArrays<RAJADeviceExec>(m_values, m_keys, start, len, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -441,7 +451,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// TODO: investigate whether radix device sort is a stable sort
       ///////////////////////////////////////////////////////////////////////////
       void stableSort() {
-         sortKeyValueArrays(m_values, m_keys, 0, m_len, true);
+         sortKeyValueArrays<RAJADeviceExec>(m_values, m_keys, 0, m_len, true);
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1181,11 +1191,12 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
 
+// Return the keys for each KVS where their values are the same
 #ifdef CARE_PARALLEL_DEVICE
 template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJADeviceExec exec, KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter1, int size1,
                               KeyValueSorter<KeyType, ValueType, RAJADeviceExec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2,
+                              host_device_ptr<KeyType> &matches1, host_device_ptr<KeyType>& matches2,
                               int & numMatches) ;
 #endif // defined(CARE_PARALLEL_DEVICE)
 
@@ -1197,7 +1208,7 @@ template <typename KeyType, typename ValueType>
 void IntersectKeyValueSorters(RAJA::seq_exec exec, 
                               KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter1, int size1,
                               KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> sorter2, int size2,
-                              host_device_ptr<int> &matches1, host_device_ptr<int>& matches2, int & numMatches) ;
+                              host_device_ptr<KeyType> &matches1, host_device_ptr<KeyType>& matches2, int & numMatches) ;
 
 } // namespace care
 

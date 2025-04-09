@@ -12,6 +12,28 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Version 0.15.1] - Release date 2025-04-07
+
+### Added
+- Added support for RAJA MultiReducers (Min/Max/Sum).
+
+### Changed
+- Changed RAJA reduce policy for CUDA to RAJA::cuda\_reduce\_atomic.
+- Rearranged template parameters of care::sortKeyValueArrays (used by care::KeyValueSorter) for ease of use
+
+### Fixed
+- Only enable calls to cub::DeviceMergeSort when it is available (used by care::sortArray and care::KeyValueSorter when the type is not arithmetic)
+- Fixes inputs to [hip]cub::DeviceMergeSort::StableSortKeys (used by care::sortArray when the type is not arithmetic)
+- Avoids hardcoding one overload of care::sortArray to use [hip]cub::DeviceRadixSort
+- Fixes a case where care::sort\_uniq should not modify the input array
+- Miscellaneous fixes for care::host\_device\_map
+- Clarified documentation for care::BinarySearch
+- Added missing attributes to functions for building as a shared library on Windows
+- Moved helper function to be accessible when the loop fuser is disabled
+
+### Removed
+- Removed dead ENABLE\_PICK option (corresponding option has been removed from CHAI)
+
 ## [Version 0.15.0] - Release date 2025-03-20
 
 ### Added
