@@ -12,6 +12,12 @@ in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] - Release date YYYY-MM-DD
+
+### Fixed
+- Fixed build errors when CARE is configured with ENABLE\_OPENMP or CARE\_ENABLE\_GPU\_SIMULATION\_MODE
+- Fixed some build warnings
+
 ## [Version 0.15.1] - Release date 2025-04-07
 
 ### Added
