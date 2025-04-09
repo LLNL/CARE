@@ -649,9 +649,8 @@ CARE_INLINE int uniqArray(RAJA::seq_exec exec, care::host_device_ptr<T> & Array,
    return newLength;
 }
 
-#ifdef CARE_PARALLEL_DEVICE
-
-#ifdef CARE_GPUCC
+#if defined(CARE_PARALLEL_DEVICE)
+#if defined(CARE_GPUCC)
 
 /************************************************************************
  * Function  : sortArray
@@ -677,12 +676,6 @@ sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, size_t len, int star
    mergeSortArray(Array, len, start, noCopy);
 }
 #endif
-
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len)
-{
-   sortArray(exec, Array, len, 0, false);
-}
 
 /************************************************************************
  * Function  : radixSortArray
@@ -809,13 +802,13 @@ CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> & Array, siz
    sortArray(RAJA::seq_exec{}, Array, len, start, noCopy);
 }
 
-template <typename T>
-CARE_INLINE void sortArray(RAJADeviceExec, care::host_device_ptr<T> &Array, size_t len)
-{
-   sortArray(RAJA::seq_exec{}, Array, len);
-}
-
 #endif // defined(CARE_GPUCC)
+
+template <typename T>
+CARE_INLINE void sortArray(RAJADeviceExec exec, care::host_device_ptr<T> & Array, size_t len)
+{
+   sortArray(exec, Array, len, 0, false);
+}
 
 #endif // defined(CARE_PARALLEL_DEVICE)
 
