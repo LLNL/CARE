@@ -29,7 +29,8 @@ namespace care {
       chai::ExecutionSpace space,  ///< The CHAI Execution space associated with this pool
       std::size_t initial_size,    ///< The initial size in bytes
       std::size_t min_block_size,  ///< The minimum block size in bytes
-      bool /* grows */)
+      bool  , /// grows
+      size_t alignment )            ///< alignment for memory allocations in this pool
    {
 #if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
@@ -40,7 +41,9 @@ namespace care {
          rm.makeAllocator<umpire::strategy::QuickPool>(poolname,
                                                        allocator,
                                                        initial_size, /* default = 512Mb*/
-                                                       min_block_size); /* default = 1Mb */
+                                                       min_block_size, /* default = 1Mb */
+                                                       alignment /* default 16 bytes */
+                                                      );
 
       chai::ArrayManager * am = chai::ArrayManager::getInstance();
       am->setAllocator(space, pooled_allocator);
@@ -56,7 +59,8 @@ namespace care {
       std::size_t initial_size,    ///< The initial size in bytes
       std::size_t min_block_size,  ///< The minimum block size in bytes
       std::size_t block_coalesce_heuristic, ///< The number of blocks that should be releasable to trigger coalescing
-      bool /* grows */)
+      bool,  /// grows, but unused by quickpool
+      size_t alignment) ///< alignment for memory allocations in this pool
    {
 #if !defined(CHAI_DISABLE_RM) || defined (CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
@@ -68,7 +72,7 @@ namespace care {
                                                        allocator,
                                                        initial_size, /* default = 512Mb*/
                                                        min_block_size, /* default = 1Mb */
-                                                       16, /* default alignment */
+                                                       alignment, /* default 16 bytes */
                                                        umpire::strategy::QuickPool::blocks_releasable(block_coalesce_heuristic));
 
       chai::ArrayManager * am = chai::ArrayManager::getInstance();
@@ -86,7 +90,8 @@ namespace care {
       std::size_t initial_size,    ///< The initial size in bytes
       std::size_t min_block_size,  ///< The minimum block size in bytes
       std::size_t percent_coalesce_heuristic, ///< The percentage of blocks that should be releasable to trigger coalescing
-      bool /* grows */)
+      bool,  /// grows
+      size_t alignment) ///< alignment for memory allocations in this pool
    {
 #if !defined(CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
       auto& rm = umpire::ResourceManager::getInstance();
@@ -98,7 +103,7 @@ namespace care {
                                                        allocator,
                                                        initial_size, /* default = 512Mb*/
                                                        min_block_size, /* default = 1Mb */
-                                                       16, /* default alignment */
+                                                       alignment, /* default 16 bytes */
                                                        umpire::strategy::QuickPool::percent_releasable(percent_coalesce_heuristic));
 
       chai::ArrayManager * am = chai::ArrayManager::getInstance();
