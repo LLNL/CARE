@@ -43,7 +43,8 @@ namespace care {
                         chai::ExecutionSpace space,
                         std::size_t initial_size,
                         std::size_t min_block_size,
-                        bool grows = true);
+                        bool grows = true,
+                        size_t alignment = 16);
 
    void initialize_pool_block_heuristic(const std::string& resource,
                                         const std::string& poolname,
@@ -51,7 +52,8 @@ namespace care {
                                         std::size_t initial_size,
                                         std::size_t min_block_size,
                                         std::size_t block_coalesce_heuristic = 3,
-                                        bool grows = true);
+                                        bool grows = true,
+                                        size_t alignment = 16);
 
    void initialize_pool_percent_heuristic(const std::string& resource,
                                           const std::string& poolname,
@@ -59,7 +61,8 @@ namespace care {
                                           std::size_t initial_size,
                                           std::size_t min_block_size,
                                           std::size_t percent_coalesce_heuristic = 100,
-                                          bool grows = true);
+                                          bool grows = true,
+                                          size_t alignment = 16);
 
    void dump_memory_statistics();
 
