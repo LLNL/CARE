@@ -72,7 +72,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
+         host_ptr(host_ptr<T_non_const> const &ptr) noexcept : m_ptr(ptr.data()) {}
 
          ///
          /// @author Peter Robinson
@@ -88,7 +88,7 @@ namespace care {
          ///
          template <bool B = std::is_const<T>::value,
                    typename std::enable_if<B, int>::type = 1>
-         host_ptr<T>(chai::ManagedArray<T_non_const> ptr) : m_ptr(ptr.data(chai::CPU)) {}
+         host_ptr(chai::ManagedArray<T_non_const> ptr) : m_ptr(ptr.data(chai::CPU)) {}
 
          ///
          /// Copy assignment operator
@@ -143,7 +143,7 @@ namespace care {
          /// Pointer arithmetic
          ///
          template<typename Idx>
-         host_ptr<T> & operator +=(Idx i) { m_ptr += i; return *this; }
+         host_ptr& operator +=(Idx i) { m_ptr += i; return *this; }
 
          ///
          /// @author Danny Taller

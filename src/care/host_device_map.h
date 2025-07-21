@@ -48,7 +48,7 @@ namespace care {
          host_device_map() noexcept;
          host_device_map(host_device_map const & other) noexcept;
          host_device_map(host_device_map && other) noexcept;
-         host_device_map<key_type, mapped_type, Exec>& operator=(host_device_map&& other) noexcept;
+         host_device_map& operator=(host_device_map&& other) noexcept;
          CARE_HOST_DEVICE inline void emplace(key_type key, mapped_type val) const;
          CARE_HOST_DEVICE inline mapped_type at(key_type key) const;
          void sort();
@@ -113,7 +113,8 @@ namespace care {
             other.m_iterator = nullptr;
             other.m_next_iterator_index = nullptr;
          }
-         host_device_map<key_type, mapped_type, RAJA::seq_exec> & operator=(host_device_map && other) noexcept  {
+
+         host_device_map& operator=(host_device_map && other) noexcept  {
             delete m_map;
             delete m_size;
             delete m_iterator;
@@ -255,7 +256,7 @@ namespace care {
          }
 
          // move assignment
-         host_device_map<key_type,mapped_type, RAJADeviceExec> & operator=(host_device_map && other) noexcept {
+         host_device_map& operator=(host_device_map && other) noexcept {
             m_max_size = other.m_max_size;
             m_signal = other.m_signal;
             m_gpu_map = std::move(other.m_gpu_map);
@@ -437,7 +438,7 @@ namespace care {
          }
          
          // move assignment
-         host_device_map<key_type, mapped_type, force_keyvaluesorter>  & operator=(host_device_map && other)  noexcept {
+         host_device_map& operator=(host_device_map && other)  noexcept {
             delete m_size_ptr;
             m_size_ptr = other.m_size_ptr;
             m_size = other.m_size;
