@@ -121,6 +121,43 @@ TEST(algorithm, copy_n_empty)
    EXPECT_EQ(b, care::host_device_ptr<int>(nullptr));
 }
 
+TEST(algorithm, associative_sort) {
+   const int size = 5;
+   care::host_device_ptr<int> keys(size);
+   care::host_device_ptr<int> values(size);
+
+   CARE_HOST_KERNEL {
+      keys[0] = 3;
+      keys[1] = 1;
+      keys[2] = 1;
+      keys[3] = 8;
+      keys[4] = 0;
+
+      values[0] = 3;
+      values[1] = 2;
+      values[2] = 1;
+      values[3] = 4;
+      values[4] = 8;
+   } CARE_HOST_KERNEL_END
+
+   // Sort by key, and if there is a tie sort by value
+   care::associative_sort(size, keys, values, comparator);
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(keys[0], 0);
+      EXPECT_EQ(keys[1], 1);
+      EXPECT_EQ(keys[2], 1);
+      EXPECT_EQ(keys[3], 3);
+      EXPECT_EQ(keys[4], 8);
+
+      EXPECT_EQ(values[0], 8);
+      EXPECT_EQ(values[1], 1);
+      EXPECT_EQ(values[2], 2);
+      EXPECT_EQ(values[3], 3);
+      EXPECT_EQ(values[4], 4);
+   } CARE_HOST_KERNEL_END
+}
+
 // NOTE: if an array is not sorted, the checkSorted function will print out an error message.
 // When you run the unit tests, please ignore the spurious print statements.
 TEST(algorithm, checkSorted) {
