@@ -24,7 +24,7 @@ set(ENABLE_CUDA ON CACHE BOOL "")
 set(CUDA_VER "12.9.1" CACHE STRING "")
 set(CUDA_TOOLKIT_ROOT_DIR "/usr/tce/packages/cuda/cuda-${CUDA_VER}" CACHE PATH "")
 set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc" CACHE PATH "")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=--gcc-toolchain=${GCC_DIR}" CACHE STRING "")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=--gcc-toolchain=${GCC_DIR} -Wno-deprecated-gpu-targets -Wno-unused-command-line-argument" CACHE STRING "")
 set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}" CACHE PATH "")
 set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "")
 

@@ -101,8 +101,6 @@ if(ENABLE_CUDA)
 
    if(TARGET CUDA::nvtx3)
       list(APPEND care_depends CUDA::nvtx3)
-   elseif(TARGET CUDA::nvToolsExt)
-      list(APPEND care_depends CUDA::nvToolsExt)
    endif()
 
    list(APPEND care_depends cub::cub cuda)
