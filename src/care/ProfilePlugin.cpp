@@ -10,12 +10,7 @@
 
 /* CUDA profiling macros */
 #if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
-// TODO: Use nvtx3 on other platforms besides Windows
-#if defined(_WIN32)
 #include "nvtx3/nvToolsExt.h"
-#else
-#include "nvToolsExt.h"
-#endif
 #endif
 
 namespace care{
