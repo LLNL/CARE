@@ -121,7 +121,7 @@ endif()
 ################################
 # NVTOOLSEXT
 ################################
-if(ENABLE_CUDA AND NOT TARGET CUDA::nvToolsExt)
+if(ENABLE_CUDA AND NOT CUDAToolkit_FOUND)
    set(CUDAToolkit_ROOT ${CUDA_TOOLKIT_ROOT_DIR})
    find_package(CUDAToolkit)
 endif()

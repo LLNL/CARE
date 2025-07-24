@@ -27,9 +27,9 @@ Required Dependencies
 
 Optional Dependencies
 =====================
-* Cub (optional)
-* LLNL_GlobalID (optional)
-* NVTX (optional)
+* CUDA
+* Cub
+* LLNL_GlobalID
 
 Contributors
 ============
