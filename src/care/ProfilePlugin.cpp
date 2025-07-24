@@ -9,7 +9,7 @@
 #include "care/PluginData.h"
 
 /* CUDA profiling macros */
-#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
+#if defined(__CUDACC__)
 #include "nvtx3/nvToolsExt.h"
 #endif
 
@@ -33,7 +33,7 @@ namespace care{
    }
 
    void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
-#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
+#if defined(__CUDACC__)
       // Profile the host loops
       if (s_profile_host_loops && p.platform == RAJA::Platform::host) {
          std::string name = PluginData::getFileName() + std::to_string(PluginData::getLineNumber());
@@ -50,12 +50,12 @@ namespace care{
          eventAttrib.message.ascii = name.c_str();
          nvtxRangePushEx(&eventAttrib);
       }
-#endif // defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
+#endif // defined(__CUDACC__)
    }
 
 
    void ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
-#if defined(__CUDACC__) && CARE_HAVE_NVTOOLSEXT
+#if defined(__CUDACC__)
       if (s_profile_host_loops && p.platform == RAJA::Platform::host) {
          // TODO: Add error checking
          nvtxRangePop();
