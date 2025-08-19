@@ -17,6 +17,9 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 ### Added
 - Added parameter for creating Umpire pools with a specified alignment for allocations.
 
+### Changed
+- Minimum C++ standard is now set to c++17.
+
 ### Fixed
 - Fixed build errors when CARE is compiled with C++20.
 - Updated to nvtx3 to support CUDA 12.9 (nvtx3 still supports back to CUDA 10.0).
