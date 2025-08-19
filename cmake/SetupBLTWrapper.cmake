@@ -50,7 +50,13 @@ if(NOT BLT_LOADED)
 
    option(ENABLE_FORTRAN      "Enables Fortran compiler support" OFF)
 
-   set(BLT_CXX_STD "c++14" CACHE STRING "Set the c++ standard to use")
+   set(BLT_CXX_STD "c++17" CACHE STRING "Set the c++ standard to use")
+
+   if(("${BLT_CXX_STD}" STREQUAL "c++98") OR
+      ("${BLT_CXX_STD}" STREQUAL "c++11") OR
+      ("${BLT_CXX_STD}" STREQUAL "c++14"))
+      message(FATAL_ERROR "CARE requires a minimum C++ standard of c++17. Please set BLT_CXX_STD accordingly.")
+   endif()
 
    include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
