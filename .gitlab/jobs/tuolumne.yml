@@ -1,12 +1,12 @@
-###############################################################################
+##############################################################################
 # Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
 # project contributors. See the CARE LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-###############################################################################
+##############################################################################
 
 # Override reproducer section to define project specific variables.
-.poodle_reproducer_vars:
+.tuolumne_reproducer_vars:
   script:
     - !reference [.reproducer_vars, script]
 

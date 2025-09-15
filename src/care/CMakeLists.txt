@@ -99,11 +99,11 @@ if(ENABLE_CUDA)
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
 
-   if(TARGET CUDA::nvToolsExt)
-      list(APPEND care_depends CUDA::nvToolsExt)
+   if(TARGET CUDA::nvtx3)
+      list(APPEND care_depends CUDA::nvtx3)
    endif()
 
-   list(APPEND care_depends cub::cub cuda)
+   list(APPEND care_depends CUB::CUB cuda)
 endif()
 
 
@@ -149,7 +149,7 @@ install(
    FILES
       ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
       ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
-      ${PROJECT_SOURCE_DIR}/cmake/modules/Findcub.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/modules/FindCUB.cmake
    DESTINATION
       lib/cmake/care)
 

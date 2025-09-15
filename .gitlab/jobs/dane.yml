@@ -6,7 +6,7 @@
 ###############################################################################
 
 # Override reproducer section to define project specific variables.
-.ruby_reproducer_vars:
+.dane_reproducer_vars:
   script:
     - !reference [.reproducer_vars, script]
 

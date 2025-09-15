@@ -15,7 +15,7 @@
 
 /* CUDA profiling macros */
 #ifdef __CUDACC__
-#include "nvToolsExt.h"
+#include "nvtx3/nvToolsExt.h"
 #ifdef CARE_TEST_PUSH_VERBOSE
 #define PUSH_PRINT(NAME) printf("%s\n",name);
 #else

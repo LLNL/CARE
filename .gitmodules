@@ -10,9 +10,6 @@
 [submodule "tpl/raja"]
 	path = tpl/raja
 	url = https://github.com/LLNL/raja
-[submodule "tpl/cub"]
-	path = tpl/cub
-	url = https://github.com/NVlabs/cub
 [submodule "scripts/radiuss-spack-configs"]
 	path = scripts/radiuss-spack-configs
 	url = https://github.com/LLNL/radiuss-spack-configs

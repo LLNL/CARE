@@ -62,7 +62,7 @@ sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                    const size_t start, const size_t len,
                    const bool noCopy=false);
 
-#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14)))
+#if defined(__HIPCC__) || (defined(__CUDACC__) && defined(CUB_MAJOR_VERSION) && defined(CUB_MINOR_VERSION) && (CUB_MAJOR_VERSION >= 2 || (CUB_MAJOR_VERSION == 1 && CUB_MINOR_VERSION >= 14))) || defined(_OPENMP) || CARE_ENABLE_GPU_SIMULATION_MODE
 template <typename Exec, typename KeyT, typename ValueT>
 std::enable_if_t<!std::is_arithmetic<typename CHAIDataGetter<KeyT, RAJADeviceExec>::raw_type>::value, void>
 sortKeyValueArrays(host_device_ptr<KeyT> & keys,
@@ -140,7 +140,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] len - The number of elements to allocate space for
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len)
+      explicit KeyValueSorter(const size_t len)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -157,7 +157,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] arr - The raw array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const ValueType* arr)
+      KeyValueSorter(const size_t len, const ValueType* arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -175,7 +175,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const size_t len, const host_device_ptr<const ValueType> & arr)
+      KeyValueSorter(const size_t len, const host_device_ptr<const ValueType> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(len, "m_keys")
@@ -194,7 +194,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<KeyType, ValueType, RAJADeviceExec>(const KeyValueSorter<KeyType, ValueType, RAJADeviceExec> &other)
+      CARE_HOST_DEVICE KeyValueSorter(const KeyValueSorter& other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
@@ -207,7 +207,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @brief Destructor
       /// Frees the underlying memory if this is the owner.
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<KeyType, ValueType, RAJADeviceExec>()
+      CARE_HOST_DEVICE ~KeyValueSorter()
       {
 #ifndef CARE_DEVICE_COMPILE
          /// Only attempt to free if we are on the CPU
@@ -223,7 +223,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & operator=(KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & other)
+      KeyValueSorter& operator=(KeyValueSorter& other)
       {
          if (this != &other) {
             free();
@@ -245,7 +245,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
       /// @param[in] other - The other KeyValueSorter to move from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJADeviceExec> & operator=(KeyValueSorter<KeyType, ValueType, RAJADeviceExec> && other)
+      KeyValueSorter& operator=(KeyValueSorter&& other)
       {
          if (this != &other) {
             free();
@@ -687,7 +687,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @brief Default constructor
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>() {}
+      KeyValueSorter() {}
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
@@ -696,7 +696,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] len - The number of elements to allocate space for
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      explicit KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(size_t len)
+      explicit KeyValueSorter(size_t len)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -714,7 +714,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] arr - The raw array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const ValueType* arr)
+      KeyValueSorter(const size_t len, const ValueType* arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -733,7 +733,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] arr - The managed array to copy elements from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const size_t len, const host_device_ptr<const ValueType> & arr)
+      KeyValueSorter(const size_t len, const host_device_ptr<const ValueType> & arr)
       : m_len(len)
       , m_ownsPointers(true)
       , m_keys(nullptr)
@@ -753,7 +753,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>(const KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> &other)
+      CARE_HOST_DEVICE KeyValueSorter(const KeyValueSorter& other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
@@ -767,7 +767,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @brief Destructor
       /// Frees the underlying memory if this is the owner.
       ///////////////////////////////////////////////////////////////////////////
-      CARE_HOST_DEVICE ~KeyValueSorter<KeyType, ValueType, RAJA::seq_exec>()
+      CARE_HOST_DEVICE ~KeyValueSorter()
       {
 #ifndef CARE_DEVICE_COMPILE
          free();
@@ -782,7 +782,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & operator=(KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & other)
+      KeyValueSorter& operator=(KeyValueSorter& other)
       {
          if (this != &other) {
             free();
@@ -805,7 +805,7 @@ class CARE_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
       /// @param[in] other - The other KeyValueSorter to move from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
-      KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> & operator=(KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> && other)
+      KeyValueSorter& operator=(KeyValueSorter&& other)
       {
          if (this != &other) {
             free();

@@ -88,28 +88,28 @@ namespace care {
       ///
       /// Default constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>() noexcept : MA() {}
+      CARE_HOST_DEVICE host_device_ptr() noexcept : MA() {}
 
       ///
       /// @author Peter Robinson
       ///
       /// nullptr constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(std::nullptr_t from) noexcept : MA (from) {}
+      CARE_HOST_DEVICE host_device_ptr(std::nullptr_t from) noexcept : MA (from) {}
 
       ///
       /// @author Peter Robinson
       ///
       /// Copy constructor
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(host_device_ptr<T> const & other) : MA (other) {}
+      CARE_HOST_DEVICE host_device_ptr(host_device_ptr<T> const & other) : MA (other) {}
 
       ///
       /// @author Peter Robinson
       ///
       /// Construct from a chai::ManagedArray
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(MA const & other) : MA (other) {}
+      CARE_HOST_DEVICE host_device_ptr(MA const & other) : MA (other) {}
 
       ///
       /// @author Peter Robinson
@@ -118,7 +118,7 @@ namespace care {
       ///
       template <bool B = std::is_const<T>::value,
                 typename std::enable_if<B, int>::type = 1>
-      CARE_HOST_DEVICE host_device_ptr<T>(MAU const & other)
+      CARE_HOST_DEVICE host_device_ptr(MAU const & other)
          : MA (other)
       {
       }
@@ -130,14 +130,14 @@ namespace care {
       /// This is defined when the CHAI resource manager is disabled
       ///
 #if defined(CARE_DEEP_COPY_RAW_PTR)
-      host_device_ptr<T>(T* from, size_t size, const char * name)
+      host_device_ptr(T* from, size_t size, const char * name)
          : MA(size)
       {
          std::copy_n(from, size, (T_non_const*)MA::data());
       }
 #else /* defined(CARE_DEEP_COPY_RAW_PTR) */
 #if defined (CHAI_DISABLE_RM) || defined(CHAI_THIN_GPU_ALLOCATE)
-      host_device_ptr<T>(T* from, size_t size, const char * name)
+      host_device_ptr(T* from, size_t size, const char * name)
          : MA(from, nullptr, size, nullptr)
       {
       }
@@ -148,7 +148,7 @@ namespace care {
       /// Construct from a raw pointer, size, and name
       /// This is defined when the CHAI resource manager is enabled
       ///
-      host_device_ptr<T>(T* from, size_t size, const char * name)
+      host_device_ptr(T* from, size_t size, const char * name)
          : MA(size == 0 ? nullptr : from,
               chai::ArrayManager::getInstance(),
               size,
@@ -172,7 +172,7 @@ namespace care {
       ///
       /// Construct from a size and name
       ///
-      host_device_ptr<T>(size_t size, const char * name) : MA (size) {
+      host_device_ptr(size_t size, const char * name) : MA (size) {
          registerCallbacks(name);
       }
 
@@ -182,7 +182,7 @@ namespace care {
       /// Construct from a size, initial value, and name
       /// Optionally inititialize on device rather than the host
       ///
-      CARE_HOST_DEVICE host_device_ptr<T>(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size) {
+      CARE_HOST_DEVICE host_device_ptr(size_t size, T initial, const char * name, bool initOnDevice=false) : MA (size) {
          registerPointerName(name); 
          initialize(size, initial, 0, initOnDevice);
       }
