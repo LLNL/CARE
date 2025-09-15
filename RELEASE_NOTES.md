@@ -24,7 +24,7 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 - Updated to BLT v0.7.1
 - Updated to Umpire v2025.09.0
 - Updated to RAJA v2025.09.0
-- Updated to CHAI v2025.09.0
+- Updated to CHAI v2025.09.1
 
 ### Fixed
 - Fixed build errors when CARE is compiled with C++20.
