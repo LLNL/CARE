@@ -21,6 +21,10 @@ The format of this file is based on [Keep a Changelog](http://keepachangelog.com
 - Minimum C++ standard is now set to c++17.
 - CUB submodule has been removed. CARE now defaults to the CUB shipped with the CUDA toolkit.
   A different CUB install can be used by specifying `CUB_DIR.`
+- Updated to BLT v0.7.1
+- Updated to Umpire v2025.09.0
+- Updated to RAJA v2025.09.0
+- Updated to CHAI v2025.09.0
 
 ### Fixed
 - Fixed build errors when CARE is compiled with C++20.
