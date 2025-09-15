@@ -103,7 +103,7 @@ if(ENABLE_CUDA)
       list(APPEND care_depends CUDA::nvtx3)
    endif()
 
-   list(APPEND care_depends cub::cub cuda)
+   list(APPEND care_depends CUB::CUB cuda)
 endif()
 
 
@@ -149,7 +149,7 @@ install(
    FILES
       ${PROJECT_BINARY_DIR}/cmake/care-config.cmake
       ${PROJECT_BINARY_DIR}/cmake/care-config-version.cmake
-      ${PROJECT_SOURCE_DIR}/cmake/modules/Findcub.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/modules/FindCUB.cmake
    DESTINATION
       lib/cmake/care)
 

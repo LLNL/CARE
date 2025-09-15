@@ -9,7 +9,7 @@
 # Set up CMake
 ##########################################################################
 
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 ##########################################################################
 # Set up package
@@ -51,11 +51,11 @@ if(@LLNL_GLOBALID_FOUND@)
 endif()
 
 if(@CUB_FOUND@)
-   find_dependency(cub)
+   find_dependency(CUB)
 endif()
 
 if(@CUDATOOLKIT_FOUND@)
-   set(CUDAToolkit ROOT ${CUDA_TOOLKIT_ROOT_DIR})
+   set(CUDAToolkit_ROOT ${CUDA_TOOLKIT_ROOT_DIR})
    find_dependency(CUDAToolkit)
 endif()
 
