@@ -10,6 +10,7 @@
 ##########################################################################
 
 cmake_minimum_required(VERSION 3.23)
+cmake_policy(SET CMP0096 OLD) # Required when building Umpire submodule
 
 ##########################################################################
 # Set up project
@@ -17,7 +18,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(CARE
         LANGUAGES C CXX
-        VERSION 0.15.1)
+        VERSION 0.15.2)
 
 include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
 

@@ -5,7 +5,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
+
+################################
+# CUB (required for CUDA build)
+################################
+if(ENABLE_CUDA AND NOT TARGET CUB::CUB)
+   if(NOT CUB_DIR)
+      set(CUB_DIR "${CUDA_TOOLKIT_ROOT_DIR}" CACHE PATH "")
+   endif()
+
+   find_package(CUB MODULE)
+
+   if(NOT CUB_FOUND)
+      message(FATAL_ERROR "CARE: CUB not found. Please set CUB_DIR to point to an installation of CUB (defaults to CUDA_TOOLKIT_ROOT_DIR).")
+   endif()
+endif()
 
 ################################
 # Umpire (required)
@@ -104,17 +119,6 @@ if(NOT TARGET llnl_globalid::llnl_globalid)
 
    if(NOT LLNL_GLOBALID_FOUND)
       message(STATUS "CARE: LLNL_GlobalID disabled")
-   endif()
-endif()
-
-################################
-# CUB (required for CUDA build)
-################################
-if(ENABLE_CUDA AND NOT TARGET cub::cub)
-   find_package(cub MODULE)
-
-   if(NOT CUB_FOUND)
-      message(FATAL_ERROR "CARE: CUB not found. Run 'git submodule update --init' in the git repository or set CUB_DIR to use an external build of CUB or use CUDA 11 or newer.")
    endif()
 endif()
 

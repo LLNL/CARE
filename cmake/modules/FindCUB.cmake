@@ -7,7 +7,7 @@
 
 #[=======================================================================[.rst:
 
-Findcub
+FindCUB
 -------
 
 Finds the CUB package.
@@ -17,7 +17,7 @@ Imported Targets
 
 This module provides the following imported target, if found:
 
-``cub::cub``
+``CUB::CUB``
   The CUB package
 
 Result Variables
@@ -43,19 +43,18 @@ include(FindPackageHandleStandardArgs)
 find_path(CUB_INCLUDE_DIR
           NAMES cub/cub.cuh
           PATHS
+             ${CUB_DIR}/
              ${CUB_DIR}/include/
-             ${CUDA_TOOLKIT_ROOT_DIR}
-             ${PROJECT_SOURCE_DIR}/tpl/cub
           NO_DEFAULT_PATH)
 
 mark_as_advanced(CUB_INCLUDE_DIR)
 
-find_package_handle_standard_args(cub
+find_package_handle_standard_args(CUB
                                   REQUIRED_VARS
                                   CUB_INCLUDE_DIR)
 
-if(CUB_FOUND AND NOT TARGET cub::cub)
-   add_library(cub::cub INTERFACE IMPORTED)
-   set_target_properties(cub::cub PROPERTIES
+if(CUB_FOUND AND NOT TARGET CUB::CUB)
+   add_library(CUB::CUB INTERFACE IMPORTED)
+   set_target_properties(CUB::CUB PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${CUB_INCLUDE_DIR}")
 endif()
