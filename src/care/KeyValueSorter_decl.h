@@ -874,7 +874,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADevic
             
             // Use exclusive scan to compute output positions
             host_device_ptr<int> positions(m_len+1);
-            exclusive_scan(RAJADeviceExec{}, isUnique, positions, m_len + 1, 0, false);
+            care::exclusive_scan(RAJADeviceExec{}, isUnique, positions, m_len + 1, 0, false);
             
             // Get the total number of unique elements
             int newSize = positions.pick(m_len);
