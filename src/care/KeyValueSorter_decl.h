@@ -720,9 +720,9 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADevic
 
          auto keys = m_keys;
          
-         // Use SCAN_LOOP to identify where ranges start
+         // Use SCAN_LOOP to identify where ranges start.
          SCAN_LOOP(i, start, start+len, idx, count,
-                  (i == start) || (keys[i] != keys[i-1])) {
+                   (i == start) || (keys[i] != keys[i-1])) {
             rangeStarts[idx] = i;
          } SCAN_LOOP_END(start+len, idx, count)
 

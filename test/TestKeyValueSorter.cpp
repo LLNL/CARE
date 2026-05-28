@@ -368,6 +368,37 @@ TEST(KeyValueSorter, SortByKeyThenValue)
       EXPECT_EQ(sorter.value(6), 7);
       EXPECT_EQ(sorter.value(7), 8);
    } CARE_HOST_KERNEL_END
+
+   int boundaryLength = 3;
+   care::host_device_ptr<size_t> boundaryKeys(boundaryLength, "boundaryKeys");
+   care::host_device_ptr<int> boundaryValues(boundaryLength, "boundaryValues");
+
+   CARE_HOST_KERNEL {
+      boundaryKeys[0] = 1;
+      boundaryKeys[1] = 1;
+      boundaryKeys[2] = 2;
+
+      boundaryValues[0] = 30;
+      boundaryValues[1] = 20;
+      boundaryValues[2] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> boundarySorter(boundaryLength,
+                                                                    std::move(boundaryKeys),
+                                                                    std::move(boundaryValues));
+
+   boundarySorter.sortByKeyThenValue();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(boundarySorter.key(0), 1);
+      EXPECT_EQ(boundarySorter.value(0), 20);
+
+      EXPECT_EQ(boundarySorter.key(1), 1);
+      EXPECT_EQ(boundarySorter.value(1), 30);
+
+      EXPECT_EQ(boundarySorter.key(2), 2);
+      EXPECT_EQ(boundarySorter.value(2), 10);
+   } CARE_HOST_KERNEL_END
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -548,6 +579,37 @@ GPU_TEST(KeyValueSorter, SortByKeyThenValue)
       EXPECT_EQ(sorter.value(5), 6);
       EXPECT_EQ(sorter.value(6), 7);
       EXPECT_EQ(sorter.value(7), 8);
+   } CARE_HOST_KERNEL_END
+
+   int boundaryLength = 3;
+   care::host_device_ptr<size_t> boundaryKeys(boundaryLength, "boundaryKeys");
+   care::host_device_ptr<int> boundaryValues(boundaryLength, "boundaryValues");
+
+   CARE_GPU_KERNEL {
+      boundaryKeys[0] = 1;
+      boundaryKeys[1] = 1;
+      boundaryKeys[2] = 2;
+
+      boundaryValues[0] = 30;
+      boundaryValues[1] = 20;
+      boundaryValues[2] = 10;
+   } CARE_GPU_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJAExec> boundarySorter(boundaryLength,
+                                                              std::move(boundaryKeys),
+                                                              std::move(boundaryValues));
+
+   boundarySorter.sortByKeyThenValue();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(boundarySorter.key(0), 1);
+      EXPECT_EQ(boundarySorter.value(0), 20);
+
+      EXPECT_EQ(boundarySorter.key(1), 1);
+      EXPECT_EQ(boundarySorter.value(1), 30);
+
+      EXPECT_EQ(boundarySorter.key(2), 2);
+      EXPECT_EQ(boundarySorter.value(2), 10);
    } CARE_HOST_KERNEL_END
 }
 
