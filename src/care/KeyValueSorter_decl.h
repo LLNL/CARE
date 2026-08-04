@@ -1112,6 +1112,13 @@ void initializeValueArray(host_device_ptr<ValueType>& values, const host_device_
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyType, typename ValueType>
 class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
+   private:
+      struct CacheState {
+         host_device_ptr<KeyType> keys = nullptr;
+         host_device_ptr<ValueType> values = nullptr;
+         size_t refCount = 1;
+      };
+
    public:
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1208,23 +1215,28 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// Does a shallow copy and indicates that the copy should NOT free
       ///    the underlying memory. This must be a shallow copy because it is
       ///    called upon lambda capture, and upon exiting the scope of a lambda
-      ///    capture, the copy must NOT free the underlying memory.
+      ///    capture, the copy must NOT free the underlying memory. Cached
+      ///    key/value arrays remain shared so that invalidation propagates
+      ///    across aliases of the same underlying key-value storage.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE KeyValueSorter(const KeyValueSorter& other)
       : m_len(other.m_len)
       , m_ownsPointers(false)
-      , m_keys(other.m_keys)
-      , m_values(other.m_values)
+      , m_keys(nullptr)
+      , m_values(nullptr)
       , m_keyValues(other.m_keyValues)
+      , m_sharedCaches(nullptr)
       {
+         shareCachesWith(other);
       }
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
       /// @brief Destructor
-      /// Frees the underlying memory if this is the owner.
+      /// Frees the underlying memory if this is the owner and releases any
+      /// shared cache state.
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE ~KeyValueSorter()
       {
@@ -1237,7 +1249,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @author Alan Dayton
       /// @brief (Shallow) Copy assignment operator
       /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory.
+      ///    the underlying memory. Cached key/value arrays remain shared so
+      ///    invalidation propagates across aliases.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
@@ -1248,9 +1261,12 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
 
             m_len = other.m_len;
             m_ownsPointers = false;
-            m_keys = other.m_keys;
-            m_values = other.m_values;
+            m_keys = nullptr;
+            m_values = nullptr;
             m_keyValues = other.m_keyValues;
+            m_sharedCaches = nullptr;
+
+            shareCachesWith(other);
          }
 
          return *this;
@@ -1274,12 +1290,14 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             m_keys = other.m_keys;
             m_values = other.m_values;
             m_keyValues = other.m_keyValues;
+            m_sharedCaches = other.m_sharedCaches;
 
             other.m_len = 0;
             other.m_ownsPointers = false;
             other.m_keys = nullptr;
             other.m_values = nullptr;
             other.m_keyValues = nullptr;
+            other.m_sharedCaches = nullptr;
          }
 
          return *this;
@@ -1342,7 +1360,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       ///////////////////////////////////////////////////////////////////////////
       host_device_ptr<KeyType> & keys() {
          initializeKeys();
-         return m_keys;
+         return keyCache();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1352,7 +1370,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       ///////////////////////////////////////////////////////////////////////////
       const host_device_ptr<KeyType> & keys() const {
          initializeKeys();
-         return m_keys;
+         return keyCache();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1362,7 +1380,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       ///////////////////////////////////////////////////////////////////////////
       host_device_ptr<ValueType> & values() {
          initializeValues();
-         return m_values;
+         return valueCache();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1372,7 +1390,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       ///////////////////////////////////////////////////////////////////////////
       const host_device_ptr<ValueType> & values() const {
          initializeValues();
-         return m_values;
+         return valueCache();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1590,10 +1608,12 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeKeys() const {
-         if (!m_keys) {
-            m_keys.alloc(m_len);
-            m_keys.namePointer("m_keys");
-            initializeKeyArray(m_keys, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
+         host_device_ptr<KeyType>& keys = keyCache();
+
+         if (!keys) {
+            keys.alloc(m_len);
+            keys.namePointer("m_keys");
+            initializeKeyArray(keys, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
          }
 
          return;
@@ -1607,10 +1627,12 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeValues() const {
-         if (!m_values) {
-            m_values.alloc(m_len);
-            m_values.namePointer("m_values");
-            initializeValueArray(m_values, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
+         host_device_ptr<ValueType>& values = valueCache();
+
+         if (!values) {
+            values.alloc(m_len);
+            values.namePointer("m_values");
+            initializeValueArray(values, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
          }
 
          return;
@@ -1625,7 +1647,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return whether keys are allocated
       ///////////////////////////////////////////////////////////////////////////
       bool keysAllocated() const {
-         return m_keys != nullptr;
+         return m_sharedCaches ? m_sharedCaches->keys != nullptr : m_keys != nullptr;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1637,7 +1659,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return whether values are allocated
       ///////////////////////////////////////////////////////////////////////////
       bool valuesAllocated() const {
-         return m_values != nullptr;
+         return m_sharedCaches ? m_sharedCaches->values != nullptr : m_values != nullptr;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1649,9 +1671,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void freeKeys() const {
-         if (m_keys) {
-            m_keys.free();
-            m_keys = nullptr;
+         host_device_ptr<KeyType>& keys = keyCache();
+
+         if (keys) {
+            keys.free();
+            keys = nullptr;
          }
 
          return;
@@ -1666,43 +1690,110 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void freeValues() const {
-         if (m_values) {
-            m_values.free();
-            m_values = nullptr;
+         host_device_ptr<ValueType>& values = valueCache();
+
+         if (values) {
+            values.free();
+            values = nullptr;
          }
 
          return;
       }
    private:
       size_t m_len = 0;
-      bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
+      bool m_ownsPointers = false; /// Controls ownership of m_keyValues
       mutable host_device_ptr<KeyType> m_keys = nullptr;
       mutable host_device_ptr<ValueType> m_values = nullptr;
       host_device_ptr<_kv<KeyType, ValueType> > m_keyValues = nullptr;
+      mutable CacheState* m_sharedCaches = nullptr;
+
+      host_device_ptr<KeyType>& keyCache() const {
+         return m_sharedCaches ? m_sharedCaches->keys : m_keys;
+      }
+
+      host_device_ptr<ValueType>& valueCache() const {
+         return m_sharedCaches ? m_sharedCaches->values : m_values;
+      }
+
+      CARE_HOST_DEVICE void promoteLocalCachesToShared() const {
+#ifndef CARE_DEVICE_COMPILE
+         if (!m_sharedCaches) {
+            m_sharedCaches = new CacheState{};
+            m_sharedCaches->keys = m_keys;
+            m_sharedCaches->values = m_values;
+            m_keys = nullptr;
+            m_values = nullptr;
+         }
+#endif
+      }
+
+      CARE_HOST_DEVICE void shareCachesWith(const KeyValueSorter& other) {
+#ifndef CARE_DEVICE_COMPILE
+         other.promoteLocalCachesToShared();
+         m_sharedCaches = other.m_sharedCaches;
+         retainSharedCaches();
+#else
+         (void) other;
+#endif
+      }
+
+      CARE_HOST_DEVICE void retainSharedCaches() {
+#ifndef CARE_DEVICE_COMPILE
+         if (m_sharedCaches) {
+            ++m_sharedCaches->refCount;
+         }
+#endif
+      }
+
+      void releaseSharedCaches() {
+         if (m_sharedCaches) {
+            if (--m_sharedCaches->refCount == 0) {
+               if (m_sharedCaches->keys) {
+                  m_sharedCaches->keys.free();
+               }
+
+               if (m_sharedCaches->values) {
+                  m_sharedCaches->values.free();
+               }
+
+               delete m_sharedCaches;
+            }
+
+            m_sharedCaches = nullptr;
+         }
+      }
 
       inline void freeCachedArrays() const {
          freeKeys();
          freeValues();
       }
 
+      inline void freeLocalCaches() {
+         if (m_keys) {
+            m_keys.free();
+            m_keys = nullptr;
+         }
+
+         if (m_values) {
+            m_values.free();
+            m_values = nullptr;
+         }
+      }
+
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
-      /// @brief Frees the underlying memory if this is the owner
+      /// @brief Frees local cache state and owned key-value storage
       /// Used by the destructor and by the assignment operators. Should be private.
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       inline void free() {
+         releaseSharedCaches();
+         freeLocalCaches();
+
          if (m_ownsPointers) {
             if (m_keyValues) {
                m_keyValues.free();
-            }
-
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
+               m_keyValues = nullptr;
             }
          }
       }

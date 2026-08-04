@@ -310,6 +310,145 @@ TEST(KeyValueSorter, OwnershipConstructor)
 
 /////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Test case that checks shallow copies share cache allocation and
+///        invalidation for the sequential KeyValueSorter specialization.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, CopySharesCacheState)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 3;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 1;
+
+      values[0] = 7;
+      values[1] = 5;
+      values[2] = 6;
+      values[3] = 3;
+      values[4] = 4;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> owner(length, std::move(keys), std::move(values));
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
+
+   EXPECT_FALSE(owner.keysAllocated());
+   EXPECT_FALSE(owner.valuesAllocated());
+   EXPECT_FALSE(alias.keysAllocated());
+   EXPECT_FALSE(alias.valuesAllocated());
+
+   const size_t* sharedKeys = alias.keys().cdata();
+   const int* sharedValues = alias.values().cdata();
+
+   EXPECT_TRUE(owner.keysAllocated());
+   EXPECT_TRUE(owner.valuesAllocated());
+   EXPECT_TRUE(alias.keysAllocated());
+   EXPECT_TRUE(alias.valuesAllocated());
+   EXPECT_EQ(owner.keys().cdata(), sharedKeys);
+   EXPECT_EQ(owner.values().cdata(), sharedValues);
+
+   alias.sortByKeyThenValue();
+
+   EXPECT_FALSE(owner.keysAllocated());
+   EXPECT_FALSE(owner.valuesAllocated());
+   EXPECT_FALSE(alias.keysAllocated());
+   EXPECT_FALSE(alias.valuesAllocated());
+
+   const size_t* sortedKeys = owner.keys().cdata();
+   const int* sortedValues = owner.values().cdata();
+
+   EXPECT_TRUE(owner.keysAllocated());
+   EXPECT_TRUE(owner.valuesAllocated());
+   EXPECT_TRUE(alias.keysAllocated());
+   EXPECT_TRUE(alias.valuesAllocated());
+   EXPECT_EQ(alias.keys().cdata(), sortedKeys);
+   EXPECT_EQ(alias.values().cdata(), sortedValues);
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(owner.key(0), 1);
+      EXPECT_EQ(owner.key(1), 1);
+      EXPECT_EQ(owner.key(2), 2);
+      EXPECT_EQ(owner.key(3), 3);
+      EXPECT_EQ(owner.key(4), 3);
+
+      EXPECT_EQ(owner.value(0), 4);
+      EXPECT_EQ(owner.value(1), 5);
+      EXPECT_EQ(owner.value(2), 3);
+      EXPECT_EQ(owner.value(3), 6);
+      EXPECT_EQ(owner.value(4), 7);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks a shallow copy of an already cached sorter
+///        still invalidates the original cached arrays after the copy is
+///        move-assigned and then mutates the shared key-value storage.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, CopyMoveFromCachedSorterInvalidatesCaches)
+{
+   int length = 4;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 2;
+      keys[1] = 1;
+      keys[2] = 2;
+      keys[3] = 1;
+
+      values[0] = 4;
+      values[1] = 3;
+      values[2] = 2;
+      values[3] = 1;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> owner(length, std::move(keys), std::move(values));
+
+   const size_t* cachedKeys = owner.keys().cdata();
+   const int* cachedValues = owner.values().cdata();
+
+   EXPECT_TRUE(owner.keysAllocated());
+   EXPECT_TRUE(owner.valuesAllocated());
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> moved;
+
+   moved = std::move(alias);
+
+   EXPECT_TRUE(moved.keysAllocated());
+   EXPECT_TRUE(moved.valuesAllocated());
+   EXPECT_EQ(moved.keys().cdata(), cachedKeys);
+   EXPECT_EQ(moved.values().cdata(), cachedValues);
+
+   moved.sortByKeyThenValue();
+
+   EXPECT_FALSE(owner.keysAllocated());
+   EXPECT_FALSE(owner.valuesAllocated());
+   EXPECT_FALSE(moved.keysAllocated());
+   EXPECT_FALSE(moved.valuesAllocated());
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(owner.key(0), 1);
+      EXPECT_EQ(owner.key(1), 1);
+      EXPECT_EQ(owner.key(2), 2);
+      EXPECT_EQ(owner.key(3), 2);
+
+      EXPECT_EQ(owner.value(0), 1);
+      EXPECT_EQ(owner.value(1), 3);
+      EXPECT_EQ(owner.value(2), 2);
+      EXPECT_EQ(owner.value(3), 4);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
 /// @brief Test case that checks the sortByKeyThenValue method.
 ///
 /////////////////////////////////////////////////////////////////////////
