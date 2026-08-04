@@ -1399,14 +1399,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::stable_sort(rawData, rawData + len);
 
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         freeCachedArrays();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1444,14 +1437,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
 
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         freeCachedArrays();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1486,14 +1472,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
          std::stable_sort(rawData, rawData + len, cmpKeysThenValues<_kv<KeyType,ValueType>>);
 
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         freeCachedArrays();
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1559,14 +1538,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          if (m_len > 1) {
             m_len = eliminateKeyValueDuplicates(m_keyValues, m_len) ;
 
-            // Free stale arrays
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
+            freeCachedArrays();
          }
       }
       
@@ -1606,14 +1578,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             // Reallocate to the correct size
             m_keyValues.realloc(newSize);
             
-            // Free stale arrays
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
+            freeCachedArrays();
          }
       }
 
@@ -1686,6 +1651,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       void freeKeys() const {
          if (m_keys) {
             m_keys.free();
+            m_keys = nullptr;
          }
 
          return;
@@ -1702,6 +1668,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       void freeValues() const {
          if (m_values) {
             m_values.free();
+            m_values = nullptr;
          }
 
          return;
@@ -1712,6 +1679,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       mutable host_device_ptr<KeyType> m_keys = nullptr;
       mutable host_device_ptr<ValueType> m_values = nullptr;
       host_device_ptr<_kv<KeyType, ValueType> > m_keyValues = nullptr;
+
+      inline void freeCachedArrays() const {
+         freeKeys();
+         freeValues();
+      }
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
