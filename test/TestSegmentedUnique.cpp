@@ -17,19 +17,19 @@ TEST(segmented_unique, segment_local_and_empty)
    care::host_device_ptr<int> offsets(5);
 
    const int input[] = {
-      1, 1, 2,
+      4, 4, 5,
       // empty segment
       2, 2, 3, 3,
-      3, 3, 4
+      1, 1, 2
    };
 
    const int segmentOffsets[] = {0, 3, 3, 7, 10};
 
    const int expectedKeys[] = {
-      1, 2,
+      4, 5,
       // empty segment
       2, 3,
-      3, 4
+      1, 2
    };
 
    const int expectedOffsets[] = {0, 2, 2, 4, 6};
@@ -111,12 +111,12 @@ TEST(segmented_unique, custom_equivalence_predicate)
    care::host_device_ptr<int> keys(6);
    care::host_device_ptr<int> offsets(3);
 
-   const int input[] = {11, 12, 12, 12, 13, 13};
+   const int input[] = {21, 22, 22, 11, 13, 13};
    const int segmentOffsets[] = {0, 3, 6};
 
    const int expectedKeys[] = {
-      11,
-      12
+      21,
+      11
    };
 
    const int expectedOffsets[] = {0, 1, 2};
@@ -179,12 +179,12 @@ TEST(segmented_unique, compacts_input_slices)
    care::host_device_ptr<int> keys = keyStorage.slice(1, 6);
    care::host_device_ptr<int> offsets = offsetStorage.slice(1, 3);
 
-   const int input[] = {-1, 1, 1, 2, 2, 2, 3, -2};
+   const int input[] = {-1, 1, 1, 2, 0, 0, 1, -2};
    const int segmentOffsets[] = {-1, 0, 3, 6, -2};
 
    const int expectedKeys[] = {
       1, 2,
-      2, 3
+      0, 1
    };
 
    const int expectedOffsets[] = {0, 2, 4};
