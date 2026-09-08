@@ -22,8 +22,16 @@ TEST(segmented_unique, segment_local_and_empty)
       2, 2, 3, 3,
       3, 3, 4
    };
+
    const int segmentOffsets[] = {0, 3, 3, 7, 10};
-   const int expectedKeys[] = {1, 2, 2, 3, 3, 4};
+
+   const int expectedKeys[] = {
+      1, 2,
+      // empty segment
+      2, 3,
+      3, 4
+   };
+
    const int expectedOffsets[] = {0, 2, 2, 4, 6};
 
    CARE_SEQUENTIAL_LOOP(i, 0, 10) {
@@ -38,9 +46,11 @@ TEST(segmented_unique, segment_local_and_empty)
 
    ASSERT_EQ(keys.size(), 10);
    ASSERT_EQ(offsets.size(), 5);
+
    CARE_SEQUENTIAL_LOOP(i, 0, 6) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
+
    CARE_SEQUENTIAL_LOOP(i, 0, 5) {
       EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
@@ -59,8 +69,15 @@ TEST(segmented_unique, in_place_after_segmented_sort)
       8, 7, 8, 7,
       5, 5
    };
+
    const int segmentOffsets[] = {0, 3, 7, 9};
-   const int expectedKeys[] = {1, 4, 7, 8, 5};
+
+   const int expectedKeys[] = {
+      1, 4,
+      7, 8,
+      5
+   };
+
    const int expectedOffsets[] = {0, 2, 4, 5};
 
    CARE_SEQUENTIAL_LOOP(i, 0, 9) {
@@ -76,9 +93,11 @@ TEST(segmented_unique, in_place_after_segmented_sort)
 
    ASSERT_EQ(keys.size(), 9);
    ASSERT_EQ(offsets.size(), 4);
+
    CARE_SEQUENTIAL_LOOP(i, 0, 5) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
+
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
       EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
@@ -94,7 +113,12 @@ TEST(segmented_unique, custom_equivalence_predicate)
 
    const int input[] = {11, 12, 12, 12, 13, 13};
    const int segmentOffsets[] = {0, 3, 6};
-   const int expectedKeys[] = {11, 12};
+
+   const int expectedKeys[] = {
+      11,
+      12
+   };
+
    const int expectedOffsets[] = {0, 1, 2};
 
    CARE_SEQUENTIAL_LOOP(i, 0, 6) {
@@ -114,9 +138,11 @@ TEST(segmented_unique, custom_equivalence_predicate)
 
    ASSERT_EQ(keys.size(), 6);
    ASSERT_EQ(offsets.size(), 3);
+
    CARE_SEQUENTIAL_LOOP(i, 0, 2) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
+
    CARE_SEQUENTIAL_LOOP(i, 0, 3) {
       EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
@@ -138,6 +164,7 @@ TEST(segmented_unique, empty_input_and_segments)
 
    EXPECT_EQ(keys.size(), 0);
    ASSERT_EQ(offsets.size(), 4);
+
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
       EXPECT_EQ(offsets[i], 0);
    } CARE_SEQUENTIAL_LOOP_END
@@ -154,12 +181,18 @@ TEST(segmented_unique, compacts_input_slices)
 
    const int input[] = {-1, 1, 1, 2, 2, 2, 3, -2};
    const int segmentOffsets[] = {-1, 0, 3, 6, -2};
-   const int expectedKeys[] = {1, 2, 2, 3};
+
+   const int expectedKeys[] = {
+      1, 2,
+      2, 3
+   };
+
    const int expectedOffsets[] = {0, 2, 4};
 
    CARE_SEQUENTIAL_LOOP(i, 0, 8) {
       keyStorage[i] = input[i];
    } CARE_SEQUENTIAL_LOOP_END
+
    CARE_SEQUENTIAL_LOOP(i, 0, 5) {
       offsetStorage[i] = segmentOffsets[i];
    } CARE_SEQUENTIAL_LOOP_END
@@ -168,9 +201,11 @@ TEST(segmented_unique, compacts_input_slices)
 
    ASSERT_EQ(keys.size(), 6);
    ASSERT_EQ(offsets.size(), 3);
+
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
+
    CARE_SEQUENTIAL_LOOP(i, 0, 3) {
       EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
