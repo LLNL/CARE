@@ -22,10 +22,8 @@ namespace care::detail {
  */
 template <typename KeyT, typename OffsetT>
 CARE_INLINE void segmented_unique_device(
-   care::host_device_ptr<KeyT> const& keys,
-   care::host_device_ptr<OffsetT> const& offsets,
-   care::host_device_ptr<KeyT>& uniqueKeys,
-   care::host_device_ptr<OffsetT>& uniqueOffsets)
+   care::host_device_ptr<KeyT>& keys,
+   care::host_device_ptr<OffsetT>& offsets)
 {
    const size_t numItems = keys.size();
    const size_t numSegments = offsets.size() > 0 ? offsets.size() - 1 : 0;
@@ -58,7 +56,6 @@ CARE_INLINE void segmented_unique_device(
 
    const int numUnique = positions.pick(numItems);
    care::host_device_ptr<KeyT> result(static_cast<size_t>(numUnique));
-   care::host_device_ptr<OffsetT> resultOffsets(offsets.size());
 
    CARE_STREAM_LOOP(i, 0, numItems) {
       if (positions[i] != positions[i + 1]) {
@@ -67,15 +64,24 @@ CARE_INLINE void segmented_unique_device(
    } CARE_STREAM_LOOP_END
 
    CARE_STREAM_LOOP(segment, 0, offsets.size()) {
-      resultOffsets[segment] = static_cast<OffsetT>(positions[offsets[segment]]);
+      offsets[segment] = static_cast<OffsetT>(positions[offsets[segment]]);
    } CARE_STREAM_LOOP_END
 
    positions.free();
 
-   uniqueKeys.free();
-   uniqueOffsets.free();
-   uniqueKeys = std::move(result);
-   uniqueOffsets = std::move(resultOffsets);
+   if (keys.isSlice()) {
+      care::host_device_ptr<const KeyT> source = result;
+
+      CARE_STREAM_LOOP(i, 0, numUnique) {
+         keys[i] = source[i];
+      } CARE_STREAM_LOOP_END
+
+      result.free();
+      keys = keys.slice(0, static_cast<size_t>(numUnique));
+   } else {
+      keys.free();
+      keys = std::move(result);
+   }
 }
 
 } // namespace care::detail

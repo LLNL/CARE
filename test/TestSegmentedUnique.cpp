@@ -15,8 +15,6 @@ TEST(segmented_unique, segment_local_and_empty)
 {
    care::host_device_ptr<int> keys(10);
    care::host_device_ptr<int> offsets(5);
-   care::host_device_ptr<int> uniqueKeys;
-   care::host_device_ptr<int> uniqueOffsets;
 
    const int input[] = {
       1, 1, 2,
@@ -36,19 +34,17 @@ TEST(segmented_unique, segment_local_and_empty)
       offsets[i] = segmentOffsets[i];
    } CARE_SEQUENTIAL_LOOP_END
 
-   care::segmented_unique(keys, offsets, uniqueKeys, uniqueOffsets);
+   care::segmented_unique(keys, offsets);
 
-   ASSERT_EQ(uniqueKeys.size(), 6);
-   ASSERT_EQ(uniqueOffsets.size(), 5);
+   ASSERT_EQ(keys.size(), 6);
+   ASSERT_EQ(offsets.size(), 5);
    CARE_SEQUENTIAL_LOOP(i, 0, 6) {
-      EXPECT_EQ(uniqueKeys[i], expectedKeys[i]);
+      EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
    CARE_SEQUENTIAL_LOOP(i, 0, 5) {
-      EXPECT_EQ(uniqueOffsets[i], expectedOffsets[i]);
+      EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
 
-   uniqueOffsets.free();
-   uniqueKeys.free();
    offsets.free();
    keys.free();
 }
@@ -95,33 +91,28 @@ TEST(segmented_unique, empty_input_and_segments)
 {
    care::host_device_ptr<int> keys;
    care::host_device_ptr<int> offsets(4);
-   care::host_device_ptr<int> uniqueKeys;
-   care::host_device_ptr<int> uniqueOffsets;
 
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
       offsets[i] = 0;
    } CARE_SEQUENTIAL_LOOP_END
 
-   care::segmented_unique(keys, offsets, uniqueKeys, uniqueOffsets);
+   care::segmented_unique(keys, offsets);
 
-   EXPECT_EQ(uniqueKeys.size(), 0);
-   ASSERT_EQ(uniqueOffsets.size(), 4);
+   EXPECT_EQ(keys.size(), 0);
+   ASSERT_EQ(offsets.size(), 4);
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
-      EXPECT_EQ(uniqueOffsets[i], 0);
+      EXPECT_EQ(offsets[i], 0);
    } CARE_SEQUENTIAL_LOOP_END
 
-   uniqueOffsets.free();
    offsets.free();
 }
 
-TEST(segmented_unique, accepts_input_slices)
+TEST(segmented_unique, compacts_input_slices)
 {
    care::host_device_ptr<int> keyStorage(8);
    care::host_device_ptr<int> offsetStorage(5);
    care::host_device_ptr<int> keys = keyStorage.slice(1, 6);
    care::host_device_ptr<int> offsets = offsetStorage.slice(1, 3);
-   care::host_device_ptr<int> uniqueKeys;
-   care::host_device_ptr<int> uniqueOffsets;
 
    const int input[] = {-1, 1, 1, 2, 2, 2, 3, -2};
    const int segmentOffsets[] = {-1, 0, 3, 6, -2};
@@ -135,27 +126,22 @@ TEST(segmented_unique, accepts_input_slices)
       offsetStorage[i] = segmentOffsets[i];
    } CARE_SEQUENTIAL_LOOP_END
 
-   care::segmented_unique(keys, offsets, uniqueKeys, uniqueOffsets);
+   care::segmented_unique(keys, offsets);
 
-   ASSERT_EQ(uniqueKeys.size(), 4);
-   ASSERT_EQ(uniqueOffsets.size(), 3);
+   ASSERT_EQ(keys.size(), 4);
+   ASSERT_EQ(offsets.size(), 3);
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
-      EXPECT_EQ(uniqueKeys[i], expectedKeys[i]);
+      EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
    CARE_SEQUENTIAL_LOOP(i, 0, 3) {
-      EXPECT_EQ(uniqueOffsets[i], expectedOffsets[i]);
+      EXPECT_EQ(offsets[i], expectedOffsets[i]);
    } CARE_SEQUENTIAL_LOOP_END
 
-   // The out-of-place overload leaves both backing allocations untouched.
-   CARE_SEQUENTIAL_LOOP(i, 0, 8) {
-      EXPECT_EQ(keyStorage[i], input[i]);
-   } CARE_SEQUENTIAL_LOOP_END
-   CARE_SEQUENTIAL_LOOP(i, 0, 5) {
-      EXPECT_EQ(offsetStorage[i], segmentOffsets[i]);
-   } CARE_SEQUENTIAL_LOOP_END
+   EXPECT_EQ(keyStorage[0], -1);
+   EXPECT_EQ(keyStorage[7], -2);
+   EXPECT_EQ(offsetStorage[0], -1);
+   EXPECT_EQ(offsetStorage[4], -2);
 
-   uniqueOffsets.free();
-   uniqueKeys.free();
    offsetStorage.free();
    keyStorage.free();
 }

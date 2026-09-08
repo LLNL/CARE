@@ -14,13 +14,10 @@ namespace care::hip {
 
 template <typename KeyT, typename OffsetT>
 CARE_INLINE void segmented_unique(
-   care::host_device_ptr<KeyT> const& keys,
-   care::host_device_ptr<OffsetT> const& offsets,
-   care::host_device_ptr<KeyT>& uniqueKeys,
-   care::host_device_ptr<OffsetT>& uniqueOffsets)
+   care::host_device_ptr<KeyT>& keys,
+   care::host_device_ptr<OffsetT>& offsets)
 {
-   care::detail::segmented_unique_device(
-      keys, offsets, uniqueKeys, uniqueOffsets);
+   care::detail::segmented_unique_device(keys, offsets);
 }
 
 } // namespace care::hip

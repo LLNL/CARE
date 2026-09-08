@@ -11,62 +11,54 @@
 #include "care/host_device_ptr.h"
 
 #include <cstddef>
-#include <utility>
 
 namespace care::host {
 
 /**
- * @brief Copy the unique values from each sorted segment into a compact array.
+ * @brief Compact each sorted segment to its unique values in place.
  */
 template <typename KeyT, typename OffsetT>
 void segmented_unique(
-   care::host_device_ptr<KeyT> const& keys,
-   care::host_device_ptr<OffsetT> const& offsets,
-   care::host_device_ptr<KeyT>& uniqueKeys,
-   care::host_device_ptr<OffsetT>& uniqueOffsets)
+   care::host_device_ptr<KeyT>& keys,
+   care::host_device_ptr<OffsetT>& offsets)
 {
    const size_t numSegments = offsets.size() > 0 ? offsets.size() - 1 : 0;
-   const KeyT* rawKeys = keys.cdata();
-   const OffsetT* rawOffsets = offsets.cdata();
+   KeyT* rawKeys = keys.data();
+   OffsetT* rawOffsets = offsets.data();
 
-   care::host_device_ptr<OffsetT> resultOffsets(offsets.size());
-   OffsetT* rawResultOffsets = resultOffsets.data();
-
-   size_t numUnique = 0;
+   size_t output = 0;
+   size_t begin = numSegments > 0
+      ? static_cast<size_t>(rawOffsets[0])
+      : 0;
    for (size_t segment = 0; segment < numSegments; ++segment) {
-      rawResultOffsets[segment] = static_cast<OffsetT>(numUnique);
-
-      const size_t begin = static_cast<size_t>(rawOffsets[segment]);
       const size_t end = static_cast<size_t>(rawOffsets[segment + 1]);
-      for (size_t i = begin; i < end; ++i) {
-         if (i == begin || rawKeys[i - 1] < rawKeys[i] || rawKeys[i] < rawKeys[i - 1]) {
-            ++numUnique;
+      rawOffsets[segment] = static_cast<OffsetT>(output);
+
+      if (begin < end) {
+         KeyT previous = rawKeys[begin];
+         rawKeys[output++] = previous;
+
+         for (size_t i = begin + 1; i < end; ++i) {
+            KeyT current = rawKeys[i];
+            if (previous < current || current < previous) {
+               rawKeys[output++] = current;
+            }
+            previous = current;
          }
       }
+
+      begin = end;
    }
 
    if (offsets.size() > 0) {
-      rawResultOffsets[numSegments] = static_cast<OffsetT>(numUnique);
+      rawOffsets[numSegments] = static_cast<OffsetT>(output);
    }
 
-   care::host_device_ptr<KeyT> result(numUnique);
-   KeyT* rawResult = result.data();
-
-   size_t output = 0;
-   for (size_t segment = 0; segment < numSegments; ++segment) {
-      const size_t begin = static_cast<size_t>(rawOffsets[segment]);
-      const size_t end = static_cast<size_t>(rawOffsets[segment + 1]);
-      for (size_t i = begin; i < end; ++i) {
-         if (i == begin || rawKeys[i - 1] < rawKeys[i] || rawKeys[i] < rawKeys[i - 1]) {
-            rawResult[output++] = rawKeys[i];
-         }
-      }
+   if (keys.isSlice()) {
+      keys = keys.slice(0, output);
+   } else {
+      keys.realloc(output);
    }
-
-   uniqueKeys.free();
-   uniqueOffsets.free();
-   uniqueKeys = std::move(result);
-   uniqueOffsets = std::move(resultOffsets);
 }
 
 } // namespace care::host
