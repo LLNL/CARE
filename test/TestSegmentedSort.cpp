@@ -106,6 +106,122 @@ TEST(segmented_sort, preserves_slice)
    storage.free();
 }
 
+// Verify that sorting and uniquing compacts each segment independently,
+// preserves empty segments, and leaves the input arrays unchanged.
+TEST(segmented_sort_and_unique, out_of_place)
+{
+   care::host_device_ptr<int> keys(10);
+   care::host_device_ptr<int> offsets(5);
+   care::host_device_ptr<int> uniqueKeys(1);
+   care::host_device_ptr<int> uniqueOffsets(1);
+
+   const int input[] = {
+      4, 1, 4,
+      // empty segment
+      8, 7, 8, 7,
+      5, 5, 4
+   };
+   const int segmentOffsets[] = {0, 3, 3, 7, 10};
+   const int expectedKeys[] = {1, 4, 7, 8, 4, 5};
+   const int expectedOffsets[] = {0, 2, 2, 4, 6};
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 10) {
+      keys[i] = input[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 5) {
+      offsets[i] = segmentOffsets[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::segmented_sort_and_unique(
+      keys, offsets, uniqueKeys, uniqueOffsets);
+
+   ASSERT_EQ(uniqueKeys.size(), 6);
+   ASSERT_EQ(uniqueOffsets.size(), 5);
+   CARE_SEQUENTIAL_LOOP(i, 0, 6) {
+      EXPECT_EQ(uniqueKeys[i], expectedKeys[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+   CARE_SEQUENTIAL_LOOP(i, 0, 5) {
+      EXPECT_EQ(uniqueOffsets[i], expectedOffsets[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 10) {
+      EXPECT_EQ(keys[i], input[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+   CARE_SEQUENTIAL_LOOP(i, 0, 5) {
+      EXPECT_EQ(offsets[i], segmentOffsets[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   uniqueOffsets.free();
+   uniqueKeys.free();
+   offsets.free();
+   keys.free();
+}
+
+// Verify that the replacement overload updates both arrays and their sizes.
+TEST(segmented_sort_and_unique, replaces_inputs)
+{
+   care::host_device_ptr<int> keys(9);
+   care::host_device_ptr<int> offsets(4);
+
+   const int input[] = {
+      3, 2, 3,
+      1, 1, 2, 1,
+      2, 2
+   };
+   const int segmentOffsets[] = {0, 3, 7, 9};
+   const int expectedKeys[] = {2, 3, 1, 2, 2};
+   const int expectedOffsets[] = {0, 2, 4, 5};
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 9) {
+      keys[i] = input[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 4) {
+      offsets[i] = segmentOffsets[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::segmented_sort_and_unique(keys, offsets);
+
+   ASSERT_EQ(keys.size(), 5);
+   ASSERT_EQ(offsets.size(), 4);
+   CARE_SEQUENTIAL_LOOP(i, 0, 5) {
+      EXPECT_EQ(keys[i], expectedKeys[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+   CARE_SEQUENTIAL_LOOP(i, 0, 4) {
+      EXPECT_EQ(offsets[i], expectedOffsets[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   offsets.free();
+   keys.free();
+}
+
+// Verify that empty input and multiple empty segments produce empty output
+// while retaining every segment boundary.
+TEST(segmented_sort_and_unique, empty_input)
+{
+   care::host_device_ptr<int> keys;
+   care::host_device_ptr<int> offsets(4);
+   care::host_device_ptr<int> uniqueKeys;
+   care::host_device_ptr<int> uniqueOffsets;
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 4) {
+      offsets[i] = 0;
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::segmented_sort_and_unique(
+      keys, offsets, uniqueKeys, uniqueOffsets);
+
+   EXPECT_EQ(uniqueKeys.size(), 0);
+   ASSERT_EQ(uniqueOffsets.size(), 4);
+   CARE_SEQUENTIAL_LOOP(i, 0, 4) {
+      EXPECT_EQ(uniqueOffsets[i], 0);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   uniqueOffsets.free();
+   offsets.free();
+}
+
 int main(int argc, char** argv)
 {
    testing::InitGoogleTest(&argc, argv);
