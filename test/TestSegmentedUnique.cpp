@@ -36,7 +36,7 @@ TEST(segmented_unique, segment_local_and_empty)
 
    care::segmented_unique(keys, offsets);
 
-   ASSERT_EQ(keys.size(), 6);
+   ASSERT_EQ(keys.size(), 10);
    ASSERT_EQ(offsets.size(), 5);
    CARE_SEQUENTIAL_LOOP(i, 0, 6) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
@@ -74,7 +74,7 @@ TEST(segmented_unique, in_place_after_segmented_sort)
    care::segmented_sort(keys, offsets);
    care::segmented_unique(keys, offsets);
 
-   ASSERT_EQ(keys.size(), 5);
+   ASSERT_EQ(keys.size(), 9);
    ASSERT_EQ(offsets.size(), 4);
    CARE_SEQUENTIAL_LOOP(i, 0, 5) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
@@ -128,7 +128,7 @@ TEST(segmented_unique, compacts_input_slices)
 
    care::segmented_unique(keys, offsets);
 
-   ASSERT_EQ(keys.size(), 4);
+   ASSERT_EQ(keys.size(), 6);
    ASSERT_EQ(offsets.size(), 3);
    CARE_SEQUENTIAL_LOOP(i, 0, 4) {
       EXPECT_EQ(keys[i], expectedKeys[i]);

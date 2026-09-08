@@ -16,9 +16,9 @@ namespace care::host {
 
 /**
  * @brief Remove duplicate keys independently within each sorted segment.
- * @param keys Sorted keys to compact in place. On return, contains the unique
- * keys from every segment and is resized to the compacted length. Equal keys
- * in different segments remain distinct.
+ * @param keys Sorted keys to compact in place. On return, the compacted keys
+ * occupy the first offsets[N] entries; the allocation and size are unchanged.
+ * Equal keys in different segments remain distinct.
  * @param offsets Segment boundaries to update in place. For N segments,
  * offsets must contain N + 1 entries: offsets[i] begins segment i, and
  * offsets[N] marks the end of the final segment. Segment i is therefore
@@ -64,11 +64,6 @@ void segmented_unique(
       rawOffsets[numSegments] = static_cast<OffsetT>(output);
    }
 
-   if (keys.isSlice()) {
-      keys = keys.slice(0, output);
-   } else {
-      keys.realloc(output);
-   }
 }
 
 } // namespace care::host

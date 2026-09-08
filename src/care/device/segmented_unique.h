@@ -13,15 +13,13 @@
 #include "care/scan.h"
 
 #include <cstddef>
-#include <utility>
-
 namespace care::device {
 
 /**
  * @brief Remove duplicate keys independently within each sorted segment.
- * @param keys Sorted keys to compact in place. On return, contains the unique
- * keys from every segment and is resized to the compacted length. Equal keys
- * in different segments remain distinct.
+ * @param keys Sorted keys to compact in place. On return, the compacted keys
+ * occupy the first offsets[N] entries; the allocation and size are unchanged.
+ * Equal keys in different segments remain distinct.
  * @param offsets Segment boundaries to update in place. For N segments,
  * offsets must contain N + 1 entries: offsets[i] begins segment i, and
  * offsets[N] marks the end of the final segment. Segment i is therefore
@@ -79,19 +77,13 @@ CARE_INLINE void segmented_unique(
 
    positions.free();
 
-   if (keys.isSlice()) {
-      care::host_device_ptr<const KeyT> source = result;
+   care::host_device_ptr<const KeyT> source = result;
 
-      CARE_STREAM_LOOP(i, 0, numUnique) {
-         keys[i] = source[i];
-      } CARE_STREAM_LOOP_END
+   CARE_STREAM_LOOP(i, 0, numUnique) {
+      keys[i] = source[i];
+   } CARE_STREAM_LOOP_END
 
-      result.free();
-      keys = keys.slice(0, static_cast<size_t>(numUnique));
-   } else {
-      keys.free();
-      keys = std::move(result);
-   }
+   result.free();
 }
 
 } // namespace care::device
