@@ -20,7 +20,7 @@ TEST(segmented_unique, segment_local_and_empty)
       4, 4, 5,
       // empty segment
       2, 2, 3, 3,
-      1, 1, 2
+      1, 2, 3
    };
 
    const int segmentOffsets[] = {0, 3, 3, 7, 10};
@@ -29,10 +29,10 @@ TEST(segmented_unique, segment_local_and_empty)
       4, 5,
       // empty segment
       2, 3,
-      1, 2
+      1, 2, 3
    };
 
-   const int expectedOffsets[] = {0, 2, 2, 4, 6};
+   const int expectedOffsets[] = {0, 2, 2, 4, 7};
 
    CARE_SEQUENTIAL_LOOP(i, 0, 10) {
       keys[i] = input[i];
@@ -47,7 +47,7 @@ TEST(segmented_unique, segment_local_and_empty)
    ASSERT_EQ(keys.size(), 10);
    ASSERT_EQ(offsets.size(), 5);
 
-   CARE_SEQUENTIAL_LOOP(i, 0, 6) {
+   CARE_SEQUENTIAL_LOOP(i, 0, 7) {
       EXPECT_EQ(keys[i], expectedKeys[i]);
    } CARE_SEQUENTIAL_LOOP_END
 
@@ -59,7 +59,7 @@ TEST(segmented_unique, segment_local_and_empty)
    keys.free();
 }
 
-TEST(segmented_unique, in_place_after_segmented_sort)
+TEST(segmented_unique, unique_after_sort)
 {
    care::host_device_ptr<int> keys(9);
    care::host_device_ptr<int> offsets(4);
@@ -111,7 +111,10 @@ TEST(segmented_unique, custom_equivalence_predicate)
    care::host_device_ptr<int> keys(6);
    care::host_device_ptr<int> offsets(3);
 
-   const int input[] = {21, 22, 22, 11, 13, 13};
+   const int input[] = {
+      21, 22, 22,
+      11, 13, 13
+   };
    const int segmentOffsets[] = {0, 3, 6};
 
    const int expectedKeys[] = {
@@ -179,7 +182,12 @@ TEST(segmented_unique, compacts_input_slices)
    care::host_device_ptr<int> keys = keyStorage.slice(1, 6);
    care::host_device_ptr<int> offsets = offsetStorage.slice(1, 3);
 
-   const int input[] = {-1, 1, 1, 2, 0, 0, 1, -2};
+   const int input[] = {
+      -1,
+      1, 1, 2,
+      0, 0, 1,
+      -2
+   };
    const int segmentOffsets[] = {-1, 0, 3, 6, -2};
 
    const int expectedKeys[] = {
