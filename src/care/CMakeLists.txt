@@ -71,8 +71,8 @@ set(care_host_headers
     host/sort.h
     )
 
-set(care_detail_headers
-    detail/segmented_unique.h
+set(care_device_headers
+    device/segmented_unique.h
     )
 
 set(care_cuda_headers)
@@ -139,7 +139,7 @@ endif ()
 blt_add_library(NAME care
                 SOURCES    ${care_sources}
                 HEADERS    ${care_headers}
-                           ${care_detail_headers}
+                           ${care_device_headers}
                            ${care_host_headers}
                            ${care_cuda_headers}
                            ${care_hip_headers}
@@ -156,8 +156,8 @@ install(FILES       ${care_headers}
 install(FILES ${care_host_headers}
         DESTINATION include/care/host)
 
-install(FILES ${care_detail_headers}
-        DESTINATION include/care/detail)
+install(FILES ${care_device_headers}
+        DESTINATION include/care/device)
 
 install(FILES ${care_cuda_headers}
         DESTINATION include/care/cuda)

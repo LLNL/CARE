@@ -8,7 +8,7 @@
 #ifndef CARE_CUDA_SEGMENTED_UNIQUE_H
 #define CARE_CUDA_SEGMENTED_UNIQUE_H
 
-#include "care/detail/segmented_unique.h"
+#include "care/device/segmented_unique.h"
 
 namespace care::cuda {
 
@@ -17,7 +17,7 @@ CARE_INLINE void segmented_unique(
    care::host_device_ptr<KeyT>& keys,
    care::host_device_ptr<OffsetT>& offsets)
 {
-   care::detail::segmented_unique_device(keys, offsets);
+   care::device::segmented_unique_device(keys, offsets);
 }
 
 } // namespace care::cuda

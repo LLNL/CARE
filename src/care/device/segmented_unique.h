@@ -5,8 +5,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef CARE_DETAIL_SEGMENTED_UNIQUE_H
-#define CARE_DETAIL_SEGMENTED_UNIQUE_H
+#ifndef CARE_DEVICE_SEGMENTED_UNIQUE_H
+#define CARE_DEVICE_SEGMENTED_UNIQUE_H
 
 #include "care/DefaultMacros.h"
 #include "care/host_device_ptr.h"
@@ -15,7 +15,7 @@
 #include <cstddef>
 #include <utility>
 
-namespace care::detail {
+namespace care::device {
 
 /**
  * @brief Device implementation shared by the CUDA and HIP front ends.
@@ -84,6 +84,6 @@ CARE_INLINE void segmented_unique_device(
    }
 }
 
-} // namespace care::detail
+} // namespace care::device
 
-#endif // CARE_DETAIL_SEGMENTED_UNIQUE_H
+#endif // CARE_DEVICE_SEGMENTED_UNIQUE_H
