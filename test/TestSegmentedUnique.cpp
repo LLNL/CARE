@@ -87,6 +87,44 @@ TEST(segmented_unique, in_place_after_segmented_sort)
    keys.free();
 }
 
+TEST(segmented_unique, custom_equivalence_predicate)
+{
+   care::host_device_ptr<int> keys(6);
+   care::host_device_ptr<int> offsets(3);
+
+   const int input[] = {11, 12, 12, 12, 13, 13};
+   const int segmentOffsets[] = {0, 3, 6};
+   const int expectedKeys[] = {11, 12};
+   const int expectedOffsets[] = {0, 1, 2};
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 6) {
+      keys[i] = input[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 3) {
+      offsets[i] = segmentOffsets[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   care::segmented_unique(
+      keys,
+      offsets,
+      [] CARE_HOST_DEVICE (int left, int right) {
+         return left / 10 == right / 10;
+      });
+
+   ASSERT_EQ(keys.size(), 6);
+   ASSERT_EQ(offsets.size(), 3);
+   CARE_SEQUENTIAL_LOOP(i, 0, 2) {
+      EXPECT_EQ(keys[i], expectedKeys[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+   CARE_SEQUENTIAL_LOOP(i, 0, 3) {
+      EXPECT_EQ(offsets[i], expectedOffsets[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   offsets.free();
+   keys.free();
+}
+
 TEST(segmented_unique, empty_input_and_segments)
 {
    care::host_device_ptr<int> keys;
