@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
@@ -50,12 +50,13 @@ if(NOT BLT_LOADED)
 
    option(ENABLE_FORTRAN      "Enables Fortran compiler support" OFF)
 
-   set(BLT_CXX_STD "c++17" CACHE STRING "Set the c++ standard to use")
+   set(BLT_CXX_STD "c++20" CACHE STRING "Set the c++ standard to use")
 
    if(("${BLT_CXX_STD}" STREQUAL "c++98") OR
       ("${BLT_CXX_STD}" STREQUAL "c++11") OR
-      ("${BLT_CXX_STD}" STREQUAL "c++14"))
-      message(FATAL_ERROR "CARE requires a minimum C++ standard of c++17. Please set BLT_CXX_STD accordingly.")
+      ("${BLT_CXX_STD}" STREQUAL "c++14") OR
+      ("${BLT_CXX_STD}" STREQUAL "c++17"))
+      message(FATAL_ERROR "CARE requires a minimum C++ standard of c++20. Please set BLT_CXX_STD accordingly.")
    endif()
 
    include(${BLT_SOURCE_DIR}/SetupBLT.cmake)

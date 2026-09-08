@@ -1,6 +1,6 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2020-25, Lawrence Livermore National Security, LLC and CARE)
-[comment]: # (project contributors. See the CARE LICENSE file for details.)
+[comment]: # (Copyright Lawrence Livermore National Security, LLC and other CARE)
+[comment]: # (contributors. See the CARE LICENSE and COPYRIGHT files for details.)
 [comment]: # 
 [comment]: # (SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
@@ -11,6 +11,44 @@ Notes describing significant changes in each CARE release are documented
 in this file.
 
 The format of this file is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased] - Release date yyyy-mm-dd
+
+### Added
+- Added `host_device_ptr<T>::slice` function to make passing slices easier to algorithms.
+
+### Changed
+- Inlined many device APIs to reduce the need for relocatable device code, though the LoopFuser still requires it.
+
+### Fixed
+- Fixed macro name conflict in tests.
+
+## [Version 2026.07.0] - Release date 2026-08-11
+
+### Added
+- Add `ATOMIC_GENERIC` and `ATOMIC_GENERIC_WITH_STOP` for new generic atomic implementations in RAJA v2026.07.0.
+- Added `sortKeyValueArrays` for simultaneously sorting two arrays.
+- Added additional instantiations when configured with explicit template instantiations.
+
+### Changed
+- Switched to date-based versioning scheme.
+- C++20 or higher is required.
+- ROCm 6 or higher is required.
+- CUDA 12 or higher is required.
+- CMake 3.24 or higher is required.
+- Updated BLT to v0.7.2.
+- Updated CHAI to v2026.07.0.
+- Updated RAJA to v2026.07.0.
+- Updated Umpire to v2026.07.1.
+
+### Fixed
+- Added explicit `host_device_ptr` constructor for constructing with a size. Previously, an unexpected chain of implicit conversions would happen.
+- Fixed bugs in GPU implementation of `KeyValueSorter::sortByKeyThenValue`
+- Fixed inconsistency between sequential and parallel implementations of `IntersectKeyValueSorters`.
+- Fixed some compiler warnings.
+
+### Removed
+- Removed unnecessary dependency on the default GPU stream in the `LoopFuser`.
 
 ## [Version 0.15.3] - Release date 2025-12-22
 

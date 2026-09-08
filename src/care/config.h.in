@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -46,6 +46,10 @@
 #else // defined(_WIN32) && !defined(CARESTATICLIB)
 #define CARE_DLL_API
 #endif // defined(_WIN32) && !defined(CARESTATICLIB)
+
+#ifndef CARE_KEY_VALUE_SORTER_DLL_API
+#define CARE_KEY_VALUE_SORTER_DLL_API CARE_DLL_API
+#endif
 
 #define CARE_STRINGIFY(x) CARE_DO_STRINGIFY(x)
 #define CARE_DO_STRINGIFY(x) #x

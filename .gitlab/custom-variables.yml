@@ -1,6 +1,6 @@
 ###############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ###############################################################################
@@ -22,39 +22,39 @@ variables:
   # Note: we repeat the reservation, helpful when jobs are manually re-triggered.
   DANE_JOB_ALLOC: "--overlap --reservation=ci --nodes=1"
   # Project specific variants for dane
-  PROJECT_DANE_VARIANTS: ""
+  PROJECT_DANE_VARIANTS: " cxxstd=20"
   # Project specific deps for dane
-  PROJECT_DANE_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  PROJECT_DANE_DEPS: "^chai~shared~examples ^raja~examples~exercises~tests ^umpire~c~shared ^fmt@12.1.0"
 
   # Matrix (SLURM) allocation settings
-  MATRIX_SHARED_ALLOC: "--exclusive --partition=pdebug --time=10 --nodes=1"
+  MATRIX_SHARED_ALLOC: "OFF"
   # Note: we repeat the reservation, helpful when jobs are manually re-triggered.
-  MATRIX_JOB_ALLOC: "--partition=pdebug --overlap --nodes=1"
+  MATRIX_JOB_ALLOC: "--partition=pci --time=10 --gpus=1"
   # Project specific variants for matrix
-  PROJECT_MATRIX_VARIANTS: "+cuda cuda_arch=90"
+  PROJECT_MATRIX_VARIANTS: " cxxstd=20 +cuda cuda_arch=90"
   # Project specific deps for matrix
-  PROJECT_MATRIX_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  PROJECT_MATRIX_DEPS: "^chai~shared~examples ^raja~examples~exercises~tests ^umpire~c~shared ^fmt@12.1.0"
 
   # Corona (flux) allocation settings
   CORONA_SHARED_ALLOC: "--exclusive --time-limit=20m --nodes=1"
   CORONA_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
   # Project specific variants for corona
-  PROJECT_CORONA_VARIANTS: ""
+  PROJECT_CORONA_VARIANTS: " cxxstd=20"
   # Project specific deps for corona
-  PROJECT_CORONA_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  PROJECT_CORONA_DEPS: "^chai~shared~examples ^raja~examples~exercises~tests ^umpire~c~shared ^fmt@12.1.0"
 
   # Tioga (flux) allocation settings
   TIOGA_SHARED_ALLOC: "--queue=pci --exclusive --time-limit=20m --nodes=1"
   TIOGA_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
   # Project specific variants for tioga
-  PROJECT_TIOGA_VARIANTS: ""
+  PROJECT_TIOGA_VARIANTS: " cxxstd=20"
   # Project specific deps for tioga
-  PROJECT_TIOGA_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  PROJECT_TIOGA_DEPS: "^chai~shared~examples ^raja~examples~exercises~tests ^umpire~c~shared ^fmt@12.1.0"
 
   # Tuolumne (flux) allocation settings
   TUOLUMNE_SHARED_ALLOC: "--queue=pci --exclusive --time-limit=20m --nodes=1"
   TUOLUMNE_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
   # Project specific variants for tuolumne
-  PROJECT_TUOLUMNE_VARIANTS: ""
+  PROJECT_TUOLUMNE_VARIANTS: " cxxstd=20"
   # Project specific deps for tuolumne
-  PROJECT_TUOLUMNE_DEPS: "^umpire~c~shared ^raja~examples~exercises~tests ^chai~shared~examples "
+  PROJECT_TUOLUMNE_DEPS: "^chai~shared~examples ^raja~examples~exercises~tests ^umpire~c~shared ^fmt@12.1.0"

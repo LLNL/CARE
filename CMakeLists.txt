@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
@@ -9,7 +9,7 @@
 # Set up CMake
 ##########################################################################
 
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.24)
 cmake_policy(SET CMP0096 OLD) # Required when building Umpire submodule
 
 ##########################################################################
@@ -18,7 +18,7 @@ cmake_policy(SET CMP0096 OLD) # Required when building Umpire submodule
 
 project(CARE
         LANGUAGES C CXX
-        VERSION 0.15.3)
+        VERSION 2026.07.0)
 
 include(${PROJECT_SOURCE_DIR}/cmake/Setup.cmake)
 

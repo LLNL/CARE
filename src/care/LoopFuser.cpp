@@ -1,12 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
-
-// Loop Fuser uses the CUDA/HIP default stream and wants to enqueue events in the default stream
-#define CAMP_USE_PLATFORM_DEFAULT_STREAM 1
 
 #include "umpire/Allocator.hpp"
 #include "umpire/TypedAllocator.hpp"
@@ -170,7 +167,11 @@ template<int REGISTER_COUNT, typename...XARGS>
 void LoopFuser<REGISTER_COUNT,XARGS...>::waitIfNeeded() {
    if (m_wait_needed) {
       // ensure asynchronous launch from previous flush is done
+#if CAMP_VERSION_MAJOR >= 2026
+      m_async_resource.wait_for(m_wait_for_event);
+#else
       m_async_resource.wait_for(&m_wait_for_event);
+#endif
       // clear out our worksites now that their work is done
       m_aw.clear();
       m_cw.clear();
@@ -282,14 +283,15 @@ void LoopFuser<REGISTER_COUNT,XARGS...>::flush_parallel_scans(const char * fileN
 
    /* need to write the scan positions to the output destinations */
    /* each destination is computed */
+   care::host_ptr<int> * pos_output_destinations = m_pos_output_destinations;
    CARE_SEQUENTIAL_LOOP(actionIndex, 0, action_count) {
       int scan_pos_offset = actionIndex == 0 ? 0 : scan_pos_outputs[actionIndex-1];
       int pos = scan_pos_outputs[actionIndex];
       pos -= scan_pos_offset;
-      *(m_pos_output_destinations[actionIndex].data()) += pos;
+      *(pos_output_destinations[actionIndex].data()) += pos;
       if (very_verbose) {
          printf("actionIndex %i: scan_pos_offset %i scan_pos_output %i pos %i store %i \n",
-                 actionIndex, scan_pos_offset, scan_pos_outputs[actionIndex], pos, *(m_pos_output_destinations[actionIndex].data()));
+                 actionIndex, scan_pos_offset, scan_pos_outputs[actionIndex], pos, *(pos_output_destinations[actionIndex].data()));
       }
    } CARE_SEQUENTIAL_LOOP_END
    scan_var.free();

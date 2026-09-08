@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -116,30 +116,6 @@ namespace care {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const int*, const int, const char*, const char*, const bool, const bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const float*, const int, const char*, const char*, const bool, const bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const double*, const int, const char*, const char*, const bool, const bool) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const globalID*, const int, const char*, const char*, const bool, const bool) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const int>&, const int, const char*, const char*, const bool, const bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const float>&, const int, const char*, const char*, const bool, const bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const double>&, const int, const char*, const char*, const bool, const bool) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool checkSorted(const care::host_device_ptr<const globalID>&, const int, const char*, const char*, const bool, const bool) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
 #ifdef CARE_PARALLEL_DEVICE
 
 CARE_EXTERN template CARE_DLL_API
@@ -184,53 +160,6 @@ void IntersectArrays(RAJA::seq_exec, care::host_device_ptr<int>, int, int, care:
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 void IntersectArrays(RAJA::seq_exec, care::host_device_ptr<globalID>, int, int, care::host_device_ptr<globalID>, int, int, care::host_device_ptr<int> &, care::host_device_ptr<int> &, int *) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const int *, const int, const int, const int, bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const size_t *, const int, const int, const size_t, bool) ;
-#if CARE_HAVE_LLNL_GLOBALID
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const globalID *, const int, const int, const globalID, bool) ;
-#if GLOBALID_IS_64BIT
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const GIDTYPE *, const int, const int, const GIDTYPE, bool) ;
-#endif
-
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<int>&, const int, const int, const int, bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<size_t>&, const int, const int, const size_t, bool) ;
-#if CARE_HAVE_LLNL_GLOBALID
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<globalID>&, const int, const int, const globalID, bool) ;
-#if GLOBALID_IS_64BIT
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
-#endif
-
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const int>&, const int, const int, const int, bool) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const size_t>&, const int, const int, const size_t, bool) ;
-#if CARE_HAVE_LLNL_GLOBALID
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const globalID>&, const int, const int, const globalID, bool) ;
-#if GLOBALID_IS_64BIT
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int BinarySearch(const care::host_device_ptr<const GIDTYPE>&, const int, const int, const GIDTYPE, bool) ;
-#endif
-
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -421,31 +350,6 @@ int CompressArray(care::host_device_ptr<globalID> &, const int, care::host_devic
 
 ///////////////////////////////////////////////////////////////////////////////
 
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void InsertionSort(care::local_ptr<int>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void InsertionSort(care::local_ptr<float>, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void InsertionSort(care::local_ptr<double>, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void InsertionSort(care::local_ptr<globalID>, int) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void uniqLocal(care::local_ptr<int>, int&) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void uniqLocal(care::local_ptr<float>, int&) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void uniqLocal(care::local_ptr<double>, int&) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE void uniqLocal(care::local_ptr<globalID>, int&) ;
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
 
 #ifdef CARE_PARALLEL_DEVICE
 
@@ -619,33 +523,6 @@ CARE_EXTERN template CARE_DLL_API
 float ArrayMin<float, RAJA::seq_exec>(care::host_device_ptr<float>, int, float, int) ;
 CARE_EXTERN template CARE_DLL_API
 double ArrayMin<double, RAJA::seq_exec>(care::host_device_ptr<double>, int, double, int) ;
-// TODO GID not implemented
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool ArrayMin(care::local_ptr<const bool>, int, bool, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMin(care::local_ptr<const int>, int, int, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE float ArrayMin(care::local_ptr<const float>, int, float, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE double ArrayMin(care::local_ptr<const double>, int, double, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE globalID ArrayMin(care::local_ptr<const globalID>, int, globalID, int) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool ArrayMin(care::local_ptr<bool>, int, bool, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMin(care::local_ptr<int>, int, int, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE float ArrayMin(care::local_ptr<float>, int, float, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE double ArrayMin(care::local_ptr<double>, int, double, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE globalID ArrayMin(care::local_ptr<globalID>, int, globalID, int) ;
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -746,32 +623,6 @@ double ArrayMax<double, RAJA::seq_exec>(care::host_device_ptr<double>, int, doub
 // TODO GID not implemented
 
 CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool ArrayMax(care::local_ptr<const bool>, int, bool, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMax(care::local_ptr<const int>, int, int, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE float ArrayMax(care::local_ptr<const float>, int, float, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE double ArrayMax(care::local_ptr<const double>, int, double, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE globalID ArrayMax(care::local_ptr<const globalID>, int, globalID, int) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE bool ArrayMax(care::local_ptr<bool>, int, bool, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMax(care::local_ptr<int>, int, int, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE float ArrayMax(care::local_ptr<float>, int, float, int) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE double ArrayMax(care::local_ptr<double>, int, double, int) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE globalID ArrayMax(care::local_ptr<globalID>, int, globalID, int) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
 bool ArrayMax(care::host_ptr<const bool>, int, bool, int) ;
 CARE_EXTERN template CARE_DLL_API
 int ArrayMax(care::host_ptr<const int>, int, int, int) ;
@@ -848,28 +699,6 @@ int ArrayMinMax<double, double, RAJA::seq_exec>(care::host_device_ptr<double>, c
 #if CARE_HAVE_LLNL_GLOBALID
 CARE_EXTERN template CARE_DLL_API
 int ArrayMinMax<globalID, GIDTYPE, RAJA::seq_exec>(care::host_device_ptr<globalID>, care::host_device_ptr<int>, int, double *, double *) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const int>, care::local_ptr<int const>, int, double *, double *) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const float>, care::local_ptr<int const>, int, double *, double *) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const double>, care::local_ptr<int const>, int, double *, double *) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<const globalID>, care::local_ptr<int const>, int, double *, double *) ;
-#endif
-
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<int>, care::local_ptr<int>, int, double *, double *) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<float>, care::local_ptr<int>, int, double *, double *) ;
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<double>, care::local_ptr<int>, int, double *, double *) ;
-#if CARE_HAVE_LLNL_GLOBALID
-CARE_EXTERN template CARE_DLL_API
-CARE_HOST_DEVICE int ArrayMinMax(care::local_ptr<globalID>, care::local_ptr<int>, int, double *, double *) ;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

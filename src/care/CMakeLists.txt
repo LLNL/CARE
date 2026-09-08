@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
@@ -57,10 +57,20 @@ set(care_headers
     ProfilePlugin.h
     scan.h
     scan_impl.h
+    segmented_scan.h
     Setup.h
     single_access_ptr.h
     util.h
- )
+    sort.h
+    )
+
+set(care_host_headers
+    host/segmented_scan.h
+    host/sort.h
+    )
+
+set(care_cuda_headers)
+set(care_hip_headers)
 
 set(care_sources
     care.cpp
@@ -97,6 +107,9 @@ if(ENABLE_OPENMP)
 endif()
 
 if(ENABLE_CUDA)
+   list(APPEND care_cuda_headers cuda/segmented_scan.h)
+   list(APPEND care_cuda_headers cuda/sort.h)
+
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
 
@@ -109,12 +122,18 @@ endif()
 
 
 if(ENABLE_HIP)
+  list(APPEND care_hip_headers hip/segmented_scan.h)
+  list(APPEND care_hip_headers hip/sort.h)
+
   list(APPEND care_depends blt::hip)
 endif ()
 
 blt_add_library(NAME care
                 SOURCES    ${care_sources}
                 HEADERS    ${care_headers}
+                           ${care_host_headers}
+                           ${care_cuda_headers}
+                           ${care_hip_headers}
                 INCLUDES   ${care_includes}
                 DEPENDS_ON ${care_depends})
 
@@ -124,6 +143,15 @@ blt_add_library(NAME care
 
 install(FILES       ${care_headers}
         DESTINATION include/care)
+
+install(FILES ${care_host_headers}
+        DESTINATION include/care/host)
+
+install(FILES ${care_cuda_headers}
+        DESTINATION include/care/cuda)
+
+install(FILES ${care_hip_headers}
+        DESTINATION include/care/hip)
 
 install(TARGETS care
         EXPORT  care-targets
@@ -153,4 +181,3 @@ install(
       ${PROJECT_SOURCE_DIR}/cmake/modules/FindCUB.cmake
    DESTINATION
       lib/cmake/care)
-

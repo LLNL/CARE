@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -36,73 +36,6 @@
 
 namespace care {
 
-///////////////////////////////////////////////////////////////////////////
-/// @author Ben Liu, Peter Robinson, Alan Dayton
-/// @brief Checks whether an array of type T is sorted and optionally unique.
-/// @param[in] array           - The array to check
-/// @param[in] len             - The number of elements contained in the sorter
-/// @param[in] name            - The name of the calling function
-/// @param[in] argname         - The name of the sorter in the calling function
-/// @param[in] allowDuplicates - Whether or not to allow duplicates
-/// @param[in] warnOnFailure   - Whether to print a warning if array not sorted
-/// @return true if sorted, false otherwise
-///////////////////////////////////////////////////////////////////////////
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const T* array, const int len,
-                                              const char* name, const char* argname,
-                                              const bool allowDuplicates,
-                                              const bool warnOnFailure)
-{
-   if (len > 0) {
-      int last = 0;
-      bool failed = false;
-
-      if (allowDuplicates) {
-         for (int k = 1 ; k < len ; ++k) {
-            failed = array[k] < array[last];
-
-            if (failed) {
-               break;
-            }
-            else {
-               last = k;
-            }
-         }
-      }
-      else {
-         for (int k = 1 ; k < len ; ++k) {
-            failed = array[k] <= array[last];
-
-            if (failed) {
-               break;
-            }
-            else {
-               last = k;
-            }
-         }
-      }
-
-      if (failed) {
-         if (warnOnFailure) {
-            printf("care:%s: %s not in ascending order at index %d\n", name, argname, last + 1);
-         }
-         return false;
-      }
-   }
-
-   return true;
-}
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE bool checkSorted(const care::host_device_ptr<const T>& array,
-                                              const int len,
-                                              const char* name,
-                                              const char* argname,
-                                              const bool allowDuplicates,
-                                              const bool warnOnFailure)
-{
-   return checkSorted<T>(array.data(), len, name, argname, allowDuplicates, warnOnFailure);
-}
 
 /************************************************************************
  * Function  : IntersectArrays<A,RAJAExec>
@@ -417,118 +350,6 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
                    matches1, matches2, numMatches);
 }
 
-/************************************************************************
- * Function  : BinarySearch
- * Author(s) : Brad Wallin, Peter Robinson
- * Purpose   : Every good code has to have one.  Searches a sorted array,
- *             or a sorted subarray, for a particular value.  This used to
- *             be in NodesGlobalToLocal.  The algorithm was taken from
- *             Numerical Recipes in C, Second Edition.
- *
- *             Important Note: mapSize is the length of the region you
- *             are searching.  For example, if you have an array that has
- *             100 entries in it, and you want to search from index 5 to
- *             40, then you would set start=5, and mapSize=(40-5)=35.
- *             In other words, mapSize is NOT the original length of the
- *             array and it is also NOT the ending index for your search.
- *
- *             If returnUpperBound is set to true, this will return the
- *             index corresponding to the earliest entry that is greater
- *             than num. A return value of -1 indicates that all values
- *             in map are smaller than or equal to num.
- *
- *             @NOTE: Intentionally implemented this using only the '<'
- *             operator to follow weak strict ordering semantics.
- *
- ************************************************************************/
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const T *map, const int start,
-                                              const int mapSize, const T num,
-                                              bool returnUpperBound)
-{
-   int klo = start ;
-   int khi = start + mapSize;
-   int k = ((khi+klo) >> 1) + 1 ;
-
-   if ((map == nullptr) || (mapSize == 0)) {
-      return -1 ;
-   }
-#ifdef CARE_DEBUG
-   const bool allowDuplicates = true;
-   const bool warnOnFailure = true;
-   checkSorted(&(map[start]), mapSize, "BinarySearch", "map", allowDuplicates, warnOnFailure) ;
-#endif
-
-   while (khi-klo > 1) {
-      k = (khi+klo) >> 1 ;
-      if (! (map[k] < num) && !(num < map[k])) {
-         if (returnUpperBound) {
-            khi = k+1;
-            klo = k;
-            continue;
-         }
-         else {
-            return k ;
-         }
-      }
-      else if (num < map[k]) {
-         khi = k ;
-      }
-      else {
-         klo = k ;
-      }
-   }
-   if (returnUpperBound) {
-      k = klo;
-      // the lower option bounds num
-      if (num < map[k]) {
-         return k;
-      }
-      // the upper option is within the range of the map index set
-      if (khi < start + mapSize) {
-         // Note: fix for last test in TEST(algorithm, binarysearch). This algorithm has failed to pick up the upper
-         // bound above 1 in the array {0, 1, 1, 1, 1, 1, 6}. Having 1 repeated confused the algorithm.
-         while ((khi < start + mapSize) && (!(map[khi] <  num) && !(num < map[khi]))) {
-            ++khi;
-         }
-
-         // the upper option bounds num
-         if ((khi < start + mapSize) && (num < map[khi])) {
-            return khi;
-         }
-         // neither the upper or lower option bound num
-         return -1;
-      }
-      else {
-         // the lower option does not bound num, and the upper option is out of bounds
-         return -1;
-      }
-   }
-   --k;
-   if (!(map[k] < num) && !(num < map[k])) {
-      return k ;
-   }
-   else {
-      return -1 ;
-   }
-}
-
-template<typename mapType>
-CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<mapType>& map, const int start,
-                                              const int mapSize, const mapType num,
-                                              bool returnUpperBound)
-{
-   return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
-}
-
-template<typename mapType>
-CARE_HOST_DEVICE CARE_INLINE int BinarySearch(const care::host_device_ptr<const mapType>& map, const int start,
-                                  const int mapSize, const mapType num,
-                                  bool returnUpperBound)
-{
-   return BinarySearch<mapType>(map.data(), start, mapSize, num, returnUpperBound);
-}
 
 #ifdef CARE_PARALLEL_DEVICE
 /************************************************************************
@@ -863,31 +684,6 @@ CARE_INLINE void sort_uniq(Exec e, care::host_device_ptr<T> * array, int * len, 
    *len = uniqArray<T>(e, *array, *len, noCopy);
 }
 
-/************************************************************************
- * Function  : uniqLocal
- * Author(s) : Benjamin Liu
- * Purpose   : Remove duplicates in-place from an array that is sorted
- *             in ascending order and updates len.
- *             For calls from within RAJA loops.
- *             Does not reallocate array.
- ************************************************************************/
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE void uniqLocal(care::local_ptr<T> array, int& len)
-{
-   int origLen = len ;
-   len = 0 ;
-
-   int i = 0 ;
-   while (i < origLen) {
-      /* copy the unique value into the array */
-      array[len] = array[i] ;
-      /* skip over all the redundant elements */
-      while (i < origLen && array[i] == array[len]) {
-         ++i ;
-      }
-      ++len ;
-   }
-}
 
 template <typename T>
 CARE_INLINE void ExpandArrayInPlace(RAJA::seq_exec, care::host_device_ptr<T> array,
@@ -981,21 +777,6 @@ CARE_INLINE T ArrayMin(care::host_device_ptr<T> arr, int n, T initVal, int start
    return ArrayMin<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
 }
 
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE T ArrayMin(care::local_ptr<const T> arr, int n, T initVal, int startIndex)
-{
-   T min = initVal;
-   for (int k = startIndex; k < n; ++k) {
-      min = care::min(min, arr[k]);
-   }
-   return min;
-}
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE T ArrayMin(care::local_ptr<T> arr, int n, T initVal, int startIndex)
-{
-   return ArrayMin<T>((care::local_ptr<const T>)arr, n, initVal, startIndex);
-}
 
 /************************************************************************
  * Function  : ArrayMin
@@ -1050,22 +831,6 @@ template <typename T, typename Exec>
 CARE_INLINE T ArrayMax(care::host_device_ptr<T> arr, int n, T initVal, int startIndex)
 {
    return ArrayMax<T, Exec>((care::host_device_ptr<const T>)arr, n, initVal, startIndex);
-}
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<const T> arr, int n, T initVal, int startIndex)
-{
-   T max = initVal;
-   for (int k = startIndex; k < n; ++k) {
-      max = care::max(max, arr[k]);
-   }
-   return max;
-}
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE T ArrayMax(care::local_ptr<T> arr, int n, T initVal, int startIndex)
-{
-   return ArrayMax<T>((care::local_ptr<const T>)arr, n, initVal, startIndex);
 }
 
 /************************************************************************
@@ -1201,67 +966,6 @@ CARE_INLINE int ArrayMinMax(care::host_device_ptr<const globalID> arr,
 }
 
 #endif // CARE_HAVE_LLNL_GLOBALID
-
-/************************************************************************
- * Function  : ArrayMinMax
- * Author(s) : Peter Robinson
- * Purpose   : Stores Minimum / Maximum values of arr (as a double) in outMin / outMax;
- *             If mask was such that no values were compared, returns 0, outMin will be -DBL_MAX, outMax will be DBL_MAX
- *             Otherwise, returns 1.
- *             care::local_ptr API to support calls from within RAJA contexts.
- * ************************************************************************/
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<const T> arr,
-                                             care::local_ptr<int const> mask,
-                                             int n, double *outMin, double *outMax)
-{
-   bool result = false;
-   // a previous implementation had min and max as a templated type and then used std::numeric_limits<T>::lowest() and 
-   // std::numeric_limits<ReducerType>::max() for initial values, but that is not valid on the device and results in 
-   // warnings and undefined behavior at runtime.
-   double min, max;
-   if (arr) {
-      max =  -DBL_MAX; 
-      min =  DBL_MAX;
-      if (mask) {
-         for (int i = 0; i < n; ++i) {
-            if (mask[i]) {
-               min = care::min(min, (double)arr[i]);
-               max = care::max(max, (double)arr[i]);
-            }
-         }
-         if (min != DBL_MAX ||
-             max != -DBL_MAX) {
-            result = true;
-         }
-      }
-      else {
-         for (int i = 0; i < n; ++i) {
-            min = care::min(min, (double)arr[i]);
-            max = care::max(max, (double)arr[i]);
-         }
-         result = true;
-      }
-   }
-
-   if (result) {
-      *outMin = (double) min;
-      *outMax = (double) max;
-   }
-   else {
-      *outMin = -DBL_MAX;
-      *outMax = +DBL_MAX;
-   }
-   return (int) result;
-}
-
-template <typename T>
-CARE_HOST_DEVICE CARE_INLINE int ArrayMinMax(care::local_ptr<T> arr,
-                                             care::local_ptr<int> mask,
-                                             int n, double *outMin, double *outMax)
-{
-   return ArrayMinMax<T>((care::local_ptr<const T>)arr, (care::local_ptr<int const>)mask, n, outMin, outMax);
-}
 
 /************************************************************************
  * Function  : ArrayCount

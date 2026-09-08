@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,7 @@
 #include "chai/ManagedArray.hpp"
 
 // Std library headers
+#include <concepts>
 #include <cstddef>
 
 
@@ -93,9 +94,21 @@ namespace care {
       ///
       /// @author Peter Robinson
       ///
-      /// nullptr constructor
+      /// Construct from nullptr
       ///
-      CARE_HOST_DEVICE host_device_ptr(std::nullptr_t from) noexcept : MA (from) {}
+      /// @note The constraint prevents overload ambiguity between this
+      ///       constructor and the size_t constructor when constructing
+      ///       with the integer literal 0. Additionally, the constraint
+      ///       is a workaround for a nvcc bug where overload resolution
+      ///       can incorrectly report an ambiguity between this constructor
+      ///       and the size_t constructor.
+      ///
+      CARE_HOST_DEVICE host_device_ptr(std::same_as<std::nullptr_t> auto from) noexcept : MA (from) {}
+
+      ///
+      /// Construct from a size
+      ///
+      CARE_HOST_DEVICE explicit host_device_ptr(size_t count) noexcept : MA (count) {}
 
       ///
       /// @author Peter Robinson
@@ -198,6 +211,11 @@ namespace care {
          return *reinterpret_cast<host_device_ptr<const T> const *> (this);
       }
 
+      ///
+      /// Copy assignment operator
+      ///
+      host_device_ptr& operator=(const host_device_ptr& other) = default;
+
 #if defined(CARE_ENABLE_BOUNDS_CHECKING)
       template <class Index>
       inline void boundsCheck(const Index i) const {
@@ -217,11 +235,6 @@ namespace care {
          }
       }
 #endif
-
-      ///
-      /// Copy assignment operator
-      ///
-      host_device_ptr& operator=(const host_device_ptr& other) = default;
 
       ///
       /// @author Peter Robinson
@@ -498,6 +511,18 @@ namespace care {
 
       CARE_HOST void move(ExecutionSpace space) {
          MA::move(chai::ExecutionSpace((int) space));
+      }
+
+      ///
+      /// Create a shallow slice of this array.
+      ///
+      /// @param begin The starting element of the slice.
+      /// @param elems The number of elements in the slice.
+      /// @return A host_device_ptr referring to the sliced range.
+      ///
+      CARE_HOST_DEVICE host_device_ptr<T> slice(size_t begin,
+                                                size_t elems = (size_t)-1) const {
+         return host_device_ptr<T>(MA::slice(begin, elems));
       }
    }; // class host_device_ptr
 

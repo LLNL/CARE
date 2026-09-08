@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -56,9 +56,8 @@ static unsigned int currentColor = 0;
 /// @note  Adapted from CHAI
 ///
 /////////////////////////////////////////////////////////////////////////
-#define str(X) #X
 #define GPU_TEST(X, Y) static void cuda_test_ ## X_ ## Y(); \
-   TEST(X, gpu_test_##Y) { PUSH_RANGE(str(Y)); cuda_test_ ## X_ ## Y(); POP_RANGE ;} \
+   TEST(X, gpu_test_##Y) { PUSH_RANGE(CARE_STRINGIFY(Y)); cuda_test_ ## X_ ## Y(); POP_RANGE ;} \
    static void cuda_test_ ## X_ ## Y()
 
 

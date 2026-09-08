@@ -1,3 +1,10 @@
+###############################################################################
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+###############################################################################
+
 name: C/C++ CI
 
 on:
@@ -17,9 +24,9 @@ jobs:
     - name: Make build directory
       run: mkdir build
     - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1.13.1
+      uses: jwlawson/actions-setup-cmake@v2
       with:
-        cmake-version: '3.23.x'
+        cmake-version: '3.24.x'
     - name: Run CMake
       run: cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCARE_ENABLE_SUBMODULE_TESTS=Off -DCARE_ENABLE_SUBMODULE_BENCHMARKS=Off -DCARE_ENABLE_SUBMODULE_EXAMPLES=Off -DCARE_ENABLE_SUBMODULE_EXERCISES=Off -DCARE_ENABLE_SUBMODULE_DOCS=Off
       working-directory: build

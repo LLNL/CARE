@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,8 @@ namespace care {
 	 }
 
          // move constructor
-         CARE_HOST_DEVICE host_device_map(host_device_map&& other) noexcept { 
+         CARE_HOST_DEVICE host_device_map(host_device_map&& other) noexcept
+         {
             m_max_size = other.m_max_size;
             m_signal = other.m_signal;
             m_gpu_map = std::move(other.m_gpu_map);
@@ -271,6 +272,7 @@ namespace care {
         inline CARE_HOST_DEVICE void emplace(key_type key, mapped_type val) const {
            care::local_ptr<int> size_ptr = m_size_ptr;
            int index = ATOMIC_ADD(size_ptr[0], 1);
+           // TODO: should this be removed?
            // commenting out to avoid having printfs compiled into every kernel that uses emplace
            //if (size_ptr[0] > m_max_size) {
            //   printf("[CARE] Warning: host_device_map exceeds max size %d > %d\n", size_ptr[0], m_max_size);

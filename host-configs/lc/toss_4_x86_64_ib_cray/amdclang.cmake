@@ -1,11 +1,11 @@
 ##############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
 
-set(ROCM_VER "6.4.1" CACHE STRING "")
+set(ROCM_VER "6.4.3" CACHE STRING "")
 set(ROCM_PATH "/usr/tce/packages/rocmcc/rocmcc-${ROCM_VER}-magic" CACHE PATH "")
 set(COMPILER_BASE "/usr/tce/packages/rocmcc/rocmcc-${ROCM_VER}-magic" CACHE PATH "")
 set(CMAKE_C_COMPILER "${COMPILER_BASE}/bin/amdclang" CACHE PATH "")

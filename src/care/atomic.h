@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-// project contributors. See the CARE LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+// contributors. See the CARE LICENSE and COPYRIGHT files for details.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
@@ -24,5 +24,9 @@ using RAJAAtomic = RAJA::auto_atomic;
 #define ATOMIC_STORE(ref, val)        RAJA::atomicStore<RAJAAtomic>(&(ref), val)
 #define ATOMIC_EXCHANGE(ref, val)     RAJA::atomicExchange<RAJAAtomic>(&(ref), val)
 #define ATOMIC_CAS(ref, compare, val) RAJA::atomicCAS<RAJAAtomic>(&(ref), compare, val)
+#if RAJA_VERSION_MAJOR >= 2026
+#define ATOMIC_GENERIC(ref, op)       RAJA::atomicGeneric<RAJAAtomic>(&(ref), op)
+#define ATOMIC_GENERIC_WITH_STOP(ref, op, stop) RAJA::atomicGeneric<RAJAAtomic>(&(ref), op, stop)
+#endif
 
 #endif // CARE_ATOMIC_H

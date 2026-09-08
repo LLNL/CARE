@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2020-25, Lawrence Livermore National Security, LLC and CARE
-# project contributors. See the CARE LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other CARE
+# contributors. See the CARE LICENSE and COPYRIGHT files for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
@@ -10,7 +10,7 @@ set(GCC_VER "13.3.1" CACHE STRING "")
 set(GCC_DIR "/usr/tce/packages/gcc/gcc-${GCC_VER}-magic" CACHE PATH "")
 
 # Use clang toolchain for host code compilers
-set(CLANG_VER "14.0.6" CACHE STRING "")
+set(CLANG_VER "19.1.3" CACHE STRING "")
 set(CLANG_DIR "/usr/tce/packages/clang/clang-${CLANG_VER}-magic" CACHE PATH "")
 
 set(CMAKE_C_COMPILER "${CLANG_DIR}/bin/clang" CACHE PATH "")
