@@ -17,7 +17,7 @@ CARE_INLINE void segmented_unique(
    care::host_device_ptr<KeyT>& keys,
    care::host_device_ptr<OffsetT>& offsets)
 {
-   care::device::segmented_unique_device(keys, offsets);
+   care::device::segmented_unique(keys, offsets);
 }
 
 } // namespace care::hip

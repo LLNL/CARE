@@ -21,7 +21,7 @@ namespace care::device {
  * @brief Device implementation shared by the CUDA and HIP front ends.
  */
 template <typename KeyT, typename OffsetT>
-CARE_INLINE void segmented_unique_device(
+CARE_INLINE void segmented_unique(
    care::host_device_ptr<KeyT>& keys,
    care::host_device_ptr<OffsetT>& offsets)
 {
