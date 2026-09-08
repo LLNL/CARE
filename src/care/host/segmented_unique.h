@@ -41,10 +41,8 @@ void segmented_unique(
    OffsetT* rawOffsets = offsets.data();
 
    size_t output = 0;
-   size_t begin = numSegments > 0
-      ? static_cast<size_t>(rawOffsets[0])
-      : 0;
    for (size_t segment = 0; segment < numSegments; ++segment) {
+      const size_t begin = static_cast<size_t>(rawOffsets[segment]);
       const size_t end = static_cast<size_t>(rawOffsets[segment + 1]);
       rawOffsets[segment] = static_cast<OffsetT>(output);
 
@@ -64,8 +62,6 @@ void segmented_unique(
          }
          output += numUnique;
       }
-
-      begin = end;
    }
 
    if (offsets.size() > 0) {
