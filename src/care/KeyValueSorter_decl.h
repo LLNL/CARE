@@ -380,9 +380,9 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<KeyType>& newKeys,
                                    const size_t oldLen);
 
 ///////////////////////////////////////////////////////////////////////////
-/// GPU partial specialization of KeyValueSorter
-/// The GPU version of KeyValueSorter stores keys and values as separate
-///    arrays to be compatible with sortKeyValueArrays.
+/// GPU partial specialization of KeyValueSorter.
+/// Both the host and GPU specializations store keys and values in separate
+/// arrays to be compatible with sortKeyValueArrays.
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyType, typename ValueType>
 class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
@@ -1002,14 +1002,9 @@ inline bool cmpKeysThenValues(KeyValueType const & left, KeyValueType const & ri
 
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 ///////////////////////////////////////////////////////////////////////////
-/// Sequential partial specialization of KeyValueSorter
-/// The CPU implementation relies on routines that use the < operator on
-/// a key-value struct.
-/// TODO make a version of this that sorts indices as in:
-/// https://stackoverflow.com/questions/3909272/sorting-two-corresponding-arrays
-/// This has the advantage of having the same underlying data layout for keys
-/// and values as the GPU version of the code, which in many instances removes
-/// the need for copying the keys and values into separate arrays after the sort.
+/// Sequential partial specialization of KeyValueSorter.
+/// Host sorting uses a zip iterator to apply standard-library algorithms to
+/// the separate key and value arrays as one logical sequence of pairs.
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyType, typename ValueType>
 class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
@@ -1101,9 +1096,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// Does a shallow copy and indicates that the copy should NOT free
       ///    the underlying memory. This must be a shallow copy because it is
       ///    called upon lambda capture, and upon exiting the scope of a lambda
-      ///    capture, the copy must NOT free the underlying memory. Cached
-      ///    key/value arrays remain shared so that invalidation propagates
-      ///    across aliases of the same underlying key-value storage.
+      ///    capture, the copy must NOT free the underlying key and value arrays.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
@@ -1130,8 +1123,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @author Alan Dayton
       /// @brief (Shallow) Copy assignment operator
       /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory. Cached key/value arrays remain shared so
-      ///    invalidation propagates across aliases.
+      ///    the underlying key and value arrays.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
@@ -1498,7 +1490,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
-      /// @brief Frees local cache state and owned key-value storage
+      /// @brief Frees owned key and value storage
       /// Used by the destructor and by the assignment operators. Should be private.
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
