@@ -68,24 +68,9 @@ namespace detail {
                                             host_device_ptr<ValueT> & values,
                                             const size_t len,
                                             const size_t start = 0) {
-
-      host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
-
-      CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-         keyValues[i].key = keys[i+start];
-         keyValues[i].value = values[i+start];
-      } CARE_SEQUENTIAL_LOOP_END
-
-      CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
-      _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
-      std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyT,ValueT>>);
-
-      CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-         keys[i+start] = keyValues[i].key;
-         values[i+start] = keyValues[i].value;
-      } CARE_SEQUENTIAL_LOOP_END
-
-      keyValues.free();
+      auto first = zip_iterator<KeyT, ValueT>(keys.data(), values.data(), start);
+      std::stable_sort(first, first + len,
+                       [](auto const& left, auto const& right) { return left.value < right.value; });
    }
 } // namespace detail
 
