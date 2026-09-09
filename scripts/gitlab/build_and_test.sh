@@ -204,10 +204,10 @@ run_section ()
 ###############################################################################
 # SETUP
 ###############################################################################
-camp_version=${UPDATE_CAMP:-""}
-raja_version=${UPDATE_RAJA:-""}
-umpire_version=${UPDATE_UMPIRE:-""}
-chai_version=${UPDATE_CHAI:-""}
+camp_reference=${CAMP_REFERENCE:-""}
+raja_reference=${RAJA_REFERENCE:-""}
+umpire_reference=${UMPIRE_REFERENCE:-""}
+chai_reference=${CHAI_REFERENCE:-""}
 
 if [[ ${debug_mode} == true ]]
 then
@@ -274,24 +274,24 @@ then
 
     extra_deps=""
 
-    if [[ -n ${camp_version} ]]
+    if [[ -n ${camp_reference} ]]
     then
-        extra_deps="${extra_deps} ^camp@git.${camp_version}=main"
+        extra_deps="${extra_deps} ^camp@git.${camp_reference}=main"
     fi
 
-    if [[ -n ${umpire_version} ]]
+    if [[ -n ${umpire_reference} ]]
     then
-        extra_deps="${extra_deps} ^umpire@git.${umpire_version}=develop"
+        extra_deps="${extra_deps} ^umpire@git.${umpire_reference}=develop"
     fi
 
-    if [[ -n ${raja_version} ]]
+    if [[ -n ${raja_reference} ]]
     then
-        extra_deps="${extra_deps} ^raja@git.${raja_version}=develop"
+        extra_deps="${extra_deps} ^raja@git.${raja_reference}=develop"
     fi
 
-    if [[ -n ${chai_version} ]]
+    if [[ -n ${chai_reference} ]]
     then
-        extra_deps="${extra_deps} ^chai@git.${chai_version}=develop"
+        extra_deps="${extra_deps} ^chai@git.${chai_reference}=develop"
     fi
 
     [[ -n ${extra_deps} ]] && spec="${spec} ${extra_deps}"
