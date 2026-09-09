@@ -32,12 +32,6 @@
 
 namespace care {
 
-   CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API void setKeyValueArraysFromArray(host_device_ptr<_kv<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE> > &, const size_t, const CARE_TEMPLATE_ARRAY_TYPE*);
-   CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE> > &, const size_t, const host_device_ptr<const CARE_TEMPLATE_ARRAY_TYPE>&);
-   CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE> > &, const size_t);
-   CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API void initializeKeyArray(host_device_ptr<CARE_TEMPLATE_KEY_TYPE>&, const host_device_ptr<const _kv<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE> >&, const size_t);
-   CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API void initializeValueArray(host_device_ptr<CARE_TEMPLATE_ARRAY_TYPE>&, const host_device_ptr<const _kv<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE> >&, const size_t);
-
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
    CARE_EXTERN template class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE, RAJA::seq_exec>;
    CARE_EXTERN template CARE_KEY_VALUE_SORTER_DLL_API void IntersectKeyValueSorters(RAJA::seq_exec, KeyValueSorter<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE, RAJA::seq_exec>, int, KeyValueSorter<CARE_TEMPLATE_KEY_TYPE, CARE_TEMPLATE_ARRAY_TYPE, RAJA::seq_exec>, int, host_device_ptr<CARE_TEMPLATE_KEY_TYPE> &, host_device_ptr<CARE_TEMPLATE_KEY_TYPE> &, int &);

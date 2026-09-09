@@ -1000,69 +1000,6 @@ inline bool cmpKeysThenValues(KeyValueType const & left, KeyValueType const & ri
           ((left.key == right.key) && (left.value < right.value));
 }
 
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes keys and values by copying elements from the array
-/// @param[out] keyValues - The key value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
-                                const size_t len, const ValueType* arr) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes the KeyValueSorter by copying elements from the array
-/// @param[out] keys   - The key array to set to the identity
-/// @param[out] values - The value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
-                                       const size_t len, const host_device_ptr<const ValueType>& arr) ;
-
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Jeff Keasler, Alan Dayton
-/// @brief Eliminates duplicate values
-/// Assumes key value array sorted by values.
-/// @param[in/out] keyValues - The key value array to eliminate duplicates in
-/// @param[in/out] len - original length of key value array
-/// @return new length of array
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, ValueType>> & keyValues, const size_t len) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the keys
-/// The keys are stored in the managed array of _kv structs. To get the
-/// keys separately, they must be copied into their own array.
-/// @param[out] keys - The key array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void initializeKeyArray(host_device_ptr<KeyType>& keys, const host_device_ptr<const _kv<KeyType, ValueType>>& keyValues, const size_t len) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the values
-/// The values are stored in the managed array of _kv structs. To get the
-///    values separately, they must be copied into their own array.
-/// @param[out] values - The values array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void initializeValueArray(host_device_ptr<ValueType>& values, const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len);
-
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 ///////////////////////////////////////////////////////////////////////////
 /// Sequential partial specialization of KeyValueSorter
