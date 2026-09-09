@@ -113,9 +113,10 @@ if(ENABLE_OPENMP)
 endif()
 
 if(ENABLE_CUDA)
-   list(APPEND care_cuda_headers cuda/segmented_scan.h)
-   list(APPEND care_cuda_headers cuda/segmented_unique.h)
-   list(APPEND care_cuda_headers cuda/sort.h)
+   list(APPEND care_cuda_headers
+        cuda/segmented_scan.h
+        cuda/segmented_unique.h
+        cuda/sort.h)
 
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
@@ -129,9 +130,10 @@ endif()
 
 
 if(ENABLE_HIP)
-  list(APPEND care_hip_headers hip/segmented_scan.h)
-  list(APPEND care_hip_headers hip/segmented_unique.h)
-  list(APPEND care_hip_headers hip/sort.h)
+  list(APPEND care_hip_headers
+       hip/segmented_scan.h
+       hip/segmented_unique.h
+       hip/sort.h)
 
   list(APPEND care_depends blt::hip)
 endif ()
@@ -139,8 +141,8 @@ endif ()
 blt_add_library(NAME care
                 SOURCES    ${care_sources}
                 HEADERS    ${care_headers}
-                           ${care_device_headers}
                            ${care_host_headers}
+                           ${care_device_headers}
                            ${care_cuda_headers}
                            ${care_hip_headers}
                 INCLUDES   ${care_includes}
