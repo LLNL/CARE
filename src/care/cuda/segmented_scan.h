@@ -13,6 +13,7 @@
 #include "care/host_device_ptr.h"
 
 #include <cstddef>
+#include <cuda/std/functional>
 #include <utility>
 
 #include "cub/cub.cuh"
@@ -122,7 +123,8 @@ CARE_INLINE void segmented_exclusive_scan(
    care::host_device_ptr<OffsetT> const& offsets,
    ValueT initialValue)
 {
-   segmented_exclusive_scan(values, offsets, initialValue, cub::Sum {});
+   care::cuda::segmented_exclusive_scan(
+      values, offsets, initialValue, ::cuda::std::plus<ValueT> {});
 }
 
 /**
@@ -141,7 +143,7 @@ CARE_INLINE void segmented_exclusive_scan(
    care::host_device_ptr<ValueT>& values,
    care::host_device_ptr<OffsetT> const& offsets)
 {
-   segmented_exclusive_scan(values, offsets, ValueT {});
+   care::cuda::segmented_exclusive_scan(values, offsets, ValueT {});
 }
 
 } // namespace care::cuda

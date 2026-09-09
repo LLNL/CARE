@@ -110,6 +110,19 @@ target_include_directories(TestSegmentedScan
 blt_add_test( NAME TestSegmentedScan
               COMMAND TestSegmentedScan )
 
+blt_add_executable( NAME TestSegmentedUnique
+                    SOURCES TestSegmentedUnique.cpp
+                    DEPENDS_ON ${care_test_dependencies} )
+
+target_include_directories(TestSegmentedUnique
+                           PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(TestSegmentedUnique
+                           PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+blt_add_test( NAME TestSegmentedUnique
+              COMMAND TestSegmentedUnique )
+
 blt_add_executable( NAME TestKeyValueSorter
                     SOURCES TestKeyValueSorter.cpp
                     DEPENDS_ON ${care_test_dependencies} )

@@ -103,8 +103,8 @@ CARE_INLINE void segmented_exclusive_scan(
    care::host_device_ptr<OffsetT> const& offsets,
    ValueT initialValue)
 {
-   segmented_exclusive_scan(values, offsets, initialValue,
-                            rocprim::plus<ValueT> {});
+   care::hip::segmented_exclusive_scan(values, offsets, initialValue,
+                                       rocprim::plus<ValueT> {});
 }
 
 /**
@@ -123,7 +123,7 @@ CARE_INLINE void segmented_exclusive_scan(
    care::host_device_ptr<ValueT>& values,
    care::host_device_ptr<OffsetT> const& offsets)
 {
-   segmented_exclusive_scan(values, offsets, ValueT {});
+   care::hip::segmented_exclusive_scan(values, offsets, ValueT {});
 }
 
 } // namespace care::hip

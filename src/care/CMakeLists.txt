@@ -58,6 +58,7 @@ set(care_headers
     scan.h
     scan_impl.h
     segmented_scan.h
+    segmented_unique.h
     Setup.h
     single_access_ptr.h
     util.h
@@ -66,7 +67,12 @@ set(care_headers
 
 set(care_host_headers
     host/segmented_scan.h
+    host/segmented_unique.h
     host/sort.h
+    )
+
+set(care_device_headers
+    device/segmented_unique.h
     )
 
 set(care_cuda_headers)
@@ -107,8 +113,10 @@ if(ENABLE_OPENMP)
 endif()
 
 if(ENABLE_CUDA)
-   list(APPEND care_cuda_headers cuda/segmented_scan.h)
-   list(APPEND care_cuda_headers cuda/sort.h)
+   list(APPEND care_cuda_headers
+        cuda/segmented_scan.h
+        cuda/segmented_unique.h
+        cuda/sort.h)
 
    # separable compilation, delay all device linking to executable linking time
    # set (CUDA_SEPARABLE_COMPILATION ON BOOL "" )
@@ -122,8 +130,10 @@ endif()
 
 
 if(ENABLE_HIP)
-  list(APPEND care_hip_headers hip/segmented_scan.h)
-  list(APPEND care_hip_headers hip/sort.h)
+  list(APPEND care_hip_headers
+       hip/segmented_scan.h
+       hip/segmented_unique.h
+       hip/sort.h)
 
   list(APPEND care_depends blt::hip)
 endif ()
@@ -132,6 +142,7 @@ blt_add_library(NAME care
                 SOURCES    ${care_sources}
                 HEADERS    ${care_headers}
                            ${care_host_headers}
+                           ${care_device_headers}
                            ${care_cuda_headers}
                            ${care_hip_headers}
                 INCLUDES   ${care_includes}
@@ -146,6 +157,9 @@ install(FILES       ${care_headers}
 
 install(FILES ${care_host_headers}
         DESTINATION include/care/host)
+
+install(FILES ${care_device_headers}
+        DESTINATION include/care/device)
 
 install(FILES ${care_cuda_headers}
         DESTINATION include/care/cuda)
