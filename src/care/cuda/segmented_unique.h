@@ -10,6 +10,8 @@
 
 #include "care/device/segmented_unique.h"
 
+#include <cuda/std/functional>
+
 namespace care::cuda {
 
 /**
@@ -55,10 +57,8 @@ CARE_INLINE void segmented_unique(
    care::host_device_ptr<KeyT>& keys,
    care::host_device_ptr<OffsetT>& offsets)
 {
-   segmented_unique(keys, offsets,
-      [] CARE_HOST_DEVICE (KeyT const& left, KeyT const& right) {
-         return left == right;
-      });
+   care::cuda::segmented_unique(keys, offsets,
+      ::cuda::std::equal_to<KeyT> {});
 }
 
 } // namespace care::cuda
