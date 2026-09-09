@@ -41,6 +41,7 @@ void segmented_unique(
    OffsetT* rawOffsets = offsets.data();
 
    size_t output = 0;
+
    for (size_t segment = 0; segment < numSegments; ++segment) {
       const size_t begin = static_cast<size_t>(rawOffsets[segment]);
       const size_t end = static_cast<size_t>(rawOffsets[segment + 1]);
@@ -51,6 +52,7 @@ void segmented_unique(
             rawKeys + begin,
             rawKeys + end,
             binaryPredicate);
+
          const size_t numUnique = static_cast<size_t>(
             uniqueEnd - (rawKeys + begin));
 
@@ -60,6 +62,7 @@ void segmented_unique(
                rawKeys[output + i] = std::move(rawKeys[begin + i]);
             }
          }
+
          output += numUnique;
       }
    }
