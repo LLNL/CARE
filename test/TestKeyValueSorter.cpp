@@ -337,35 +337,17 @@ TEST(KeyValueSorter, CopySharesCacheState)
    care::KeyValueSorter<size_t, int, RAJA::seq_exec> owner(length, std::move(keys), std::move(values));
    care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
 
-   EXPECT_FALSE(owner.keysAllocated());
-   EXPECT_FALSE(owner.valuesAllocated());
-   EXPECT_FALSE(alias.keysAllocated());
-   EXPECT_FALSE(alias.valuesAllocated());
-
    const size_t* sharedKeys = alias.keys().cdata();
    const int* sharedValues = alias.values().cdata();
 
-   EXPECT_TRUE(owner.keysAllocated());
-   EXPECT_TRUE(owner.valuesAllocated());
-   EXPECT_TRUE(alias.keysAllocated());
-   EXPECT_TRUE(alias.valuesAllocated());
    EXPECT_EQ(owner.keys().cdata(), sharedKeys);
    EXPECT_EQ(owner.values().cdata(), sharedValues);
 
    alias.sortByKeyThenValue();
 
-   EXPECT_FALSE(owner.keysAllocated());
-   EXPECT_FALSE(owner.valuesAllocated());
-   EXPECT_FALSE(alias.keysAllocated());
-   EXPECT_FALSE(alias.valuesAllocated());
-
    const size_t* sortedKeys = owner.keys().cdata();
    const int* sortedValues = owner.values().cdata();
 
-   EXPECT_TRUE(owner.keysAllocated());
-   EXPECT_TRUE(owner.valuesAllocated());
-   EXPECT_TRUE(alias.keysAllocated());
-   EXPECT_TRUE(alias.valuesAllocated());
    EXPECT_EQ(alias.keys().cdata(), sortedKeys);
    EXPECT_EQ(alias.values().cdata(), sortedValues);
 
@@ -414,25 +396,15 @@ TEST(KeyValueSorter, CopyMoveFromCachedSorterInvalidatesCaches)
    const size_t* cachedKeys = owner.keys().cdata();
    const int* cachedValues = owner.values().cdata();
 
-   EXPECT_TRUE(owner.keysAllocated());
-   EXPECT_TRUE(owner.valuesAllocated());
-
    care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
    care::KeyValueSorter<size_t, int, RAJA::seq_exec> moved;
 
    moved = std::move(alias);
 
-   EXPECT_TRUE(moved.keysAllocated());
-   EXPECT_TRUE(moved.valuesAllocated());
    EXPECT_EQ(moved.keys().cdata(), cachedKeys);
    EXPECT_EQ(moved.values().cdata(), cachedValues);
 
    moved.sortByKeyThenValue();
-
-   EXPECT_FALSE(owner.keysAllocated());
-   EXPECT_FALSE(owner.valuesAllocated());
-   EXPECT_FALSE(moved.keysAllocated());
-   EXPECT_FALSE(moved.valuesAllocated());
 
    CARE_HOST_KERNEL {
       EXPECT_EQ(owner.key(0), 1);

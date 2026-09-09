@@ -42,6 +42,7 @@ set(care_headers
     KeyValueSorter_decl.h
     KeyValueSorter_impl.h
     KeyValueSorter_inst.h
+    zip_iterator.h
     local_host_device_ptr.h
     local_ptr.h
     LoopFuser.h

@@ -397,13 +397,6 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
    int j = 0 ;
    host_ptr<KeyType> host_matches1 = matches1 ;
    host_ptr<KeyType> host_matches2 = matches2 ;
-   /* keys() and values() will allocate managed arrays for the keys and values,
-    * respectively, if they were not previously allocated.
-    * Check to see whether they were previously allocated. */
-   bool sorter1KeysAllocated = sorter1.keysAllocated() ;
-   bool sorter2KeysAllocated = sorter2.keysAllocated() ;
-   bool sorter1ValuesAllocated = sorter1.valuesAllocated() ;
-   bool sorter2ValuesAllocated = sorter2.valuesAllocated() ;
    host_ptr<KeyType const> host_sorter1_key = sorter1.keys() ;
    host_ptr<KeyType const> host_sorter2_key = sorter2.keys() ;
    host_ptr<ValueType const> host_sorter1_value = sorter1.values() ;
@@ -453,19 +446,6 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
       matches2.realloc(numMatches);
    }
 
-   /* If the keys/values arrays were not previously allocated, free them. */
-   if (!sorter1KeysAllocated) {
-      sorter1.freeKeys() ;
-   }
-   if (!sorter2KeysAllocated) {
-      sorter2.freeKeys() ;
-   }
-   if (!sorter1ValuesAllocated) {
-      sorter1.freeValues() ;
-   }
-   if (!sorter2ValuesAllocated) {
-      sorter2.freeValues() ;
-   }
 }
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 
