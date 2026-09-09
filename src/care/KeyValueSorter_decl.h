@@ -1437,27 +1437,19 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          if (m_len > 1) {
             // First sort by key and then by value to group identical pairs
             sortByKeyThenValue();
-            // Create a new array to hold the unique pairs
-            host_device_ptr<_kv<KeyType, ValueType>> uniquePairs(m_len, "uniquePairs");
-            // Copy the first element
-            uniquePairs.set(0, _kv<KeyType, ValueType>{m_keys.pick(0), m_values.pick(0)});
-            // Copy only non-duplicate elements
+            // Compact unique pairs in place. The sorted input guarantees that
+            // writing at newSize cannot overwrite an unread element.
             size_t newSize = 1;
-            CARE_SEQUENTIAL_REF_LOOP(i, 1, m_len, newSize) {
+            for (size_t i = 1; i < m_len; ++i) {
                if (m_keys[i] != m_keys[i-1] || m_values[i] != m_values[i-1]) {
-                  uniquePairs[newSize] = _kv<KeyType, ValueType>{m_keys[i], m_values[i]};
+                  m_keys[newSize] = m_keys[i];
+                  m_values[newSize] = m_values[i];
                   ++newSize;
                }
-            } CARE_SEQUENTIAL_REF_LOOP_END
-            
-            // Free the original key value pairs
+            }
+
             m_keys.realloc(newSize);
             m_values.realloc(newSize);
-            for (size_t i = 0; i < newSize; ++i) {
-               m_keys[i] = uniquePairs[i].key;
-               m_values[i] = uniquePairs[i].value;
-            }
-            uniquePairs.free();
             m_len = newSize;
          }
       }
