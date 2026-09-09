@@ -106,7 +106,7 @@ TEST(segmented_unique, unique_after_sort)
    keys.free();
 }
 
-TEST(segmented_unique, custom_equivalence_predicate)
+GPU_TEST(segmented_unique, custom_equivalence_predicate)
 {
    care::host_device_ptr<int> keys(6);
    care::host_device_ptr<int> offsets(3);

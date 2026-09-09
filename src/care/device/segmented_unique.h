@@ -50,9 +50,9 @@ CARE_INLINE void segmented_unique(
    // Mark unique values by comparing adjacent keys. Segment starts are fixed
    // in a separate kernel so equal values on opposite sides of a boundary are
    // both retained.
-   CARE_STREAM_LOOP(i, 0, numItems) {
+   CARE_STREAM_LOOP(i, 1, numItems) {
       positions[i] = static_cast<int>(
-         i == 0 || !binaryPredicate(keys[i - 1], keys[i]));
+         !binaryPredicate(keys[i - 1], keys[i]));
    } CARE_STREAM_LOOP_END
 
    CARE_STREAM_LOOP(segment, 0, numSegments) {
