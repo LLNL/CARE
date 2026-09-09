@@ -1032,9 +1032,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       , m_keys(len, "m_keys")
       , m_values(len, "m_values")
       {
+         auto keys = m_keys;
+         auto values = m_values;
          CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-            m_keys[i] = (KeyType)i;
-            m_values[i] = arr[i];
+            keys[i] = (KeyType)i;
+            values[i] = arr[i];
          } CARE_SEQUENTIAL_LOOP_END
       }
 
@@ -1053,9 +1055,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       , m_keys(len, "m_keys")
       , m_values(len, "m_values")
       {
+         auto keys = m_keys;
+         auto values = m_values;
          CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-            m_keys[i] = (KeyType)i;
-            m_values[i] = arr[i];
+            keys[i] = (KeyType)i;
+            values[i] = arr[i];
          } CARE_SEQUENTIAL_LOOP_END
       }
 
@@ -1397,14 +1401,17 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       void eliminateDuplicates() {
          if (m_len > 1) {
             sort();
+            auto keys = m_keys;
+            auto values = m_values;
+            auto len = m_len;
             size_t newSize = 1;
-            for (size_t i = 1; i < m_len; ++i) {
-               if (m_values[i] != m_values[newSize - 1]) {
-                  m_keys[newSize] = m_keys[i];
-                  m_values[newSize] = m_values[i];
+            CARE_SEQUENTIAL_REF_LOOP(i, 1, (int) len, newSize) {
+               if (values[i] != values[newSize - 1]) {
+                  keys[newSize] = keys[i];
+                  values[newSize] = values[i];
                   ++newSize;
                }
-            }
+            } CARE_SEQUENTIAL_REF_LOOP_END
             m_keys.realloc(newSize);
             m_values.realloc(newSize);
             m_len = newSize;
@@ -1424,14 +1431,17 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             sortByKeyThenValue();
             // Compact unique pairs in place. The sorted input guarantees that
             // writing at newSize cannot overwrite an unread element.
+            auto keys = m_keys;
+            auto values = m_values;
+            auto len = m_len;
             size_t newSize = 1;
-            for (size_t i = 1; i < m_len; ++i) {
-               if (m_keys[i] != m_keys[i-1] || m_values[i] != m_values[i-1]) {
-                  m_keys[newSize] = m_keys[i];
-                  m_values[newSize] = m_values[i];
+            CARE_SEQUENTIAL_REF_LOOP(i, 1, (int) len, newSize) {
+               if (keys[i] != keys[i-1] || values[i] != values[i-1]) {
+                  keys[newSize] = keys[i];
+                  values[newSize] = values[i];
                   ++newSize;
                }
-            }
+            } CARE_SEQUENTIAL_REF_LOOP_END
 
             m_keys.realloc(newSize);
             m_values.realloc(newSize);
