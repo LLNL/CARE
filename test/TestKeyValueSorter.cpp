@@ -310,11 +310,11 @@ TEST(KeyValueSorter, OwnershipConstructor)
 
 /////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Test case that checks shallow copies share cache allocation and
-///        invalidation for the sequential KeyValueSorter specialization.
+/// @brief Test case that checks shallow copies share key and value storage
+///        for the sequential KeyValueSorter specialization.
 ///
 /////////////////////////////////////////////////////////////////////////
-TEST(KeyValueSorter, CopySharesCacheState)
+TEST(KeyValueSorter, CopySharesStorage)
 {
    int length = 5;
    care::host_device_ptr<size_t> keys(length, "keys");
@@ -368,12 +368,11 @@ TEST(KeyValueSorter, CopySharesCacheState)
 
 /////////////////////////////////////////////////////////////////////////
 ///
-/// @brief Test case that checks a shallow copy of an already cached sorter
-///        still invalidates the original cached arrays after the copy is
-///        move-assigned and then mutates the shared key-value storage.
+/// @brief Test case that checks a shallow copy remains valid after the copy
+///        is move-assigned and then mutates the shared key-value storage.
 ///
 /////////////////////////////////////////////////////////////////////////
-TEST(KeyValueSorter, CopyMoveFromCachedSorterInvalidatesCaches)
+TEST(KeyValueSorter, CopyMoveSharesStorage)
 {
    int length = 4;
    care::host_device_ptr<size_t> keys(length, "keys");
