@@ -205,10 +205,13 @@ namespace care {
       ///
       /// Convert to a host_device_ptr<const T>
       ///
-      template<bool B = std::is_const<T>::value,
-               typename std::enable_if<!B, int>::type = 0>
-      CARE_HOST_DEVICE operator host_device_ptr<const T> () const {
-         return *reinterpret_cast<host_device_ptr<const T> const *> (this);
+      // Keep the conversion target dependent on U.  When T is already const,
+      // spelling the target as host_device_ptr<const T> declares a conversion
+      // to the same type, which Clang correctly warns can never be used.
+      template<typename U = T>
+         requires (!std::is_const_v<U>)
+      CARE_HOST_DEVICE operator host_device_ptr<const U> () const {
+         return *reinterpret_cast<host_device_ptr<const U> const *> (this);
       }
 
       ///
@@ -530,4 +533,3 @@ namespace care {
 
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
-
