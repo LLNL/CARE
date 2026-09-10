@@ -5,14 +5,90 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef CARE_CUDA_SEGMENTED_UNIQUE_H
-#define CARE_CUDA_SEGMENTED_UNIQUE_H
+#ifndef CARE_CUDA_UNIQUE_H
+#define CARE_CUDA_UNIQUE_H
 
-#include "care/device/segmented_unique.h"
+#include "care/CHAIDataGetter.h"
+#include "care/DefaultMacros.h"
+#include "care/device/unique.h"
 
+#include <cstddef>
 #include <cuda/std/functional>
 
+#include "cub/cub.cuh"
+
 namespace care::cuda {
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @param binaryPredicate Returns true when two adjacent keys are equivalent.
+ * It must be callable on the device.
+ * @return The number of unique keys.
+ */
+template <typename KeyT, typename BinaryPredicate>
+CARE_INLINE size_t unique(care::host_device_ptr<KeyT>& keys,
+                          BinaryPredicate binaryPredicate)
+{
+   const size_t numItems = keys.size();
+   if (numItems == 0) {
+      return 0;
+   }
+
+   CHAIDataGetter<KeyT, RAJADeviceExec> keyGetter {};
+   auto* rawKeys = keyGetter.getRawArrayData(keys);
+   care::host_device_ptr<KeyT> result(numItems);
+   auto* rawResult = keyGetter.getRawArrayData(result);
+
+   care::host_device_ptr<int> numUnique(1);
+   CHAIDataGetter<int, RAJADeviceExec> countGetter {};
+   auto* rawNumUnique = countGetter.getRawArrayData(numUnique);
+
+   size_t tempStorageBytes = 0;
+   cub::DeviceSelect::UniqueByKey(
+      nullptr, tempStorageBytes, rawKeys,
+      cub::CountingInputIterator<size_t>(0), rawResult,
+      cub::DiscardOutputIterator<> {}, rawNumUnique, numItems,
+      binaryPredicate);
+
+   CHAIDataGetter<char, RAJADeviceExec> charGetter {};
+   care::host_device_ptr<char> tempStorage(tempStorageBytes);
+   auto* rawTempStorage = charGetter.getRawArrayData(tempStorage);
+   cub::DeviceSelect::UniqueByKey(
+      rawTempStorage, tempStorageBytes, rawKeys,
+      cub::CountingInputIterator<size_t>(0), rawResult,
+      cub::DiscardOutputIterator<> {}, rawNumUnique, numItems,
+      binaryPredicate);
+
+   int numUniqueValue = 0;
+   numUnique.pick(0, numUniqueValue);
+   const size_t numUniqueKeys = static_cast<size_t>(numUniqueValue);
+
+   tempStorage.free();
+   numUnique.free();
+
+   care::host_device_ptr<const KeyT> source = result;
+   CARE_STREAM_LOOP(i, 0, numUniqueKeys) {
+      keys[i] = source[i];
+   } CARE_STREAM_LOOP_END
+
+   result.free();
+   return numUniqueKeys;
+}
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array using equality
+ * comparison.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @return The number of unique keys.
+ */
+template <typename KeyT>
+CARE_INLINE size_t unique(care::host_device_ptr<KeyT>& keys)
+{
+   return care::cuda::unique(keys, ::cuda::std::equal_to<KeyT> {});
+}
 
 /**
  * @brief Remove duplicate keys independently within each sorted segment.
@@ -63,4 +139,4 @@ CARE_INLINE void segmented_unique(
 
 } // namespace care::cuda
 
-#endif // CARE_CUDA_SEGMENTED_UNIQUE_H
+#endif // CARE_CUDA_UNIQUE_H

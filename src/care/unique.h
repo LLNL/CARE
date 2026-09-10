@@ -5,20 +5,57 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef CARE_SEGMENTED_UNIQUE_H
-#define CARE_SEGMENTED_UNIQUE_H
+#ifndef CARE_UNIQUE_H
+#define CARE_UNIQUE_H
 
 #include "care/host_device_ptr.h"
 
 #if defined(__CUDACC__)
-#include "care/cuda/segmented_unique.h"
+#include "care/cuda/unique.h"
 #elif defined(__HIPCC__)
-#include "care/hip/segmented_unique.h"
+#include "care/hip/unique.h"
 #else
-#include "care/host/segmented_unique.h"
+#include "care/host/unique.h"
 #endif
 
 namespace care {
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @param binaryPredicate Returns true when two adjacent keys are equivalent.
+ * When compiling for CUDA or HIP, it must be callable on the device.
+ * @return The number of unique keys.
+ */
+template <typename KeyT, typename BinaryPredicate>
+CARE_INLINE size_t unique(care::host_device_ptr<KeyT>& keys,
+                          BinaryPredicate binaryPredicate)
+{
+#if defined(__CUDACC__)
+   return care::cuda::unique(keys, binaryPredicate);
+#elif defined(__HIPCC__)
+   return care::hip::unique(keys, binaryPredicate);
+#else
+   return care::host::unique(keys, binaryPredicate);
+#endif
+}
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array using equality
+ * comparison.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @return The number of unique keys.
+ */
+template <typename KeyT>
+CARE_INLINE size_t unique(care::host_device_ptr<KeyT>& keys)
+{
+   return care::unique(keys,
+      [] CARE_HOST_DEVICE (KeyT const& left, KeyT const& right) {
+         return left == right;
+      });
+}
 
 /**
  * @brief Remove duplicate keys independently within each sorted segment.
@@ -77,4 +114,4 @@ CARE_INLINE void segmented_unique(
 
 } // namespace care
 
-#endif // CARE_SEGMENTED_UNIQUE_H
+#endif // CARE_UNIQUE_H

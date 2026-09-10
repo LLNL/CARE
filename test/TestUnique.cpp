@@ -5,11 +5,56 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
 
-#include "care/segmented_unique.h"
+#include "care/unique.h"
 #include "care/sort.h"
 #include "care/detail/test_utils.h"
 
 #include "gtest/gtest.h"
+
+TEST(unique, compacts_sorted_input)
+{
+   care::host_device_ptr<int> keys(8);
+   const int input[] = {1, 1, 2, 3, 3, 3, 4, 4};
+   const int expected[] = {1, 2, 3, 4};
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 8) {
+      keys[i] = input[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   const size_t numUnique = care::unique(keys);
+
+   EXPECT_EQ(numUnique, 4);
+   EXPECT_EQ(keys.size(), 8);
+   CARE_SEQUENTIAL_LOOP(i, 0, numUnique) {
+      EXPECT_EQ(keys[i], expected[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   keys.free();
+}
+
+GPU_TEST(unique, nonsegmented_custom_equivalence_predicate)
+{
+   care::host_device_ptr<int> keys(6);
+   const int input[] = {21, 22, 22, 31, 33, 33};
+   const int expected[] = {21, 31};
+
+   CARE_SEQUENTIAL_LOOP(i, 0, 6) {
+      keys[i] = input[i];
+   } CARE_SEQUENTIAL_LOOP_END
+
+   const size_t numUnique = care::unique(
+      keys,
+      [] CARE_HOST_DEVICE (int left, int right) {
+         return left / 10 == right / 10;
+      });
+
+   EXPECT_EQ(numUnique, 2);
+   CARE_SEQUENTIAL_LOOP(i, 0, numUnique) {
+      EXPECT_EQ(keys[i], expected[i]);
+   } CARE_SEQUENTIAL_LOOP_END
+
+   keys.free();
+}
 
 TEST(segmented_unique, segment_local_and_empty)
 {

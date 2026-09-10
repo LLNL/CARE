@@ -58,7 +58,7 @@ set(care_headers
     scan.h
     scan_impl.h
     segmented_scan.h
-    segmented_unique.h
+    unique.h
     Setup.h
     single_access_ptr.h
     util.h
@@ -67,12 +67,12 @@ set(care_headers
 
 set(care_host_headers
     host/segmented_scan.h
-    host/segmented_unique.h
+    host/unique.h
     host/sort.h
     )
 
 set(care_device_headers
-    device/segmented_unique.h
+    device/unique.h
     )
 
 set(care_cuda_headers)
@@ -115,7 +115,7 @@ endif()
 if(ENABLE_CUDA)
    list(APPEND care_cuda_headers
         cuda/segmented_scan.h
-        cuda/segmented_unique.h
+        cuda/unique.h
         cuda/sort.h)
 
    # separable compilation, delay all device linking to executable linking time
@@ -132,7 +132,7 @@ endif()
 if(ENABLE_HIP)
   list(APPEND care_hip_headers
        hip/segmented_scan.h
-       hip/segmented_unique.h
+       hip/unique.h
        hip/sort.h)
 
   list(APPEND care_depends blt::hip)

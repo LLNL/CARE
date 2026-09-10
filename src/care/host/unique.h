@@ -5,8 +5,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef CARE_HOST_SEGMENTED_UNIQUE_H
-#define CARE_HOST_SEGMENTED_UNIQUE_H
+#ifndef CARE_HOST_UNIQUE_H
+#define CARE_HOST_UNIQUE_H
 
 #include "care/host_device_ptr.h"
 
@@ -15,6 +15,39 @@
 #include <utility>
 
 namespace care::host {
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @param binaryPredicate Returns true when two adjacent keys are equivalent.
+ * @return The number of unique keys.
+ */
+template <typename KeyT, typename BinaryPredicate>
+size_t unique(care::host_device_ptr<KeyT>& keys,
+              BinaryPredicate binaryPredicate)
+{
+   KeyT* rawKeys = keys.data();
+   KeyT* uniqueEnd = std::unique(rawKeys, rawKeys + keys.size(),
+                                 binaryPredicate);
+   return static_cast<size_t>(uniqueEnd - rawKeys);
+}
+
+/**
+ * @brief Remove adjacent duplicate keys from a sorted array using equality
+ * comparison.
+ * @param keys Sorted keys to compact in place. The compacted keys occupy the
+ * first returned-number entries; the allocation and size are unchanged.
+ * @return The number of unique keys.
+ */
+template <typename KeyT>
+size_t unique(care::host_device_ptr<KeyT>& keys)
+{
+   return care::host::unique(keys,
+      [] (KeyT const& left, KeyT const& right) {
+         return left == right;
+      });
+}
 
 /**
  * @brief Remove duplicate keys independently within each sorted segment.
@@ -99,4 +132,4 @@ void segmented_unique(
 
 } // namespace care::host
 
-#endif // CARE_HOST_SEGMENTED_UNIQUE_H
+#endif // CARE_HOST_UNIQUE_H
