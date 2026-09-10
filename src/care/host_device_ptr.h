@@ -205,9 +205,8 @@ namespace care {
       ///
       /// Convert to a host_device_ptr<const T>
       ///
-      // Keep the conversion target dependent on U.  When T is already const,
-      // spelling the target as host_device_ptr<const T> declares a conversion
-      // to the same type, which Clang correctly warns can never be used.
+      /// @note U keeps the conversion target dependent,
+      ///       avoiding self-conversion warnings.
       template<typename U = T>
          requires (!std::is_const_v<U>)
       CARE_HOST_DEVICE operator host_device_ptr<const U> () const {
