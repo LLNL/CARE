@@ -418,8 +418,8 @@ namespace care {
       //     *CPU_destination will be updated with a deep copy of this data
       //
       // TODO: Should this really live in chai::ManagedArray?
-      void freeDeviceMemory(T_non_const ** CPU_destination,
-                            size_t elems,
+      void freeDeviceMemory([[maybe_unused]] T_non_const ** CPU_destination,
+                            [[maybe_unused]] size_t elems,
                             bool deregisterPointer=true) {
 #if defined(CARE_DEEP_COPY_RAW_PTR)
          // if there is a pointer to update ...

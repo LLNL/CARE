@@ -111,7 +111,7 @@ inline sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                           const size_t start, const size_t len,
                           const bool noCopy=false)
 {
-   bool _noCopy ;
+   [[maybe_unused]] bool _noCopy ;
    if (noCopy && start > 0) {
       printf("[CARE] Warning: sortKeyValueArrays. noCopy should not be set if start > 0 (%d)\n", (int)start);
       _noCopy = false;
@@ -228,7 +228,7 @@ inline sortKeyValueArrays(host_device_ptr<KeyT> & keys,
                           const size_t start, const size_t len,
                           const bool noCopy=false)
 {
-   bool _noCopy ;
+   [[maybe_unused]] bool _noCopy ;
    if (noCopy && start > 0) {
       printf("[CARE] Warning: sortKeyValueArrays. noCopy should not be set if start > 0 (%d)\n", (int)start);
       _noCopy = false;
