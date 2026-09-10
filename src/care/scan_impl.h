@@ -60,12 +60,12 @@ void exclusive_scan(chai::ManagedArray<T> data, //!< [in/out] Input data (output
       if (size > 1) {
          bool warned = false;
 
-         if (data.size() < size) {
+         if (data.size() < static_cast<size_t>(size)) {
             printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. Size of input array (%zu) is less than given size (%d).\n", data.size(), size);
             warned = true;
          }
 
-         if (!inPlace && outData.size() < size) {
+         if (!inPlace && outData.size() < static_cast<size_t>(size)) {
             printf("[CARE] Warning: Invalid arguments to care::exclusive_scan. Size of output array (%zu) is less than given size (%d).\n", outData.size(), size);
             warned = true;
          }
@@ -130,12 +130,12 @@ void inclusive_scan(chai::ManagedArray<T> data, chai::ManagedArray<T> outData,
 
       bool warned = false;
 
-      if (data.size() < size) {
+      if (data.size() < static_cast<size_t>(size)) {
          printf("[CARE] Warning: Invalid arguments to care::inclusive_scan. Size of input array (%zu) is less than given size (%d).\n", data.size(), size);
          warned = true;
       }
 
-      if (!inPlace && outData.size() < size) {
+      if (!inPlace && outData.size() < static_cast<size_t>(size)) {
          printf("[CARE] Warning: Invalid arguments to care::inclusive_scan. Size of output array (%zu) is less than given size (%d).\n", outData.size(), size);
          warned = true;
       }
@@ -350,4 +350,3 @@ void inclusive_scan(CARE_SCAN_EXEC, chai::ManagedArray<const GIDTYPE> inData, ch
 } // namespace care
 
 #undef CARE_SCAN_EXEC
-

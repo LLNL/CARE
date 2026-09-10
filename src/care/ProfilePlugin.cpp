@@ -32,7 +32,7 @@ namespace care{
       static RAJA::util::PluginRegistry::add<care::ProfilePlugin> L ("Profile plugin", "CARE plugin for profiling");
    }
 
-   void ProfilePlugin::preLaunch(const RAJA::util::PluginContext& p) {
+   void ProfilePlugin::preLaunch([[maybe_unused]] const RAJA::util::PluginContext& p) {
 #if defined(__CUDACC__)
       // Profile the host loops
       if (s_profile_host_loops && p.platform == RAJA::Platform::host) {
@@ -54,7 +54,7 @@ namespace care{
    }
 
 
-   void ProfilePlugin::postLaunch(const RAJA::util::PluginContext& p) {
+   void ProfilePlugin::postLaunch([[maybe_unused]] const RAJA::util::PluginContext& p) {
 #if defined(__CUDACC__)
       if (s_profile_host_loops && p.platform == RAJA::Platform::host) {
          // TODO: Add error checking

@@ -28,8 +28,8 @@ namespace care {
   // TODO: Use if constexpr when supported
   template <typename T, typename T_PTR, std::enable_if_t<std::is_null_pointer<T_PTR>::value>* = nullptr>
    inline void wrappedFreeDeviceMemory(care::host_device_ptr<T> & array,
-                                       T_PTR freeDeviceCPUDestination,
-                                       size_t elems) {
+                                       [[maybe_unused]] T_PTR freeDeviceCPUDestination,
+                                       [[maybe_unused]] size_t elems) {
       array.freeDeviceMemory(nullptr, 0);
    }
 

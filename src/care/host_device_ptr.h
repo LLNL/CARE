@@ -205,10 +205,12 @@ namespace care {
       ///
       /// Convert to a host_device_ptr<const T>
       ///
-      template<bool B = std::is_const<T>::value,
-               typename std::enable_if<!B, int>::type = 0>
-      CARE_HOST_DEVICE operator host_device_ptr<const T> () const {
-         return *reinterpret_cast<host_device_ptr<const T> const *> (this);
+      /// @note U keeps the conversion target dependent,
+      ///       avoiding self-conversion warnings.
+      template<typename U = T>
+         requires (!std::is_const_v<U>)
+      CARE_HOST_DEVICE operator host_device_ptr<const U> () const {
+         return *reinterpret_cast<host_device_ptr<const U> const *> (this);
       }
 
       ///
@@ -415,8 +417,8 @@ namespace care {
       //     *CPU_destination will be updated with a deep copy of this data
       //
       // TODO: Should this really live in chai::ManagedArray?
-      void freeDeviceMemory(T_non_const ** CPU_destination,
-                            size_t elems,
+      void freeDeviceMemory([[maybe_unused]] T_non_const ** CPU_destination,
+                            [[maybe_unused]] size_t elems,
                             bool deregisterPointer=true) {
 #if defined(CARE_DEEP_COPY_RAW_PTR)
          // if there is a pointer to update ...
@@ -530,4 +532,3 @@ namespace care {
 
 
 #endif // !defined(_CARE_HOST_DEVICE_PTR_H_)
-

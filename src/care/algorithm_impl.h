@@ -300,7 +300,7 @@ CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
  *             start1=0, then matches1 will contain 2. However, if start1 was 1, then matches will contain 2-start1=1.
  ************************************************************************/
 template <typename T>
-CARE_INLINE void IntersectArrays(RAJA::seq_exec exec,
+CARE_INLINE void IntersectArrays(RAJA::seq_exec,
                                  care::host_device_ptr<const T> arr1, int size1, int start1,
                                  care::host_device_ptr<const T> arr2, int size2, int start2,
                                  care::host_device_ptr<int> &matches1,
