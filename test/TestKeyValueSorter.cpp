@@ -139,6 +139,49 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test that the sequential free sorting API sorts by keys while
+///        preserving key-value associations.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, SortKeyValueArraysByKey)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 4;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 0;
+
+      values[0] = 20;
+      values[1] = 10;
+      values[2] = 20;
+      values[3] = 30;
+      values[4] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::sortKeyValueArrays<RAJA::seq_exec>(keys, values, 0, length);
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(keys[0], 0);
+      EXPECT_EQ(keys[1], 1);
+      EXPECT_EQ(keys[2], 2);
+      EXPECT_EQ(keys[3], 3);
+      EXPECT_EQ(keys[4], 4);
+
+      EXPECT_EQ(values[0], 10);
+      EXPECT_EQ(values[1], 10);
+      EXPECT_EQ(values[2], 30);
+      EXPECT_EQ(values[3], 20);
+      EXPECT_EQ(values[4], 20);
+   } CARE_HOST_KERNEL_END
+}
+
 #if defined(CARE_GPUCC)
 
 /////////////////////////////////////////////////////////////////////////
@@ -575,6 +618,50 @@ TEST(KeyValueSorter, EliminateDuplicatePairs)
 
       EXPECT_EQ(sorter.key(5), 6);
       EXPECT_EQ(sorter.value(5), 60);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test that eliminating duplicate values restores key order for
+///        the sequential KeyValueSorter specialization.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, EliminateDuplicatesRestoresKeyOrder)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 4;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 0;
+
+      values[0] = 20;
+      values[1] = 10;
+      values[2] = 20;
+      values[3] = 30;
+      values[4] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length,
+                                                            std::move(keys),
+                                                            std::move(values));
+
+   sorter.eliminateDuplicates();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(sorter.len(), 3);
+
+      EXPECT_EQ(sorter.key(0), 1);
+      EXPECT_EQ(sorter.value(0), 10);
+      EXPECT_EQ(sorter.key(1), 2);
+      EXPECT_EQ(sorter.value(1), 30);
+      EXPECT_EQ(sorter.key(2), 4);
+      EXPECT_EQ(sorter.value(2), 20);
    } CARE_HOST_KERNEL_END
 }
 

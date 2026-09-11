@@ -70,7 +70,7 @@ namespace detail {
                                             const size_t start = 0) {
       auto first = zip_iterator<KeyT, ValueT>(keys.data(), values.data(), start);
       std::stable_sort(first, first + len,
-                       [](auto const& left, auto const& right) { return left.value < right.value; });
+                       [](auto const& left, auto const& right) { return left.key < right.key; });
    }
 } // namespace detail
 
@@ -1415,6 +1415,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             m_keys.realloc(newSize);
             m_values.realloc(newSize);
             m_len = newSize;
+            sortByKey();
          }
       }
       
