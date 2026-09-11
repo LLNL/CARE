@@ -23,6 +23,7 @@
 // Std library headers
 #include <concepts>
 #include <cstddef>
+#include <type_traits>
 
 
 namespace care {
@@ -207,10 +208,10 @@ namespace care {
       ///
       /// @note U keeps the conversion target dependent,
       ///       avoiding self-conversion warnings.
-      template<typename U = T>
-         requires (!std::is_const_v<U>)
-      CARE_HOST_DEVICE operator host_device_ptr<const U> () const {
-         return *reinterpret_cast<host_device_ptr<const U> const *> (this);
+      template <typename U = T>
+         requires (std::same_as<U, T> && !std::is_const_v<U>)
+      CARE_HOST_DEVICE operator host_device_ptr<const U>() const {
+         return *reinterpret_cast<const host_device_ptr<const U>*>(this);
       }
 
       ///
