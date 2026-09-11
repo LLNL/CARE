@@ -211,156 +211,6 @@ CARE_INLINE void IntersectKeyValueSorters(RAJADeviceExec exec,
 
 #endif // defined(CARE_PARALLEL_DEVICE) || CARE_ENABLE_GPU_SIMULATION_MODE
 
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes keys and values by copying elements from the array
-/// @param[out] keyValues - The key value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-CARE_INLINE void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType,ValueType>> & keyValues,
-                                            const size_t len, const ValueType* arr)
-{
-   // TODO: this requires key types to be constructable from a size_t -
-   // maybe only enable this for integral types?
-
-   CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-      keyValues[i].key = (KeyType)i;
-      keyValues[i].value = arr[i];
-   } CARE_SEQUENTIAL_LOOP_END
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes the KeyValueSorter by copying elements from the array
-/// @param[out] keyValues - The key value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-CARE_INLINE void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType> > & keyValues,
-                                                   const size_t len, const host_device_ptr<const ValueType>& arr)
-{
-   // TODO: this requires key types to be constructable from a size_t -
-   // maybe only enable this for integral types?
-
-   FUSIBLE_LOOP_STREAM(i, 0, (int)len) {
-      keyValues[i].key = (KeyType)i;
-      keyValues[i].value = arr[i];
-   } FUSIBLE_LOOP_STREAM_END
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Jeff Keasler, Alan Dayton
-/// @brief Eliminates duplicate values
-/// First does a stable sort based on the values, which preserves the
-///    ordering in case of a tie. Then duplicates are removed. The final
-///    step is to unsort.
-/// @param[in/out] keyValues - The key value array to eliminate duplicates in
-/// @param[in/out] len - original length of key value array/new length of array
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-CARE_INLINE size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, ValueType> > & keyValues, const size_t len)
-{
-   size_t newSize = len;
-   if (len > 1) {
-      CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
-      _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(keyValues);
-
-      // First do a stable sort by value (preserve the original order
-      // in the case of a tie)
-      std::stable_sort(rawData, rawData + len);
-
-      // Then eliminate duplicates
-      size_t lsize = len - 1;  /* adjust search range */
-      size_t put = 0;
-      size_t get = 0;
-
-      while (get < lsize) {
-         if (put != get) {
-            memcpy(&rawData[put], &rawData[get], sizeof(struct _kv<KeyType, ValueType>));
-         }
-
-         if (rawData[get].value == rawData[get+1].value) {
-            ++get;
-            ++put;
-
-            while (get < lsize && rawData[get].value == rawData[get+1].value) {
-               ++get;
-            }
-            ++get;
-         }
-         else {
-            ++get;
-            ++put;
-         }
-      }
-
-      if (rawData[lsize].value != rawData[lsize-1].value) {
-         memmove(&rawData[put++], &rawData[lsize], sizeof(struct _kv<KeyType, ValueType>));
-      }
-
-      lsize = put;
-
-      // Then sort by key to get the original ordering
-      std::sort(rawData, rawData + lsize, cmpKeys<_kv<KeyType,ValueType>>);
-
-      // Reallocate memory
-      keyValues.realloc(lsize);
-
-      newSize = lsize;
-   }
-
-   return newSize;
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the keys
-/// The keys are stored in the managed array of _kv structs. To get the
-/// keys separately, they must be copied into their own array.
-/// @param[out] keys - The key array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-CARE_INLINE void initializeKeyArray(host_device_ptr<KeyType>& keys,
-                                    const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len)
-{
-   CARE_STREAM_LOOP(i, 0, len) {
-      keys[i] = keyValues[i].key;
-   } CARE_STREAM_LOOP_END
-
-   return;
-}
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the values
-/// The values are stored in the managed array of _kv structs. To get the
-///    values separately, they must be copied into their own array.
-/// @param[out] values - The values array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-CARE_INLINE void initializeValueArray(host_device_ptr<ValueType>& values,
-                                      const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len)
-{
-   CARE_STREAM_LOOP(i, 0, len) {
-      values[i] = keyValues[i].value;
-   } CARE_STREAM_LOOP_END
-
-   return;
-}
-
-
-
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 // This assumes arrays have been sorted and unique. If they are not uniqued the GPU
 // and CPU versions may have different behaviors (the index they match to may be different,
@@ -397,13 +247,6 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
    int j = 0 ;
    host_ptr<KeyType> host_matches1 = matches1 ;
    host_ptr<KeyType> host_matches2 = matches2 ;
-   /* keys() and values() will allocate managed arrays for the keys and values,
-    * respectively, if they were not previously allocated.
-    * Check to see whether they were previously allocated. */
-   bool sorter1KeysAllocated = sorter1.keysAllocated() ;
-   bool sorter2KeysAllocated = sorter2.keysAllocated() ;
-   bool sorter1ValuesAllocated = sorter1.valuesAllocated() ;
-   bool sorter2ValuesAllocated = sorter2.valuesAllocated() ;
    host_ptr<KeyType const> host_sorter1_key = sorter1.keys() ;
    host_ptr<KeyType const> host_sorter2_key = sorter2.keys() ;
    host_ptr<ValueType const> host_sorter1_value = sorter1.values() ;
@@ -453,19 +296,6 @@ CARE_INLINE void IntersectKeyValueSorters(RAJA::seq_exec /* exec */,
       matches2.realloc(numMatches);
    }
 
-   /* If the keys/values arrays were not previously allocated, free them. */
-   if (!sorter1KeysAllocated) {
-      sorter1.freeKeys() ;
-   }
-   if (!sorter2KeysAllocated) {
-      sorter2.freeKeys() ;
-   }
-   if (!sorter1ValuesAllocated) {
-      sorter1.freeValues() ;
-   }
-   if (!sorter2ValuesAllocated) {
-      sorter2.freeValues() ;
-   }
 }
 #endif // !CARE_ENABLE_GPU_SIMULATION_MODE
 

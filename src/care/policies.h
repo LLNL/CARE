@@ -72,6 +72,8 @@ using RAJADeviceExec = RAJA::seq_exec;
 using RAJAReductionExec = RAJA::hip_exec_with_reduce<256, CARE_CUDA_ASYNC>;
 #elif defined(__CUDACC__)
 using RAJAReductionExec = RAJA::cuda_exec_with_reduce<256, CARE_CUDA_ASYNC>;
+#elif CARE_ENABLE_GPU_SIMULATION_MODE
+using RAJAReductionExec = care::gpu_simulation;
 #elif defined(_OPENMP) && defined(RAJA_ENABLE_OPENMP) // CARE_GPUCC
 using RAJAReductionExec = RAJA::omp_parallel_for_exec;
 #else

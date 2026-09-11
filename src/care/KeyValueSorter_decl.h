@@ -15,6 +15,7 @@
 #include "care/CHAIDataGetter.h"
 
 #include "care/scan.h"
+#include "care/zip_iterator.h"
 
 // Other library headers
 #ifdef CARE_GPUCC
@@ -67,24 +68,9 @@ namespace detail {
                                             host_device_ptr<ValueT> & values,
                                             const size_t len,
                                             const size_t start = 0) {
-
-      host_device_ptr<_kv<KeyT,ValueT>> keyValues(len);
-
-      CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-         keyValues[i].key = keys[i+start];
-         keyValues[i].value = values[i+start];
-      } CARE_SEQUENTIAL_LOOP_END
-
-      CHAIDataGetter<_kv<KeyT, ValueT>, RAJA::seq_exec> getter {};
-      _kv<KeyT, ValueT> * rawData = getter.getRawArrayData(keyValues);
-      std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyT,ValueT>>);
-
-      CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
-         keys[i+start] = keyValues[i].key;
-         values[i+start] = keyValues[i].value;
-      } CARE_SEQUENTIAL_LOOP_END
-
-      keyValues.free();
+      auto first = zip_iterator<KeyT, ValueT>(keys.data(), values.data(), start);
+      std::stable_sort(first, first + len,
+                       [](auto const& left, auto const& right) { return left.key < right.key; });
    }
 } // namespace detail
 
@@ -379,9 +365,9 @@ size_t eliminateKeyValueDuplicates(host_device_ptr<KeyType>& newKeys,
                                    const size_t oldLen);
 
 ///////////////////////////////////////////////////////////////////////////
-/// GPU partial specialization of KeyValueSorter
-/// The GPU version of KeyValueSorter stores keys and values as separate
-///    arrays to be compatible with sortKeyValueArrays.
+/// GPU partial specialization of KeyValueSorter.
+/// Both the host and GPU specializations store keys and values in separate
+/// arrays to be compatible with sortKeyValueArrays.
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyType, typename ValueType>
 class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADeviceExec> {
@@ -720,9 +706,9 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADevic
 
          auto keys = m_keys;
          
-         // Use SCAN_LOOP to identify where ranges start
+         // Use SCAN_LOOP to identify where ranges start.
          SCAN_LOOP(i, start, start+len, idx, count,
-                  (i == start) || (keys[i] != keys[i-1])) {
+                   (i == start) || (keys[i] != keys[i-1])) {
             rangeStarts[idx] = i;
          } SCAN_LOOP_END(start+len, idx, count)
 
@@ -874,7 +860,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADevic
             
             // Use exclusive scan to compute output positions
             host_device_ptr<int> positions(m_len+1);
-            exclusive_scan(RAJADeviceExec{}, isUnique, positions, m_len + 1, 0, false);
+            care::exclusive_scan(RAJADeviceExec{}, isUnique, positions, m_len + 1, 0, false);
             
             // Get the total number of unique elements
             int newSize = positions.pick(m_len);
@@ -926,43 +912,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJADevic
          return;
       }
 
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// GPU version does not require separate allocation for keys array.
-      /// @return true
-      ///////////////////////////////////////////////////////////////////////////
-      bool keysAllocated() const {
-         return true ;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// GPU version does not require separate allocation for keys array.
-      /// @return true
-      ///////////////////////////////////////////////////////////////////////////
-      bool valuesAllocated() const {
-         return true ;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief no-op
-      /// GPU version does not require separate allocation for keys array.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeKeys() const {
-         return;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief no-op
-      /// GPU version does not require separate allocation for values array.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeValues() const {
-         return;
-      }
    private:
       size_t m_len = 0;
       bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
@@ -1036,79 +985,11 @@ inline bool cmpKeysThenValues(KeyValueType const & left, KeyValueType const & ri
           ((left.key == right.key) && (left.value < right.value));
 }
 
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes keys and values by copying elements from the array
-/// @param[out] keyValues - The key value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void setKeyValueArraysFromArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
-                                const size_t len, const ValueType* arr) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Benjamin Liu after Alan Dayton
-/// @brief Initializes the KeyValueSorter by copying elements from the array
-/// @param[out] keys   - The key array to set to the identity
-/// @param[out] values - The value array to set
-/// @param[in] len - The number of elements to allocate space for
-/// @param[in] arr - An array to copy elements from
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void setKeyValueArraysFromManagedArray(host_device_ptr<_kv<KeyType, ValueType>> & keyValues,
-                                       const size_t len, const host_device_ptr<const ValueType>& arr) ;
-
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Jeff Keasler, Alan Dayton
-/// @brief Eliminates duplicate values
-/// Assumes key value array sorted by values.
-/// @param[in/out] keyValues - The key value array to eliminate duplicates in
-/// @param[in/out] len - original length of key value array
-/// @return new length of array
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-size_t eliminateKeyValueDuplicates(host_device_ptr<_kv<KeyType, ValueType>> & keyValues, const size_t len) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the keys
-/// The keys are stored in the managed array of _kv structs. To get the
-/// keys separately, they must be copied into their own array.
-/// @param[out] keys - The key array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void initializeKeyArray(host_device_ptr<KeyType>& keys, const host_device_ptr<const _kv<KeyType, ValueType>>& keyValues, const size_t len) ;
-
-///////////////////////////////////////////////////////////////////////////
-/// @author Alan Dayton
-/// @brief Initializes the values
-/// The values are stored in the managed array of _kv structs. To get the
-///    values separately, they must be copied into their own array.
-/// @param[out] values - The values array
-/// @param[in] keyValues - The key value array
-/// @param[in/out] len - length of key value array
-/// @return void
-///////////////////////////////////////////////////////////////////////////
-template <typename KeyType, typename ValueType>
-void initializeValueArray(host_device_ptr<ValueType>& values, const host_device_ptr<const _kv<KeyType, ValueType> >& keyValues, const size_t len);
-
 #if !CARE_ENABLE_GPU_SIMULATION_MODE
 ///////////////////////////////////////////////////////////////////////////
-/// Sequential partial specialization of KeyValueSorter
-/// The CPU implementation relies on routines that use the < operator on
-/// a key-value struct.
-/// TODO make a version of this that sorts indices as in:
-/// https://stackoverflow.com/questions/3909272/sorting-two-corresponding-arrays
-/// This has the advantage of having the same underlying data layout for keys
-/// and values as the GPU version of the code, which in many instances removes
-/// the need for copying the keys and values into separate arrays after the sort.
+/// Sequential partial specialization of KeyValueSorter.
+/// Host sorting uses a zip iterator to apply standard-library algorithms to
+/// the separate key and value arrays as one logical sequence of pairs.
 ///////////////////////////////////////////////////////////////////////////
 template <typename KeyType, typename ValueType>
 class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq_exec> {
@@ -1131,9 +1012,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       explicit KeyValueSorter(size_t len)
       : m_len(len)
       , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
+      , m_keys(len, "m_keys")
+      , m_values(len, "m_values")
       {
       }
 
@@ -1149,11 +1029,15 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       KeyValueSorter(const size_t len, const ValueType* arr)
       : m_len(len)
       , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
+      , m_keys(len, "m_keys")
+      , m_values(len, "m_values")
       {
-         setKeyValueArraysFromArray(m_keyValues, len, arr);
+         auto keys = m_keys;
+         auto values = m_values;
+         CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
+            keys[i] = (KeyType)i;
+            values[i] = arr[i];
+         } CARE_SEQUENTIAL_LOOP_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1168,11 +1052,15 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       KeyValueSorter(const size_t len, const host_device_ptr<const ValueType> & arr)
       : m_len(len)
       , m_ownsPointers(true)
-      , m_keys(nullptr)
-      , m_values(nullptr)
-      , m_keyValues(len, "m_keyValues")
+      , m_keys(len, "m_keys")
+      , m_values(len, "m_values")
       {
-         setKeyValueArraysFromManagedArray(m_keyValues, len, arr);
+         auto keys = m_keys;
+         auto values = m_values;
+         CARE_SEQUENTIAL_LOOP(i, 0, (int) len) {
+            keys[i] = (KeyType)i;
+            values[i] = arr[i];
+         } CARE_SEQUENTIAL_LOOP_END
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1189,18 +1077,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       , m_ownsPointers(true)
       , m_keys(std::move(keys))
       , m_values(std::move(values))
-      , m_keyValues(len, "m_keyValues")
-      {
-         auto mkeyValues  = m_keyValues;
-         auto mkeys = m_keys;
-         auto mvalues = m_values;
-
-         // Initialize m_keyValues from the provided keys and values
-         CARE_SEQUENTIAL_LOOP(i, 0, m_len) {
-            mkeyValues[i].key = mkeys[i];
-            mkeyValues[i].value = mvalues[i];
-         } CARE_SEQUENTIAL_LOOP_END
-      }
+      {}
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
@@ -1208,7 +1085,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// Does a shallow copy and indicates that the copy should NOT free
       ///    the underlying memory. This must be a shallow copy because it is
       ///    called upon lambda capture, and upon exiting the scope of a lambda
-      ///    capture, the copy must NOT free the underlying memory.
+      ///    capture, the copy must NOT free the underlying key and value arrays.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return a KeyValueSorter instance
       ///////////////////////////////////////////////////////////////////////////
@@ -1217,9 +1094,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       , m_ownsPointers(false)
       , m_keys(other.m_keys)
       , m_values(other.m_values)
-      , m_keyValues(other.m_keyValues)
-      {
-      }
+      {}
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
@@ -1237,7 +1112,7 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @author Alan Dayton
       /// @brief (Shallow) Copy assignment operator
       /// Does a shallow copy and indicates that the copy should NOT free
-      ///    the underlying memory.
+      ///    the underlying key and value arrays.
       /// @param[in] other - The other KeyValueSorter to copy from
       /// @return *this
       ///////////////////////////////////////////////////////////////////////////
@@ -1250,7 +1125,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             m_ownsPointers = false;
             m_keys = other.m_keys;
             m_values = other.m_values;
-            m_keyValues = other.m_keyValues;
          }
 
          return *this;
@@ -1273,13 +1147,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
             m_ownsPointers = other.m_ownsPointers;
             m_keys = other.m_keys;
             m_values = other.m_values;
-            m_keyValues = other.m_keyValues;
 
             other.m_len = 0;
             other.m_ownsPointers = false;
             other.m_keys = nullptr;
             other.m_values = nullptr;
-            other.m_keyValues = nullptr;
          }
 
          return *this;
@@ -1293,8 +1165,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return the key at the given index
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE KeyType key(const size_t index) const {
-         local_ptr<_kv<KeyType,ValueType> > local_keyValues = m_keyValues;
-         return local_keyValues[index].key;
+         local_ptr<const KeyType> keys = m_keys;
+         return keys[index];
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1306,8 +1178,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE void setKey(const size_t index, const KeyType key) const {
-         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
-         local_keyValues[index].key = key;
+         local_ptr<KeyType> keys = m_keys;
+         keys[index] = key;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1318,8 +1190,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return the value at the given index
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE ValueType value(const size_t index) const {
-         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
-         return local_keyValues[index].value;
+         local_ptr<const ValueType> values = m_values;
+         return values[index];
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1331,8 +1203,8 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       CARE_HOST_DEVICE void setValue(const size_t index, const ValueType value) const {
-         local_ptr<_kv<KeyType, ValueType> > local_keyValues = m_keyValues;
-         local_keyValues[index].value = value;
+         local_ptr<ValueType> values = m_values;
+         values[index] = value;
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1341,7 +1213,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
       host_device_ptr<KeyType> & keys() {
-         initializeKeys();
          return m_keys;
       }
 
@@ -1351,7 +1222,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return a const copy of the keys contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
       const host_device_ptr<KeyType> & keys() const {
-         initializeKeys();
          return m_keys;
       }
 
@@ -1361,7 +1231,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
       host_device_ptr<ValueType> & values() {
-         initializeValues();
          return m_values;
       }
 
@@ -1371,7 +1240,6 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// @return a const copy of the values contained in the KeyValueSorter
       ///////////////////////////////////////////////////////////////////////////
       const host_device_ptr<ValueType> & values() const {
-         initializeValues();
          return m_values;
       }
 
@@ -1395,18 +1263,9 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sort(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
-         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::stable_sort(rawData, rawData + len);
-
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         auto first = zip_iterator<KeyType, ValueType>(m_keys.data(), m_values.data(), start);
+         std::stable_sort(first, first + len,
+                          [](auto const& left, auto const& right) { return left.value < right.value; });
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1440,18 +1299,9 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sortByKey(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
-         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::stable_sort(rawData, rawData + len, cmpKeys<_kv<KeyType,ValueType>>);
-
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         auto first = zip_iterator<KeyType, ValueType>(m_keys.data(), m_values.data(), start);
+         std::stable_sort(first, first + len,
+                          [](auto const& left, auto const& right) { return left.key < right.key; });
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1482,18 +1332,11 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       /// TODO: add bounds checking
       ///////////////////////////////////////////////////////////////////////////
       void sortByKeyThenValue(const size_t start, const size_t len) const {
-         CHAIDataGetter<_kv<KeyType, ValueType>, RAJA::seq_exec> getter {};
-         _kv<KeyType, ValueType> * rawData = getter.getRawArrayData(m_keyValues) + start;
-         std::stable_sort(rawData, rawData + len, cmpKeysThenValues<_kv<KeyType,ValueType>>);
-
-         // Free stale arrays
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         if (m_values) {
-            m_values.free();
-         }
+         auto first = zip_iterator<KeyType, ValueType>(m_keys.data(), m_values.data(), start);
+         std::stable_sort(first, first + len, [](auto const& left, auto const& right) {
+            return (left.key < right.key) ||
+                   (left.key == right.key && left.value < right.value);
+         });
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -1557,16 +1400,22 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
       ///////////////////////////////////////////////////////////////////////////
       void eliminateDuplicates() {
          if (m_len > 1) {
-            m_len = eliminateKeyValueDuplicates(m_keyValues, m_len) ;
-
-            // Free stale arrays
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
+            sort();
+            auto keys = m_keys;
+            auto values = m_values;
+            auto len = m_len;
+            size_t newSize = 1;
+            CARE_SEQUENTIAL_REF_LOOP(i, 1, (int) len, newSize) {
+               if (values[i] != values[newSize - 1]) {
+                  keys[newSize] = keys[i];
+                  values[newSize] = values[i];
+                  ++newSize;
+               }
+            } CARE_SEQUENTIAL_REF_LOOP_END
+            m_keys.realloc(newSize);
+            m_values.realloc(newSize);
+            m_len = newSize;
+            sortByKey();
          }
       }
       
@@ -1581,157 +1430,62 @@ class CARE_KEY_VALUE_SORTER_DLL_API KeyValueSorter<KeyType, ValueType, RAJA::seq
          if (m_len > 1) {
             // First sort by key and then by value to group identical pairs
             sortByKeyThenValue();
-            // Create a new array to hold the unique pairs
-            host_device_ptr<_kv<KeyType, ValueType>> uniquePairs(m_len, "uniquePairs");
-            // Copy the first element
-            uniquePairs.set(0, m_keyValues.pick(0));
-            // Copy only non-duplicate elements
+            // Compact unique pairs in place. The sorted input guarantees that
+            // writing at newSize cannot overwrite an unread element.
+            auto keys = m_keys;
+            auto values = m_values;
+            auto len = m_len;
             size_t newSize = 1;
-            auto keyValues  = m_keyValues;
-            CARE_SEQUENTIAL_REF_LOOP(i, 1, m_len, newSize) {
-               if (keyValues[i].key != keyValues[i-1].key ||
-                  keyValues[i].value != keyValues[i-1].value) {
-                  uniquePairs[newSize] = keyValues[i];
+            CARE_SEQUENTIAL_REF_LOOP(i, 1, (int) len, newSize) {
+               if (keys[i] != keys[i-1] || values[i] != values[i-1]) {
+                  keys[newSize] = keys[i];
+                  values[newSize] = values[i];
                   ++newSize;
                }
             } CARE_SEQUENTIAL_REF_LOOP_END
-            
-            // Free the original key value pairs
-            m_keyValues.free();
-            
-            // Set to new key value pairs
-            m_keyValues = uniquePairs;
-            m_len = newSize;
-            
-            // Reallocate to the correct size
-            m_keyValues.realloc(newSize);
-            
-            // Free stale arrays
-            if (m_keys) {
-               m_keys.free();
-            }
 
-            if (m_values) {
-               m_values.free();
-            }
+            m_keys.realloc(newSize);
+            m_values.realloc(newSize);
+            m_len = newSize;
          }
       }
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
-      /// @brief Initializes the keys
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
+      /// @brief No-op retained for compatibility with host-device map setup.
+      /// Keys are stored directly in the host-side key array.
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeKeys() const {
-         if (!m_keys) {
-            m_keys.alloc(m_len);
-            m_keys.namePointer("m_keys");
-            initializeKeyArray(m_keys, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
-         }
-
          return;
       }
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Alan Dayton
-      /// @brief Initializes the values
-      /// The values are stored in the managed array of _kv structs. To get the
-      ///    values separately, they must be copied into their own array.
+      /// @brief No-op retained for compatibility with host-device map setup.
+      /// Values are stored directly in the host-side value array.
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       void initializeValues() const {
-         if (!m_values) {
-            m_values.alloc(m_len);
-            m_values.namePointer("m_values");
-            initializeValueArray(m_values, (host_device_ptr<const _kv<KeyType, ValueType> >)m_keyValues, m_len);
-         }
-
          return;
       }
 
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief whether keys allocated
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
-      /// This routine returns whether that copy is allocated.
-      /// @return whether keys are allocated
-      ///////////////////////////////////////////////////////////////////////////
-      bool keysAllocated() const {
-         return m_keys != nullptr;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief whether values allocated
-      /// The values are stored in the managed array of _kv structs. To get the
-      /// values separately, they must be copied into their own array.
-      /// This routine returns whether that copy is allocated.
-      /// @return whether values are allocated
-      ///////////////////////////////////////////////////////////////////////////
-      bool valuesAllocated() const {
-         return m_values != nullptr;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief Free the keys
-      /// The keys are stored in the managed array of _kv structs. To get the
-      /// keys separately, they must be copied into their own array.
-      /// This routine frees that copy.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeKeys() const {
-         if (m_keys) {
-            m_keys.free();
-         }
-
-         return;
-      }
-
-      ///////////////////////////////////////////////////////////////////////////
-      /// @author Benjamin Liu
-      /// @brief Free the values
-      /// The values are stored in the managed array of _kv structs. To get the
-      /// values separately, they must be copied into their own array.
-      /// This routine frees that copy.
-      /// @return void
-      ///////////////////////////////////////////////////////////////////////////
-      void freeValues() const {
-         if (m_values) {
-            m_values.free();
-         }
-
-         return;
-      }
    private:
       size_t m_len = 0;
       bool m_ownsPointers = false; /// Prevents memory from being freed by lambda captures
       mutable host_device_ptr<KeyType> m_keys = nullptr;
       mutable host_device_ptr<ValueType> m_values = nullptr;
-      host_device_ptr<_kv<KeyType, ValueType> > m_keyValues = nullptr;
 
       ///////////////////////////////////////////////////////////////////////////
       /// @author Peter Robinson, Alan Dayton
-      /// @brief Frees the underlying memory if this is the owner
+      /// @brief Frees owned key and value storage
       /// Used by the destructor and by the assignment operators. Should be private.
       /// @return void
       ///////////////////////////////////////////////////////////////////////////
       inline void free() {
          if (m_ownsPointers) {
-            if (m_keyValues) {
-               m_keyValues.free();
-            }
-
-            if (m_keys) {
-               m_keys.free();
-            }
-
-            if (m_values) {
-               m_values.free();
-            }
+            m_keys.free();
+            m_values.free();
          }
       }
 };

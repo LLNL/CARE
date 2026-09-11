@@ -225,13 +225,13 @@ CARE_HOST_DEVICE void ArrayCopy(
  * Purpose   : Copies from one local_ptr into another. from and to
  *             should not have the same or overlapping memory addresses.
  * ************************************************************************/
-template<typename T>
+template<typename T, typename SizeType>
 CARE_HOST_DEVICE inline void ArrayCopy(
                            care::local_ptr<T> into,
                            care::local_ptr<const T> from,
-                           int n, int start1, int start2)
+                           SizeType n, SizeType start1, SizeType start2)
 {
-   for (int i = 0; i < n; ++i)  {
+   for (SizeType i = 0; i < n; ++i)  {
       into[i+start1] = from[i+start2];
    }
 }

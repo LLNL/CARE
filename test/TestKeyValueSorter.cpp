@@ -139,6 +139,49 @@ TEST(KeyValueSorter, host_device_ptr_Constructor)
    } CARE_HOST_KERNEL_END
 }
 
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test that the sequential free sorting API sorts by keys while
+///        preserving key-value associations.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, SortKeyValueArraysByKey)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 4;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 0;
+
+      values[0] = 20;
+      values[1] = 10;
+      values[2] = 20;
+      values[3] = 30;
+      values[4] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::sortKeyValueArrays<RAJA::seq_exec>(keys, values, 0, length);
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(keys[0], 0);
+      EXPECT_EQ(keys[1], 1);
+      EXPECT_EQ(keys[2], 2);
+      EXPECT_EQ(keys[3], 3);
+      EXPECT_EQ(keys[4], 4);
+
+      EXPECT_EQ(values[0], 10);
+      EXPECT_EQ(values[1], 10);
+      EXPECT_EQ(values[2], 30);
+      EXPECT_EQ(values[3], 20);
+      EXPECT_EQ(values[4], 20);
+   } CARE_HOST_KERNEL_END
+}
+
 #if defined(CARE_GPUCC)
 
 /////////////////////////////////////////////////////////////////////////
@@ -310,6 +353,116 @@ TEST(KeyValueSorter, OwnershipConstructor)
 
 /////////////////////////////////////////////////////////////////////////
 ///
+/// @brief Test case that checks shallow copies share key and value storage
+///        for the sequential KeyValueSorter specialization.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, CopySharesStorage)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 3;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 1;
+
+      values[0] = 7;
+      values[1] = 5;
+      values[2] = 6;
+      values[3] = 3;
+      values[4] = 4;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> owner(length, std::move(keys), std::move(values));
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
+
+   const size_t* sharedKeys = alias.keys().cdata();
+   const int* sharedValues = alias.values().cdata();
+
+   EXPECT_EQ(owner.keys().cdata(), sharedKeys);
+   EXPECT_EQ(owner.values().cdata(), sharedValues);
+
+   alias.sortByKeyThenValue();
+
+   const size_t* sortedKeys = owner.keys().cdata();
+   const int* sortedValues = owner.values().cdata();
+
+   EXPECT_EQ(alias.keys().cdata(), sortedKeys);
+   EXPECT_EQ(alias.values().cdata(), sortedValues);
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(owner.key(0), 1);
+      EXPECT_EQ(owner.key(1), 1);
+      EXPECT_EQ(owner.key(2), 2);
+      EXPECT_EQ(owner.key(3), 3);
+      EXPECT_EQ(owner.key(4), 3);
+
+      EXPECT_EQ(owner.value(0), 4);
+      EXPECT_EQ(owner.value(1), 5);
+      EXPECT_EQ(owner.value(2), 3);
+      EXPECT_EQ(owner.value(3), 6);
+      EXPECT_EQ(owner.value(4), 7);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test case that checks a shallow copy remains valid after the copy
+///        is move-assigned and then mutates the shared key-value storage.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, CopyMoveSharesStorage)
+{
+   int length = 4;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 2;
+      keys[1] = 1;
+      keys[2] = 2;
+      keys[3] = 1;
+
+      values[0] = 4;
+      values[1] = 3;
+      values[2] = 2;
+      values[3] = 1;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> owner(length, std::move(keys), std::move(values));
+
+   const size_t* cachedKeys = owner.keys().cdata();
+   const int* cachedValues = owner.values().cdata();
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> alias(owner);
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> moved;
+
+   moved = std::move(alias);
+
+   EXPECT_EQ(moved.keys().cdata(), cachedKeys);
+   EXPECT_EQ(moved.values().cdata(), cachedValues);
+
+   moved.sortByKeyThenValue();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(owner.key(0), 1);
+      EXPECT_EQ(owner.key(1), 1);
+      EXPECT_EQ(owner.key(2), 2);
+      EXPECT_EQ(owner.key(3), 2);
+
+      EXPECT_EQ(owner.value(0), 1);
+      EXPECT_EQ(owner.value(1), 3);
+      EXPECT_EQ(owner.value(2), 2);
+      EXPECT_EQ(owner.value(3), 4);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
 /// @brief Test case that checks the sortByKeyThenValue method.
 ///
 /////////////////////////////////////////////////////////////////////////
@@ -367,6 +520,37 @@ TEST(KeyValueSorter, SortByKeyThenValue)
       EXPECT_EQ(sorter.value(5), 6);
       EXPECT_EQ(sorter.value(6), 7);
       EXPECT_EQ(sorter.value(7), 8);
+   } CARE_HOST_KERNEL_END
+
+   int boundaryLength = 3;
+   care::host_device_ptr<size_t> boundaryKeys(boundaryLength, "boundaryKeys");
+   care::host_device_ptr<int> boundaryValues(boundaryLength, "boundaryValues");
+
+   CARE_HOST_KERNEL {
+      boundaryKeys[0] = 1;
+      boundaryKeys[1] = 1;
+      boundaryKeys[2] = 2;
+
+      boundaryValues[0] = 30;
+      boundaryValues[1] = 20;
+      boundaryValues[2] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> boundarySorter(boundaryLength,
+                                                                    std::move(boundaryKeys),
+                                                                    std::move(boundaryValues));
+
+   boundarySorter.sortByKeyThenValue();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(boundarySorter.key(0), 1);
+      EXPECT_EQ(boundarySorter.value(0), 20);
+
+      EXPECT_EQ(boundarySorter.key(1), 1);
+      EXPECT_EQ(boundarySorter.value(1), 30);
+
+      EXPECT_EQ(boundarySorter.key(2), 2);
+      EXPECT_EQ(boundarySorter.value(2), 10);
    } CARE_HOST_KERNEL_END
 }
 
@@ -434,6 +618,50 @@ TEST(KeyValueSorter, EliminateDuplicatePairs)
 
       EXPECT_EQ(sorter.key(5), 6);
       EXPECT_EQ(sorter.value(5), 60);
+   } CARE_HOST_KERNEL_END
+}
+
+/////////////////////////////////////////////////////////////////////////
+///
+/// @brief Test that eliminating duplicate values restores key order for
+///        the sequential KeyValueSorter specialization.
+///
+/////////////////////////////////////////////////////////////////////////
+TEST(KeyValueSorter, EliminateDuplicatesRestoresKeyOrder)
+{
+   int length = 5;
+   care::host_device_ptr<size_t> keys(length, "keys");
+   care::host_device_ptr<int> values(length, "values");
+
+   CARE_HOST_KERNEL {
+      keys[0] = 4;
+      keys[1] = 1;
+      keys[2] = 3;
+      keys[3] = 2;
+      keys[4] = 0;
+
+      values[0] = 20;
+      values[1] = 10;
+      values[2] = 20;
+      values[3] = 30;
+      values[4] = 10;
+   } CARE_HOST_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJA::seq_exec> sorter(length,
+                                                            std::move(keys),
+                                                            std::move(values));
+
+   sorter.eliminateDuplicates();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(sorter.len(), 3);
+
+      EXPECT_EQ(sorter.key(0), 1);
+      EXPECT_EQ(sorter.value(0), 10);
+      EXPECT_EQ(sorter.key(1), 2);
+      EXPECT_EQ(sorter.value(1), 30);
+      EXPECT_EQ(sorter.key(2), 4);
+      EXPECT_EQ(sorter.value(2), 20);
    } CARE_HOST_KERNEL_END
 }
 
@@ -548,6 +776,37 @@ GPU_TEST(KeyValueSorter, SortByKeyThenValue)
       EXPECT_EQ(sorter.value(5), 6);
       EXPECT_EQ(sorter.value(6), 7);
       EXPECT_EQ(sorter.value(7), 8);
+   } CARE_HOST_KERNEL_END
+
+   int boundaryLength = 3;
+   care::host_device_ptr<size_t> boundaryKeys(boundaryLength, "boundaryKeys");
+   care::host_device_ptr<int> boundaryValues(boundaryLength, "boundaryValues");
+
+   CARE_GPU_KERNEL {
+      boundaryKeys[0] = 1;
+      boundaryKeys[1] = 1;
+      boundaryKeys[2] = 2;
+
+      boundaryValues[0] = 30;
+      boundaryValues[1] = 20;
+      boundaryValues[2] = 10;
+   } CARE_GPU_KERNEL_END
+
+   care::KeyValueSorter<size_t, int, RAJAExec> boundarySorter(boundaryLength,
+                                                              std::move(boundaryKeys),
+                                                              std::move(boundaryValues));
+
+   boundarySorter.sortByKeyThenValue();
+
+   CARE_HOST_KERNEL {
+      EXPECT_EQ(boundarySorter.key(0), 1);
+      EXPECT_EQ(boundarySorter.value(0), 20);
+
+      EXPECT_EQ(boundarySorter.key(1), 1);
+      EXPECT_EQ(boundarySorter.value(1), 30);
+
+      EXPECT_EQ(boundarySorter.key(2), 2);
+      EXPECT_EQ(boundarySorter.value(2), 10);
    } CARE_HOST_KERNEL_END
 }
 

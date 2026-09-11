@@ -474,10 +474,6 @@ namespace care {
         // call sort() after emplaces are all done and before lookups are needed
         void sort() {
            m_map.sortByKey();
-           // cache the keys and values for lookups. Doing this outside of a kernel context is important
-           // so that the primary m_map object (not the lambda-captured copy) has initialized keys.
-           m_map.initializeKeys();
-           m_map.initializeValues();
            m_size = *m_size_ptr;
         }
 
